@@ -1,26 +1,56 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/**
+ * Base palette: ink navy + brass on warm paper.
+ * Use these semantic tokens instead of raw Tailwind color scales so the
+ * whole platform (public site, LMS, math tools) stays visually consistent.
+ */
+@theme {
+  --font-sans: "Noto Sans Georgian", "BPG Arial", Sylfaen, ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", sans-serif;
+
+  /* Neutral surfaces */
+  --color-paper: #faf9f6;
+  --color-paper-deep: #f2f0ea;
+  --color-hairline: #e6e3da;
+  --color-hairline-soft: #efece4;
+
+  /* Text */
+  --color-ink: #16233a;
+  --color-body: #515b6b;
+  --color-muted: #7b8494;
+
+  /* Primary accent */
+  --color-navy: #17365d;
+  --color-navy-strong: #0f2544;
+  --color-navy-tint: #e9eef5;
+
+  /* Secondary accent */
+  --color-brass: #8a621b;
+  --color-brass-strong: #6f4e14;
+  --color-brass-soft: #d3ab61;
+  --color-brass-tint: #f7f0e0;
+
+  --animate-dropdown: dropdown 140ms ease-out;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes dropdown {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem) scale(0.98);
   }
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-navy-tint);
+  color: var(--color-navy-strong);
 }

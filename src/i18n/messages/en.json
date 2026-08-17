@@ -1,0 +1,156 @@
+{
+  "meta": {
+    "title": "Mathematics Learning Platform",
+    "description": "An online mathematics platform: preparatory courses, interactive tools and a student portal."
+  },
+  "brand": {
+    "name": "MathLab",
+    "person": "Shota Mikolaichuki",
+    "home": "Back to the home page"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "tools": "Tools",
+    "students": "Students",
+    "teacher": "Teacher"
+  },
+  "header": {
+    "mainNav": "Main navigation",
+    "mobileNav": "Mobile navigation",
+    "search": "Search the site",
+    "searchPlaceholder": "Search for a course, material or tool",
+    "openMenu": "Menu",
+    "closeMenu": "Close menu",
+    "language": "Change language"
+  },
+  "home": {
+    "hero": {
+      "badge": "Mathematics learning platform",
+      "role": "Senior Mathematics Instructor & Researcher",
+      "photoAlt": "Photo of the teacher",
+      "bio1": "I have been teaching mathematics for more than fifteen years, and I am convinced that memorising formulas means nothing if a student cannot see the logic behind them. My lessons are built on clear explanations, visual examples and a great deal of independent practice.",
+      "bio2": "I prepare students for national exams, olympiads and international competitions — both one to one and in small groups.",
+      "statusTitle": "Enrolment is open",
+      "statusNote": "Autumn groups — online and on site",
+      "primaryCta": "Explore courses",
+      "secondaryCta": "Interactive tools"
+    },
+    "stats": {
+      "title": "Achievements and statistics",
+      "items": {
+        "experience": {
+          "value": "15+",
+          "label": "years of experience",
+          "hint": "School, university and private tutoring"
+        },
+        "students": {
+          "value": "1000+",
+          "label": "students taught",
+          "hint": "From every region of Georgia"
+        },
+        "olympiad": {
+          "value": "50+",
+          "label": "olympiad winners",
+          "hint": "National and international rounds"
+        },
+        "passRate": {
+          "value": "100%",
+          "label": "exam pass rate",
+          "hint": "Statistics for the past five years"
+        }
+      }
+    },
+    "testimonials": {
+      "eyebrow": "Student results",
+      "title": "Success stories",
+      "description": "My work is described best by what my students achieve — from university admission to olympiad medals.",
+      "items": [
+        {
+          "name": "Nino Kvaratskhelia",
+          "achievement": "Tbilisi State University",
+          "result": "National exam — 100%",
+          "quote": "I was always afraid of mathematics until I started studying with Shota. Within a year I learned to see the structure of a problem and scored full marks in the exam."
+        },
+        {
+          "name": "Luka Maisuradze",
+          "achievement": "International Mathematical Olympiad",
+          "result": "Bronze medal",
+          "quote": "We worked through olympiad problems every week. What helped most was that he never handed me a ready answer — he made me think and led me to the solution myself."
+        },
+        {
+          "name": "Ana Tskitishvili",
+          "achievement": "Free University of Tbilisi",
+          "result": "Mathematics — 98 points",
+          "quote": "Geometry became completely clear after the visual models and interactive graphs. Today I help my own classmates with the difficult topics."
+        }
+      ]
+    },
+    "resources": {
+      "eyebrow": "Platform sections",
+      "title": "Where shall we start?",
+      "description": "Choose a direction: study materials, interactive tools or your personal space for assignments.",
+      "cta": "Open",
+      "items": {
+        "tools": {
+          "title": "Interactive tools",
+          "description": "Calculators, a function graph visualiser and a matrix solver."
+        },
+        "courses": {
+          "title": "Preparatory courses",
+          "description": "National exams, olympiads and an intensive school curriculum course."
+        },
+        "blog": {
+          "title": "Blog and materials",
+          "description": "Theory explained, a formula reference and themed problem sets."
+        },
+        "portal": {
+          "title": "Student portal",
+          "description": "Assignments, grade sheet, attendance and lesson recordings."
+        }
+      }
+    }
+  },
+  "footer": {
+    "description": "A mathematics learning platform for students who want to understand the subject deeply — from exam preparation to olympiad problems.",
+    "contact": {
+      "email": "info@mathlab.ge",
+      "phone": "+995 322 00 00 00",
+      "address": "1 Chavchavadze Avenue, Tbilisi"
+    },
+    "groups": {
+      "platform": {
+        "title": "Platform",
+        "links": {
+          "tools": "Interactive tools",
+          "courses": "Preparatory courses",
+          "blog": "Blog and materials",
+          "formulas": "Formula reference"
+        }
+      },
+      "learning": {
+        "title": "Learning",
+        "links": {
+          "student": "Student portal",
+          "teacher": "Teacher space",
+          "assignments": "Assignments",
+          "login": "Sign in"
+        }
+      },
+      "info": {
+        "title": "Information",
+        "links": {
+          "about": "About me",
+          "pricing": "Prices and packages",
+          "faq": "Frequently asked questions",
+          "contact": "Contact"
+        }
+      }
+    },
+    "copyright": "© {year} MathLab · Shota Mikolaichuki. All rights reserved.",
+    "legal": {
+      "privacy": "Privacy",
+      "terms": "Terms and conditions"
+    }
+  }
+}
