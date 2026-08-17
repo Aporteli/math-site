@@ -3,17 +3,21 @@ import { MathMark } from "@/components/layout/math-mark";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/types";
 
+interface SiteLogoProps {
+  locale: Locale;
+  brand: Dictionary["brand"];
+  tone?: "dark" | "light";
+  className?: string;
+  markOnly?: boolean;
+}
+
 export function SiteLogo({
   locale,
   brand,
   tone = "dark",
   className = "",
-}: {
-  locale: Locale;
-  brand: Dictionary["brand"];
-  tone?: "dark" | "light";
-  className?: string;
-}) {
+  markOnly = false,
+}: SiteLogoProps) {
   const isLight = tone === "light";
 
   return (
@@ -26,22 +30,25 @@ export function SiteLogo({
         tone={tone}
         className="size-9 transition-transform group-hover:-rotate-3"
       />
-      <span className="flex flex-col leading-tight">
-        <span
-          className={`text-base font-bold tracking-tight ${
-            isLight ? "text-white" : "text-ink"
-          }`}
-        >
-          {brand.name}
+      {markOnly ? null : (
+        <span className="flex min-w-0 flex-col leading-tight">
+          <span
+            className={`text-base font-bold tracking-tight ${
+              isLight ? "text-white" : "text-ink"
+            }`}
+          >
+            {brand.name}
+          </span>
+          <span
+            className={`truncate text-xs font-medium ${
+              isLight ? "text-paper/70" : "text-muted"
+            }`}
+          >
+            {brand.person}
+          </span>
         </span>
-        <span
-          className={`text-xs font-medium ${
-            isLight ? "text-paper/70" : "text-muted"
-          }`}
-        >
-          {brand.person}
-        </span>
-      </span>
+      )}
     </Link>
   );
 }
+

@@ -13,15 +13,21 @@ import {
 } from "@/i18n/config";
 import { setCookie } from "@/lib/helpers/cookies";
 
+interface LanguageSwitcherProps {
+  locale: Locale;
+  label: string;
+  className?: string;
+  menuPlacement?: "below" | "above";
+  menuAlign?: "right" | "center";
+}
+
 export function LanguageSwitcher({
   locale,
   label,
   className = "",
-}: {
-  locale: Locale;
-  label: string;
-  className?: string;
-}) {
+  menuPlacement = "below",
+  menuAlign = "right",
+}: LanguageSwitcherProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -80,7 +86,7 @@ export function LanguageSwitcher({
         aria-expanded={open}
         aria-label={`${label} — ${localeNames[locale].label}`}
         className={[
-          "group inline-flex items-center gap-1.5 rounded-xl py-2 pl-2.5 pr-2 text-sm font-semibold ring-1 transition-colors",
+          "group inline-flex shrink-0 items-center gap-1.5 rounded-full py-2 pl-3 pr-2.5 text-sm font-semibold ring-1 transition-colors duration-200",
           open
             ? "bg-navy-tint text-navy ring-navy/30"
             : "bg-white text-ink ring-hairline hover:text-navy hover:ring-navy/30",
@@ -104,7 +110,15 @@ export function LanguageSwitcher({
       {open && (
         <ul
           role="menu"
-          className="absolute right-0 top-full z-50 mt-2 w-48 origin-top-right animate-dropdown rounded-2xl border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5"
+          className={[
+            "absolute z-50 w-48 animate-dropdown rounded-2xl border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5",
+            menuPlacement === "above"
+              ? "bottom-full mb-2 origin-bottom"
+              : "top-full mt-2 origin-top-right",
+            menuAlign === "center"
+              ? "left-1/2 -translate-x-1/2"
+              : "right-0",
+          ].join(" ")}
         >
           {locales.map((code) => {
             const active = code === locale;

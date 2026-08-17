@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Mathematics Learning Platform",
-    "description": "An online mathematics platform: preparatory courses, interactive tools and a student portal."
+    "title": "MathLab — mathematics resources and tools",
+    "description": "Calculators, a formula reference, a problem bank and the lesson schedule in one catalogue."
   },
   "brand": {
     "name": "MathLab",
@@ -10,144 +10,1183 @@
   },
   "nav": {
     "home": "Home",
-    "about": "About",
     "tools": "Tools",
-    "students": "Students",
-    "teacher": "Teacher"
+    "courses": "Courses",
+    "blog": "Blog & Resources",
+    "contact": "Contact"
+  },
+  "menus": {
+    "tools": {
+      "calculators": "Calculators",
+      "graphing": "Graph visualiser",
+      "matrices": "Matrix solver",
+      "calculus": "Derivatives & integrals"
+    },
+    "blog": {
+      "articles": "Articles",
+      "formulas": "Formula reference",
+      "problems": "Problem sets",
+      "videos": "Video lessons"
+    }
   },
   "header": {
     "mainNav": "Main navigation",
     "mobileNav": "Mobile navigation",
     "search": "Search the site",
-    "searchPlaceholder": "Search for a course, material or tool",
+    "searchPlaceholder": "Search…",
+    "searchClose": "Close search",
+    "searchEmpty": "No results found",
+    "searchGroups": {
+      "pages": "Pages",
+      "tools": "Tools",
+      "articles": "Articles"
+    },
     "openMenu": "Menu",
     "closeMenu": "Close menu",
-    "language": "Change language"
+    "language": "Change language",
+    "login": "Log in",
+    "quickActions": "Quick actions"
   },
   "home": {
-    "hero": {
-      "badge": "Mathematics learning platform",
-      "role": "Senior Mathematics Instructor & Researcher",
-      "photoAlt": "Photo of the teacher",
-      "bio1": "I have been teaching mathematics for more than fifteen years, and I am convinced that memorising formulas means nothing if a student cannot see the logic behind them. My lessons are built on clear explanations, visual examples and a great deal of independent practice.",
-      "bio2": "I prepare students for national exams, olympiads and international competitions — both one to one and in small groups.",
-      "statusTitle": "Enrolment is open",
-      "statusNote": "Autumn groups — online and on site",
-      "primaryCta": "Explore courses",
-      "secondaryCta": "Interactive tools"
+    "index": {
+      "title": "MathLab · Mathematics resources and tools",
+      "badge": "Open workspace / catalogue",
+      "searchLabel": "Search the catalogue",
+      "searchPlaceholder": "Find a topic, formula or calculator…",
+      "empty": "No matching entry."
     },
-    "stats": {
-      "title": "Achievements and statistics",
+    "slider": {
+      "title": "Blog",
+      "prev": "Previous article",
+      "next": "Next article",
+      "goTo": "Article {n}"
+    },
+    "modules": {
+      "title": "Workspaces",
       "items": {
-        "experience": {
-          "value": "15+",
-          "label": "years of experience",
-          "hint": "School, university and private tutoring"
+        "compute": {
+          "title": "Computational tools",
+          "links": {
+            "graphing": "Graphing",
+            "equations": "Equation solvers",
+            "ode": "Differential equations",
+            "matrices": "Linear algebra"
+          }
         },
-        "students": {
-          "value": "1000+",
-          "label": "students taught",
-          "hint": "From every region of Georgia"
+        "reference": {
+          "title": "Theory reference & formulas",
+          "links": {
+            "algebra": "Algebra",
+            "geometry": "Geometry",
+            "calculus": "Calculus"
+          }
         },
-        "olympiad": {
-          "value": "50+",
-          "label": "olympiad winners",
-          "hint": "National and international rounds"
+        "problems": {
+          "title": "Problem bank",
+          "links": {
+            "school": "School",
+            "olympiad": "Olympiad",
+            "university": "University"
+          }
         },
-        "passRate": {
-          "value": "100%",
-          "label": "exam pass rate",
-          "hint": "Statistics for the past five years"
+        "schedule": {
+          "title": "Lesson schedule and groups",
+          "links": {
+            "national": "National exams · 2–3 times a week · online / on site",
+            "school": "School mathematics · twice a week · grades V–XI",
+            "olympiad": "Olympiad · twice a week · 2 hours",
+            "university": "Higher mathematics · flexible hours · online"
+          }
         }
       }
     },
-    "testimonials": {
-      "eyebrow": "Student results",
-      "title": "Success stories",
-      "description": "My work is described best by what my students achieve — from university admission to olympiad medals.",
-      "items": [
-        {
-          "name": "Nino Kvaratskhelia",
-          "achievement": "Tbilisi State University",
-          "result": "National exam — 100%",
-          "quote": "I was always afraid of mathematics until I started studying with Shota. Within a year I learned to see the structure of a problem and scored full marks in the exam."
-        },
-        {
-          "name": "Luka Maisuradze",
-          "achievement": "International Mathematical Olympiad",
-          "result": "Bronze medal",
-          "quote": "We worked through olympiad problems every week. What helped most was that he never handed me a ready answer — he made me think and led me to the solution myself."
-        },
-        {
-          "name": "Ana Tskitishvili",
-          "achievement": "Free University of Tbilisi",
-          "result": "Mathematics — 98 points",
-          "quote": "Geometry became completely clear after the visual models and interactive graphs. Today I help my own classmates with the difficult topics."
-        }
-      ]
+    "lookup": {
+      "title": "Quick access",
+      "launch": "Open",
+      "columns": {
+        "name": "Name",
+        "kind": "Type",
+        "action": "Launch"
+      },
+      "kinds": {
+        "calculator": "Calculator",
+        "formula": "Formula"
+      },
+      "rows": {
+        "graphing": "Graphing calculator",
+        "equations": "Equation solver",
+        "matrices": "Matrices and linear algebra",
+        "calculus": "Derivatives and integrals",
+        "ode": "Differential equations",
+        "triangle": "Triangle solver",
+        "formulas": "Formula sheet",
+        "identities": "Algebraic identities",
+        "unitCircle": "Unit circle"
+      }
+    }
+  },
+  "toolsPage": {
+    "meta": {
+      "title": "Interactive tools",
+      "description": "Calculators, solvers, visualisers, a formula reference and mathematical challenges in one place."
     },
-    "resources": {
-      "eyebrow": "Platform sections",
-      "title": "Where shall we start?",
-      "description": "Choose a direction: study materials, interactive tools or your personal space for assignments.",
-      "cta": "Open",
+    "hero": {
+      "eyebrow": "Tools and widgets",
+      "title": "Interactive mathematics space",
+      "subtitle": "Calculators, visualisers, a formula reference and challenges — everything in one place, so you can see and understand mathematics, not just memorise it.",
+      "searchLabel": "Search tools",
+      "searchPlaceholder": "Find a tool…",
+      "empty": "No tools match this search. Try another word or pick a category.",
+      "resultCount": "{count} tools"
+    },
+    "filters": {
+      "aria": "Category filter",
+      "all": "All"
+    },
+    "openTool": "Open tool",
+    "tool": {
+      "back": "Back to tools",
+      "comingSoon": "The interactive module is coming soon",
+      "comingSoonText": "This page already opens from the catalogue. The full tool will appear here when it is ready."
+    },
+    "sections": {
+      "calculators": {
+        "title": "Calculators and solvers",
+        "subtitle": "Graphs, equations, geometry, calculus and statistics — the full solver catalogue.",
+        "filter": "Calculators"
+      },
+      "advanced": {
+        "title": "Advanced mathematics and analysis",
+        "subtitle": "Derivatives, matrices, vector fields, and differential equations in an interactive visual laboratory.",
+        "filter": "Higher maths"
+      },
+      "applied": {
+        "title": "Applied mathematics",
+        "subtitle": "Mathematical modeling, statistics, financial analysis, dynamical systems, and game theory in action.",
+        "filter": "Applied"
+      },
+      "exam": {
+        "title": "Exams and preparation",
+        "subtitle": "National exams, olympiads, standardized international tests, and timed mock environments with automated scoring.",
+        "filter": "Exams"
+      },
+      "teacher": {
+        "title": "Teacher lab",
+        "subtitle": "Free, practical tools to generate worksheets, visualize concepts, and manage classroom time without logging in.",
+        "filter": "Teacher"
+      },
+      "formulas": {
+        "title": "Formulas",
+        "subtitle": "A complete KaTeX formula sheet, standard constants, algebraic identities, and calculus tables in one searchable place.",
+        "filter": "Formulas"
+      },
+      "widgets": {
+        "title": "Interactive widgets and resources",
+        "subtitle": "Visual proofs, mental math trainers, daily problems, and dynamic simulations that turn mathematical practice into an intuitive habit.",
+        "filter": "Widgets"
+      },
+      "games": {
+        "title": "Gamification and challenges",
+        "subtitle": "Speed arithmetic, fractals, topological puzzles, and interactive math challenges built to engage and test intuition.",
+        "filter": "Games"
+      }
+    },
+    "items": {
+      "graphing": {
+        "title": "Function graphs",
+        "description": "Visualise functions, compare several graphs and watch parameters change in real time.",
+        "badge": "Graph"
+      },
+      "equations": {
+        "title": "Equation solver",
+        "description": "Step-by-step solutions of linear, quadratic and polynomial equations with every transformation shown.",
+        "badge": "Step-by-step"
+      },
+      "fractions": {
+        "title": "Fractions and percentages",
+        "description": "Add, multiply and simplify fractions and convert percentages without arithmetic slips.",
+        "badge": "Foundations"
+      },
+      "systemSolver": {
+        "title": "Systems of equations",
+        "description": "Solve 2- and 3-variable linear and nonlinear systems by substitution, addition and matrix methods.",
+        "badge": "Algebra"
+      },
+      "polynomials": {
+        "title": "Polynomials and factoring",
+        "description": "Factor polynomials, find roots and divide using long division.",
+        "badge": "Algebra"
+      },
+      "inequalities": {
+        "title": "Inequalities and intervals",
+        "description": "Solve linear, quadratic and absolute-value inequalities with interval visualisation on the number line.",
+        "badge": "Algebra"
+      },
+      "logarithms": {
+        "title": "Logarithms and exponents",
+        "description": "Simplify logarithmic expressions, change of base, and exponential equations.",
+        "badge": "Algebra"
+      },
+      "triangle": {
+        "title": "Triangle solver",
+        "description": "Find every side, angle, area and radius of a triangle with the laws of sines and cosines.",
+        "badge": "Geometry"
+      },
+      "unitCircle": {
+        "title": "Unit circle",
+        "description": "Convert degrees ⟷ radians and read exact radical values of the trigonometric functions.",
+        "badge": "Geometry"
+      },
+      "geometry": {
+        "title": "2D / 3D solid geometry",
+        "description": "Compute perimeter, area, surface and volume for prisms, pyramids, cones and spheres.",
+        "badge": "Geometry"
+      },
+      "vectors": {
+        "title": "Coordinate geometry and vectors",
+        "description": "Distance between points, midpoint, the equation of a line, dot product and cross product.",
+        "badge": "Geometry"
+      },
+      "derivatives": {
+        "title": "Derivatives and limits",
+        "description": "Differentiate step by step (chain and product rules) and evaluate limits with L'Hôpital's rule.",
+        "badge": "Calculus"
+      },
+      "integrals": {
+        "title": "Integrals lab",
+        "description": "Compute definite and indefinite integrals step by step and visualise area under a curve.",
+        "badge": "Calculus"
+      },
+      "ode": {
+        "title": "Differential equations (ODE)",
+        "description": "Solve first- and second-order equations and run a numerical simulation with Runge–Kutta (RK4).",
+        "badge": "Calculus"
+      },
+      "matrices": {
+        "title": "Matrix lab",
+        "description": "Multiply matrices, compute determinants and inverses, apply Gaussian elimination and find eigenvalues.",
+        "badge": "Linear Algebra"
+      },
+      "combinatorics": {
+        "title": "Combinatorics",
+        "description": "Permutations (P), combinations (C), arrangements (A) and binomial coefficients.",
+        "badge": "Probability"
+      },
+      "statistics": {
+        "title": "Statistics and regression analysis",
+        "description": "Data analysis, linear regression, variance, standard deviation, correlation and histograms.",
+        "badge": "Stats"
+      },
+      "sequences": {
+        "title": "Sequences and series",
+        "description": "The nth term of arithmetic and geometric progressions, the sum of the first n terms, and series convergence.",
+        "badge": "Foundations"
+      },
+      "numberTheory": {
+        "title": "Number theory (GCD / LCM)",
+        "description": "Greatest common divisor, least common multiple, prime factorisation and modular arithmetic.",
+        "badge": "Foundations"
+      },
+      "finance": {
+        "title": "Financial mathematics",
+        "description": "Compound interest, annuity payments, the effect of inflation, and future investment value (NPV/FV).",
+        "badge": "Finance"
+      },
+      "calculusSolver": {
+        "title": "Derivatives and integrals",
+        "description": "Differentiate and integrate a single-variable function with stepwise transformations, critical points and an area graph.",
+        "badge": "Analysis"
+      },
+      "linearAlgebra": {
+        "title": "Matrices and linear algebra",
+        "description": "Matrix multiplication, determinants, inverses, Gaussian elimination and eigenvalues.",
+        "badge": "Algebra"
+      },
+      "odeLab": {
+        "title": "Differential equations",
+        "description": "Analytic solutions of first- and second-order ODEs and an RK4 numerical simulation.",
+        "badge": "ODE"
+      },
+      "limitsSeries": {
+        "title": "Limits and infinite series",
+        "description": "One-sided and two-sided limits (L'Hôpital), Taylor expansions and convergence tests.",
+        "badge": "Calculus"
+      },
+      "multivariable": {
+        "title": "Multivariable analysis (3D)",
+        "description": "Partial derivatives, the gradient, double/triple integrals and interactive 3D surfaces z = f(x, y).",
+        "badge": "3D Analysis"
+      },
+      "vectorCalculus": {
+        "title": "Vector fields and analysis",
+        "description": "Visualise vector fields and compute divergence, curl, and line/surface integrals.",
+        "badge": "Vectors"
+      },
+      "complexAnalysis": {
+        "title": "Complex numbers and the Argand plane",
+        "description": "Algebraic and trigonometric forms, Euler's formula, roots, and visualisation of complex functions.",
+        "badge": "Complex"
+      },
+      "transforms": {
+        "title": "Fourier and Laplace transforms",
+        "description": "Continuous and discrete Fourier transforms, harmonic decomposition of signals, and a Laplace transform lab.",
+        "badge": "Transforms"
+      },
+      "formulas": {
+        "title": "Formula sheet with KaTeX search",
+        "description": "Search by topic and copy ready LaTeX for lessons, tests and papers.",
+        "badge": "KaTeX"
+      },
+      "problem": {
+        "title": "Problem of the day",
+        "description": "A new thinking problem every day — from school level to olympiad, with hints and a full solution.",
+        "badge": "Daily"
+      },
+      "quizzes": {
+        "title": "Interactive quizzes",
+        "description": "Short topic tests with instant checking, explanations and score tracking.",
+        "badge": "Practice"
+      },
+      "duel": {
+        "title": "Speed math duel",
+        "description": "A 60-second mental arithmetic and reaction challenge — practice speed and accuracy.",
+        "badge": "60s"
+      },
+      "lissajous": {
+        "title": "Math art and Lissajous generator",
+        "description": "A generator of Lissajous figures, epicycloids and parametric curves — mathematics that draws itself.",
+        "badge": "Art"
+      },
+      "game24": {
+        "title": "The 24 arithmetic challenge",
+        "description": "Use four random numbers and the basic operations to make 24 in the shortest time.",
+        "badge": "Puzzle"
+      },
+      "fractalExplorer": {
+        "title": "Fractal explorer",
+        "description": "Interactive zoom into the infinite Mandelbrot and Julia sets, and the mathematics of chaos.",
+        "badge": "Fractals"
+      },
+      "tangram": {
+        "title": "Tangram and spatial geometry",
+        "description": "Assemble geometric figures, transform polygons and train spatial thinking.",
+        "badge": "Shapes"
+      },
+      "towerOfHanoi": {
+        "title": "Tower of Hanoi and recursion",
+        "description": "The classic recursive puzzle for optimizing moves and discovering binary patterns.",
+        "badge": "Logic"
+      },
+      "mapColoring": {
+        "title": "Topology and the four-color challenge",
+        "description": "Color maps and graphs with as few colors as possible so that adjacent vertices never match.",
+        "badge": "Topology"
+      },
+      "primeMaze": {
+        "title": "Prime maze and number-theory quest",
+        "description": "Find a path using number theory, divisibility rules and prime factors.",
+        "badge": "Numbers"
+      },
+      "flashcards": {
+        "title": "Formula flashcards",
+        "description": "Spaced-repetition cards for remembering formulas and core theorems easily.",
+        "badge": "Memory"
+      },
+      "visualProofs": {
+        "title": "Visual proofs without words",
+        "description": "Dynamic geometric demonstrations of theorems (Pythagoras, areas, angle sum) without words.",
+        "badge": "Visual"
+      },
+      "mentalMath": {
+        "title": "Mental math speed trainer",
+        "description": "Timed quick calculations — multiplication tables, percentages, squares and arithmetic drills.",
+        "badge": "Speed"
+      },
+      "converters": {
+        "title": "Units and number-base converter",
+        "description": "Convert angles (degrees ⟷ radians) and number systems (binary, decimal, hexadecimal).",
+        "badge": "Convert"
+      },
+      "paradoxes": {
+        "title": "Math paradoxes and experiments",
+        "description": "The Monty Hall problem, Buffon's needle experiment (finding π) and interactive chaos simulations.",
+        "badge": "Lab"
+      },
+      "functionSandbox": {
+        "title": "Function transformation playground",
+        "description": "Shift, stretch and reflect graphs with sliders to build an intuitive sense of how functions behave.",
+        "badge": "Sandbox"
+      },
+      "probability": {
+        "title": "Probability and combinatorics",
+        "description": "Random trials, distributions, binomial models and combinatorial calculations in real time.",
+        "badge": "Chance"
+      },
+      "physicsSim": {
+        "title": "Physics simulations and chaos",
+        "description": "A harmonic pendulum, projectile motion with drag, and the Lorenz attractor.",
+        "badge": "Physics"
+      },
+      "gameTheory": {
+        "title": "Game theory and strategies",
+        "description": "The prisoner's dilemma, Nash equilibrium, matrix games and mathematical models of decision-making.",
+        "badge": "Decisions"
+      },
+      "graphTheory": {
+        "title": "Graph theory and networks",
+        "description": "Shortest paths (Dijkstra), minimum spanning trees (Kruskal) and network-flow models.",
+        "badge": "Networks"
+      },
+      "optimization": {
+        "title": "Optimization and the simplex method",
+        "description": "Linear programming: maximise or minimise a function under constraints and allocate resources.",
+        "badge": "Optimization"
+      },
+      "nationalExam": {
+        "title": "National exam trainer",
+        "description": "Typical exam papers, marking schemes and time control in the unified national exam format.",
+        "badge": "Exam"
+      },
+      "olympiadPrep": {
+        "title": "Olympiad problem bank",
+        "description": "Hard, non-standard problems with hints and full solutions — from the school round to IMO level.",
+        "badge": "Olympiad"
+      },
+      "mockTests": {
+        "title": "Full timed mock tests",
+        "description": "Testing under a real time limit, with automatic scores and a detailed analysis of mistakes.",
+        "badge": "Test"
+      },
+      "schoolDiagnostics": {
+        "title": "School diagnostic tests",
+        "description": "Staged and end-of-year tests for grades V–XI, to close gaps in specific topics.",
+        "badge": "School"
+      },
+      "internationalTests": {
+        "title": "International tests (SAT / GRE)",
+        "description": "Practice modules for SAT Math and GRE Quantitative, plus an archive of English-language papers.",
+        "badge": "International"
+      },
+      "mistakeAnalysis": {
+        "title": "Mistake analysis lab",
+        "description": "A personal archive of test errors and repeated practice on the problems that cause trouble.",
+        "badge": "Adaptive"
+      },
+      "formulaBlitz": {
+        "title": "Formula blitz quiz",
+        "description": "Fast 3-minute drills for instant recall of formulas, theorems and identities.",
+        "badge": "Speed"
+      },
+      "universityExams": {
+        "title": "University exam papers",
+        "description": "Midterm and final papers in higher mathematics, calculus and differential equations.",
+        "badge": "University"
+      },
+      "worksheetBuilder": {
+        "title": "Printable worksheet builder",
+        "description": "Build standard practice sheets quickly and export a PDF ready to print.",
+        "badge": "Printable"
+      },
+      "whiteboard": {
+        "title": "Digital math whiteboard",
+        "description": "A quick online board with a coordinate grid, simple figures and formula visualisation.",
+        "badge": "Board"
+      },
+      "diagramExporter": {
+        "title": "Formula and diagram export",
+        "description": "Turn LaTeX formulas and geometric figures into PNG/SVG images to drop into tests.",
+        "badge": "Export"
+      },
+      "classroomTimer": {
+        "title": "Classroom timer",
+        "description": "Time exercises and quick blitz quizzes, with an audio cue.",
+        "badge": "Timer"
+      },
+      "gradeCalculator": {
+        "title": "Simple grade calculator",
+        "description": "A quick calculator for percentage scores from maximum marks and marks obtained.",
+        "badge": "Grades"
+      },
+      "identities": {
+        "title": "Algebraic identities and factoring",
+        "description": "Short multiplication formulas, powers, roots, logarithms and polynomial transformations.",
+        "badge": "Identities"
+      },
+      "constants": {
+        "title": "Mathematical constants and symbols",
+        "description": "π, e, i, the golden ratio (φ) and the meaning, precision and definitions of the main symbols.",
+        "badge": "Constants"
+      },
+      "formulaGeometry": {
+        "title": "Geometry and mensuration",
+        "description": "Perimeter, area, volume and spherical geometry formulas for 2D and 3D figures.",
+        "badge": "Geometry"
+      },
+      "formulaTrig": {
+        "title": "Trigonometric identities",
+        "description": "Core identities, double-angle and conversion formulas, and a table of exact function values.",
+        "badge": "Trig"
+      },
+      "formulaCalculus": {
+        "title": "Derivatives and integrals table",
+        "description": "Differentiation rules for elementary functions, standard integrals and a cheat sheet of integration methods.",
+        "badge": "Calculus"
+      },
+      "formulaSeries": {
+        "title": "Series, Taylor expansions and progressions",
+        "description": "Arithmetic and geometric progressions, Taylor series and the main convergence tests.",
+        "badge": "Series"
+      },
+      "formulaVectors": {
+        "title": "Vectors and analytic geometry",
+        "description": "Dot and cross products, and equations of a plane and a line in 2D and 3D coordinates.",
+        "badge": "Vectors"
+      }
+    }
+  },
+  "blogPage": {
+    "meta": {
+      "title": "Blog and resources",
+      "description": "Articles, historical overviews, biographies of mathematicians and downloadable study materials."
+    },
+    "hero": {
+      "eyebrow": "Blog and materials",
+      "title": "Mathematical blog and resources",
+      "subtitle": "Articles, historical overviews, biographies of famous mathematicians and study materials.",
+      "searchLabel": "Search articles",
+      "searchPlaceholder": "Find an article…",
+      "empty": "No article or file matches this search. Try another word or pick a category.",
+      "articleCount": "{count} articles"
+    },
+    "filters": {
+      "aria": "Category filter",
+      "all": "All",
+      "history": "History",
+      "biographies": "Biographies",
+      "funFacts": "Fun facts",
+      "guides": "Theory and guides",
+      "downloads": "PDF downloads"
+    },
+    "categories": {
+      "history": "History",
+      "biographies": "Biography",
+      "funFacts": "Fun fact",
+      "guides": "Guide",
+      "paradoxes": "Paradox"
+    },
+    "tags": {
+      "geometry": "Geometry",
+      "algebra": "Algebra",
+      "analysis": "Analysis",
+      "history": "History",
+      "biography": "Biography",
+      "exam": "Exam",
+      "formulas": "Formulas",
+      "paradox": "Paradox",
+      "arithmetic": "Arithmetic",
+      "art": "Art"
+    },
+    "readTime": "{minutes} min",
+    "readMore": "Read the full article",
+    "coverAlt": "Cover image for {title}",
+    "featuredLabel": "Featured article",
+    "articlesTitle": "Articles",
+    "downloads": {
+      "title": "Downloadable resources",
+      "subtitle": "Cheat sheets, exam archives and formula PDFs — for lessons and independent practice.",
+      "cta": "Download"
+    },
+    "fileCategories": {
+      "cheatSheets": "Cheat sheet",
+      "examArchives": "Archive",
+      "formulas": "Formulas"
+    },
+    "posts": {
+      "euclid-geometry": {
+        "title": "From Euclid to modern geometry",
+        "excerpt": "From Euclid’s axioms to the spaces of Riemann and Lobachevsky — what changed in two thousand years, and what still sits at the heart of school geometry."
+      },
+      "euler-biography": {
+        "title": "Leonhard Euler — the mathematician who saw everything",
+        "excerpt": "Even after he went blind, Euler kept writing formulas that still shape analysis, graphs and mechanics. A short life story and a few ideas for the classroom."
+      },
+      "story-of-zero": {
+        "title": "The zero that did not exist",
+        "excerpt": "How zero appeared in India, travelled through Arabic mathematics, and why Europe found it so hard to accept."
+      },
+      "exam-writeup": {
+        "title": "How to write a solution in the national exam",
+        "excerpt": "The order of the steps, what must appear on the page, and how to avoid the technical slips that cost marks."
+      },
+      "zeno-paradoxes": {
+        "title": "Zeno’s paradoxes and the infinite sum",
+        "excerpt": "Will Achilles never catch the tortoise? Series and limits explain what looked impossible to ancient philosophy."
+      },
+      "hypatia": {
+        "title": "Hypatia of Alexandria",
+        "excerpt": "One of the first well-known women mathematicians of the ancient world — astronomy, conic sections and the school of Alexandria."
+      },
+      "golden-ratio": {
+        "title": "The golden ratio: myth and mathematics",
+        "excerpt": "φ in spirals, rectangles and art — where the real mathematics is, and where it is only a beautiful story."
+      },
+      "katex-in-class": {
+        "title": "LaTeX and KaTeX in the classroom",
+        "excerpt": "How to write a formula quickly, how to keep the notation clear, and how to use the reference on the board."
+      }
+    },
+    "files": {
+      "formula-cheatsheet": {
+        "title": "Formula cheat sheet",
+        "description": "The core school formulas in one PDF — algebra, geometry and the start of analysis."
+      },
+      "national-exam-archive": {
+        "title": "National exam archive",
+        "description": "Papers from 2018–2025 with answers — for practice and classroom work."
+      },
+      "geometry-workbook": {
+        "title": "Geometry constructions workbook",
+        "description": "A sequence of constructions, diagrams and short problems for years 7–9."
+      },
+      "olympiad-set": {
+        "title": "Olympiad problem set",
+        "description": "School and regional-round problems with hints and full solutions."
+      }
+    }
+  },
+  "coursesPage": {
+    "meta": {
+      "title": "Courses and programmes",
+      "description": "One-to-one and small-group mathematics tuition — on site and online, for exam candidates, school pupils and university students."
+    },
+    "hero": {
+      "eyebrow": "Courses",
+      "title": "Study programmes and courses",
+      "subtitle": "Individual and group mathematics tuition — on site (at home) and online."
+    },
+    "highlights": {
+      "onsite": "Lessons on site",
+      "online": "Online lessons",
+      "lms": "A private LMS cabinet for parents"
+    },
+    "filters": {
+      "aria": "Programme filter",
+      "all": "All programmes",
+      "national": "Exam candidates",
+      "school": "School maths (years 5–11)",
+      "olympiad": "Olympiads",
+      "university": "Higher mathematics"
+    },
+    "cta": "Book a consultation",
+    "scheduleLabel": "Schedule",
+    "empty": "No programme in this category.",
+    "items": {
+      "national": {
+        "title": "National exam preparation (school leavers)",
+        "badges": ["Online / on site", "One-to-one or a small group"],
+        "schedule": "2–3 times a week (1.5–2 hours)",
+        "features": [
+          "The full exam syllabus, taught and consolidated",
+          "Monthly timed mock tests",
+          "Access to the online platform (assignments, formulas, analytics)",
+          "A monthly report for the parent"
+        ]
+      },
+      "school": {
+        "title": "School mathematics boost (years 5–11)",
+        "badges": ["Online / on site", "Small group of 3–4 pupils"],
+        "schedule": "Twice a week (1.5 hours)",
+        "features": [
+          "Stronger school grades and gaps filled in",
+          "Homework monitored and worked through",
+          "Interactive quizzes and games to keep pupils engaged"
+        ]
+      },
+      "olympiad": {
+        "title": "Olympiad mathematics and logic",
+        "badges": ["Intensive group", "Online / on site"],
+        "schedule": "Twice a week (2 hours)",
+        "features": [
+          "Non-standard and combinatorial problems",
+          "National and international olympiad archives",
+          "Training in critical and logical thinking"
+        ]
+      },
+      "university": {
+        "title": "Higher mathematics (for students)",
+        "badges": ["One-to-one", "Online"],
+        "schedule": "Flexible timetable / exam intensive",
+        "features": [
+          "Calculus, integrals, differential equations",
+          "Linear algebra and matrices",
+          "University exam papers worked through"
+        ]
+      }
+    },
+    "process": {
+      "title": "How we work",
+      "subtitle": "Four steps from the first conversation to steady progress.",
+      "steps": {
+        "diagnose": {
+          "title": "Diagnostic interview",
+          "text": "A free check of the current level and a clear view of the goals."
+        },
+        "plan": {
+          "title": "A personal plan",
+          "text": "A timetable and a set of materials built around those goals."
+        },
+        "practice": {
+          "title": "Active lessons",
+          "text": "Theory plus interactive practice on the platform."
+        },
+        "monitor": {
+          "title": "Progress monitoring",
+          "text": "Progress charts for the pupil and the parent."
+        }
+      }
+    },
+    "faq": {
+      "title": "Frequently asked questions",
       "items": {
+        "online": {
+          "question": "How are the online lessons run?",
+          "answer": "The lesson is a video call with a digital board and the platform tools. You need a stable connection, a camera and a microphone — we set the rest up together in the first session."
+        },
+        "missed": {
+          "question": "What happens if a lesson is missed?",
+          "answer": "With advance notice the lesson is postponed. A lesson missed without notice is lost, but the materials, recording and assignments stay on the platform."
+        },
+        "parent": {
+          "question": "How does a parent follow the pupil’s progress?",
+          "answer": "The parent receives a monthly report and can see attendance, assignments and test results in a private LMS cabinet."
+        },
+        "switch": {
+          "question": "Can we move from a group to one-to-one lessons?",
+          "answer": "Yes. Depending on the level and the goal we can move from a group to one-to-one, or the other way around, if a place is available."
+        }
+      }
+    },
+    "banner": {
+      "title": "Ready to learn mathematics clearly and in depth?",
+      "subtitle": "Book a free first conversation and choose the format that works for you.",
+      "cta": "Book a free conversation"
+    }
+  },
+  "contactPage": {
+    "meta": {
+      "title": "Contact and consultation",
+      "description": "Book a free diagnostic conversation and choose on-site or online tuition."
+    },
+    "hero": {
+      "eyebrow": "Contact",
+      "title": "Get in touch / Consultation",
+      "subtitle": "Book a free diagnostic conversation and choose the study format that suits you."
+    },
+    "channels": {
+      "title": "Direct contact",
+      "phone": "Phone",
+      "email": "Email",
+      "location": "Address",
+      "locationNote": "On site (at home) and online",
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram",
+      "whatsappAria": "Chat on WhatsApp",
+      "telegramAria": "Chat on Telegram"
+    },
+    "hours": {
+      "title": "Consultation hours",
+      "value": "Monday – Saturday, 10:00 – 20:00"
+    },
+    "assessment": {
+      "title": "Free assessment",
+      "text": "The first 20-minute consultation and level assessment is completely free."
+    },
+    "form": {
+      "title": "Book a consultation",
+      "subtitle": "Fill in the form and we will get back to you to agree a convenient time.",
+      "name": "Full name",
+      "namePlaceholder": "e.g. Nino Beridze",
+      "phone": "Phone number",
+      "phonePlaceholder": "+995 5XX XX XX XX",
+      "role": "Who is filling this in",
+      "course": "Programme of interest",
+      "coursePlaceholder": "Choose a programme",
+      "format": "Preferred format",
+      "message": "Additional notes",
+      "messageOptional": "(optional)",
+      "messagePlaceholder": "Year group, goal or a convenient time…",
+      "submit": "Send application",
+      "sending": "Sending…",
+      "successTitle": "Application received",
+      "successText": "We will contact you by phone or messenger shortly to arrange the free conversation.",
+      "successAgain": "Send another"
+    },
+    "roles": {
+      "parent": "Parent",
+      "pupil": "Pupil",
+      "student": "Student"
+    },
+    "courses": {
+      "national": "National exams (applicants)",
+      "school": "School mathematics (grades V–XI)",
+      "olympiad": "Olympiad mathematics",
+      "university": "Higher mathematics (students)",
+      "other": "Other / general consultation"
+    },
+    "formats": {
+      "onsite": "On site (at home)",
+      "online": "Online",
+      "either": "No preference"
+    },
+    "errors": {
+      "name": "Please enter your full name.",
+      "phone": "Please enter a valid phone number.",
+      "role": "Please choose who is filling this in.",
+      "course": "Please choose a programme.",
+      "format": "Please choose a preferred format."
+    },
+    "map": {
+      "title": "How to find us",
+      "subtitle": "Lessons in Tbilisi on site — or online, wherever you are.",
+      "pin": "Tbilisi"
+    }
+  },
+  "auth": {
+    "login": {
+      "metaTitle": "Log in",
+      "metaDescription": "Sign in to the teacher workspace or the student learning space.",
+      "eyebrow": "Account",
+      "title": "Sign in to the platform",
+      "subtitle": "Enter your role workspace — the teacher cabinet or the student learning space.",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Log in",
+      "submitting": "Signing in…",
+      "error": "Email or password is incorrect.",
+      "demoTitle": "Demo accounts",
+      "demoTeacher": "Teacher: teacher@mathlab.ge",
+      "demoStudent": "Student: student@mathlab.ge",
+      "demoPassword": "Password: mathlab-demo"
+    }
+  },
+  "dashboard": {
+    "workspace": "Workspace",
+    "openWorkspace": "Open your cabinet",
+    "signOut": "Sign out",
+    "navLabel": "Workspace navigation",
+    "collapseNav": "Collapse navigation",
+    "expandNav": "Expand navigation",
+    "openNav": "Open navigation",
+    "closeNav": "Close navigation",
+    "teacher": {
+      "role": "Teacher",
+      "nav": {
+        "overview": "Overview",
+        "journal": "Classroom journal",
+        "homework": "Homework review",
+        "problems": "Problem bank",
+        "reports": "Reports",
+        "lab": "Teacher lab",
+        "tools": "Tools",
+        "students": "Students"
+      },
+      "pages": {
+        "overview": {
+          "title": "Teacher overview",
+          "subtitle": "Classroom journal, assignments and reports in one workspace."
+        },
+        "journal": {
+          "title": "Classroom journal",
+          "subtitle": "Attendance, grades and lesson notes by class."
+        },
+        "homework": {
+          "title": "Homework review",
+          "subtitle": "View submitted work, comment and grade."
+        },
+        "problems": {
+          "title": "Problem bank",
+          "subtitle": "Pick problems by topic, difficulty and year group."
+        },
+        "reports": {
+          "title": "Reports",
+          "subtitle": "Progress, error maps and class results."
+        },
+        "lab": {
+          "title": "Teacher lab",
+          "subtitle": "Worksheets, the whiteboard and classroom tools for the lesson."
+        },
         "tools": {
-          "title": "Interactive tools",
-          "description": "Calculators, a function graph visualiser and a matrix solver."
+          "title": "Teaching tools",
+          "subtitle": "Calculators, graphs and formula sheets for class work."
+        },
+        "students": {
+          "title": "Students",
+          "subtitle": "Groups, enrolments and each student’s progress."
+        }
+      },
+      "problemBank": {
+        "eyebrow": "Workspace",
+        "searchLabel": "Search problems",
+        "searchPlaceholder": "Text, topic or formula…",
+        "filtersTitle": "Filters",
+        "resetFilters": "Clear filters",
+        "allTopics": "All topics",
+        "allDifficulties": "All difficulties",
+        "allYears": "All year groups",
+        "allSources": "All sources",
+        "results": "{count} problems",
+        "empty": "No problems match these filters.",
+        "emptyHint": "Adjust the filters or generate a new set.",
+        "previewEmpty": "Select a problem from the list to see the prompt and solution.",
+        "prompt": "Prompt",
+        "solution": "Solution",
+        "showSolution": "Show solution",
+        "hideSolution": "Hide solution",
+        "addToSet": "Add to set",
+        "removeFromSet": "Remove from set",
+        "inSet": "In set",
+        "lessonSet": "Lesson set",
+        "lessonSetEmpty": "No problems selected yet.",
+        "clearSet": "Clear set",
+        "listLabel": "Problem list",
+        "previewLabel": "Problem preview",
+        "soon": "Soon",
+        "topics": {
+          "algebra": "Algebra",
+          "equations": "Equations",
+          "geometry": "Geometry",
+          "functions": "Functions",
+          "percent": "Percentages",
+          "calculus": "Calculus",
+          "vectors": "Vectors"
+        },
+        "difficulties": {
+          "easy": "Easy",
+          "medium": "Medium",
+          "hard": "Hard"
+        },
+        "years": {
+          "7": "Year 7",
+          "8": "Year 8",
+          "9": "Year 9",
+          "10": "Year 10",
+          "11": "Year 11",
+          "12": "Year 12"
+        },
+        "sources": {
+          "bank": "Bank",
+          "generated": "Generated",
+          "ai": "Verified"
+        },
+        "instructions": {
+          "solve": "Solve the equation",
+          "evaluate": "Evaluate",
+          "findDerivative": "Find the derivative",
+          "percentOf": "Find the value",
+          "missingSide": "Find the missing side",
+          "expand": "Expand the expression"
+        },
+        "tools": {
+          "label": "Teacher tools",
+          "generate": {
+            "title": "Generate",
+            "hint": "New problems by topic, year group and difficulty."
+          },
+          "import": {
+            "title": "Import",
+            "hint": "Upload your own problems as LaTeX or text."
+          },
+          "variants": {
+            "title": "Variants",
+            "hint": "Same template, different numbers — fair tests for a class."
+          },
+          "worksheet": {
+            "title": "Worksheet",
+            "hint": "Print the selected set in the teacher lab."
+          },
+          "assign": {
+            "title": "Assign",
+            "hint": "Send the set to a class as homework."
+          },
+          "graph": {
+            "title": "Graph",
+            "hint": "Open a function problem in the graphing calculator."
+          }
+        },
+        "generate": {
+          "title": "Generate problems",
+          "topic": "Topic",
+          "difficulty": "Difficulty",
+          "year": "Year group",
+          "source": "Source",
+          "count": "Count",
+          "submit": "Generate",
+          "close": "Close generator",
+          "keep": "Keep in set",
+          "discard": "Discard",
+          "batchHint": "Generated problems appear in the list. Keep them in the set or discard them.",
+          "mode": "Mode",
+          "modeTemplates": "Templates",
+          "modeDiverse": "Different types",
+          "request": "Request",
+          "requestPlaceholder": "e.g. 5 different types of problems on vectors",
+          "requestHint": "The model proposes prompts; the math engine computes the answer.",
+          "busy": "Generating…",
+          "keepAll": "Keep all in set",
+          "errorMissingKey": "GEMINI_API_KEY is required on the server.",
+          "errorFailed": "Generation failed. Try again.",
+          "errorNoneVerified": "No problem passed the math checker. Try a different request.",
+          "errorUnauthorized": "A teacher account is required for this action.",
+          "partial": "Verified {verified} / {requested}."
+        },
+        "variantPanel": {
+          "title": "Similar variants",
+          "hint": "Same formula, new numbers. Math.js computes the answer — no AI.",
+          "submit": "Generate variants",
+          "count": "Count",
+          "close": "Close variants",
+          "needProblem": "Select a problem from the list first.",
+          "needFormula": "This problem has no formula to vary. Generate it with AI first.",
+          "noneVerified": "No clean numbers were found. Try again.",
+          "sourceLabel": "Source problem"
+        },
+        "stats": {
+          "inBank": "In bank",
+          "selected": "In set",
+          "generated": "New"
+        },
+        "actions": {
+          "openLab": "Open teacher lab",
+          "openHomework": "Open homework"
+        }
+      }
+    },
+    "student": {
+      "role": "Student",
+      "nav": {
+        "overview": "Overview",
+        "courses": "My courses",
+        "practice": "Daily practice",
+        "assignments": "Active assignments",
+        "flashcards": "Flashcards",
+        "progress": "Progress",
+        "grades": "Grades"
+      },
+      "pages": {
+        "overview": {
+          "title": "Learning overview",
+          "subtitle": "Courses, assignments and daily practice in one place."
         },
         "courses": {
-          "title": "Preparatory courses",
-          "description": "National exams, olympiads and an intensive school curriculum course."
+          "title": "My courses",
+          "subtitle": "Active programmes, materials and upcoming lessons."
         },
-        "blog": {
-          "title": "Blog and materials",
-          "description": "Theory explained, a formula reference and themed problem sets."
+        "practice": {
+          "title": "Daily practice",
+          "subtitle": "Short drills and the problem of the day to train intuition."
         },
-        "portal": {
-          "title": "Student portal",
-          "description": "Assignments, grade sheet, attendance and lesson recordings."
+        "assignments": {
+          "title": "Active assignments",
+          "subtitle": "Work to submit, deadlines and teacher comments."
+        },
+        "flashcards": {
+          "title": "Flashcards",
+          "subtitle": "Review formulas and theorems with spaced repetition."
+        },
+        "progress": {
+          "title": "Progress",
+          "subtitle": "What you already do well and where you need more practice."
+        },
+        "grades": {
+          "title": "Grades",
+          "subtitle": "Scores, feedback and assignment history."
         }
       }
     }
   },
+  "graphingTool": {
+    "meta": {
+      "title": "Function graphs",
+      "description": "Plot several functions at once, zoom, inspect the derivative, and export a PNG."
+    },
+    "back": "Back to tools",
+    "eyebrow": "Calculator",
+    "functions": "Functions",
+    "addFunction": "Add function",
+    "removeFunction": "Remove function",
+    "toggleVisible": "Show graph",
+    "color": "Curve colour",
+    "expression": "Expression",
+    "expressionPlaceholder": "e.g. x^2 - 4",
+    "invalid": "This expression could not be parsed.",
+    "presets": "Examples",
+    "presetParabola": "Parabola & line",
+    "presetTrig": "Trigonometry",
+    "presetHyperbola": "Hyperbola",
+    "presetCubic": "Cubic function",
+    "presetParams": "Parameters a, b, c, k",
+    "resetView": "Reset view",
+    "zoomIn": "Zoom +",
+    "zoomOut": "Zoom -",
+    "exportPng": "Export PNG",
+    "showDerivative": "Plot the derivative",
+    "showTangent": "Tangent at cursor",
+    "showMarkers": "Special points",
+    "tangentTitle": "Tangent",
+    "tangentSlope": "Slope m",
+    "tangentUnavailable": "No tangent at this point.",
+    "markers": "Special points",
+    "markerRoot": "Root",
+    "markerYIntercept": "Y-intercept",
+    "markerIntersection": "Intersection",
+    "markerMax": "Maximum",
+    "markerMin": "Minimum",
+    "markersEmpty": "No special points in this range.",
+    "integralTitle": "Integral / area",
+    "integralEnable": "Shade the area",
+    "integralFrom": "Start a",
+    "integralTo": "End b",
+    "integralMode": "Mode",
+    "integralSingle": "Single function",
+    "integralBetween": "Area between two curves",
+    "integralFn": "Function",
+    "integralUpper": "Upper function",
+    "integralLower": "Lower function",
+    "integralResult": "Result",
+    "integralError": "The integral could not be computed.",
+    "tableTitle": "Table of values",
+    "tableStart": "Start X",
+    "tableEnd": "End X",
+    "tableStep": "Step",
+    "tableCopy": "Copy",
+    "tableExport": "Export CSV",
+    "tableCopied": "Copied",
+    "tableEmpty": "The table is empty.",
+    "tableX": "x",
+    "syntaxParams": "Parameters: a, b, c, k — adjusted with sliders",
+    "cursor": "Cursor",
+    "cursorEmpty": "Move the pointer over the graph",
+    "domainX": "X range",
+    "domainY": "Y range",
+    "applyDomain": "Apply range",
+    "syntaxTitle": "Syntax",
+    "syntaxPowers": "Powers: x^2, x^(1/3)",
+    "syntaxMult": "Multiplication: 2*x or x * sin(x)",
+    "syntaxTrig": "Trigonometry: sin(x), cos(x), tan(x)",
+    "syntaxConst": "Constants and roots: sqrt(x), PI, E, abs(x), log(x)",
+    "plotError": "The graph could not be drawn.",
+    "loading": "Loading graph…"
+  },
   "footer": {
-    "description": "A mathematics learning platform for students who want to understand the subject deeply — from exam preparation to olympiad problems.",
     "contact": {
       "email": "info@mathlab.ge",
       "phone": "+995 322 00 00 00",
-      "address": "1 Chavchavadze Avenue, Tbilisi"
+      "address": "1 Chavchavadze Avenue, Tbilisi",
+      "telegram": "@mathlabge"
     },
-    "groups": {
-      "platform": {
-        "title": "Platform",
-        "links": {
-          "tools": "Interactive tools",
-          "courses": "Preparatory courses",
-          "blog": "Blog and materials",
-          "formulas": "Formula reference"
-        }
-      },
-      "learning": {
-        "title": "Learning",
-        "links": {
-          "student": "Student portal",
-          "teacher": "Teacher space",
-          "assignments": "Assignments",
-          "login": "Sign in"
-        }
-      },
-      "info": {
-        "title": "Information",
-        "links": {
-          "about": "About me",
-          "pricing": "Prices and packages",
-          "faq": "Frequently asked questions",
-          "contact": "Contact"
-        }
-      }
-    },
-    "copyright": "© {year} MathLab · Shota Mikolaichuki. All rights reserved.",
+    "copyright": "© {year} MathLab",
     "legal": {
       "privacy": "Privacy",
       "terms": "Terms and conditions"

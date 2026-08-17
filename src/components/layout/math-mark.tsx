@@ -3,13 +3,12 @@
  * Drawn as inline SVG (no gradient <defs>) so it can be repeated on a page
  * without duplicate element ids, and stays crisp from 24px to 96px.
  */
-export function MathMark({
-  tone = "dark",
-  className = "size-9",
-}: {
+interface MathMarkProps {
   tone?: "dark" | "light";
   className?: string;
-}) {
+}
+
+export function MathMark({ tone = "dark", className = "size-9" }: MathMarkProps) {
   const isLight = tone === "light";
 
   return (

@@ -35,7 +35,7 @@ export default async function LocaleLayout({
   if (!isLocale(locale)) notFound();
 
   return (
-    <html lang={locale}>
+    <html lang={locale} data-scroll-behavior="smooth">
       <body className="bg-paper text-ink">{children}</body>
     </html>
   );
