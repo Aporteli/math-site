@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum YearGroup {
+  YEAR_7
+  YEAR_8
+  YEAR_9
+  YEAR_10
+  YEAR_11
+  YEAR_12
+}
+
+enum ProblemDifficulty {
+  easy
+  medium
+  hard
+}
+
+enum ProblemSource {
+  bank
+  generated
+  ai
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+}
+
+enum AssignmentStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  RETURNED
+}
+
+/// Platform account. Passwords are stored as hashes, never plaintext.
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STUDENT)
+  imageUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  coursesTaught Course[]      @relation("CourseTeacher")
+  enrollments   Enrollment[]
+  problems      Problem[]
+  problemSets   ProblemSet[]
+  submissions   Submission[]
+  gradesGiven   Grade[]       @relation("GradedBy")
+  attendance    Attendance[]
+  lessonNotes   LessonNote[]
+
+  @@map("users")
+}
+
+/// A taught class / programme. Teacher owns it; students join via Enrollment.
+model Course {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  description String    @db.Text
+  yearGroup   YearGroup
+  locale      String    @db.VarChar(8)
+  teacherId   String
+  teacher     User      @relation("CourseTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  enrollments Enrollment[]
+  assignments Assignment[]
+  problemSets ProblemSet[]
+  attendance  Attendance[]
+  lessonNotes LessonNote[]
+
+  @@index([teacherId])
+  @@map("courses")
+}
+
+/// User -> Course join. LMS chain starts here.
+model Enrollment {
+  id         String           @id @default(cuid())
+  userId     String
+  courseId   String
+  status     EnrollmentStatus @default(ACTIVE)
+  enrolledAt DateTime         @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@map("enrollments")
+}
+
+/// One item in a teacher's problem bank.
+/// Persist templateId + seed + formula/variables — not PDFs or binary files.
+model Problem {
+  id             String            @id @default(cuid())
+  authorId       String
+  templateId     String
+  topic          String            @db.VarChar(64)
+  difficulty     ProblemDifficulty
+  yearGroup      YearGroup
+  source         ProblemSource
+  instructionId  String
+  promptTex      String            @db.Text
+  solutionTex    String            @db.Text
+  seed           Int?
+  graphExpr      String?           @db.Text
+  kind           String?
+  formula        String?           @db.Text
+  variables      Json?
+  promptTemplate String?           @db.Text
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  author User             @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  items  ProblemSetItem[]
+
+  @@index([authorId, topic, difficulty])
+  @@index([yearGroup, source])
+  @@map("problems")
+}
+
+/// Teacher lesson set (what "Add to set" will persist).
+model ProblemSet {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String
+  authorId  String
+  courseId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author      User             @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  course      Course?          @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  items       ProblemSetItem[]
+  assignments Assignment[]
+
+  @@unique([authorId, slug])
+  @@index([authorId])
+  @@index([courseId])
+  @@map("problem_sets")
+}
+
+model ProblemSetItem {
+  id        String @id @default(cuid())
+  setId     String
+  problemId String
+  position  Int
+
+  set     ProblemSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  problem Problem    @relation(fields: [problemId], references: [id], onDelete: Restrict)
+
+  @@unique([setId, problemId])
+  @@index([problemId])
+  @@map("problem_set_items")
+}
+
+/// Course -> Assignment. Optional problemSetId links the lesson set.
+model Assignment {
+  id           String           @id @default(cuid())
+  courseId     String
+  problemSetId String?
+  title        String
+  instructions String?          @db.Text
+  status       AssignmentStatus @default(DRAFT)
+  dueAt        DateTime?
+  publishedAt  DateTime?
+  /// Object-storage URL only — never store PDF/binary in MySQL.
+  attachmentUrl String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  course     Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  problemSet ProblemSet?  @relation(fields: [problemSetId], references: [id], onDelete: SetNull)
+  submissions Submission[]
+
+  @@index([courseId, status])
+  @@index([problemSetId])
+  @@map("assignments")
+}
+
+/// Assignment -> Submission (one per enrolled student).
+model Submission {
+  id            String           @id @default(cuid())
+  assignmentId  String
+  studentId     String
+  status        SubmissionStatus @default(DRAFT)
+  /// Per-problem answers as JSON, not uploaded files.
+  answers       Json?
+  /// Object-storage URL for optional attachments.
+  attachmentUrl String?
+  submittedAt   DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student    User       @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  grade      Grade?
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
+  @@map("submissions")
+}
+
+/// Submission -> Grade.
+model Grade {
+  id           String   @id @default(cuid())
+  submissionId String   @unique
+  graderId     String
+  score        Decimal  @db.Decimal(6, 2)
+  maxScore     Decimal  @db.Decimal(6, 2)
+  comment      String?  @db.Text
+  gradedAt     DateTime @default(now())
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  grader     User       @relation("GradedBy", fields: [graderId], references: [id], onDelete: Restrict)
+
+  @@index([graderId])
+  @@map("grades")
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  courseId  String
+  studentId String
+  date      DateTime @db.Date
+  present   Boolean  @default(true)
+  note      String?
+
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student User   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, studentId, date])
+  @@index([studentId])
+  @@map("attendance")
+}
+
+model LessonNote {
+  id        String   @id @default(cuid())
+  courseId  String
+  teacherId String
+  date      DateTime @db.Date
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacher User   @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+
+  @@index([courseId, date])
+  @@map("lesson_notes")
+}

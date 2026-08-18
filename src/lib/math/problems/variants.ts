@@ -1,25 +1,21 @@
 import { numberToTex, verifyFormula } from "./cas";
+import { polishStudentTex, tidySignedTex } from "./tex";
 import type { BankProblem } from "./types";
+import {
+  applyRecipe,
+  ensureVariableSlots,
+  fingerprint,
+  mulberry32,
+  recipesFor,
+  rollVaryLimits,
+  shapeKey,
+  unwrapOuter,
+} from "./variant-mutate";
 
 const PLACEHOLDER = (name: string) => `{{${name}}}`;
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function mulberry32(seed: number) {
-  let a = seed >>> 0;
-  return () => {
-    a += 0x6d2b79f5;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function randInt(rng: () => number, min: number, max: number) {
-  return min + Math.floor(rng() * (max - min + 1));
 }
 
 function numberSnippets(value: number): string[] {
@@ -90,47 +86,12 @@ export function fillPromptTemplate(
     for (const [name, value] of Object.entries(variables)) {
       filled = filled.replaceAll(PLACEHOLDER(name), numberToTex(value));
     }
-    return filled;
+    return polishStudentTex(tidySignedTex(filled));
   }
 
   return Object.entries(variables)
     .map(([name, value]) => `\\mathrm{${name}} = ${numberToTex(value)}`)
     .join(",\\; ");
-}
-
-function similarInteger(rng: () => number, original: number) {
-  const magnitude = Math.max(3, Math.abs(Math.round(original)) + 4);
-  const preferNegative = original < 0;
-
-  for (let attempt = 0; attempt < 24; attempt += 1) {
-    let next = randInt(rng, 1, magnitude);
-    const negative =
-      rng() < (preferNegative ? 0.7 : 0.25) || (original === 0 && rng() < 0.5);
-    if (negative) next = -next;
-    if (next !== original) return next;
-  }
-
-  return original === 0 ? 1 : -original;
-}
-
-function fingerprint(variables: Record<string, number>) {
-  return Object.keys(variables)
-    .sort()
-    .map((name) => `${name}:${variables[name]}`)
-    .join("|");
-}
-
-function randomizeVariables(
-  rng: () => number,
-  original: Record<string, number>,
-) {
-  const next: Record<string, number> = {};
-  for (const [name, value] of Object.entries(original)) {
-    next[name] = Number.isInteger(value)
-      ? similarInteger(rng, value)
-      : similarInteger(rng, Math.round(value) || 1);
-  }
-  return next;
 }
 
 export function generateVariants(
@@ -140,49 +101,97 @@ export function generateVariants(
 ): BankProblem[] {
   if (!canVary(source) || !source.formula || !source.variables) return [];
 
-  const formula = source.formula;
-  const original = source.variables;
+  const originalVars = source.variables;
   const template =
-    source.promptTemplate && templateHasAll(source.promptTemplate, original)
+    source.promptTemplate && templateHasAll(source.promptTemplate, originalVars)
       ? source.promptTemplate
-      : (derivePromptTemplate(source.promptTex, original) ?? "");
+      : (derivePromptTemplate(source.promptTex, originalVars) ?? "");
 
+  const core = unwrapOuter({
+    formula: source.formula,
+    variables: originalVars,
+    promptTex: source.promptTex,
+    promptTemplate: template || source.promptTemplate,
+    instructionId: source.instructionId,
+  });
+  if (Object.keys(core.variables).length === 0) return [];
+
+  const original = core.variables;
+  const recipes = recipesFor(core.instructionId);
   const root = seed ?? (Date.now() ^ Math.floor(Math.random() * 0x7fffffff));
-  const used = new Set([fingerprint(original)]);
+  const limits = rollVaryLimits(mulberry32(root ^ 0x9e3779b9));
+  const used = new Set([fingerprint(core.formula, original)]);
+  const seenShapes = new Set([shapeKey(core.formula)]);
   const variants: BankProblem[] = [];
+  const extras: BankProblem[] = [];
   const target = Math.min(12, Math.max(1, Math.floor(count)));
+  const attempts = Math.max(80, target * 24);
 
-  for (let i = 0; i < target * 16 && variants.length < target; i += 1) {
+  for (let i = 0; i < attempts && variants.length + extras.length < target * 3; i += 1) {
     const rng = mulberry32(root + i * 7919);
-    const variables = randomizeVariables(rng, original);
-    const key = fingerprint(variables);
+    const recipe = recipes[i % recipes.length];
+    if (!recipe) continue;
+
+    const jittered = {
+      ...limits,
+      absMax: Math.min(24, limits.absMax + (i % 3)),
+    };
+
+    const state = applyRecipe(core, recipe, jittered, rng);
+    if (!state) continue;
+
+    const key = fingerprint(state.formula, state.variables);
     if (used.has(key)) continue;
 
     const cas = verifyFormula(
-      formula,
-      Object.entries(variables).map(([name, value]) => ({ name, value })),
+      state.formula,
+      Object.entries(state.variables).map(([name, value]) => ({ name, value })),
     );
     if (!cas.ok) continue;
 
     used.add(key);
+    const promptTemplate =
+      (state.promptTemplate &&
+      templateHasAll(state.promptTemplate, state.variables)
+        ? state.promptTemplate
+        : derivePromptTemplate(state.promptTex, state.variables)) ?? undefined;
+    const promptTex = promptTemplate
+      ? fillPromptTemplate(promptTemplate, state.variables)
+      : state.promptTex;
+
     const variantSeed = root + i;
-    variants.push({
-      id: `var-${source.kind ?? source.templateId}-${variantSeed}-${variants.length}`,
+    const item: BankProblem = {
+      id: `var-${source.kind ?? source.templateId}-${variantSeed}-${variants.length + extras.length}`,
       templateId: "ai-verified",
       topic: source.topic,
       difficulty: source.difficulty,
       year: source.year,
       source: "generated",
       instructionId: source.instructionId,
-      promptTex: fillPromptTemplate(template, variables),
+      promptTex,
       solutionTex: cas.solutionTex,
       seed: variantSeed,
       kind: source.kind,
-      formula,
-      variables,
-      promptTemplate: template || undefined,
-    });
+      formula: state.formula,
+      variables: state.variables,
+      promptTemplate,
+    };
+
+    const shape = shapeKey(state.formula);
+    if (!seenShapes.has(shape) && variants.length < target) {
+      seenShapes.add(shape);
+      variants.push(item);
+    } else {
+      extras.push(item);
+    }
   }
 
-  return variants;
+  for (const item of extras) {
+    if (variants.length >= target) break;
+    variants.push(item);
+  }
+
+  return variants.slice(0, target);
 }
+
+export { ensureVariableSlots };

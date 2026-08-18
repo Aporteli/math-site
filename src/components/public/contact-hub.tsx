@@ -4,7 +4,6 @@ import { useId, useState, type FormEvent, type ReactNode } from "react";
 import {
   ArrowLeftRight,
   CheckCircle2,
-  ChevronDown,
   Clock,
   ClipboardCheck,
   House,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 import type { Dictionary } from "@/i18n/types";
 import { PageHero } from "@/components/ui/page-hero";
+import { SelectMenu } from "@/components/ui/select-menu";
 import {
   CONTACT_COURSES,
   CONTACT_FORMATS,
@@ -342,30 +342,26 @@ function ConsultationForm({
             label={copy.form.course}
             error={errors.course}
           >
-            <div className="relative">
-              <select
-                id={`${formId}-course`}
-                name="course"
-                value={course}
-                onChange={(event) =>
-                  setCourse(event.target.value as ContactCourseId | "")
-                }
-                aria-invalid={Boolean(errors.course)}
-                aria-describedby={errors.course ? `${formId}-course-error` : undefined}
-                className={`${errors.course ? fieldErrorClass : fieldClass} pr-10`}
-              >
-                <option value="">{copy.form.coursePlaceholder}</option>
-                {CONTACT_COURSES.map((id) => (
-                  <option key={id} value={id}>
-                    {copy.courses[id]}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted"
-                aria-hidden="true"
-              />
-            </div>
+            <SelectMenu
+              id={`${formId}-course`}
+              name="course"
+              value={course}
+              invalid={Boolean(errors.course)}
+              describedBy={
+                errors.course ? `${formId}-course-error` : undefined
+              }
+              triggerClassName="px-3.5 py-3 text-base"
+              onChange={(value) =>
+                setCourse(value as ContactCourseId | "")
+              }
+              options={[
+                { value: "", label: copy.form.coursePlaceholder },
+                ...CONTACT_COURSES.map((id) => ({
+                  value: id,
+                  label: copy.courses[id],
+                })),
+              ]}
+            />
           </Field>
 
           <fieldset>

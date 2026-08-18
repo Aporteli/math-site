@@ -10,8 +10,10 @@ import {
 import type { Dictionary } from "@/i18n/types";
 import {
   EMPTY_PROBLEM_FILTERS,
+  PROBLEM_TOPICS,
   type BankProblem,
   type ProblemFilters,
+  type ProblemTopic,
 } from "./types";
 
 export type ProblemBankCopy = Dictionary["dashboard"]["teacher"]["problemBank"];
@@ -38,7 +40,7 @@ export const PROBLEM_BANK_TOOLS: ProblemBankTool[] = [
     id: "worksheet",
     icon: Printer,
     status: "link",
-    href: "/teacher/lab",
+    href: "/teacher/problems",
   },
   { id: "assign", icon: Send, status: "soon" },
   {
@@ -48,6 +50,28 @@ export const PROBLEM_BANK_TOOLS: ProblemBankTool[] = [
     href: "/tools/graphing",
   },
 ];
+
+export function topicLabel(
+  topics: ProblemBankCopy["topics"],
+  topic: string,
+) {
+  if (Object.hasOwn(topics, topic)) {
+    return topics[topic as ProblemTopic];
+  }
+  return topic.replaceAll("-", " ");
+}
+
+export function topicsInBank(problems: BankProblem[]) {
+  const seen = new Set<string>(PROBLEM_TOPICS);
+  const extra: string[] = [];
+  for (const problem of problems) {
+    if (!seen.has(problem.topic)) {
+      seen.add(problem.topic);
+      extra.push(problem.topic);
+    }
+  }
+  return [...PROBLEM_TOPICS, ...extra];
+}
 
 export function filterProblems(
   problems: BankProblem[],
@@ -69,6 +93,12 @@ export function filterProblems(
       return false;
     }
     if (filters.source !== "all" && problem.source !== filters.source) {
+      return false;
+    }
+    if (filters.check === "unchecked" && problem.templateId !== "ai-plain") {
+      return false;
+    }
+    if (filters.check === "verified" && problem.templateId !== "ai-verified") {
       return false;
     }
     if (!q) return true;

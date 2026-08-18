@@ -80,6 +80,8 @@ function templateFor(
       return "derivative-at";
     case "vectors":
       return difficulty === "easy" ? "vector-magnitude" : "vector-dot";
+    case "combinatorics":
+      return "binomial-choose";
   }
 }
 
@@ -325,9 +327,29 @@ function buildProblem(
         solutionTex: String(ax * bx + ay * by),
       };
     }
-    case "ai-verified":
-      throw new Error("ai-verified problems come from the CAS pipeline");
+    case "binomial-choose": {
+      const n = randInt(rng, 6, 14);
+      const k = randInt(rng, 2, Math.min(4, n - 1));
+      return {
+        ...base,
+        instructionId: "evaluate",
+        promptTex: `\\binom{${n}}{${k}}`,
+        solutionTex: String(binomial(n, k)),
+      };
     }
+    case "ai-verified":
+    case "ai-plain":
+      throw new Error("ai problems come from the CAS or plain AI pipeline");
+    }
+}
+
+function binomial(n: number, k: number) {
+  const r = Math.min(k, n - k);
+  let value = 1;
+  for (let i = 1; i <= r; i += 1) {
+    value = (value * (n - r + i)) / i;
+  }
+  return Math.round(value);
 }
 
 function gcd(a: number, b: number): number {

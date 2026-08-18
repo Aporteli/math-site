@@ -6,6 +6,7 @@ export const PROBLEM_TOPICS = [
   "percent",
   "calculus",
   "vectors",
+  "combinatorics",
 ] as const;
 
 export const PROBLEM_DIFFICULTIES = ["easy", "medium", "hard"] as const;
@@ -13,6 +14,8 @@ export const PROBLEM_DIFFICULTIES = ["easy", "medium", "hard"] as const;
 export const PROBLEM_YEARS = ["7", "8", "9", "10", "11", "12"] as const;
 
 export const PROBLEM_SOURCES = ["bank", "generated", "ai"] as const;
+
+export const PROBLEM_CHECKS = ["verified", "unchecked"] as const;
 
 export const PROBLEM_INSTRUCTIONS = [
   "solve",
@@ -27,6 +30,7 @@ export type ProblemTopic = (typeof PROBLEM_TOPICS)[number];
 export type ProblemDifficulty = (typeof PROBLEM_DIFFICULTIES)[number];
 export type ProblemYear = (typeof PROBLEM_YEARS)[number];
 export type ProblemSource = (typeof PROBLEM_SOURCES)[number];
+export type ProblemCheck = (typeof PROBLEM_CHECKS)[number];
 export type ProblemInstructionId = (typeof PROBLEM_INSTRUCTIONS)[number];
 
 export type ProblemTemplateId =
@@ -47,12 +51,14 @@ export type ProblemTemplateId =
   | "derivative-at"
   | "vector-magnitude"
   | "vector-dot"
-  | "ai-verified";
+  | "binomial-choose"
+  | "ai-verified"
+  | "ai-plain";
 
 export interface BankProblem {
   id: string;
   templateId: ProblemTemplateId;
-  topic: ProblemTopic;
+  topic: string;
   difficulty: ProblemDifficulty;
   year: ProblemYear;
   source: ProblemSource;
@@ -73,10 +79,11 @@ export interface BankProblem {
 
 export interface ProblemFilters {
   query: string;
-  topic: ProblemTopic | "all";
+  topic: string | "all";
   difficulty: ProblemDifficulty | "all";
   year: ProblemYear | "all";
   source: ProblemSource | "all";
+  check: ProblemCheck | "all";
 }
 
 export const EMPTY_PROBLEM_FILTERS: ProblemFilters = {
@@ -85,4 +92,5 @@ export const EMPTY_PROBLEM_FILTERS: ProblemFilters = {
   difficulty: "all",
   year: "all",
   source: "all",
+  check: "all",
 };

@@ -907,7 +907,7 @@
         },
         "problems": {
           "title": "Problem bank",
-          "subtitle": "Pick problems by topic, difficulty and year group."
+          "subtitle": "Worksheets, the whiteboard and classroom tools for the lesson."
         },
         "reports": {
           "title": "Reports",
@@ -915,7 +915,7 @@
         },
         "lab": {
           "title": "Teacher lab",
-          "subtitle": "Worksheets, the whiteboard and classroom tools for the lesson."
+          "subtitle": "Pick problems by topic, difficulty and year group."
         },
         "tools": {
           "title": "Teaching tools",
@@ -936,11 +936,15 @@
         "allDifficulties": "All difficulties",
         "allYears": "All year groups",
         "allSources": "All sources",
+        "checkFilter": "Check",
+        "allChecks": "Verified & unchecked",
         "results": "{count} problems",
         "empty": "No problems match these filters.",
         "emptyHint": "Adjust the filters or generate a new set.",
         "previewEmpty": "Select a problem from the list to see the prompt and solution.",
         "prompt": "Prompt",
+        "copyPrompt": "Copy prompt",
+        "copiedPrompt": "Copied",
         "solution": "Solution",
         "showSolution": "Show solution",
         "hideSolution": "Hide solution",
@@ -960,7 +964,8 @@
           "functions": "Functions",
           "percent": "Percentages",
           "calculus": "Calculus",
-          "vectors": "Vectors"
+          "vectors": "Vectors",
+          "combinatorics": "Combinatorics"
         },
         "difficulties": {
           "easy": "Easy",
@@ -978,7 +983,9 @@
         "sources": {
           "bank": "Bank",
           "generated": "Generated",
-          "ai": "Verified"
+          "ai": "AI",
+          "verified": "Verified",
+          "unchecked": "Unchecked"
         },
         "instructions": {
           "solve": "Solve the equation",
@@ -1004,7 +1011,7 @@
           },
           "worksheet": {
             "title": "Worksheet",
-            "hint": "Print the selected set in the teacher lab."
+            "hint": "Print the selected set in the problem bank."
           },
           "assign": {
             "title": "Assign",
@@ -1031,19 +1038,77 @@
           "modeTemplates": "Templates",
           "modeDiverse": "Different types",
           "request": "Request",
-          "requestPlaceholder": "e.g. 5 different types of problems on vectors",
-          "requestHint": "The model proposes prompts; the math engine computes the answer.",
+          "requestPlaceholder": "e.g. 5 problems in algebraic combinatorics",
+          "requestHint": "In verified mode the model proposes prompts; Math.js computes the answer (trig, logs, combinatorics, number theory, statistics, and more).",
+          "plainHint": "In Unchecked AI the model thinks the way it does in its own chat. The stem and full solution are stored as-is — Math.js does not check them.",
+          "checkMode": "Checking",
+          "modeVerified": "Math.js check",
+          "modePlain": "Unchecked AI",
+          "anyTopic": "Any topic",
+          "anyDifficulty": "Any difficulty",
+          "anyYear": "Any year",
+          "classifyHint": "Topic, difficulty and year are stored from each problem — not from these filters.",
+          "model": "Model",
+          "limitLabel": "Site daily cap",
+          "limitUsed": "{used} / {limit}",
+          "limitReady": "Ready",
+          "limitNoKey": "No API key",
+          "limitExhausted": "Limit reached",
+          "walletLabel": "Credits",
+          "walletFree": "Free quota",
+          "walletReady": "Credit available",
+          "walletNeedsBilling": "Needs billing",
+          "walletUnknown": "Balance unknown",
+          "walletInvalid": "Invalid key",
+          "walletAmount": "{amount} {currency}",
+          "walletHintReadyPaid": "This model has credit: {detail}.",
+          "walletHintReadyFree": "This model runs on a free quota.",
+          "walletHintNeedsBilling": "This account has no credit. Top up, or pick a free model (Gemini / Groq).",
+          "walletHintMissing": "This model has no API key in .env.",
+          "walletHintInvalid": "This model’s API key was rejected.",
+          "walletHintUnknown": "The key works, but this provider does not expose a balance.",
+          "providers": {
+            "gemini": "Gemini",
+            "groq": "Groq",
+            "deepseek": "DeepSeek",
+            "openai": "OpenAI",
+            "huggingface": "Hugging Face",
+            "anthropic": "Claude",
+            "cloudflare": "Cloudflare"
+          },
+          "models": {
+            "gemini-flash-lite": "Gemini Flash Lite",
+            "gemini-3.7-flash": "Gemini 3.7 Flash",
+            "llama-3.3-70b": "Groq GPT-OSS 120B",
+            "deepseek-v4-flash": "DeepSeek V4 Flash",
+            "deepseek-v4-pro": "DeepSeek V4 Pro",
+            "deepseek-r1": "DeepSeek R1",
+            "gpt-4o-mini": "GPT-4o Mini",
+            "huggingface": "Hugging Face",
+            "claude-sonnet-5": "Claude 3.5 Sonnet",
+            "claude-haiku-4.5": "Claude Haiku 4.5",
+            "claude-3.5-haiku": "Claude 3.5 Haiku",
+            "cloudflare-workers-ai": "Cloudflare Workers AI"
+          },
           "busy": "Generating…",
           "keepAll": "Keep all in set",
-          "errorMissingKey": "GEMINI_API_KEY is required on the server.",
+          "saveToBank": "Save to bank",
+          "saving": "Saving…",
+          "saved": "Saved {count} problems.",
+          "saveFailed": "Could not save. Try again.",
+          "errorMissingKey": "This model has no API key on the server.",
+          "errorInvalidKey": "This API key was rejected. Paste a new key in .env and restart the server.",
+          "errorLimit": "This model’s daily limit is used up.",
           "errorFailed": "Generation failed. Try again.",
-          "errorNoneVerified": "No problem passed the math checker. Try a different request.",
+          "errorNoneVerified": "No problem matched the request or passed the checker. Try another request or Unchecked AI.",
           "errorUnauthorized": "A teacher account is required for this action.",
+          "errorBilling": "This API key has no credit. Unchecked AI still calls the same paid API. Add OpenAI credit at platform.openai.com/account/billing, or pick Gemini / Groq.",
+          "errorTimeout": "The model took too long. Try Unchecked AI, fewer problems, or Gemini / Groq.",
           "partial": "Verified {verified} / {requested}."
         },
         "variantPanel": {
           "title": "Similar variants",
-          "hint": "Same formula, new numbers. Math.js computes the answer — no AI.",
+          "hint": "Many candidates are generated; Math.js keeps only clean answers. Structure can change (scale, sign, power) without growing on each click.",
           "submit": "Generate variants",
           "count": "Count",
           "close": "Close variants",
@@ -1058,7 +1123,7 @@
           "generated": "New"
         },
         "actions": {
-          "openLab": "Open teacher lab",
+          "openLab": "Open problem bank",
           "openHomework": "Open homework"
         }
       }

@@ -177,7 +177,7 @@ function DesktopNavItem({
 
       {menuItems && menuId && open && (
         <div className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2">
-          <ul className="w-72 rounded-2xl border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5">
+          <ul className="w-72 origin-top animate-dropdown rounded-2xl border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5">
             {menuItems.map(([itemId, itemLabel]) => {
               const itemHref = localePath(
                 locale,

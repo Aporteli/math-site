@@ -907,7 +907,7 @@
         },
         "problems": {
           "title": "Банк задач",
-          "subtitle": "Подбор задач по теме, сложности и классу."
+          "subtitle": "Рабочие листы, доска и классные инструменты к уроку."
         },
         "reports": {
           "title": "Отчёты",
@@ -915,7 +915,7 @@
         },
         "lab": {
           "title": "Лаборатория учителя",
-          "subtitle": "Рабочие листы, доска и классные инструменты к уроку."
+          "subtitle": "Подбор задач по теме, сложности и классу."
         },
         "tools": {
           "title": "Учебные инструменты",
@@ -936,11 +936,15 @@
         "allDifficulties": "Все уровни",
         "allYears": "Все классы",
         "allSources": "Все источники",
+        "checkFilter": "Проверка",
+        "allChecks": "Проверенные и без проверки",
         "results": "{count} задач",
         "empty": "Подходящих задач нет.",
         "emptyHint": "Измените фильтры или сгенерируйте новый набор.",
         "previewEmpty": "Выберите задачу в списке, чтобы увидеть условие и решение.",
         "prompt": "Условие",
+        "copyPrompt": "Копировать условие",
+        "copiedPrompt": "Скопировано",
         "solution": "Решение",
         "showSolution": "Показать решение",
         "hideSolution": "Скрыть решение",
@@ -960,7 +964,8 @@
           "functions": "Функции",
           "percent": "Проценты",
           "calculus": "Матанализ",
-          "vectors": "Векторы"
+          "vectors": "Векторы",
+          "combinatorics": "Комбинаторика"
         },
         "difficulties": {
           "easy": "Легко",
@@ -978,7 +983,9 @@
         "sources": {
           "bank": "Банк",
           "generated": "Сгенерированные",
-          "ai": "Проверенные"
+          "ai": "ИИ",
+          "verified": "Проверено",
+          "unchecked": "Без проверки"
         },
         "instructions": {
           "solve": "Решите уравнение",
@@ -1004,7 +1011,7 @@
           },
           "worksheet": {
             "title": "Рабочий лист",
-            "hint": "Печать выбранного набора в лаборатории учителя."
+            "hint": "Печать выбранного набора в банке задач."
           },
           "assign": {
             "title": "Задание",
@@ -1031,19 +1038,77 @@
           "modeTemplates": "Шаблоны",
           "modeDiverse": "Разные типы",
           "request": "Запрос",
-          "requestPlaceholder": "напр. 5 разных типов задач на векторы",
-          "requestHint": "Модель предлагает условия; ответ считает математический движок.",
+          "requestPlaceholder": "напр. 5 задач по алгебраической комбинаторике",
+          "requestHint": "В проверенном режиме модель предлагает условие, ответ считает Math.js (тригонометрия, логарифмы, комбинаторика, теория чисел, статистика и другое).",
+          "plainHint": "В непроверенном режиме модель думает так же, как в своём чате. Сохраняются условие и полное решение — Math.js их не проверяет.",
+          "checkMode": "Проверка",
+          "modeVerified": "Проверка Math.js",
+          "modePlain": "ИИ без проверки",
+          "anyTopic": "Любая тема",
+          "anyDifficulty": "Любая сложность",
+          "anyYear": "Любой класс",
+          "classifyHint": "Тема, сложность и класс записываются по каждой задаче — не по этим фильтрам.",
+          "model": "Модель",
+          "limitLabel": "Дневной лимит сайта",
+          "limitUsed": "{used} / {limit}",
+          "limitReady": "Готово",
+          "limitNoKey": "Нет ключа",
+          "limitExhausted": "Лимит исчерпан",
+          "walletLabel": "Кредит",
+          "walletFree": "Бесплатная квота",
+          "walletReady": "Кредит есть",
+          "walletNeedsBilling": "Нужно пополнить",
+          "walletUnknown": "Баланс неизвестен",
+          "walletInvalid": "Ключ отклонён",
+          "walletAmount": "{amount} {currency}",
+          "walletHintReadyPaid": "У этой модели есть кредит: {detail}.",
+          "walletHintReadyFree": "Эта модель работает на бесплатной квоте.",
+          "walletHintNeedsBilling": "На этом счёте нет кредита. Пополни или выбери бесплатную модель (Gemini / Groq).",
+          "walletHintMissing": "Ключ этой модели не задан в .env.",
+          "walletHintInvalid": "Ключ этой модели отклонён.",
+          "walletHintUnknown": "Ключ работает, но провайдер не показывает точный баланс.",
+          "providers": {
+            "gemini": "Gemini",
+            "groq": "Groq",
+            "deepseek": "DeepSeek",
+            "openai": "OpenAI",
+            "huggingface": "Hugging Face",
+            "anthropic": "Claude",
+            "cloudflare": "Cloudflare"
+          },
+          "models": {
+            "gemini-flash-lite": "Gemini Flash Lite",
+            "gemini-3.7-flash": "Gemini 3.7 Flash",
+            "llama-3.3-70b": "Groq GPT-OSS 120B",
+            "deepseek-v4-flash": "DeepSeek V4 Flash",
+            "deepseek-v4-pro": "DeepSeek V4 Pro",
+            "deepseek-r1": "DeepSeek R1",
+            "gpt-4o-mini": "GPT-4o Mini",
+            "huggingface": "Hugging Face",
+            "claude-sonnet-5": "Claude 3.5 Sonnet",
+            "claude-haiku-4.5": "Claude Haiku 4.5",
+            "claude-3.5-haiku": "Claude 3.5 Haiku",
+            "cloudflare-workers-ai": "Cloudflare Workers AI"
+          },
           "busy": "Генерация…",
           "keepAll": "Сохранить все в набор",
-          "errorMissingKey": "На сервере нужен GEMINI_API_KEY.",
+          "saveToBank": "Сохранить в банк",
+          "saving": "Сохранение…",
+          "saved": "Сохранено задач: {count}.",
+          "saveFailed": "Не удалось сохранить. Попробуйте ещё раз.",
+          "errorMissingKey": "Для этой модели на сервере нет API-ключа.",
+          "errorInvalidKey": "Этот API-ключ отклонён. Вставьте новый ключ в .env и перезапустите сервер.",
+          "errorLimit": "Дневной лимит этой модели исчерпан.",
           "errorFailed": "Генерация не удалась. Попробуйте ещё раз.",
-          "errorNoneVerified": "Ни одна задача не прошла математическую проверку. Измените запрос.",
+          "errorNoneVerified": "Ни одна задача не совпала с запросом или не прошла проверку. Измените запрос или включите ИИ без проверки.",
           "errorUnauthorized": "Для этого действия нужна учётная запись учителя.",
+          "errorBilling": "У этого ключа нет кредита. Режим без проверки всё равно вызывает тот же платный API. Пополните DeepSeek или OpenAI либо выберите Gemini / Groq.",
+          "errorTimeout": "Модель слишком долго отвечала. Попробуйте режим без проверки, меньше задач или Gemini / Groq.",
           "partial": "Проверено {verified} / {requested}."
         },
         "variantPanel": {
           "title": "Похожие варианты",
-          "hint": "Та же формула, новые числа. Ответ считает Math.js — без ИИ.",
+          "hint": "Создаётся много кандидатов; Math.js оставляет только чистые ответы. Структура меняется (коэффициент, знак, степень) и не растёт с каждым нажатием.",
           "submit": "Сгенерировать варианты",
           "count": "Количество",
           "close": "Закрыть варианты",
@@ -1058,7 +1123,7 @@
           "generated": "Новые"
         },
         "actions": {
-          "openLab": "Открыть лабораторию",
+          "openLab": "Открыть банк задач",
           "openHomework": "Открыть задания"
         }
       }

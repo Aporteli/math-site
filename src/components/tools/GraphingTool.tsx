@@ -15,6 +15,7 @@ import {
 import type { Chart, FunctionPlotDatum, FunctionPlotDatumScope } from "function-plot";
 import { KatexPreview } from "@/components/math/katex-preview";
 import { PageHero } from "@/components/ui/page-hero";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/types";
 import {
@@ -528,6 +529,8 @@ function IntegralPanel({
     bounds && value !== null
       ? `\\int_{${formatGraphNumber(bounds[0], 2)}}^{${formatGraphNumber(bounds[1], 2)}} ${body}\\,dx = ${formatGraphNumber(value, 4)}`
       : null;
+  const upperSelectId = useId();
+  const lowerSelectId = useId();
 
   return (
     <section className={panelClass}>
@@ -578,38 +581,48 @@ function IntegralPanel({
         </div>
       </fieldset>
       {functions.length > 0 ? (
-        <label className="mt-3 block text-xs font-semibold text-muted">
-          {mode === "between" ? copy.integralUpper : copy.integralFn}
-          <select
-            value={upperId}
-            onChange={(event) => onUpper(event.target.value)}
-            className={`mt-1 ${fieldClass}`}
+        <div className="mt-3">
+          <label
+            htmlFor={upperSelectId}
+            className="block text-xs font-semibold text-muted"
           >
-            {functions.map((row, index) => (
-              <option key={row.id} value={row.id}>
-                f{index + 1}(x) = {row.expr}
-              </option>
-            ))}
-          </select>
-        </label>
+            {mode === "between" ? copy.integralUpper : copy.integralFn}
+          </label>
+          <SelectMenu
+            id={upperSelectId}
+            className="mt-1"
+            triggerClassName="font-mono"
+            value={upperId}
+            onChange={onUpper}
+            options={functions.map((row, index) => ({
+              value: row.id,
+              label: `f${index + 1}(x) = ${row.expr}`,
+            }))}
+          />
+        </div>
       ) : null}
       {mode === "between" && functions.length > 1 ? (
-        <label className="mt-3 block text-xs font-semibold text-muted">
-          {copy.integralLower}
-          <select
-            value={lowerId}
-            onChange={(event) => onLower(event.target.value)}
-            className={`mt-1 ${fieldClass}`}
+        <div className="mt-3">
+          <label
+            htmlFor={lowerSelectId}
+            className="block text-xs font-semibold text-muted"
           >
-            {functions
+            {copy.integralLower}
+          </label>
+          <SelectMenu
+            id={lowerSelectId}
+            className="mt-1"
+            triggerClassName="font-mono"
+            value={lowerId}
+            onChange={onLower}
+            options={functions
               .filter((row) => row.id !== upperId)
-              .map((row, index) => (
-                <option key={row.id} value={row.id}>
-                  f{index + 1}(x) = {row.expr}
-                </option>
-              ))}
-          </select>
-        </label>
+              .map((row, index) => ({
+                value: row.id,
+                label: `f${index + 1}(x) = ${row.expr}`,
+              }))}
+          />
+        </div>
       ) : null}
       <div className="mt-4 rounded-xl bg-paper-deep px-3 py-3 text-sm text-ink">
         <p className="text-xs font-semibold tracking-wide text-muted">

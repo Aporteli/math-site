@@ -907,7 +907,7 @@
         },
         "problems": {
           "title": "ამოცანების ბანკი",
-          "subtitle": "აირჩიე ამოცანები თემის, სირთულისა და კლასის მიხედვით."
+          "subtitle": "სავარჯიშო ფურცლები, დაფა და საკლასო ხელსაწყოები გაკვეთილისთვის."
         },
         "reports": {
           "title": "ანგარიშები",
@@ -915,7 +915,7 @@
         },
         "lab": {
           "title": "მასწავლებლის ლაბორატორია",
-          "subtitle": "სავარჯიშო ფურცლები, დაფა და საკლასო ხელსაწყოები გაკვეთილისთვის."
+          "subtitle": "აირჩიე ამოცანები თემის, სირთულისა და კლასის მიხედვით."
         },
         "tools": {
           "title": "სასწავლო ხელსაწყოები",
@@ -936,11 +936,15 @@
         "allDifficulties": "ყველა სირთულე",
         "allYears": "ყველა კლასი",
         "allSources": "ყველა წყარო",
+        "checkFilter": "შემოწმება",
+        "allChecks": "შემოწმებული და შეუმოწმებელი",
         "results": "{count} ამოცანა",
         "empty": "ამოცანა ვერ მოიძებნა.",
         "emptyHint": "შეცვალე ფილტრები ან დააგენერირე ახალი ამოცანები.",
         "previewEmpty": "აირჩიე ამოცანა სიიდან, რომ ნახო პირობა და ამოხსნა.",
         "prompt": "პირობა",
+        "copyPrompt": "პირობის კოპირება",
+        "copiedPrompt": "დაკოპირებულია",
         "solution": "ამოხსნა",
         "showSolution": "ამოხსნის ჩვენება",
         "hideSolution": "ამოხსნის დამალვა",
@@ -960,7 +964,8 @@
           "functions": "ფუნქციები",
           "percent": "პროცენტები",
           "calculus": "კალკულუსი",
-          "vectors": "ვექტორები"
+          "vectors": "ვექტორები",
+          "combinatorics": "კომბინატორიკა"
         },
         "difficulties": {
           "easy": "მარტივი",
@@ -978,7 +983,9 @@
         "sources": {
           "bank": "ბანკი",
           "generated": "დაგენერირებული",
-          "ai": "შემოწმებული"
+          "ai": "AI",
+          "verified": "შემოწმებული",
+          "unchecked": "შეუმოწმებელი"
         },
         "instructions": {
           "solve": "ამოხსენი განტოლება",
@@ -1004,7 +1011,7 @@
           },
           "worksheet": {
             "title": "სავარჯიშო ფურცელი",
-            "hint": "არჩეული ამოცანების ბეჭდვა მასწავლებლის ლაბორატორიაში."
+            "hint": "არჩეული ამოცანების ბეჭდვა ამოცანების ბანკში."
           },
           "assign": {
             "title": "დავალება",
@@ -1031,19 +1038,77 @@
           "modeTemplates": "შაბლონები",
           "modeDiverse": "სხვადასხვა ტიპი",
           "request": "მოთხოვნა",
-          "requestPlaceholder": "მაგ. 5 სხვადასხვა ტიპის ამოცანა ვექტორებზე",
-          "requestHint": "მოდელი გვთავაზობს პირობებს; პასუხს ითვლის მათემატიკური ძრავა.",
+          "requestPlaceholder": "მაგ. 5 ამოცანა ალგებრული კომბინატორიკიდან",
+          "requestHint": "შემოწმებულ რეჟიმში პირობას გვთავაზობს მოდელი, პასუხს ითვლის Math.js (ტრიგონომეტრია, ლოგარითმები, კომბინატორიკა, რიცხვთა თეორია, სტატისტიკა და სხვა).",
+          "plainHint": "შეუმოწმებელ რეჟიმში მოდელი ფიქრობს, როგორც საკუთარ ჩატში. ინახება პირობა და სრული ამოხსნა — Math.js არ ამოწმებს.",
+          "checkMode": "შემოწმება",
+          "modeVerified": "Math.js შემოწმება",
+          "modePlain": "შეუმოწმებელი AI",
+          "anyTopic": "ნებისმიერი თემა",
+          "anyDifficulty": "ნებისმიერი სირთულე",
+          "anyYear": "ნებისმიერი კლასი",
+          "classifyHint": "თემა, სირთულე და კლასი ინახება თითოეული ამოცანიდან — არა ამ ფილტრებიდან.",
+          "model": "მოდელი",
+          "limitLabel": "საიტის დღიური ლიმიტი",
+          "limitUsed": "{used} / {limit}",
+          "limitReady": "მზადაა",
+          "limitNoKey": "გასაღები არ არის",
+          "limitExhausted": "ლიმიტი ამოიწურა",
+          "walletLabel": "კრედიტი",
+          "walletFree": "უფასო კვოტა",
+          "walletReady": "კრედიტი არის",
+          "walletNeedsBilling": "საჭიროა შევსება",
+          "walletUnknown": "ბალანსი უცნობია",
+          "walletInvalid": "გასაღები არასწორია",
+          "walletAmount": "{amount} {currency}",
+          "walletHintReadyPaid": "ამ მოდელს კრედიტი აქვს: {detail}.",
+          "walletHintReadyFree": "ეს მოდელი უფასო კვოტაზე მუშაობს.",
+          "walletHintNeedsBilling": "ამ ანგარიშს კრედიტი არ აქვს. შეავსე ან აირჩიე უფასო მოდელი (Gemini / Groq).",
+          "walletHintMissing": "ამ მოდელის API გასაღები .env-ში არ არის.",
+          "walletHintInvalid": "ამ მოდელის გასაღები უარყოფილია.",
+          "walletHintUnknown": "გასაღები მუშაობს, მაგრამ პროვაიდერი ზუსტ ბალანსს არ აჩვენებს.",
+          "providers": {
+            "gemini": "Gemini",
+            "groq": "Groq",
+            "deepseek": "DeepSeek",
+            "openai": "OpenAI",
+            "huggingface": "Hugging Face",
+            "anthropic": "Claude",
+            "cloudflare": "Cloudflare"
+          },
+          "models": {
+            "gemini-flash-lite": "Gemini Flash Lite",
+            "gemini-3.7-flash": "Gemini 3.7 Flash",
+            "llama-3.3-70b": "Groq GPT-OSS 120B",
+            "deepseek-v4-flash": "DeepSeek V4 Flash",
+            "deepseek-v4-pro": "DeepSeek V4 Pro",
+            "deepseek-r1": "DeepSeek R1",
+            "gpt-4o-mini": "GPT-4o Mini",
+            "huggingface": "Hugging Face",
+            "claude-sonnet-5": "Claude 3.5 Sonnet",
+            "claude-haiku-4.5": "Claude Haiku 4.5",
+            "claude-3.5-haiku": "Claude 3.5 Haiku",
+            "cloudflare-workers-ai": "Cloudflare Workers AI"
+          },
           "busy": "გენერაცია…",
           "keepAll": "ყველას შენახვა ნაკრებში",
-          "errorMissingKey": "სერვერზე საჭიროა GEMINI_API_KEY.",
+          "saveToBank": "ბანკში შენახვა",
+          "saving": "ინახება…",
+          "saved": "შენახულია {count} ამოცანა.",
+          "saveFailed": "შენახვა ვერ მოხერხდა.",
+          "errorMissingKey": "ამ მოდელის API გასაღები სერვერზე არ არის.",
+          "errorInvalidKey": "ეს API გასაღები უარყოფილია. ჩასვი ახალი გასაღები .env-ში და გადატვირთე სერვერი.",
+          "errorLimit": "ამ მოდელის დღიური ლიმიტი ამოიწურა.",
           "errorFailed": "გენერაცია ვერ მოხერხდა. სცადე ხელახლა.",
-          "errorNoneVerified": "არცერთი ამოცანა ვერ გაიარა მათემატიკურ შემოწმებას. სცადე სხვა მოთხოვნა.",
+          "errorNoneVerified": "არცერთი ამოცანა არ ემთხვეოდა მოთხოვნას ან ვერ გაიარა შემოწმებას. სცადე სხვა მოთხოვნა ან შეუმოწმებელი რეჟიმი.",
           "errorUnauthorized": "ამ მოქმედებისთვის საჭიროა მასწავლებლის ანგარიში.",
+          "errorBilling": "ამ API გასაღებს კრედიტი არ აქვს. შეუმოწმებელი AI იგივე ფასიან API-ს იძახებს. შეავსე DeepSeek ან OpenAI, ან აირჩიე Gemini / Groq.",
+          "errorTimeout": "მოდელს დიდი დრო დასჭირდა. სცადე შეუმოწმებელი AI, ნაკლები ამოცანა, ან Gemini / Groq.",
           "partial": "შემოწმდა {verified} / {requested}."
         },
         "variantPanel": {
           "title": "მსგავსი ვარიანტები",
-          "hint": "იგივე ფორმულა, ახალი რიცხვები. პასუხს ითვლის Math.js — AI აღარ სჭირდება.",
+          "hint": "იქმნება ბევრი კანდიდატი; Math.js ტოვებს მხოლოდ სუფთა პასუხებს. სტრუქტურა იცვლება (კოეფიციენტი, ნიშანი, ხარისხი) და ყოველ კლიკზე აღარ გრძელდება.",
           "submit": "ვარიანტების გენერაცია",
           "count": "რაოდენობა",
           "close": "ვარიანტების დახურვა",
@@ -1058,7 +1123,7 @@
           "generated": "ახალი"
         },
         "actions": {
-          "openLab": "გახსენი ლაბორატორია",
+          "openLab": "გახსენი ამოცანების ბანკი",
           "openHomework": "გახსენი დავალებები"
         }
       }
