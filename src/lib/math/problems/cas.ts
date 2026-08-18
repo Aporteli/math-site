@@ -6,7 +6,7 @@ import type { ProblemDifficulty } from "./types";
 const ALLOWED_EXPR = /^[0-9A-Za-z_+\-*/^()!%.,\s]+$/;
 const BLOCKED =
   /\b(constructor|prototype|window|document|Function|eval|globalThis|import|createUnit|random)\b/i;
-const NAME = /^[A-Za-z][A-Za-z0-9_]{0,11}$/;
+const NAME = /^[A-Za-z][A-Za-z0-9_]{0,23}$/;
 
 const FORMULA_MAX = 320;
 const VARIABLE_ABS_MAX = 200;
@@ -188,6 +188,217 @@ export type CasOk = {
 
 export type CasFail = { ok: false; reason: string };
 
+/**
+ * Evaluate a sanitized math.js expression against a numeric scope.
+ * Used by the JSON template engine for derived fields and constraints.
+ */
+export function evaluateCas(
+  rawFormula: string,
+  scope: Record<string, number>,
+): { ok: true; value: number } | CasFail {
+  try {
+    const formula = sanitizeFormula(rawFormula);
+    const filtered = scopeForFormula(formula, scope);
+    const names = Object.keys(filtered);
+    const variables =
+      names.length === 0
+        ? {}
+        : sanitizeVariables(
+            names.map((name) => ({ name, value: filtered[name]! })),
+          );
+    const node = parse(formula);
+    assertSafeAst(node, new Set(Object.keys(variables)));
+
+    const compiled = node.compile();
+    const raw = compiled.evaluate({
+      ...CAS_SCOPE,
+      ...variables,
+    });
+
+    if (typeof raw === "boolean") {
+      return { ok: true, value: raw ? 1 : 0 };
+    }
+    if (typeof raw !== "number" || !Number.isFinite(raw)) {
+      return { ok: false, reason: "nonreal" };
+    }
+
+    const value = snapClean(raw);
+    if (value === null) return { ok: false, reason: "unclean" };
+    return { ok: true, value };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "unsafe";
+    return { ok: false, reason };
+  }
+}
+
+const COMPARE_OPS = ["<=", ">=", "!=", "==", "<", ">"] as const;
+type CompareOp = (typeof COMPARE_OPS)[number];
+
+const OR_SEPS = ["||", " or ", " ∨ ", "∨"] as const;
+const AND_SEPS = ["&&", " and ", " ∧ ", "∧"] as const;
+const COMPARE_EPS = 1e-9;
+
+function rewriteCompareMacros(expr: string) {
+  return expr
+    .replace(/\\(?:geq|ge)(?![A-Za-z])/gi, ">=")
+    .replace(/\\(?:leq|le)(?![A-Za-z])/gi, "<=")
+    .replace(/\\(?:neq|ne)(?![A-Za-z])/gi, "!=")
+    .replace(/\\gt(?![A-Za-z])/gi, ">")
+    .replace(/\\lt(?![A-Za-z])/gi, "<")
+    .replace(/<>/g, "!=")
+    .replace(/≠/g, "!=")
+    .replace(/≥|⩾/g, ">=")
+    .replace(/≤|⩽/g, "<=");
+}
+
+function rewriteBareEquals(expr: string) {
+  return expr.replace(/(?<![<>!=])=(?![=])/g, "==");
+}
+
+function splitTopLevel(expr: string, seps: readonly string[]): string[] {
+  const sorted = [...seps].sort((a, b) => b.length - a.length);
+  const parts: string[] = [];
+  let start = 0;
+  let depth = 0;
+  for (let i = 0; i < expr.length; i += 1) {
+    const char = expr[i]!;
+    if (char === "(") depth += 1;
+    else if (char === ")") depth = Math.max(0, depth - 1);
+    else if (depth === 0) {
+      const hit = sorted.find(
+        (sep) => expr.slice(i, i + sep.length).toLowerCase() === sep.toLowerCase(),
+      );
+      if (hit) {
+        parts.push(expr.slice(start, i).trim());
+        i += hit.length - 1;
+        start = i + 1;
+      }
+    }
+  }
+  parts.push(expr.slice(start).trim());
+  return parts;
+}
+
+function compareOp(op: CompareOp, left: number, right: number) {
+  switch (op) {
+    case "==":
+      return Math.abs(left - right) < COMPARE_EPS;
+    case "!=":
+      return Math.abs(left - right) >= COMPARE_EPS;
+    case ">":
+      return left > right + COMPARE_EPS;
+    case "<":
+      return left < right - COMPARE_EPS;
+    case ">=":
+      return left > right - COMPARE_EPS;
+    case "<=":
+      return left < right + COMPARE_EPS;
+  }
+}
+
+function evalCompareChain(
+  expr: string,
+  scope: Record<string, number>,
+): { ok: true; value: number } | CasFail {
+  const parts: Array<
+    { kind: "expr"; value: string } | { kind: "op"; value: CompareOp }
+  > = [];
+  let depth = 0;
+  let buf = "";
+  let i = 0;
+  while (i < expr.length) {
+    const char = expr[i]!;
+    if (char === "(") {
+      depth += 1;
+      buf += char;
+      i += 1;
+      continue;
+    }
+    if (char === ")") {
+      depth = Math.max(0, depth - 1);
+      buf += char;
+      i += 1;
+      continue;
+    }
+    if (depth === 0) {
+      const rest = expr.slice(i);
+      const op = COMPARE_OPS.find((candidate) => rest.startsWith(candidate));
+      if (op) {
+        parts.push({ kind: "expr", value: buf.trim() });
+        parts.push({ kind: "op", value: op });
+        buf = "";
+        i += op.length;
+        continue;
+      }
+    }
+    buf += char;
+    i += 1;
+  }
+  if (buf.trim()) parts.push({ kind: "expr", value: buf.trim() });
+
+  const exprs = parts.filter(
+    (part): part is { kind: "expr"; value: string } => part.kind === "expr",
+  );
+  const ops = parts.filter(
+    (part): part is { kind: "op"; value: CompareOp } => part.kind === "op",
+  );
+  if (ops.length === 0) return evaluateCas(expr, scope);
+  if (exprs.length !== ops.length + 1 || exprs.some((part) => !part.value)) {
+    return { ok: false, reason: "unsafe" };
+  }
+
+  const values: number[] = [];
+  for (const part of exprs) {
+    const result = evaluateCas(part.value, scope);
+    if (!result.ok) return result;
+    values.push(result.value);
+  }
+  for (let index = 0; index < ops.length; index += 1) {
+    if (!compareOp(ops[index]!.value, values[index]!, values[index + 1]!)) {
+      return { ok: true, value: 0 };
+    }
+  }
+  return { ok: true, value: 1 };
+}
+
+function evalAndExpr(
+  expr: string,
+  scope: Record<string, number>,
+): { ok: true; value: number } | CasFail {
+  const parts = splitTopLevel(expr, AND_SEPS);
+  if (parts.length <= 1) return evalCompareChain(expr, scope);
+  for (const part of parts) {
+    if (!part) return { ok: false, reason: "unsafe" };
+    const result = evalCompareChain(part, scope);
+    if (!result.ok) return result;
+    if (result.value === 0) return { ok: true, value: 0 };
+  }
+  return { ok: true, value: 1 };
+}
+
+/**
+ * Template-engine evaluator: comparisons, and/or, then the same CAS as evaluateCas.
+ * Formula verification stays on evaluateCas / verifyFormula and still rejects `=`, `>`.
+ */
+export function evaluateTemplateExpr(
+  rawFormula: string,
+  scope: Record<string, number>,
+): { ok: true; value: number } | CasFail {
+  const expr = rewriteBareEquals(rewriteCompareMacros(rawFormula.trim()));
+  if (!expr) return { ok: false, reason: "empty" };
+
+  const orParts = splitTopLevel(expr, OR_SEPS);
+  if (orParts.length <= 1) return evalAndExpr(expr, scope);
+
+  for (const part of orParts) {
+    if (!part) return { ok: false, reason: "unsafe" };
+    const result = evalAndExpr(part, scope);
+    if (!result.ok) return result;
+    if (result.value !== 0) return { ok: true, value: 1 };
+  }
+  return { ok: true, value: 0 };
+}
+
 /** Prompt fragment so Gemini stays inside what verifyFormula can check. */
 export function casVerifiedPromptGuide(difficulty?: ProblemDifficulty) {
   return [
@@ -220,7 +431,7 @@ export function casVerifiedPromptGuide(difficulty?: ProblemDifficulty) {
     "Special: gamma erf lgamma zeta bernoulli compare add subtract multiply divide.",
     "Use only the listed variable names. No arrays, matrices, random, assignment, or units.",
     "Do not emit proofs, inequalities without a numeric answer, matrices, or geometry constructions in this mode.",
-    "instructionId must be one of: solve, evaluate, findDerivative, percentOf, missingSide, expand.",
+    "instructionId must be one of: solve, evaluate, findDerivative, percentOf, missingSide, expand, factor, simplify.",
   ].join("\n");
 }
 
@@ -240,7 +451,7 @@ function casDifficultyLines(difficulty?: ProblemDifficulty) {
       "BAD as the whole problem: only 'find the discriminant' or only f(4).",
     ];
   }
-  if (difficulty === "hard") {
+  if (difficulty === "hard" || difficulty === "olympiad") {
     return [
       "REQUIRED difficulty: hard (including 'very hard'). Year 10–12 contest-style, still ONE numeric answer.",
       "A problem that is only discriminant, only vertex, only f(k), or only one root of a tiny quadratic is FORBIDDEN even if you label it hard.",
@@ -283,11 +494,20 @@ export function normalizeMathJsFormula(raw: string) {
   expr = expr.replace(/\^\{([^{}]+)\}/g, "^($1)");
   expr = expr.replace(/[{}]/g, "");
   expr = expr.replace(/[−–—]/g, "-");
+  expr = expr.replace(/[·×∙⋅]/g, "*");
+  expr = expr.replace(/÷/g, "/");
   expr = expr.replace(/\*\*/g, "^");
   expr = expr.replace(/(\d)\s*([A-Za-z(])/g, "$1*$2");
+  expr = insertIdentImplicitMul(expr);
   expr = expr.replace(/\)\s*\(/g, ")*(");
   expr = expr.replace(/\)\s*([A-Za-z])/g, ")*$1");
   return expr.replace(/\s+/g, " ").trim();
+}
+
+function insertIdentImplicitMul(expr: string) {
+  return expr.replace(/([A-Za-z][A-Za-z0-9_]*)\s*\(/g, (full, name: string) =>
+    ALLOWED_FUNCTIONS.has(name) ? full : `${name}*(`,
+  );
 }
 
 export function sanitizeFormula(raw: string) {
@@ -297,6 +517,15 @@ export function sanitizeFormula(raw: string) {
     throw new Error("unsafe");
   }
   return expr;
+}
+
+function scopeForFormula(formula: string, scope: Record<string, number>) {
+  const names = formula.match(/[A-Za-z][A-Za-z0-9_]{0,23}/g) ?? [];
+  const filtered: Record<string, number> = {};
+  for (const name of names) {
+    if (name in scope) filtered[name] = scope[name]!;
+  }
+  return filtered;
 }
 
 export function sanitizeVariables(

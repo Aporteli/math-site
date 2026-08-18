@@ -26,6 +26,7 @@ enum ProblemDifficulty {
   easy
   medium
   hard
+  olympiad
 }
 
 enum ProblemSource {

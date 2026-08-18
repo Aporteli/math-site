@@ -14,6 +14,11 @@ import {
   type GenerateDiverseProblemsInput,
 } from "./ai-schema";
 import {
+  proposeTemplateFromExample,
+  proposeTemplateSchema,
+  type ProposeTemplateResult,
+} from "./templates/from-example";
+import {
   deleteTeacherProblem,
   loadDraftLessonSet,
   loadTeacherProblems,
@@ -70,6 +75,31 @@ export async function generateDiverseProblemsAction(
     return await generateDiverseProblems(parsed.data);
   } catch (error) {
     console.error("AI generate action failed", error instanceof Error ? error.message : error);
+    return { ok: false, error: "failed" };
+  }
+}
+
+export async function proposeTemplateAction(
+  raw: unknown,
+): Promise<ProposeTemplateResult> {
+  const session = await getSession();
+  const role = session?.user?.role;
+  if (role !== "TEACHER" && role !== "ADMIN") {
+    return { ok: false, error: "unauthorized" };
+  }
+
+  const parsed = proposeTemplateSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, error: "failed" };
+  }
+
+  try {
+    return await proposeTemplateFromExample(parsed.data);
+  } catch (error) {
+    console.error(
+      "Template import failed",
+      error instanceof Error ? error.message : error,
+    );
     return { ok: false, error: "failed" };
   }
 }

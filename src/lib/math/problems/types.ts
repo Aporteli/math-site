@@ -9,7 +9,13 @@ export const PROBLEM_TOPICS = [
   "combinatorics",
 ] as const;
 
-export const PROBLEM_DIFFICULTIES = ["easy", "medium", "hard"] as const;
+export const GENERATOR_DIFFICULTIES = ["easy", "medium", "hard"] as const;
+export const PROBLEM_DIFFICULTIES = [
+  "easy",
+  "medium",
+  "hard",
+  "olympiad",
+] as const;
 
 export const PROBLEM_YEARS = ["7", "8", "9", "10", "11", "12"] as const;
 
@@ -24,36 +30,25 @@ export const PROBLEM_INSTRUCTIONS = [
   "percentOf",
   "missingSide",
   "expand",
+  "factor",
+  "simplify",
 ] as const;
 
 export type ProblemTopic = (typeof PROBLEM_TOPICS)[number];
+export type GeneratorDifficulty = (typeof GENERATOR_DIFFICULTIES)[number];
 export type ProblemDifficulty = (typeof PROBLEM_DIFFICULTIES)[number];
+
+export function toGeneratorDifficulty(
+  difficulty: ProblemDifficulty,
+): GeneratorDifficulty {
+  return difficulty === "olympiad" ? "hard" : difficulty;
+}
 export type ProblemYear = (typeof PROBLEM_YEARS)[number];
 export type ProblemSource = (typeof PROBLEM_SOURCES)[number];
 export type ProblemCheck = (typeof PROBLEM_CHECKS)[number];
 export type ProblemInstructionId = (typeof PROBLEM_INSTRUCTIONS)[number];
 
-export type ProblemTemplateId =
-  | "linear-one-step"
-  | "linear-two-step"
-  | "linear-both-sides"
-  | "quadratic-monic"
-  | "quadratic-scaled"
-  | "percent-of"
-  | "percent-whole"
-  | "percent-increase"
-  | "pythagoras-hyp"
-  | "pythagoras-leg"
-  | "function-linear"
-  | "function-quadratic"
-  | "derivative-power"
-  | "derivative-quadratic"
-  | "derivative-at"
-  | "vector-magnitude"
-  | "vector-dot"
-  | "binomial-choose"
-  | "ai-verified"
-  | "ai-plain";
+export type ProblemTemplateId = string;
 
 export interface BankProblem {
   id: string;

@@ -26,7 +26,7 @@ function hintLines(input: ProposeInput) {
       : "No catalog topic filter.",
     input.difficulty
       ? `REQUIRED difficulty for EVERY problem: ${input.difficulty}. Emitting an easier task and tagging it ${input.difficulty} is forbidden.`
-      : "Choose easy, medium, or hard to match THIS problem — and the teacher request if it names a difficulty.",
+      : "Choose easy, medium, hard, or olympiad to match THIS problem — and the teacher request if it names a difficulty.",
     input.year
       ? `Preferred year group (hint only): ${input.year}.`
       : "Choose year 7–12 to match THIS problem.",
@@ -66,7 +66,7 @@ function compactVerifiedGuide(input: ProposeInput) {
     "kind: short unique English slug (eval-at-point, discriminant, vertex, vieta-sum, …).",
     "topic: lowercase English slug such as quadratic-equation.",
     'year: string "7" "8" "9" "10" "11" or "12".',
-    "instructionId: solve, evaluate, findDerivative, percentOf, missingSide, or expand.",
+    "instructionId: solve, evaluate, findDerivative, percentOf, missingSide, expand, factor, or simplify.",
     "promptTex: student LaTeX only. Write $4k^{2}+6k-5=0$, NEVER 4k * k or 4*k*k.",
     "formula: math.js, NOT LaTeX. Use * for multiply. Example: a*k^2 + b*k + c",
     "Never write 2x^{2}, \\frac, or digits 2 or 3 inside formula. 0 and 1 are allowed if needed.",
@@ -89,36 +89,32 @@ function compactPlainGuide(input: ProposeInput) {
       : input.difficulty === "easy"
         ? "Easy means one-step."
         : "Match the named difficulty.",
-    "instructionId: solve, evaluate, findDerivative, percentOf, missingSide, or expand.",
+    "instructionId: solve, evaluate, findDerivative, percentOf, missingSide, expand, factor, or simplify.",
   ].join("\n");
 }
 
-/** Unchecked AI: same freedom as the model's own chat; JSON is only a wrapper. */
+/** Unchecked AI: deep contest thinking, then a fast JSON wrap. */
 export function buildUncheckedChatPrompt(input: ProposeInput) {
   const language = PROMPT_LANGUAGE[input.locale];
   const count = Math.min(12, Math.max(1, input.count));
   const request = input.request.trim();
 
   return [
-    "You are chatting with a mathematics teacher, the same way you do on your own chat site.",
-    "Think privately as deeply as you normally would. Do not dumb the request down. Do not substitute a different, easier topic.",
-    "If they asked for hard or very hard problems, write contest/olympiad-level items with real reasoning — not textbook drills such as $x^2-5x+6=0$ or $2x^2-5x-3=0$.",
+    "Think at contest/olympiad depth AND at speed: complete the hard reasoning in private, then write JSON immediately. Do not ramble. Do not skip steps in the maths.",
+    "Do not dumb the request down. Do not replace it with a different, easier topic.",
+    "If they asked for hard or very hard problems, each item needs several non-obvious steps. Forbidden as the whole problem: $x^2-5x+6=0$, $2x^2-5x-3=0$, only the discriminant, or only f(k).",
     "",
-    `Teacher request (follow this): ${request}`,
-    `Write exactly ${count} different problems.`,
-    `Student-facing language: ${language} (${localeNames[input.locale].label}).`,
-    input.topic
-      ? `Topic hint (only if it still matches the request): ${input.topic}`
-      : "",
-    input.difficulty ? `Difficulty hint: ${input.difficulty}` : "",
-    input.year ? `School year hint: ${input.year}` : "",
+    `Teacher request: ${request}`,
+    `Exactly ${count} different problems. Language: ${language} (${localeNames[input.locale].label}).`,
+    input.topic ? `Topic hint: ${input.topic}` : "",
+    input.difficulty ? `Difficulty: ${input.difficulty}` : "",
+    input.year ? `Year hint: ${input.year}` : "",
     "",
-    "When you are done thinking, reply with JSON only:",
-    '{"problems":[{"kind":"short-unique-slug","topic":"quadratic-equation","difficulty":"hard","year":"12","instructionId":"evaluate","promptTex":"...","solutionTex":"..."}]}',
-    "promptTex = the full problem a student reads (natural sentences, maths in $...$).",
-    "solutionTex = stepped working, not a one-line answer. Keep each solution under 12 short lines so the JSON can finish.",
-    "kind must be unique. year is 7-12. difficulty is easy, medium, or hard.",
-    "Finish the whole JSON object. Escape backslashes in LaTeX (write \\\\frac not \\frac).",
+    "JSON only:",
+    '{"problems":[{"kind":"short-slug","topic":"quadratic-equation","difficulty":"hard","year":"12","instructionId":"evaluate","promptTex":"...","solutionTex":"..."}]}',
+    "promptTex = full student stem, maths in $...$.",
+    "solutionTex = the main reasoning steps (tight, not an essay).",
+    "kind unique. year 7-12. difficulty easy|medium|hard|olympiad. Double LaTeX backslashes (\\\\frac).",
   ]
     .filter(Boolean)
     .join("\n");
@@ -141,7 +137,7 @@ export function buildProblemPrompt(
     ...hintLines(input),
     "Each problem must be a DIFFERENT kind of TASK, not the same identity rewritten.",
     "topic is a lowercase English slug for THIS problem (quadratic-equation, number-theory, combinatorics, …), not a copy of the filter bar.",
-    "difficulty must be easy, medium, or hard — and MUST equal the required difficulty when one is set.",
+    "difficulty must be easy, medium, hard, or olympiad — and MUST equal the required difficulty when one is set.",
     "year must be one of: 7, 8, 9, 10, 11, 12.",
     ...contestHardGuide(input),
     compact
@@ -163,7 +159,7 @@ export function buildProblemPrompt(
                 : "Match the named difficulty in the teacher request.",
             "solutionTex is the answer or short working, same rules: readable text, maths in $...$.",
             "Stay on school mathematics matching the teacher request. Do not switch to unrelated trivia.",
-            "instructionId if present must be one of: solve, evaluate, findDerivative, percentOf, missingSide, expand.",
+            "instructionId if present must be one of: solve, evaluate, findDerivative, percentOf, missingSide, expand, factor, simplify.",
           ].join("\n"),
     'Return ONLY a JSON object: {"problems":[...]} with no markdown fences.',
     "In JSON, double every LaTeX backslash: write \\\\frac and \\\\( not \\frac or \\(.",

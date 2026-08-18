@@ -6,6 +6,7 @@ import { Check, Copy, Eye, EyeOff, Library, Plus, Save, Shuffle, Trash2, X } fro
 import { KatexPreview } from "@/components/math/katex-preview";
 import { PageHero } from "@/components/ui/page-hero";
 import { SelectMenu } from "@/components/ui/select-menu";
+import { ImportFamilyModal } from "@/components/lms/problem-bank/import-family-modal";
 import { localePath, type Locale } from "@/i18n/config";
 import {
   generateDiverseProblemsAction,
@@ -36,6 +37,8 @@ import {
   toPersistInput,
   replaceCount,
   replaceTokens,
+  groupedKindsForTopic,
+  kindLabel,
   topicLabel,
   topicsInBank,
   type AiCheckMode,
@@ -135,6 +138,7 @@ const difficultyTone: Record<ProblemDifficulty, string> = {
   easy: "bg-navy-tint text-navy",
   medium: "bg-brass-tint text-brass",
   hard: "border border-hairline bg-paper-deep text-brass-strong",
+  olympiad: "bg-navy text-brass-soft",
 };
 
 interface ProblemBankWorkspaceProps {
@@ -165,14 +169,16 @@ export function ProblemBankWorkspace({
   const [draftIds, setDraftIds] = useState<string[]>([]);
   const [showSolution, setShowSolution] = useState(false);
   const [panel, setPanel] = useState<"generate" | "variants" | null>("generate");
+  const [importOpen, setImportOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [genTopic, setGenTopic] = useState<ProblemTopic | "any">("any");
+  const [genKind, setGenKind] = useState<string>("any");
   const [genDifficulty, setGenDifficulty] = useState<ProblemDifficulty | "any">(
     "any",
   );
   const [genYear, setGenYear] = useState<ProblemYear | "any">("any");
   const [genCount, setGenCount] = useState(5);
-  const [genMode, setGenMode] = useState<"templates" | "diverse">("diverse");
+  const [genMode, setGenMode] = useState<"algorithms" | "diverse">("diverse");
   const [genCheck, setGenCheck] = useState<AiCheckMode>("verified");
   const [genModel, setGenModel] = useState<AiModelId>(DEFAULT_AI_MODEL);
   const [modelStatus, setModelStatus] = useState<AiModelStatus[]>([]);
@@ -230,6 +236,11 @@ export function ProblemBankWorkspace({
     setFilters((current) => ({ ...current, [key]: value }));
   }
 
+  function selectGenTopic(value: ProblemTopic | "any") {
+    setGenTopic(value);
+    setGenKind("any");
+  }
+
   function remapIds(ids: string[], idMap: Record<string, string>) {
     return ids.map((id) => idMap[id] ?? id);
   }
@@ -284,9 +295,10 @@ export function ProblemBankWorkspace({
     return result;
   }
 
-  async function persistLessonSet(nextIds: string[]) {
+  // დამატებულია currentBank პარამეტრი Stale State-ის თავიდან ასაცილებლად
+  async function persistLessonSet(nextIds: string[], currentBank = bank) {
     const members = nextIds
-      .map((id) => bank.find((problem) => problem.id === id))
+      .map((id) => currentBank.find((problem) => problem.id === id))
       .filter((problem): problem is BankProblem => Boolean(problem));
     const unsaved = members.filter((problem) => isUnsavedId(problem.id));
     let payload;
@@ -302,7 +314,15 @@ export function ProblemBankWorkspace({
       return;
     }
     setBank((current) => mergeSaved(current, result.saved, result.idMap));
-    setDraftIds((current) => remapIds(current, result.idMap));
+    
+    // შესწორება: შენახული ამოცანების გასუფთავება draftIds-დან
+    setDraftIds((current) =>
+      remapIds(
+        current.filter((id) => !unsaved.some((problem) => problem.id === id)),
+        result.idMap,
+      ),
+    );
+    
     setSelectedId((current) =>
       current ? (result.idMap[current] ?? current) : current,
     );
@@ -333,17 +353,22 @@ export function ProblemBankWorkspace({
     }
 
     const nextSet = lessonSetIds.filter((item) => item !== id);
-    setBank((current) => current.filter((problem) => problem.id !== id));
+    const nextBank = bank.filter((problem) => problem.id !== id);
+    
+    setBank(nextBank);
     setLessonSetIds(nextSet);
     setDraftIds((current) => current.filter((item) => item !== id));
+    
     if (selectedId === id) {
       setSelectedId(null);
       setShowSolution(false);
     }
+    
     if (!isUnsavedId(id)) {
       setSaving(true);
       try {
-        await persistLessonSet(nextSet);
+        // შესწორება: ახალი მონაცემების მიწოდება (avoid stale state)
+        await persistLessonSet(nextSet, nextBank);
       } finally {
         setSaving(false);
       }
@@ -377,7 +402,13 @@ export function ProblemBankWorkspace({
   function applyCreated(created: BankProblem[]) {
     if (created.length === 0) return;
     setBank((current) => [...created, ...current]);
-    setDraftIds(created.map((problem) => problem.id));
+    
+    // შესწორება: ახალი ამოცანების დამატება არსებულ draftIds-ში ზედწერის ნაცვლად
+    setDraftIds((current) => [
+      ...created.map((problem) => problem.id),
+      ...current,
+    ]);
+    
     setSelectedId(created[0]?.id ?? null);
     setShowSolution(false);
     setFilters({
@@ -400,15 +431,14 @@ export function ProblemBankWorkspace({
   async function onGenerate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (genMode === "templates") {
-      if (genTopic === "any" || genDifficulty === "any" || genYear === "any") {
-        return;
-      }
+    if (genMode === "algorithms") {
       const parsed = generateProblemsSchema.safeParse({
-        topic: genTopic,
-        difficulty: genDifficulty,
-        year: genYear,
+        topic: genTopic === "any" ? undefined : genTopic,
+        kind: genKind === "any" ? undefined : genKind,
+        difficulty: genDifficulty === "any" ? undefined : genDifficulty,
+        year: genYear === "any" ? undefined : genYear,
         count: genCount,
+        locale,
       });
       if (!parsed.success) return;
       applyCreated(generateProblems(parsed.data));
@@ -497,6 +527,12 @@ export function ProblemBankWorkspace({
       return;
     }
 
+    if (id === "import") {
+      setImportOpen(true);
+      setNotice(null);
+      return;
+    }
+
     if (tool.status === "soon") {
       setNotice(copy.tools[id].hint);
     }
@@ -528,7 +564,8 @@ export function ProblemBankWorkspace({
             const item = copy.tools[tool.id];
             const className = [
               "flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all",
-              tool.status === "ready" && panel === tool.id
+              tool.status === "ready" &&
+              (panel === tool.id || (tool.id === "import" && importOpen))
                 ? "border-navy/30 bg-navy-tint shadow-sm"
                 : "border-hairline bg-white shadow-sm hover:border-navy/30 hover:shadow-md",
             ].join(" ");
@@ -567,7 +604,9 @@ export function ProblemBankWorkspace({
                     aria-pressed={
                       tool.id === "generate" || tool.id === "variants"
                         ? panel === tool.id
-                        : undefined
+                        : tool.id === "import"
+                          ? importOpen
+                          : undefined
                     }
                     onClick={() => onTool(tool.id)}
                   >
@@ -584,6 +623,22 @@ export function ProblemBankWorkspace({
           </p>
         ) : null}
       </section>
+
+      {importOpen ? (
+        <ImportFamilyModal
+          locale={locale}
+          copy={copy}
+          count={genCount}
+          difficulty={genDifficulty}
+          year={genYear}
+          model={genModel}
+          onClose={() => setImportOpen(false)}
+          onCreated={(created) => {
+            applyCreated(created);
+            setNotice(null);
+          }}
+        />
+      ) : null}
 
       {panel === "generate" ? (
         <form
@@ -604,7 +659,7 @@ export function ProblemBankWorkspace({
                   ? genCheck === "plain"
                     ? copy.generate.plainHint
                     : copy.generate.requestHint
-                  : copy.generate.batchHint}
+                  : copy.generate.algorithmHint}
               </p>
             </div>
             <button
@@ -626,24 +681,6 @@ export function ProblemBankWorkspace({
                 type="button"
                 className={[
                   "rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
-                  genMode === "templates"
-                    ? "bg-white text-navy shadow-sm"
-                    : "text-body hover:text-navy",
-                ].join(" ")}
-                aria-pressed={genMode === "templates"}
-                onClick={() => {
-                  setGenMode("templates");
-                  if (genTopic === "any") setGenTopic("algebra");
-                  if (genDifficulty === "any") setGenDifficulty("medium");
-                  if (genYear === "any") setGenYear("9");
-                }}
-              >
-                {copy.generate.modeTemplates}
-              </button>
-              <button
-                type="button"
-                className={[
-                  "rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
                   genMode === "diverse"
                     ? "bg-white text-navy shadow-sm"
                     : "text-body hover:text-navy",
@@ -652,6 +689,19 @@ export function ProblemBankWorkspace({
                 onClick={() => setGenMode("diverse")}
               >
                 {copy.generate.modeDiverse}
+              </button>
+              <button
+                type="button"
+                className={[
+                  "rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
+                  genMode === "algorithms"
+                    ? "bg-white text-navy shadow-sm"
+                    : "text-body hover:text-navy",
+                ].join(" ")}
+                aria-pressed={genMode === "algorithms"}
+                onClick={() => setGenMode("algorithms")}
+              >
+                {copy.generate.modeAlgorithms}
               </button>
             </div>
             {genMode === "diverse" ? (
@@ -795,6 +845,152 @@ export function ProblemBankWorkspace({
             </label>
           ) : null}
           <div className="rounded-2xl border border-brass/10 bg-brass-tint/30 p-3">
+          {genMode === "algorithms" ? (
+            <div className="space-y-3">
+              <div className="max-w-md">
+                <label
+                  htmlFor={`${genId}-topic`}
+                  className="block text-sm font-medium text-ink"
+                >
+                  {copy.generate.topic}
+                </label>
+                <SelectMenu
+                  id={`${genId}-topic`}
+                  className="mt-1.5"
+                  value={genTopic}
+                  onChange={(value) =>
+                    selectGenTopic(value as ProblemTopic | "any")
+                  }
+                  options={[
+                    { value: "any" as const, label: copy.generate.anyTopic },
+                    ...PROBLEM_TOPICS.map((topic) => ({
+                      value: topic,
+                      label: copy.topics[topic],
+                    })),
+                  ]}
+                />
+              </div>
+              {genTopic !== "any" ? (
+                <div className="rounded-2xl border border-hairline bg-white p-3">
+                  <p className="text-sm font-semibold text-ink">
+                    {copy.topics[genTopic]}
+                  </p>
+                  <div className="mt-3 max-w-md">
+                    <label
+                      htmlFor={`${genId}-kind`}
+                      className="block text-sm font-medium text-ink"
+                    >
+                      {copy.generate.kind}
+                    </label>
+                    <SelectMenu
+                      id={`${genId}-kind`}
+                      className="mt-1.5"
+                      value={genKind}
+                      onChange={setGenKind}
+                      options={[
+                        {
+                          value: "any",
+                          label: copy.generate.anyKind,
+                        },
+                        ...groupedKindsForTopic(genTopic).flatMap((group) => [
+                          ...(group.groupId
+                            ? [
+                                {
+                                  heading:
+                                    copy.generate.kindGroups[group.groupId],
+                                },
+                              ]
+                            : []),
+                          ...group.kinds.map((option) => ({
+                            value: option.id,
+                            label: kindLabel(copy.generate.kinds, option.id),
+                          })),
+                        ]),
+                      ]}
+                    />
+                  </div>
+                </div>
+              ) : null}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <label
+                    htmlFor={`${genId}-difficulty`}
+                    className="block text-sm font-medium text-ink"
+                  >
+                    {copy.generate.difficulty}
+                  </label>
+                  <SelectMenu
+                    id={`${genId}-difficulty`}
+                    className="mt-1.5"
+                    value={genDifficulty}
+                    onChange={(value) =>
+                      setGenDifficulty(value as ProblemDifficulty | "any")
+                    }
+                    options={[
+                      {
+                        value: "any" as const,
+                        label: copy.generate.anyDifficulty,
+                      },
+                      ...PROBLEM_DIFFICULTIES.map((difficulty) => ({
+                        value: difficulty,
+                        label: copy.difficulties[difficulty],
+                      })),
+                    ]}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor={`${genId}-year`}
+                    className="block text-sm font-medium text-ink"
+                  >
+                    {copy.generate.year}
+                  </label>
+                  <SelectMenu
+                    id={`${genId}-year`}
+                    className="mt-1.5"
+                    value={genYear}
+                    onChange={(value) =>
+                      setGenYear(value as ProblemYear | "any")
+                    }
+                    options={[
+                      { value: "any" as const, label: copy.generate.anyYear },
+                      ...PROBLEM_YEARS.map((year) => ({
+                        value: year,
+                        label: copy.years[year],
+                      })),
+                    ]}
+                  />
+                </div>
+                <label className="block text-sm font-medium text-ink">
+                  {copy.generate.count}
+                  <input
+                    className={`${fieldClass} mt-1.5`}
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={genCount}
+                    onChange={(event) =>
+                      setGenCount(
+                        Math.min(
+                          12,
+                          Math.max(1, Number(event.target.value) || 1),
+                        ),
+                      )
+                    }
+                  />
+                </label>
+                <div className="flex items-end">
+                  <button
+                    type="submit"
+                    disabled={generating}
+                    className="inline-flex w-full items-center justify-center rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60"
+                  >
+                    {generating ? copy.generate.busy : copy.generate.submit}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div>
               <label
@@ -808,12 +1004,10 @@ export function ProblemBankWorkspace({
                 className="mt-1.5"
                 value={genTopic}
                 onChange={(value) =>
-                  setGenTopic(value as ProblemTopic | "any")
+                  selectGenTopic(value as ProblemTopic | "any")
                 }
                 options={[
-                  ...(genMode === "diverse"
-                    ? [{ value: "any" as const, label: copy.generate.anyTopic }]
-                    : []),
+                  { value: "any" as const, label: copy.generate.anyTopic },
                   ...PROBLEM_TOPICS.map((topic) => ({
                     value: topic,
                     label: copy.topics[topic],
@@ -836,14 +1030,10 @@ export function ProblemBankWorkspace({
                   setGenDifficulty(value as ProblemDifficulty | "any")
                 }
                 options={[
-                  ...(genMode === "diverse"
-                    ? [
-                        {
-                          value: "any" as const,
-                          label: copy.generate.anyDifficulty,
-                        },
-                      ]
-                    : []),
+                  {
+                    value: "any" as const,
+                    label: copy.generate.anyDifficulty,
+                  },
                   ...PROBLEM_DIFFICULTIES.map((difficulty) => ({
                     value: difficulty,
                     label: copy.difficulties[difficulty],
@@ -866,9 +1056,7 @@ export function ProblemBankWorkspace({
                   setGenYear(value as ProblemYear | "any")
                 }
                 options={[
-                  ...(genMode === "diverse"
-                    ? [{ value: "any" as const, label: copy.generate.anyYear }]
-                    : []),
+                  { value: "any" as const, label: copy.generate.anyYear },
                   ...PROBLEM_YEARS.map((year) => ({
                     value: year,
                     label: copy.years[year],
@@ -882,14 +1070,11 @@ export function ProblemBankWorkspace({
                 className={`${fieldClass} mt-1.5`}
                 type="number"
                 min={1}
-                max={genMode === "diverse" ? 8 : 12}
+                max={8}
                 value={genCount}
                 onChange={(event) =>
                   setGenCount(
-                    Math.min(
-                      genMode === "diverse" ? 8 : 12,
-                      Math.max(1, Number(event.target.value) || 1),
-                    ),
+                    Math.min(8, Math.max(1, Number(event.target.value) || 1)),
                   )
                 }
               />
@@ -904,9 +1089,8 @@ export function ProblemBankWorkspace({
               </button>
             </div>
           </div>
-          {genMode === "diverse" ? (
-            <p className="mt-3 text-sm text-muted">{copy.generate.classifyHint}</p>
-          ) : null}
+          )}
+          <p className="mt-3 text-sm text-muted">{copy.generate.classifyHint}</p>
           </div>
           {draftIds.length > 0 ? (
             <div className="mt-4 flex flex-wrap gap-3">

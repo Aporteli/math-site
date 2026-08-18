@@ -1,12 +1,15 @@
 export {
   EMPTY_PROBLEM_FILTERS,
+  GENERATOR_DIFFICULTIES,
   PROBLEM_DIFFICULTIES,
   PROBLEM_INSTRUCTIONS,
   PROBLEM_CHECKS,
   PROBLEM_SOURCES,
   PROBLEM_TOPICS,
   PROBLEM_YEARS,
+  toGeneratorDifficulty,
   type BankProblem,
+  type GeneratorDifficulty,
   type ProblemDifficulty,
   type ProblemFilters,
   type ProblemCheck,
@@ -22,6 +25,7 @@ export {
   filterProblems,
   replaceCount,
   replaceTokens,
+  kindLabel,
   topicLabel,
   topicsInBank,
   type ProblemBankCopy,
@@ -33,9 +37,16 @@ export {
 export { SEED_PROBLEM_BANK } from "./bank";
 
 export {
+  algorithmOptionsForTopic,
+  groupedKindsForTopic,
+  generateFromTemplate,
   generateProblems,
   generateProblemsSchema,
+  PROBLEM_ALGORITHM_OPTIONS,
+  PROBLEM_ALGORITHMS,
+  type AlgorithmKindGroupId,
   type GenerateProblemsInput,
+  type ProblemAlgorithmOption,
 } from "./generate";
 
 export {

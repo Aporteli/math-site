@@ -1,0 +1,61 @@
+{
+  "id": "linear-one-step",
+  "topic": "algebra",
+  "difficulties": ["easy"],
+  "years": ["7", "8"],
+  "instructionId": "solve",
+  "variants": [
+    {
+      "id": "x-plus-a",
+      "params": {
+        "v": { "pick": ["x", "y", "n"] },
+        "x": { "int": [-8, 8] },
+        "a": { "int": [-9, 9], "nonzero": true }
+      },
+      "derived": {
+        "b": "x + a"
+      },
+      "prompt": "{{linear 1 a v}} = {{b}}",
+      "solutionSteps": [
+        "{{linear 1 a v}} &= {{b}}",
+        "{{v}} &= {{x}}"
+      ]
+    },
+    {
+      "id": "ax-equals-b",
+      "params": {
+        "v": { "pick": ["x", "y", "n"] },
+        "x": { "int": [-8, 8], "nonzero": true },
+        "a": { "int": [-9, 9], "nonzero": true, "exclude": [1, -1] }
+      },
+      "derived": {
+        "b": "a * x"
+      },
+      "prompt": "{{linear a 0 v}} = {{b}}",
+      "solutionSteps": [
+        "{{linear a 0 v}} &= {{b}}",
+        "{{v}} &= {{b}} \\div {{a}}",
+        "{{v}} &= {{x}}"
+      ]
+    },
+    {
+      "id": "ax-plus-b",
+      "params": {
+        "v": { "pick": ["x", "y", "n"] },
+        "x": { "int": [-8, 8] },
+        "a": { "int": [-9, 9], "nonzero": true, "exclude": [1, -1] },
+        "b": { "int": [-9, 9], "nonzero": true }
+      },
+      "derived": {
+        "c": "a * x + b",
+        "rhs": "c - b"
+      },
+      "prompt": "{{linear a b v}} = {{c}}",
+      "solutionSteps": [
+        "{{linear a b v}} &= {{c}}",
+        "{{linear a 0 v}} &= {{rhs}}",
+        "{{v}} &= {{x}}"
+      ]
+    }
+  ]
+}

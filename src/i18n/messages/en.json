@@ -970,7 +970,8 @@
         "difficulties": {
           "easy": "Easy",
           "medium": "Medium",
-          "hard": "Hard"
+          "hard": "Hard",
+          "olympiad": "Olympiad"
         },
         "years": {
           "7": "Year 7",
@@ -993,7 +994,306 @@
           "findDerivative": "Find the derivative",
           "percentOf": "Find the value",
           "missingSide": "Find the missing side",
-          "expand": "Expand the expression"
+          "expand": "Expand the expression",
+          "factor": "Factor the expression",
+          "simplify": "Simplify"
+        },
+        "wordProblems": {
+          "names": ["Nino", "Giorgi", "Ana", "Luka", "Mariam", "Nika"],
+          "templates": {
+            "age-in-years": {
+              "prompt": "{name} is ${a}$ years old. How old will {name} be in ${b}$ years?",
+              "solution": "${a} + {b} = {x}$"
+            },
+            "age-years-ago": {
+              "prompt": "{name} was ${a}$ years old ${b}$ years ago. How old is {name} now?",
+              "solution": "${a} + {b} = {x}$"
+            },
+            "number-plus-equals": {
+              "prompt": "A number plus ${a}$ equals ${b}$. Find the number.",
+              "solution": "${variable} + {a} = {b} \\\\ {variable} = {x}$"
+            },
+            "number-twice-plus": {
+              "prompt": "Twice a number plus ${a}$ equals ${b}$. Find the number.",
+              "solution": "$2{variable} + {a} = {b} \\\\ {variable} = {x}$"
+            },
+            "consecutive-sum": {
+              "prompt": "The sum of two consecutive integers is ${s}$. Find the integers.",
+              "solution": "${variable} + ({variable}+1) = {s} \\\\ {variable} = {x},\\; {variable}+1 = {y}$"
+            },
+            "rectangle-perimeter": {
+              "prompt": "A rectangle has length ${l}$ and width ${w}$. Find the perimeter.",
+              "solution": "$P = 2({l} + {w}) = {x}$"
+            },
+            "items-total-cost": {
+              "prompt": "${n}$ items cost ${p}$ lari each. What is the total cost?",
+              "solution": "${n} \\cdot {p} = {x}$"
+            },
+            "distance-speed-time": {
+              "prompt": "Speed is ${v}$ km/h and time is ${t}$ hours. Find the distance.",
+              "solution": "$s = {v} \\cdot {t} = {x}$"
+            },
+            "split-money": {
+              "prompt": "{name} has ${total}$ lari and splits it equally with {name2}. How much does each get?",
+              "solution": "${total} \\div 2 = {x}$"
+            },
+            "pages-left": {
+              "prompt": "A book has ${total}$ pages. {name} has read ${read}$. How many are left?",
+              "solution": "${total} - {read} = {x}$"
+            },
+            "more-than-sum": {
+              "prompt": "{name} has ${a}$ more than {name2}. Together they have ${s}$. How many does {name2} have?",
+              "solution": "$2{variable} + {a} = {s} \\\\ {variable} = {x}$"
+            },
+            "half-of-plus": {
+              "prompt": "Half a number plus ${a}$ equals ${b}$. Find the number.",
+              "solution": "$\\dfrac{{variable}}{2} + {a} = {b} \\\\ {variable} = {x}$"
+            },
+            "age-twice-sum": {
+              "prompt": "{name} is twice as old as {name2}. The sum of their ages is ${s}$. How old is {name2}?",
+              "solution": "${variable} + 2{variable} = {s} \\\\ {variable} = {x}$"
+            },
+            "sum-and-difference": {
+              "prompt": "The sum of two numbers is ${s}$ and their difference is ${d}$. Find the numbers.",
+              "solution": "${variable} = \\dfrac{{s} + {d}}{2} = {x},\\; {y} = \\dfrac{{s} - {d}}{2} = {z}$"
+            },
+            "coins-two-kinds": {
+              "prompt": "{name} has ${n}$ coins of ${a}$ lari and ${b}$ lari. The total is ${total}$ lari. How many ${a}-lari coins are there?",
+              "solution": "${a}{variable} + {b}({n} - {variable}) = {total} \\\\ {variable} = {x}$"
+            },
+            "consecutive-even": {
+              "prompt": "The sum of three consecutive even integers is ${s}$. Find the integers.",
+              "solution": "${variable} + ({variable}+2) + ({variable}+4) = {s} \\\\ {variable} = {x}$"
+            },
+            "rectangle-area": {
+              "prompt": "A rectangle’s length is ${a}$ more than its width. The area is ${area}$. Find the width.",
+              "solution": "${variable}({variable} + {a}) = {area} \\\\ {variable} = {x}$"
+            },
+            "tickets-two-prices": {
+              "prompt": "Adult tickets cost ${adult}$ lari and child tickets ${child}$ lari. ${n}$ tickets were sold for ${total}$ lari. How many adult tickets were sold?",
+              "solution": "${adult}{variable} + {child}({n} - {variable}) = {total} \\\\ {variable} = {x}$"
+            },
+            "two-trains": {
+              "prompt": "Two trains approach each other at ${v1}$ km/h and ${v2}$ km/h. They are ${dist}$ km apart. When do they meet?",
+              "solution": "$t = \\dfrac{{dist}}{{v1} + {v2}} = {x}$"
+            },
+            "work-remaining": {
+              "prompt": "{name} finishes a job in ${a}$ hours and has already worked ${b}$ hours. What fraction remains?",
+              "solution": "$1 - \\dfrac{{b}}{{a}} = \\dfrac{{x}}{{a}}$"
+            },
+            "mixture-ratio-parts": {
+              "prompt": "A mixture is in the ratio ${a} : {b}$ and totals ${total}$ litres. How much is the first part?",
+              "solution": "$\\dfrac{{a}}{{a} + {b}} \\cdot {total} = {x}$"
+            },
+            "percent-find-whole": {
+              "prompt": "${p}\\%$ of a number is ${part}$. Find the number.",
+              "solution": "$\\dfrac{{p}}{100} {variable} = {part} \\\\ {variable} = {x}$"
+            },
+            "mean-of-two": {
+              "prompt": "{name} scored ${a}$. The mean of that score and another is ${m}$. Find the other score.",
+              "solution": "$\\dfrac{{a} + {variable}}{2} = {m} \\\\ {variable} = {x}$"
+            },
+            "two-ages-now": {
+              "prompt": "{name} is ${a}$ years older than {name2}. In ${b}$ years, {name} will be three times {name2}’s age. How old is {name2} now?",
+              "solution": "$({variable} + {a} + {b}) = 3({variable} + {b}) \\\\ {variable} = {x}$"
+            },
+            "two-digit-value": {
+              "prompt": "A two-digit number has tens digit ${a}$ and units digit ${b}$. What is the number?",
+              "solution": "$10\\cdot{a} + {b} = {x}$"
+            },
+            "work-together": {
+              "prompt": "{name} finishes a job in ${a}$ hours, {name2} in ${b}$ hours. How many hours do they need together?",
+              "solution": "$t = \\dfrac{{a}{b}}{{a} + {b}} = {x}$"
+            },
+            "mixture-percent": {
+              "prompt": "${n1}$ litres of a ${p1}$\\%$ solution are mixed with ${n2}$ litres of ${p2}$\\%$. What is the mixture’s percent?",
+              "solution": "$\\dfrac{{n1}\\cdot{p1} + {n2}\\cdot{p2}}{{n1} + {n2}} = {x}$"
+            },
+            "boat-current": {
+              "prompt": "A boat’s speed in still water is ${b}$ km/h and the current is ${c}$ km/h. What is the upstream speed?",
+              "solution": "${b} - {c} = {x}$"
+            },
+            "two-goods-prices": {
+              "prompt": "${n1}$ pencils and ${n2}$ notebooks cost ${t1}$ lari. ${m1}$ pencils and ${m2}$ notebooks cost ${t2}$ lari. Find the price of one pencil.",
+              "solution": "${n1}{variable} + {n2}y = {t1},\\; {m1}{variable} + {m2}y = {t2} \\\\ {variable} = {x}$"
+            },
+            "age-past-twice": {
+              "prompt": "${a}$ years ago {name} was twice as old as {name2}. Now {name} is ${b}$ years older. How old is {name2} now?",
+              "solution": "${variable} + {b} - {a} = 2({variable} - {a}) \\\\ {variable} = {x}$"
+            },
+            "simple-interest": {
+              "prompt": "${p}$ lari at ${r}\\%$ per year for ${t}$ years. Find the simple interest.",
+              "solution": "$I = \\dfrac{{p} \\cdot {r} \\cdot {t}}{100} = {x}$"
+            },
+            "round-trip": {
+              "prompt": "Going at ${v1}$ km/h and returning at ${v2}$ km/h, one way is ${d}$ km. Find the total time.",
+              "solution": "$t = \\dfrac{{d}}{{v1}} + \\dfrac{{d}}{{v2}} = {x}$"
+            },
+            "fraction-word": {
+              "prompt": "$\\dfrac{{a}}{{b}}$ of a number is ${part}$. Find the number.",
+              "solution": "$\\dfrac{{a}}{{b}} {variable} = {part} \\\\ {variable} = {x}$"
+            },
+            "three-consecutive": {
+              "prompt": "Three consecutive integers multiply to ${p}$. The middle one is ${m}$. Write the integers.",
+              "solution": "$({m}-1)\\cdot{m}\\cdot({m}+1) = {p} \\\\ {x},\\; {m},\\; {y}$"
+            },
+            "reverse-digits": {
+              "prompt": "A two-digit number is ${n}$ more than its reverse. The tens digit is ${a}$ more than the units digit. Find the number.",
+              "solution": "${x}$"
+            },
+            "pipes-fill-empty": {
+              "prompt": "One pipe fills a tank in ${a}$ hours, another empties it in ${b}$ hours. How long to fill an empty tank with both open?",
+              "solution": "$t = \\dfrac{{a}{b}}{{b}-{a}} = {x}$"
+            }
+          }
+        },
+        "basicGraphing": {
+          "templates": {
+            "quadrant": {
+              "prompt": "In which quadrant is the point ${point}$?",
+              "solution": "${x}$"
+            },
+            "on-x-axis": {
+              "prompt": "Which axis contains the point ${point}$?",
+              "solution": "the $x$-axis"
+            },
+            "on-y-axis": {
+              "prompt": "Which axis contains the point ${point}$?",
+              "solution": "the $y$-axis"
+            },
+            "horizontal-line": {
+              "prompt": "Write the equation of the horizontal line through ${point}$.",
+              "solution": "$y = {k}$"
+            },
+            "vertical-line": {
+              "prompt": "Write the equation of the vertical line through ${point}$.",
+              "solution": "$x = {k}$"
+            },
+            "slope-origin": {
+              "prompt": "Find the slope of the line through $O(0, 0)$ and ${point}$.",
+              "solution": "$m = {m}$"
+            },
+            "y-intercept": {
+              "prompt": "Find the $y$-intercept of ${eq}$.",
+              "solution": "${intercept}$"
+            },
+            "x-intercept": {
+              "prompt": "Find the $x$-intercept of ${eq}$.",
+              "solution": "${intercept}$"
+            },
+            "linear-value": {
+              "prompt": "Given ${eq}$, find $y$ when $x = {k}$.",
+              "solution": "$y = {y}$"
+            },
+            "point-on-line": {
+              "prompt": "The line ${eq}$ passes through $({x}, y)$. Find $y$.",
+              "solution": "$y = {y}$"
+            },
+            "slope-horizontal": {
+              "prompt": "Find the slope of the line through ${p1}$ and ${p2}$.",
+              "solution": "$m = 0$"
+            },
+            "slope-rise-run": {
+              "prompt": "On a line, $\\Delta x = {run}$ and $\\Delta y = {rise}$. Find the slope.",
+              "solution": "$m = \\dfrac{{rise}}{{run}} = {m}$"
+            },
+            "slope-two-points": {
+              "prompt": "Find the slope of the line through ${p1}$ and ${p2}$.",
+              "solution": "$m = \\dfrac{{y2} - {y1}}{{x2} - {x1}} = {m}$"
+            },
+            "midpoint": {
+              "prompt": "Find the midpoint of the segment with endpoints ${p1}$ and ${p2}$.",
+              "solution": "$M = {mid}$"
+            },
+            "distance": {
+              "prompt": "Find the distance between ${p1}$ and ${p2}$.",
+              "solution": "$d = \\sqrt{({x2}-{x1})^2 + ({y2}-{y1})^2} = {d}$"
+            },
+            "write-slope-intercept": {
+              "prompt": "Write the equation of the line with slope ${m}$ and $y$-intercept ${b}$.",
+              "solution": "${eq}$"
+            },
+            "point-slope": {
+              "prompt": "A line passes through ${point}$ with slope ${m}$. Write its equation as $y = mx + b$.",
+              "solution": "${eq}$"
+            },
+            "parallel-line": {
+              "prompt": "Find the equation of the line parallel to ${eq1}$ that passes through ${point}$.",
+              "solution": "${eq}$"
+            },
+            "standard-intercepts": {
+              "prompt": "Find the intercepts of ${eq}$.",
+              "solution": "$x$-intercept: ${xint}$; $y$-intercept: ${yint}$"
+            },
+            "two-points-equation": {
+              "prompt": "Write the equation of the line through ${p1}$ and ${p2}$.",
+              "solution": "${eq}$"
+            },
+            "both-intercepts": {
+              "prompt": "Find the intercepts of ${eq}$.",
+              "solution": "$x$-intercept: ${xint}$; $y$-intercept: ${yint}$"
+            },
+            "abs-vertex": {
+              "prompt": "Find the vertex of ${eq}$.",
+              "solution": "${vertex}$"
+            },
+            "parabola-shift": {
+              "prompt": "Find the vertex of the parabola ${eq}$.",
+              "solution": "${vertex}$"
+            },
+            "lines-intersect": {
+              "prompt": "Find the intersection of ${eq1}$ and ${eq2}$.",
+              "solution": "${point}$"
+            },
+            "perpendicular-line": {
+              "prompt": "Find the equation of the line perpendicular to ${eq1}$ that passes through ${point}$.",
+              "solution": "${eq}$"
+            },
+            "vertex-form": {
+              "prompt": "Find the vertex of the parabola ${eq}$.",
+              "solution": "${vertex}$"
+            },
+            "complete-square": {
+              "prompt": "Find the vertex of the parabola ${eq}$.",
+              "solution": "${eq2}$ \\\\ ${vertex}$"
+            },
+            "parabola-x-intercepts": {
+              "prompt": "Find the $x$-intercepts of ${eq}$.",
+              "solution": "${p1}$,\\; ${p2}$"
+            },
+            "axis-symmetry": {
+              "prompt": "Find the axis of symmetry of ${eq}$.",
+              "solution": "$x = {h}$"
+            },
+            "circle-center": {
+              "prompt": "Find the centre and radius of the circle ${eq}$.",
+              "solution": "centre ${center}$, $r = {r}$"
+            },
+            "line-parabola": {
+              "prompt": "Find the intersection points of ${eq1}$ and ${eq2}$.",
+              "solution": "${p1}$,\\; ${p2}$"
+            },
+            "abs-scaled": {
+              "prompt": "Find the vertex of ${eq}$.",
+              "solution": "${vertex}$"
+            },
+            "inverse-linear": {
+              "prompt": "Find the inverse function of ${eq}$.",
+              "solution": "${inv}$"
+            },
+            "quadratic-y-intercept": {
+              "prompt": "Find the $y$-intercept of ${eq}$.",
+              "solution": "${intercept}$"
+            },
+            "intercept-count": {
+              "prompt": "How many times does the graph of ${eq}$ meet the $x$-axis?",
+              "solution": "${n}$"
+            },
+            "parabola-range": {
+              "prompt": "Find the range of ${eq}$.",
+              "solution": "$y {rel} {k}$"
+            }
+          }
         },
         "tools": {
           "label": "Teacher tools",
@@ -1003,7 +1303,7 @@
           },
           "import": {
             "title": "Import",
-            "hint": "Upload your own problems as LaTeX or text."
+            "hint": "Type a problem, upload a photo, or load a JSON family."
           },
           "variants": {
             "title": "Variants",
@@ -1034,19 +1334,91 @@
           "keep": "Keep in set",
           "discard": "Discard",
           "batchHint": "Generated problems appear in the list. Keep them in the set or discard them.",
+          "algorithmHint": "Our generators pick different task types from the topic library. No AI — answers are computed in code.",
           "mode": "Mode",
-          "modeTemplates": "Templates",
+          "modeAlgorithms": "Algorithms",
           "modeDiverse": "Different types",
           "request": "Request",
           "requestPlaceholder": "e.g. 5 problems in algebraic combinatorics",
           "requestHint": "In verified mode the model proposes prompts; Math.js computes the answer (trig, logs, combinatorics, number theory, statistics, and more).",
-          "plainHint": "In Unchecked AI the model thinks the way it does in its own chat. The stem and full solution are stored as-is — Math.js does not check them.",
+          "plainHint": "In Unchecked AI the model thinks deeply and quickly, the way it does in its own chat. The stem and full solution are stored as-is — Math.js does not check them.",
           "checkMode": "Checking",
           "modeVerified": "Math.js check",
           "modePlain": "Unchecked AI",
           "anyTopic": "Any topic",
           "anyDifficulty": "Any difficulty",
           "anyYear": "Any year",
+          "kind": "Type",
+          "anyKind": "All types",
+          "kindGroups": {
+            "foundational-pre-algebra": "Elementary & Classical Algebra"
+          },
+          "kinds": {
+            "order-of-operations": "Order of operations",
+            "numerical-simplification": "Numerical simplification",
+            "linear-equations-inequalities": "Linear equations/inequalities",
+            "linear-one-step": "Linear one-step equations",
+            "quadratic-equations-inequalities": "Quadratic equations/inequalities",
+            "higher-degree-equations-inequalities": "Higher-degree polynomial equations/inequalities",
+            "rational-equations-inequalities": "Rational equations/inequalities",
+            "radical-equations-inequalities": "Radical equations/inequalities",
+            "absolute-value-parametric": "Absolute value & parametric equations",
+            "domain-range": "Domain and range determination",
+            "composition-of-functions": "Composition of functions",
+            "inverse-functions": "Inverse functions",
+            "graphical-transformations": "Graphical shifts/transformations",
+            "polynomial-functions": "Polynomial functions",
+            "exponential-functions": "Exponential functions",
+            "logarithmic-functions": "Logarithmic functions",
+            "arithmetic-progressions": "Arithmetic progressions",
+            "geometric-progressions": "Geometric progressions",
+            "infinite-geometric-series": "Infinite convergent geometric series",
+            "binomial-expansion": "Binomial Theorem & Pascal's Triangle",
+            "root-finding-algorithms": "Root-finding algorithms",
+            "linear-lcd-dynamic": "Linear equation with fractions",
+            "polynomial-simplification": "Polynomial simplification",
+            "polynomial-factoring": "Factoring polynomials",
+            "synthetic-division": "Synthetic division",
+            "polynomial-interpolation": "Polynomial interpolation",
+            "proportions-ratios": "Proportions and ratios",
+            "word-problems": "Word problems",
+            "basic-graphing": "Basic graphing",
+            "quadratic-monic": "Quadratic equation",
+            "quadratic-scaled": "Quadratic equation (scaled)",
+            "quadratic-pure": "Incomplete quadratic equation",
+            "vieta-squares": "Vieta formulas",
+            "system-2x2": "Two-variable system",
+            "pythagoras-hyp": "Pythagoras — hypotenuse",
+            "pythagoras-leg": "Pythagoras — leg",
+            "rectangle-area": "Rectangle area",
+            "triangle-area": "Triangle area",
+            "circle-circumference": "Circle circumference",
+            "similar-ratio": "Similar triangles",
+            "function-linear": "Linear function",
+            "function-quadratic": "Quadratic function",
+            "function-composition": "Function composition",
+            "linear-inverse": "Inverse function",
+            "arithmetic-term": "Arithmetic sequence",
+            "percent-of": "Percent of a number",
+            "percent-whole": "Whole from a percent",
+            "percent-increase": "Percent increase",
+            "percent-decrease": "Percent decrease",
+            "percent-successive": "Successive percents",
+            "derivative-power": "Power rule derivative",
+            "derivative-quadratic": "Quadratic derivative",
+            "derivative-at": "Derivative at a point",
+            "derivative-sum": "Sum rule derivative",
+            "antiderivative-power": "Power antiderivative",
+            "vector-magnitude": "Vector magnitude",
+            "vector-dot": "Dot product",
+            "vector-add": "Vector addition",
+            "vector-scalar": "Scalar multiple",
+            "midpoint": "Midpoint",
+            "binomial-choose": "Binomial coefficient",
+            "factorial": "Factorial",
+            "permutations": "Permutations",
+            "counting-product": "Product rule"
+          },
           "classifyHint": "Topic, difficulty and year are stored from each problem — not from these filters.",
           "model": "Model",
           "limitLabel": "Site daily cap",
@@ -1117,6 +1489,63 @@
           "needFormula": "This problem has no formula to vary. Generate it with AI first.",
           "noneVerified": "No clean numbers were found. Try again.",
           "sourceLabel": "Source problem"
+        },
+        "importFamily": {
+          "title": "Build from an example",
+          "hint": "Type a problem, upload a screenshot or handwriting, or load a JSON family. We validate it, then the engine fills new numbers.",
+          "close": "Close import",
+          "source": "Source",
+          "sourceType": "Type",
+          "sourceScreenshot": "Screenshot",
+          "sourceHandwriting": "Handwriting",
+          "sourceJson": "JSON file",
+          "sourceJsonPaste": "Paste JSON",
+          "typeLabel": "Problem text",
+          "typePlaceholder": "e.g. Solve 3x + 2 = 14",
+          "typeHint": "The model turns this into a JSON family (parameters, derived values, LaTeX). Equations, arithmetic, and binomial expansions are supported.",
+          "photoLabel": "Image",
+          "photoHint": "PNG, JPEG or WebP. Keep the writing large and high-contrast.",
+          "handwritingHint": "Photograph the page from above. Avoid glare.",
+          "jsonLabel": "Template file",
+          "jsonHint": "A family file like linear-one-step.json. No AI — the engine reads it directly.",
+          "jsonPasteLabel": "JSON text",
+          "jsonPasteHint": "Paste a copied family object. No AI — Zod checks the schema, then the engine samples new numbers.",
+          "jsonPastePlaceholder": "{ \"id\": \"…\", \"variants\": [ … ] }",
+          "jsonPasteRead": "Read JSON",
+          "analyze": "Convert to JSON",
+          "building": "Working…",
+          "jsonPreview": "JSON family",
+          "preview": "Preview",
+          "checkCas": "Check with math.js",
+          "checkCasOk": "math.js agrees: {value}",
+          "checkCasFail": "math.js rejected this instance.",
+          "checkCasNoFormula": "There is no numeric formula to check. Add a formula field or a derived answer.",
+          "checkCasMismatch": "math.js got {got}; the template answer is {expected}.",
+          "build": "Generate problems",
+          "unsupported": "This example cannot be turned into a reusable family. Proofs and long word problems are out of scope. Equations, arithmetic, and binomial expansions are in scope.",
+          "invalidJson": "This is not valid JSON.",
+          "invalidTemplate": "The JSON does not match the problem-family schema.",
+          "diagnoseTitle": "Why it failed",
+          "diagnoseDetails": "Technical details",
+          "diagnoseJson": "This text is not valid JSON (a comma, quote, or trailing comma is wrong).",
+          "diagnoseName": "A param or derived name is invalid. Use letters, digits and underscore; at most 24 characters.",
+          "diagnoseEnum": "topic, difficulty, year or instructionId is not in the allowed list.",
+          "diagnoseLength": "The prompt or a solution step is too long.",
+          "diagnoseMissing": "A required field is missing (prompt, solution, or variants).",
+          "diagnoseCollide": "The same name is used in both params and derived.",
+          "diagnoseSample": "The schema is valid, but sampling failed (a derived value, constraint, or slot).",
+          "diagnoseSchema": "The family object does not match the engine schema.",
+          "fileTooLarge": "This file is too large.",
+          "badImage": "Use a PNG, JPEG or WebP image.",
+          "empty": "Type a problem or upload a file first.",
+          "errorMissingKey": "This model has no API key on the server.",
+          "errorInvalidKey": "This API key was rejected.",
+          "errorLimit": "This model’s daily limit is used up.",
+          "errorFailed": "Could not convert this example. Try again.",
+          "errorBadOutput": "The model replied in a form we could not use.",
+          "errorUnauthorized": "A teacher account is required for this action.",
+          "errorBilling": "This API key has no credit.",
+          "errorTimeout": "The model took too long. Try a clearer photo or typed text."
         },
         "stats": {
           "inBank": "In bank",

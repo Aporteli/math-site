@@ -970,7 +970,8 @@
         "difficulties": {
           "easy": "Легко",
           "medium": "Средне",
-          "hard": "Сложно"
+          "hard": "Сложно",
+          "olympiad": "Олимпиада"
         },
         "years": {
           "7": "7 класс",
@@ -993,7 +994,306 @@
           "findDerivative": "Найдите производную",
           "percentOf": "Найдите значение",
           "missingSide": "Найдите неизвестную сторону",
-          "expand": "Раскройте выражение"
+          "expand": "Раскройте выражение",
+          "factor": "Разложите на множители",
+          "simplify": "Упростите"
+        },
+        "wordProblems": {
+          "names": ["Нино", "Гиорги", "Анна", "Лука", "Мариам", "Ника"],
+          "templates": {
+            "age-in-years": {
+              "prompt": "{name} сейчас ${a}$ лет. Сколько лет будет через ${b}$ лет?",
+              "solution": "${a} + {b} = {x}$"
+            },
+            "age-years-ago": {
+              "prompt": "{name} ${b}$ лет назад было ${a}$ лет. Сколько лет сейчас?",
+              "solution": "${a} + {b} = {x}$"
+            },
+            "number-plus-equals": {
+              "prompt": "К числу прибавили ${a}$ и получили ${b}$. Найдите число.",
+              "solution": "${variable} + {a} = {b} \\\\ {variable} = {x}$"
+            },
+            "number-twice-plus": {
+              "prompt": "К удвоенному числу прибавили ${a}$ и получили ${b}$. Найдите число.",
+              "solution": "$2{variable} + {a} = {b} \\\\ {variable} = {x}$"
+            },
+            "consecutive-sum": {
+              "prompt": "Сумма двух последовательных целых равна ${s}$. Найдите числа.",
+              "solution": "${variable} + ({variable}+1) = {s} \\\\ {variable} = {x},\\; {variable}+1 = {y}$"
+            },
+            "rectangle-perimeter": {
+              "prompt": "Длина прямоугольника ${l}$, ширина ${w}$. Найдите периметр.",
+              "solution": "$P = 2({l} + {w}) = {x}$"
+            },
+            "items-total-cost": {
+              "prompt": "${n}$ предметов по ${p}$ лари. Какова общая стоимость?",
+              "solution": "${n} \\cdot {p} = {x}$"
+            },
+            "distance-speed-time": {
+              "prompt": "Скорость ${v}$ км/ч, время ${t}$ ч. Найдите путь.",
+              "solution": "$s = {v} \\cdot {t} = {x}$"
+            },
+            "split-money": {
+              "prompt": "У {name} ${total}$ лари, делится поровну с {name2}. Сколько получит каждый?",
+              "solution": "${total} \\div 2 = {x}$"
+            },
+            "pages-left": {
+              "prompt": "В книге ${total}$ страниц. {name} прочитал(а) ${read}$. Сколько осталось?",
+              "solution": "${total} - {read} = {x}$"
+            },
+            "more-than-sum": {
+              "prompt": "У {name} на ${a}$ больше, чем у {name2}. Вместе ${s}$. Сколько у {name2}?",
+              "solution": "$2{variable} + {a} = {s} \\\\ {variable} = {x}$"
+            },
+            "half-of-plus": {
+              "prompt": "К половине числа прибавили ${a}$ и получили ${b}$. Найдите число.",
+              "solution": "$\\dfrac{{variable}}{2} + {a} = {b} \\\\ {variable} = {x}$"
+            },
+            "age-twice-sum": {
+              "prompt": "{name} вдвое старше {name2}. Сумма возрастов ${s}$. Сколько лет {name2}?",
+              "solution": "${variable} + 2{variable} = {s} \\\\ {variable} = {x}$"
+            },
+            "sum-and-difference": {
+              "prompt": "Сумма двух чисел ${s}$, разность ${d}$. Найдите числа.",
+              "solution": "${variable} = \\dfrac{{s} + {d}}{2} = {x},\\; {y} = \\dfrac{{s} - {d}}{2} = {z}$"
+            },
+            "coins-two-kinds": {
+              "prompt": "У {name} ${n}$ монет по ${a}$ и ${b}$ лари. Всего ${total}$ лари. Сколько монет по ${a}$ лари?",
+              "solution": "${a}{variable} + {b}({n} - {variable}) = {total} \\\\ {variable} = {x}$"
+            },
+            "consecutive-even": {
+              "prompt": "Сумма трёх последовательных чётных чисел ${s}$. Найдите числа.",
+              "solution": "${variable} + ({variable}+2) + ({variable}+4) = {s} \\\\ {variable} = {x}$"
+            },
+            "rectangle-area": {
+              "prompt": "Длина прямоугольника на ${a}$ больше ширины. Площадь ${area}$. Найдите ширину.",
+              "solution": "${variable}({variable} + {a}) = {area} \\\\ {variable} = {x}$"
+            },
+            "tickets-two-prices": {
+              "prompt": "Билеты по ${adult}$ и ${child}$ лари. Продано ${n}$ билетов на ${total}$ лари. Сколько взрослых билетов?",
+              "solution": "${adult}{variable} + {child}({n} - {variable}) = {total} \\\\ {variable} = {x}$"
+            },
+            "two-trains": {
+              "prompt": "Два поезда едут навстречу со скоростями ${v1}$ и ${v2}$ км/ч. Между ними ${dist}$ км. Когда встретятся?",
+              "solution": "$t = \\dfrac{{dist}}{{v1} + {v2}} = {x}$"
+            },
+            "work-remaining": {
+              "prompt": "{name} делает работу за ${a}$ ч и уже работал(а) ${b}$ ч. Какая часть осталась?",
+              "solution": "$1 - \\dfrac{{b}}{{a}} = \\dfrac{{x}}{{a}}$"
+            },
+            "mixture-ratio-parts": {
+              "prompt": "Смесь в отношении ${a} : {b}$, всего ${total}$ л. Сколько первой части?",
+              "solution": "$\\dfrac{{a}}{{a} + {b}} \\cdot {total} = {x}$"
+            },
+            "percent-find-whole": {
+              "prompt": "${p}\\%$ числа равны ${part}$. Найдите число.",
+              "solution": "$\\dfrac{{p}}{100} {variable} = {part} \\\\ {variable} = {x}$"
+            },
+            "mean-of-two": {
+              "prompt": "У {name} балл ${a}$, среднее двух баллов ${m}$. Найдите второй балл.",
+              "solution": "$\\dfrac{{a} + {variable}}{2} = {m} \\\\ {variable} = {x}$"
+            },
+            "two-ages-now": {
+              "prompt": "{name} старше {name2} на ${a}$ лет. Через ${b}$ лет {name} будет втрое старше {name2}. Сколько лет {name2} сейчас?",
+              "solution": "$({variable} + {a} + {b}) = 3({variable} + {b}) \\\\ {variable} = {x}$"
+            },
+            "two-digit-value": {
+              "prompt": "У двузначного числа цифра десятков ${a}$, единиц ${b}$. Какое это число?",
+              "solution": "$10\\cdot{a} + {b} = {x}$"
+            },
+            "work-together": {
+              "prompt": "{name} делает работу за ${a}$ ч, {name2} — за ${b}$ ч. За сколько часов они справятся вместе?",
+              "solution": "$t = \\dfrac{{a}{b}}{{a} + {b}} = {x}$"
+            },
+            "mixture-percent": {
+              "prompt": "${n1}$ л раствора ${p1}$\\%$ смешали с ${n2}$ л ${p2}$\\%$. Какой процент у смеси?",
+              "solution": "$\\dfrac{{n1}\\cdot{p1} + {n2}\\cdot{p2}}{{n1} + {n2}} = {x}$"
+            },
+            "boat-current": {
+              "prompt": "Собственная скорость лодки ${b}$ км/ч, течение ${c}$ км/ч. Какова скорость против течения?",
+              "solution": "${b} - {c} = {x}$"
+            },
+            "two-goods-prices": {
+              "prompt": "${n1}$ карандашей и ${n2}$ тетрадей стоят ${t1}$ лари. ${m1}$ карандашей и ${m2}$ тетрадей — ${t2}$ лари. Найдите цену карандаша.",
+              "solution": "${n1}{variable} + {n2}y = {t1},\\; {m1}{variable} + {m2}y = {t2} \\\\ {variable} = {x}$"
+            },
+            "age-past-twice": {
+              "prompt": "${a}$ лет назад {name} был(а) вдвое старше {name2}. Сейчас {name} старше на ${b}$ лет. Сколько лет {name2} сейчас?",
+              "solution": "${variable} + {b} - {a} = 2({variable} - {a}) \\\\ {variable} = {x}$"
+            },
+            "simple-interest": {
+              "prompt": "${p}$ лари под ${r}\\%$ годовых на ${t}$ лет. Найдите простые проценты.",
+              "solution": "$I = \\dfrac{{p} \\cdot {r} \\cdot {t}}{100} = {x}$"
+            },
+            "round-trip": {
+              "prompt": "Туда ${v1}$ км/ч, обратно ${v2}$ км/ч, одно направление ${d}$ км. Найдите полное время.",
+              "solution": "$t = \\dfrac{{d}}{{v1}} + \\dfrac{{d}}{{v2}} = {x}$"
+            },
+            "fraction-word": {
+              "prompt": "$\\dfrac{{a}}{{b}}$ числа равны ${part}$. Найдите число.",
+              "solution": "$\\dfrac{{a}}{{b}} {variable} = {part} \\\\ {variable} = {x}$"
+            },
+            "three-consecutive": {
+              "prompt": "Произведение трёх последовательных целых равно ${p}$. Среднее число ${m}$. Запишите числа.",
+              "solution": "$({m}-1)\\cdot{m}\\cdot({m}+1) = {p} \\\\ {x},\\; {m},\\; {y}$"
+            },
+            "reverse-digits": {
+              "prompt": "Двузначное число на ${n}$ больше своего обращения. Цифра десятков на ${a}$ больше цифры единиц. Найдите число.",
+              "solution": "${x}$"
+            },
+            "pipes-fill-empty": {
+              "prompt": "Одна труба наполняет бассейн за ${a}$ ч, другая опустошает за ${b}$ ч. За сколько часов наполнят пустой бассейн вместе?",
+              "solution": "$t = \\dfrac{{a}{b}}{{b}-{a}} = {x}$"
+            }
+          }
+        },
+        "basicGraphing": {
+          "templates": {
+            "quadrant": {
+              "prompt": "В какой четверти лежит точка ${point}$?",
+              "solution": "${x}$"
+            },
+            "on-x-axis": {
+              "prompt": "На какой оси лежит точка ${point}$?",
+              "solution": "ось $x$"
+            },
+            "on-y-axis": {
+              "prompt": "На какой оси лежит точка ${point}$?",
+              "solution": "ось $y$"
+            },
+            "horizontal-line": {
+              "prompt": "Запишите уравнение горизонтальной прямой, проходящей через ${point}$.",
+              "solution": "$y = {k}$"
+            },
+            "vertical-line": {
+              "prompt": "Запишите уравнение вертикальной прямой, проходящей через ${point}$.",
+              "solution": "$x = {k}$"
+            },
+            "slope-origin": {
+              "prompt": "Найдите угловой коэффициент прямой, проходящей через $O(0, 0)$ и ${point}$.",
+              "solution": "$m = {m}$"
+            },
+            "y-intercept": {
+              "prompt": "Найдите точку пересечения прямой ${eq}$ с осью $y$.",
+              "solution": "${intercept}$"
+            },
+            "x-intercept": {
+              "prompt": "Найдите точку пересечения прямой ${eq}$ с осью $x$.",
+              "solution": "${intercept}$"
+            },
+            "linear-value": {
+              "prompt": "Дана ${eq}$. Найдите $y$, если $x = {k}$.",
+              "solution": "$y = {y}$"
+            },
+            "point-on-line": {
+              "prompt": "Прямая ${eq}$ проходит через точку $({x}, y)$. Найдите $y$.",
+              "solution": "$y = {y}$"
+            },
+            "slope-horizontal": {
+              "prompt": "Найдите угловой коэффициент прямой, проходящей через ${p1}$ и ${p2}$.",
+              "solution": "$m = 0$"
+            },
+            "slope-rise-run": {
+              "prompt": "На прямой $\\Delta x = {run}$ и $\\Delta y = {rise}$. Найдите угловой коэффициент.",
+              "solution": "$m = \\dfrac{{rise}}{{run}} = {m}$"
+            },
+            "slope-two-points": {
+              "prompt": "Найдите угловой коэффициент прямой, проходящей через ${p1}$ и ${p2}$.",
+              "solution": "$m = \\dfrac{{y2} - {y1}}{{x2} - {x1}} = {m}$"
+            },
+            "midpoint": {
+              "prompt": "Найдите середину отрезка с концами ${p1}$ и ${p2}$.",
+              "solution": "$M = {mid}$"
+            },
+            "distance": {
+              "prompt": "Найдите расстояние между точками ${p1}$ и ${p2}$.",
+              "solution": "$d = \\sqrt{({x2}-{x1})^2 + ({y2}-{y1})^2} = {d}$"
+            },
+            "write-slope-intercept": {
+              "prompt": "Запишите уравнение прямой с угловым коэффициентом ${m} и свободным членом ${b}.",
+              "solution": "${eq}$"
+            },
+            "point-slope": {
+              "prompt": "Прямая проходит через ${point}$ и имеет угловой коэффициент ${m}. Запишите уравнение в виде $y = mx + b$.",
+              "solution": "${eq}$"
+            },
+            "parallel-line": {
+              "prompt": "Найдите уравнение прямой, параллельной ${eq1}$ и проходящей через ${point}$.",
+              "solution": "${eq}$"
+            },
+            "standard-intercepts": {
+              "prompt": "Найдите точки пересечения прямой ${eq}$ с осями координат.",
+              "solution": "ось $x$: ${xint}$; ось $y$: ${yint}$"
+            },
+            "two-points-equation": {
+              "prompt": "Запишите уравнение прямой, проходящей через ${p1}$ и ${p2}$.",
+              "solution": "${eq}$"
+            },
+            "both-intercepts": {
+              "prompt": "Найдите точки пересечения прямой ${eq}$ с осями координат.",
+              "solution": "ось $x$: ${xint}$; ось $y$: ${yint}$"
+            },
+            "abs-vertex": {
+              "prompt": "Найдите вершину графика ${eq}$.",
+              "solution": "${vertex}$"
+            },
+            "parabola-shift": {
+              "prompt": "Найдите вершину параболы ${eq}$.",
+              "solution": "${vertex}$"
+            },
+            "lines-intersect": {
+              "prompt": "Найдите точку пересечения прямых ${eq1}$ и ${eq2}$.",
+              "solution": "${point}$"
+            },
+            "perpendicular-line": {
+              "prompt": "Найдите уравнение прямой, перпендикулярной ${eq1}$ и проходящей через ${point}$.",
+              "solution": "${eq}$"
+            },
+            "vertex-form": {
+              "prompt": "Найдите вершину параболы ${eq}$.",
+              "solution": "${vertex}$"
+            },
+            "complete-square": {
+              "prompt": "Найдите вершину параболы ${eq}$.",
+              "solution": "${eq2}$ \\\\ ${vertex}$"
+            },
+            "parabola-x-intercepts": {
+              "prompt": "Найдите точки пересечения параболы ${eq}$ с осью $x$.",
+              "solution": "${p1}$,\\; ${p2}$"
+            },
+            "axis-symmetry": {
+              "prompt": "Найдите ось симметрии параболы ${eq}$.",
+              "solution": "$x = {h}$"
+            },
+            "circle-center": {
+              "prompt": "Найдите центр и радиус окружности ${eq}$.",
+              "solution": "центр ${center}$, $r = {r}$"
+            },
+            "line-parabola": {
+              "prompt": "Найдите точки пересечения ${eq1}$ и ${eq2}$.",
+              "solution": "${p1}$,\\; ${p2}$"
+            },
+            "abs-scaled": {
+              "prompt": "Найдите вершину графика ${eq}$.",
+              "solution": "${vertex}$"
+            },
+            "inverse-linear": {
+              "prompt": "Найдите обратную функцию: ${eq}$.",
+              "solution": "${inv}$"
+            },
+            "quadratic-y-intercept": {
+              "prompt": "Найдите точку пересечения параболы ${eq}$ с осью $y$.",
+              "solution": "${intercept}$"
+            },
+            "intercept-count": {
+              "prompt": "Сколько раз график ${eq}$ пересекает ось $x$?",
+              "solution": "${n}$"
+            },
+            "parabola-range": {
+              "prompt": "Найдите множество значений функции ${eq}$.",
+              "solution": "$y {rel} {k}$"
+            }
+          }
         },
         "tools": {
           "label": "Инструменты учителя",
@@ -1003,7 +1303,7 @@
           },
           "import": {
             "title": "Импорт",
-            "hint": "Загрузка своих задач в LaTeX или текстом."
+            "hint": "Введите задачу, загрузите фото или JSON-семейство."
           },
           "variants": {
             "title": "Варианты",
@@ -1034,19 +1334,91 @@
           "keep": "Оставить в наборе",
           "discard": "Отклонить",
           "batchHint": "Сгенерированные задачи появляются в списке. Оставьте их в наборе или отклоните.",
+          "algorithmHint": "Наши алгоритмы берут разные типы задач из библиотеки темы. Без ИИ — ответ считает код.",
           "mode": "Режим",
-          "modeTemplates": "Шаблоны",
+          "modeAlgorithms": "Алгоритмы",
           "modeDiverse": "Разные типы",
           "request": "Запрос",
           "requestPlaceholder": "напр. 5 задач по алгебраической комбинаторике",
           "requestHint": "В проверенном режиме модель предлагает условие, ответ считает Math.js (тригонометрия, логарифмы, комбинаторика, теория чисел, статистика и другое).",
-          "plainHint": "В непроверенном режиме модель думает так же, как в своём чате. Сохраняются условие и полное решение — Math.js их не проверяет.",
+          "plainHint": "В непроверенном режиме модель думает глубоко и быстро, как в своём чате. Сохраняются условие и полное решение — Math.js их не проверяет.",
           "checkMode": "Проверка",
           "modeVerified": "Проверка Math.js",
           "modePlain": "ИИ без проверки",
           "anyTopic": "Любая тема",
           "anyDifficulty": "Любая сложность",
           "anyYear": "Любой класс",
+          "kind": "Тип",
+          "anyKind": "Все типы",
+          "kindGroups": {
+            "foundational-pre-algebra": "Элементарная и классическая алгебра"
+          },
+          "kinds": {
+            "order-of-operations": "Порядок действий",
+            "numerical-simplification": "Упрощение числовых выражений",
+            "linear-equations-inequalities": "Линейные уравнения и неравенства",
+            "linear-one-step": "Линейные уравнения в одно действие",
+            "quadratic-equations-inequalities": "Квадратные уравнения и неравенства",
+            "higher-degree-equations-inequalities": "Полиномиальные уравнения и неравенства высших степеней",
+            "rational-equations-inequalities": "Рациональные уравнения и неравенства",
+            "radical-equations-inequalities": "Иррациональные уравнения и неравенства",
+            "absolute-value-parametric": "Модуль и уравнения с параметром",
+            "domain-range": "Область определения и множество значений",
+            "composition-of-functions": "Композиция функций",
+            "inverse-functions": "Обратные функции",
+            "graphical-transformations": "Графические сдвиги и преобразования",
+            "polynomial-functions": "Полиномиальные функции",
+            "exponential-functions": "Показательные функции",
+            "logarithmic-functions": "Логарифмические функции",
+            "arithmetic-progressions": "Арифметические прогрессии",
+            "geometric-progressions": "Геометрические прогрессии",
+            "infinite-geometric-series": "Бесконечные сходящиеся геометрические ряды",
+            "binomial-expansion": "Бином Ньютона и треугольник Паскаля",
+            "root-finding-algorithms": "Алгоритмы поиска корней",
+            "linear-lcd-dynamic": "Линейное уравнение с дробями",
+            "polynomial-simplification": "Упрощение многочленов",
+            "polynomial-factoring": "Разложение многочленов на множители",
+            "synthetic-division": "Синтетическое деление",
+            "polynomial-interpolation": "Полиномиальная интерполяция",
+            "proportions-ratios": "Пропорции и отношения",
+            "word-problems": "Текстовые задачи",
+            "basic-graphing": "Начальные графики",
+            "quadratic-monic": "Квадратное уравнение",
+            "quadratic-scaled": "Квадратное уравнение (с коэффициентом)",
+            "quadratic-pure": "Неполное квадратное уравнение",
+            "vieta-squares": "Формулы Виета",
+            "system-2x2": "Система с двумя неизвестными",
+            "pythagoras-hyp": "Пифагор — гипотенуза",
+            "pythagoras-leg": "Пифагор — катет",
+            "rectangle-area": "Площадь прямоугольника",
+            "triangle-area": "Площадь треугольника",
+            "circle-circumference": "Длина окружности",
+            "similar-ratio": "Подобные треугольники",
+            "function-linear": "Линейная функция",
+            "function-quadratic": "Квадратичная функция",
+            "function-composition": "Композиция функций",
+            "linear-inverse": "Обратная функция",
+            "arithmetic-term": "Арифметическая прогрессия",
+            "percent-of": "Процент от числа",
+            "percent-whole": "Число по проценту",
+            "percent-increase": "Процентное увеличение",
+            "percent-decrease": "Процентное уменьшение",
+            "percent-successive": "Последовательные проценты",
+            "derivative-power": "Производная степенной",
+            "derivative-quadratic": "Производная квадратичной",
+            "derivative-at": "Производная в точке",
+            "derivative-sum": "Производная суммы",
+            "antiderivative-power": "Первообразная степенной",
+            "vector-magnitude": "Длина вектора",
+            "vector-dot": "Скалярное произведение",
+            "vector-add": "Сложение векторов",
+            "vector-scalar": "Умножение на скаляр",
+            "midpoint": "Середина отрезка",
+            "binomial-choose": "Биномиальный коэффициент",
+            "factorial": "Факториал",
+            "permutations": "Перестановки",
+            "counting-product": "Правило произведения"
+          },
           "classifyHint": "Тема, сложность и класс записываются по каждой задаче — не по этим фильтрам.",
           "model": "Модель",
           "limitLabel": "Дневной лимит сайта",
@@ -1117,6 +1489,63 @@
           "needFormula": "У этой задачи нет формулы для вариантов. Сначала сгенерируйте её через ИИ.",
           "noneVerified": "Не удалось подобрать чистые числа. Попробуйте ещё раз.",
           "sourceLabel": "Исходная задача"
+        },
+        "importFamily": {
+          "title": "Собрать по примеру",
+          "hint": "Введите задачу, загрузите снимок или рукопись, либо JSON-семейство. Мы проверим схему, и движок подставит новые числа.",
+          "close": "Закрыть импорт",
+          "source": "Источник",
+          "sourceType": "Текст",
+          "sourceScreenshot": "Снимок экрана",
+          "sourceHandwriting": "Рукопись",
+          "sourceJson": "JSON-файл",
+          "sourceJsonPaste": "Вставить JSON",
+          "typeLabel": "Текст задачи",
+          "typePlaceholder": "напр. Решите 3x + 2 = 14",
+          "typeHint": "Модель превратит это в JSON-семейство (параметры, вычисляемые значения, LaTeX). Уравнения, арифметика и биномиальное разложение поддерживаются.",
+          "photoLabel": "Изображение",
+          "photoHint": "PNG, JPEG или WebP. Пишите крупно и контрастно.",
+          "handwritingHint": "Снимите страницу сверху. Избегайте бликов.",
+          "jsonLabel": "Файл шаблона",
+          "jsonHint": "Файл семейства вроде linear-one-step.json. Без ИИ — движок читает его напрямую.",
+          "jsonPasteLabel": "Текст JSON",
+          "jsonPasteHint": "Вставьте скопированный объект семейства. Без ИИ — Zod проверяет схему, движок подставляет новые числа.",
+          "jsonPastePlaceholder": "{ \"id\": \"…\", \"variants\": [ … ] }",
+          "jsonPasteRead": "Прочитать JSON",
+          "analyze": "Преобразовать в JSON",
+          "building": "Обработка…",
+          "jsonPreview": "JSON-семейство",
+          "preview": "Предпросмотр",
+          "checkCas": "Проверить через math.js",
+          "checkCasOk": "math.js согласен: {value}",
+          "checkCasFail": "math.js отклонил этот экземпляр.",
+          "checkCasNoFormula": "Нет числовой формулы для проверки. Добавьте formula или derived-ответ.",
+          "checkCasMismatch": "math.js получил {got}, ответ шаблона — {expected}.",
+          "build": "Сгенерировать задачи",
+          "unsupported": "Этот пример нельзя превратить в повторно используемое семейство. Доказательства и длинные текстовые задачи не входят. Уравнения, арифметика и биномиальное разложение входят.",
+          "invalidJson": "Это некорректный JSON.",
+          "invalidTemplate": "JSON не соответствует схеме семейства задач.",
+          "diagnoseTitle": "Почему не получилось",
+          "diagnoseDetails": "Технические детали",
+          "diagnoseJson": "Это некорректный JSON (запятая, кавычка или лишняя запятая).",
+          "diagnoseName": "Имя param или derived недопустимо. Буквы, цифры и подчёркивание; не больше 24 символов.",
+          "diagnoseEnum": "topic, difficulty, year или instructionId нет в списке допустимых значений.",
+          "diagnoseLength": "prompt или шаг решения слишком длинный.",
+          "diagnoseMissing": "Не хватает обязательного поля (prompt, solution или variants).",
+          "diagnoseCollide": "Одно и то же имя стоит и в params, и в derived.",
+          "diagnoseSample": "Схема верна, но не удалось подобрать числа (derived, constraint или slot).",
+          "diagnoseSchema": "Объект семейства не соответствует схеме движка.",
+          "fileTooLarge": "Файл слишком большой.",
+          "badImage": "Используйте изображение PNG, JPEG или WebP.",
+          "empty": "Сначала введите задачу или загрузите файл.",
+          "errorMissingKey": "У этой модели нет API-ключа на сервере.",
+          "errorInvalidKey": "API-ключ отклонён.",
+          "errorLimit": "Дневной лимит этой модели исчерпан.",
+          "errorFailed": "Не удалось преобразовать пример. Попробуйте ещё раз.",
+          "errorBadOutput": "Модель ответила в непригодном виде.",
+          "errorUnauthorized": "Для этого действия нужна учётная запись учителя.",
+          "errorBilling": "У этого API-ключа нет кредита.",
+          "errorTimeout": "Модель слишком долго отвечала. Попробуйте более чёткое фото или текст."
         },
         "stats": {
           "inBank": "В банке",

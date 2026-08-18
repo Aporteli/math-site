@@ -20,14 +20,19 @@ export function joinTex(...parts: string[]) {
   return parts.filter(Boolean).join(" ").replace(/^\+ /, "");
 }
 
-export function formatLinearTex(a: number, b: number) {
-  return joinTex(polyTerm(a, "x", true), polyTerm(b, "", a === 0));
+export function formatLinearTex(a: number, b: number, variable = "x") {
+  return joinTex(polyTerm(a, variable, true), polyTerm(b, "", a === 0));
 }
 
-export function formatQuadraticTex(a: number, b: number, c: number) {
+export function formatQuadraticTex(
+  a: number,
+  b: number,
+  c: number,
+  variable = "x",
+) {
   return joinTex(
-    polyTerm(a, "x^2", true),
-    polyTerm(b, "x", a === 0),
+    polyTerm(a, `${variable}^2`, true),
+    polyTerm(b, variable, a === 0),
     polyTerm(c, "", a === 0 && b === 0),
   );
 }

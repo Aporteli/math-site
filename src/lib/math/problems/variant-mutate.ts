@@ -328,6 +328,8 @@ function canFlip(instructionId: ProblemInstructionId) {
   return (
     instructionId === "evaluate" ||
     instructionId === "expand" ||
+    instructionId === "factor" ||
+    instructionId === "simplify" ||
     instructionId === "missingSide"
   );
 }

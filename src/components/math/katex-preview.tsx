@@ -38,8 +38,25 @@ function splitMathSegments(input: string): Segment[] {
   return segments.length > 0 ? segments : [{ type: "text", value: input }];
 }
 
+/** `$y = -x that passes through$` — keep the formula, restore the words. */
+function peelProseFromMath(segment: Segment): Segment[] {
+  if (segment.type !== "math") return [segment];
+  if (/\\[a-zA-Z]+/.test(segment.value)) return [segment];
+  const leak = /(?<!\\)[\p{L}]{3,}\s+[\p{L}]{3,}/u.exec(segment.value);
+  if (!leak) return [segment];
+  const mathPart = segment.value.slice(0, leak.index).trimEnd();
+  const textPart = segment.value.slice(mathPart.length);
+  const parts: Segment[] = [];
+  if (mathPart) {
+    parts.push({ type: "math", value: mathPart, display: segment.display });
+  }
+  if (textPart) parts.push({ type: "text", value: textPart });
+  return parts.length > 0 ? parts : [segment];
+}
+
 function looksLikeProse(tex: string) {
   if (/\$|\\\(|\\\[/.test(tex)) return true;
+  if (/\\[a-zA-Z]+/.test(tex) || /[_^]\{/.test(tex)) return false;
   return /[\p{L}]{2,}\s+[\p{L}]{2,}/u.test(tex);
 }
 
@@ -72,7 +89,7 @@ export function KatexPreview({
       return;
     }
 
-    const segments = splitMathSegments(tex);
+    const segments = splitMathSegments(tex).flatMap(peelProseFromMath);
     const onlyMath =
       segments.length === 1 && segments[0]?.type === "math" ? segments[0] : null;
     if (onlyMath) {

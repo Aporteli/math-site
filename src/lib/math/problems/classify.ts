@@ -206,6 +206,8 @@ export function inferKnownTopic(input: {
   }
   if (
     input.instructionId === "expand" ||
+    input.instructionId === "factor" ||
+    input.instructionId === "simplify" ||
     /factor|expand|simplify|linear[-_ ]?(one|two)[-_ ]?step/.test(hay)
   ) {
     return "algebra";
@@ -242,6 +244,11 @@ export function difficultyFromRequest(
   request: string,
 ): ProblemDifficulty | undefined {
   const text = request.toLowerCase();
+  if (
+    /ოლიმპ|olympiad|olympic|олимпиад/.test(text)
+  ) {
+    return "olympiad";
+  }
   if (
     /ძალიან\s*რთულ|very\s*hard|extremely\s*hard|очень\s*сложн|очень\s*трудн/.test(
       text,

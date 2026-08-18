@@ -14,11 +14,19 @@ export interface SelectOption<T extends string = string> {
   label: string;
 }
 
+export interface SelectHeading {
+  heading: string;
+}
+
+export type SelectItem<T extends string = string> =
+  | SelectOption<T>
+  | SelectHeading;
+
 interface SelectMenuProps<T extends string> {
   id?: string;
   name?: string;
   value: T;
-  options: readonly SelectOption<T>[];
+  options: readonly SelectItem<T>[];
   onChange: (value: T) => void;
   className?: string;
   triggerClassName?: string;
@@ -29,6 +37,30 @@ interface SelectMenuProps<T extends string> {
 
 const triggerBase =
   "flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border bg-white px-3 py-2 text-left text-sm text-ink shadow-sm transition-colors hover:border-navy/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/15 disabled:cursor-not-allowed disabled:opacity-60";
+
+function isOption<T extends string>(
+  item: SelectItem<T>,
+): item is SelectOption<T> {
+  return "value" in item;
+}
+
+function optionIndex<T extends string>(
+  items: readonly SelectItem<T>[],
+  value: T,
+) {
+  return items.findIndex((item) => isOption(item) && item.value === value);
+}
+
+function firstSelectable<T extends string>(items: readonly SelectItem<T>[]) {
+  return items.findIndex(isOption);
+}
+
+function lastSelectable<T extends string>(items: readonly SelectItem<T>[]) {
+  for (let i = items.length - 1; i >= 0; i -= 1) {
+    if (isOption(items[i]!)) return i;
+  }
+  return -1;
+}
 
 export function SelectMenu<T extends string>({
   id,
@@ -44,10 +76,7 @@ export function SelectMenu<T extends string>({
 }: SelectMenuProps<T>) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(() =>
-    Math.max(
-      0,
-      options.findIndex((option) => option.value === value),
-    ),
+    Math.max(0, optionIndex(options, value)),
   );
   const generatedId = useId();
   const triggerId = id ?? generatedId;
@@ -56,13 +85,15 @@ export function SelectMenu<T extends string>({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const activeRef = useRef<HTMLLIElement>(null);
 
-  const selected = options.find((option) => option.value === value);
-  const selectedIndex = options.findIndex((option) => option.value === value);
+  const selected = options.find(
+    (item) => isOption(item) && item.value === value,
+  );
+  const selectedIndex = optionIndex(options, value);
 
   useEffect(() => {
     if (!open) return;
 
-    setActive(selectedIndex >= 0 ? selectedIndex : 0);
+    setActive(selectedIndex >= 0 ? selectedIndex : Math.max(0, firstSelectable(options)));
 
     function handlePointerDown(event: PointerEvent) {
       if (!containerRef.current?.contains(event.target as Node)) {
@@ -72,7 +103,7 @@ export function SelectMenu<T extends string>({
 
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [open, selectedIndex]);
+  }, [open, selectedIndex, options]);
 
   useEffect(() => {
     if (!open) return;
@@ -87,9 +118,13 @@ export function SelectMenu<T extends string>({
 
   function moveActive(delta: number) {
     setActive((current) => {
-      const last = options.length - 1;
-      if (last < 0) return 0;
-      return Math.min(last, Math.max(0, current + delta));
+      let next = current;
+      for (let step = 0; step < options.length; step += 1) {
+        next += delta;
+        if (next < 0 || next >= options.length) return current;
+        if (isOption(options[next]!)) return next;
+      }
+      return current;
     });
   }
 
@@ -108,14 +143,14 @@ export function SelectMenu<T extends string>({
 
     if (event.key === "Home") {
       event.preventDefault();
-      setActive(0);
+      setActive(Math.max(0, firstSelectable(options)));
       if (!open) setOpen(true);
       return;
     }
 
     if (event.key === "End") {
       event.preventDefault();
-      setActive(Math.max(0, options.length - 1));
+      setActive(Math.max(0, lastSelectable(options)));
       if (!open) setOpen(true);
       return;
     }
@@ -126,8 +161,8 @@ export function SelectMenu<T extends string>({
         setOpen(true);
         return;
       }
-      const option = options[active];
-      if (option) selectValue(option.value);
+      const item = options[active];
+      if (item && isOption(item)) selectValue(item.value);
       return;
     }
 
@@ -167,7 +202,9 @@ export function SelectMenu<T extends string>({
           triggerClassName,
         ].join(" ")}
       >
-        <span className="min-w-0 truncate">{selected?.label ?? ""}</span>
+        <span className="min-w-0 truncate">
+          {selected && isOption(selected) ? selected.label : ""}
+        </span>
         <ChevronDown
           className={`size-4 shrink-0 text-muted transition-transform ${
             open ? "rotate-180 text-navy" : ""
@@ -181,21 +218,33 @@ export function SelectMenu<T extends string>({
           id={listId}
           role="listbox"
           aria-labelledby={triggerId}
-          className="thin-scrollbar absolute z-50 mt-1.5 max-h-60 w-full min-w-full origin-top overflow-y-auto animate-dropdown rounded-2xl border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5"
+          className="thin-scrollbar absolute z-50 mt-1.5 max-h-72 w-full min-w-full origin-top overflow-y-auto animate-dropdown rounded-2xl border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5"
         >
-          {options.map((option, index) => {
-            const isSelected = option.value === value;
+          {options.map((item, index) => {
+            if (!isOption(item)) {
+              return (
+                <li
+                  key={`heading-${item.heading}-${index}`}
+                  role="presentation"
+                  className="px-3 pb-1 pt-2.5 text-sm font-bold text-ink first:pt-1"
+                >
+                  {item.heading}
+                </li>
+              );
+            }
+
+            const isSelected = item.value === value;
             const isActive = index === active;
 
             return (
               <li
-                key={option.value || `empty-${index}`}
+                key={item.value || `empty-${index}`}
                 ref={isActive ? activeRef : undefined}
                 role="option"
                 aria-selected={isSelected}
                 onMouseEnter={() => setActive(index)}
                 onMouseDown={(event) => event.preventDefault()}
-                onClick={() => selectValue(option.value)}
+                onClick={() => selectValue(item.value)}
                 className={[
                   "flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
                   isSelected
@@ -205,7 +254,7 @@ export function SelectMenu<T extends string>({
                       : "text-body hover:bg-paper hover:text-navy",
                 ].join(" ")}
               >
-                <span className="min-w-0 break-words">{option.label}</span>
+                <span className="min-w-0 break-words">{item.label}</span>
                 {isSelected ? (
                   <Check className="size-4 shrink-0 text-brass" aria-hidden="true" />
                 ) : null}

@@ -970,7 +970,8 @@
         "difficulties": {
           "easy": "მარტივი",
           "medium": "საშუალო",
-          "hard": "რთული"
+          "hard": "რთული",
+          "olympiad": "ოლიმპიადა"
         },
         "years": {
           "7": "VII კლასი",
@@ -993,7 +994,306 @@
           "findDerivative": "იპოვე წარმოებული",
           "percentOf": "იპოვე მნიშვნელობა",
           "missingSide": "იპოვე უცნობი გვერდი",
-          "expand": "გაშალე გამოსახულება"
+          "expand": "გაშალე გამოსახულება",
+          "factor": "დააშალე მამრავლებად",
+          "simplify": "გამარტივე"
+        },
+        "wordProblems": {
+          "names": ["ნინო", "გიორგი", "ანა", "ლუკა", "მარიამი", "ნიკა"],
+          "templates": {
+            "age-in-years": {
+              "prompt": "{name} ახლა ${a}$ წლისაა. ${b}$ წელში რამდენი წლის იქნება?",
+              "solution": "${a} + {b} = {x}$"
+            },
+            "age-years-ago": {
+              "prompt": "{name} ${b}$ წლის წინ ${a}$ წლის იყო. რამდენი წლისაა ახლა?",
+              "solution": "${a} + {b} = {x}$"
+            },
+            "number-plus-equals": {
+              "prompt": "რიცხვს დავუმატეთ ${a}$ და მივიღეთ ${b}$. იპოვე რიცხვი.",
+              "solution": "{variable} + {a} = {b} \\\\ {variable} = {x}"
+            },
+            "number-twice-plus": {
+              "prompt": "რიცხვის ორმაგს დავუმატეთ ${a}$ და მივიღეთ ${b}$. იპოვე რიცხვი.",
+              "solution": "2{variable} + {a} = {b} \\\\ {variable} = {x}"
+            },
+            "consecutive-sum": {
+              "prompt": "ორი მიმდევრობითი მთელი რიცხვის ჯამია ${s}$. იპოვე რიცხვები.",
+              "solution": "{variable} + ({variable}+1) = {s} \\\\ {variable} = {x},\\; {variable}+1 = {y}"
+            },
+            "rectangle-perimeter": {
+              "prompt": "მართკუთხედის სიგრძეა ${l}$ და სიგანე ${w}$. იპოვე პერიმეტრი.",
+              "solution": "P = 2({l} + {w}) = {x}"
+            },
+            "items-total-cost": {
+              "prompt": "${n}$ ნივთი ღირს ${p}$ ლარი თითო. რა არის ჯამური ფასი?",
+              "solution": "{n} \\cdot {p} = {x}"
+            },
+            "distance-speed-time": {
+              "prompt": "სიჩქარეა ${v}$ კმ/სთ, დრო ${t}$ საათი. იპოვე განვლილი მანძილი.",
+              "solution": "s = {v} \\cdot {t} = {x}"
+            },
+            "split-money": {
+              "prompt": "{name}-ს აქვს ${total}$ ლარი და ჰყოფს {name2}-სთან თანაბრად. რამდენს მიიღებს თითოეული?",
+              "solution": "{total} \\div 2 = {x}"
+            },
+            "pages-left": {
+              "prompt": "წიგნშია ${total}$ გვერდი. {name}-მა წაიკითხა ${read}$. რამდენი დარჩა?",
+              "solution": "{total} - {read} = {x}"
+            },
+            "more-than-sum": {
+              "prompt": "{name}-ს აქვს ${a}$-ით მეტი, ვიდრე {name2}-ს. ერთად აქვთ ${s}$. რამდენი აქვს {name2}-ს?",
+              "solution": "2{variable} + {a} = {s} \\\\ {variable} = {x}"
+            },
+            "half-of-plus": {
+              "prompt": "რიცხვის ნახევარს დავუმატეთ ${a}$ და მივიღეთ ${b}$. იპოვე რიცხვი.",
+              "solution": "\\dfrac{{variable}}{2} + {a} = {b} \\\\ {variable} = {x}"
+            },
+            "age-twice-sum": {
+              "prompt": "{name} ორჯერ უფროსია {name2}-ზე. მათი ასაკების ჯამია ${s}$. რამდენი წლისაა {name2}?",
+              "solution": "{variable} + 2{variable} = {s} \\\\ {variable} = {x}"
+            },
+            "sum-and-difference": {
+              "prompt": "ორი რიცხვის ჯამია ${s}$, სხვაობა ${d}$. იპოვე რიცხვები.",
+              "solution": "{variable} = \\dfrac{{s} + {d}}{2} = {x},\\; {y} = \\dfrac{{s} - {d}}{2} = {z}"
+            },
+            "coins-two-kinds": {
+              "prompt": "{name}-ს აქვს ${n}$ მონეტა: ${a}$-ლარიანი და ${b}$-ლარიანი. ჯამში ${total}$ ლარია. რამდენი ${a}$-ლარიანია?",
+              "solution": "{a}{variable} + {b}({n} - {variable}) = {total} \\\\ {variable} = {x}"
+            },
+            "consecutive-even": {
+              "prompt": "სამი მიმდევრობითი ლუწი რიცხვის ჯამია ${s}$. იპოვე რიცხვები.",
+              "solution": "{variable} + ({variable}+2) + ({variable}+4) = {s} \\\\ {variable} = {x}"
+            },
+            "rectangle-area": {
+              "prompt": "მართკუთხედის სიგრძე ${a}$-ით მეტია სიგანეზე. ფართობია ${area}$. იპოვე სიგანე.",
+              "solution": "{variable}({variable} + {a}) = {area} \\\\ {variable} = {x}"
+            },
+            "tickets-two-prices": {
+              "prompt": "${adult}$ ლარიანი და ${child}$ ლარიანი ბილეთი. გაიყიდა ${n}$ ბილეთი ${total}$ ლარად. რამდენი უფროსის ბილეთია?",
+              "solution": "{adult}{variable} + {child}({n} - {variable}) = {total} \\\\ {variable} = {x}"
+            },
+            "two-trains": {
+              "prompt": "ორი მატარებელი ერთმანეთისკენ მიდის ${v1}$ და ${v2}$ კმ/სთ სიჩქარით. მათ შორის არის ${dist}$ კმ. როდის შეხვდებიან?",
+              "solution": "t = \\dfrac{{dist}}{{v1} + {v2}} = {x}"
+            },
+            "work-remaining": {
+              "prompt": "{name} სამუშაოს ასრულებს ${a}$ საათში. უკვე იმუშავა ${b}$ საათი. რა ნაწილი დარჩა?",
+              "solution": "1 - \\dfrac{{b}}{{a}} = \\dfrac{{x}}{{a}}"
+            },
+            "mixture-ratio-parts": {
+              "prompt": "ნაზავი შეფარდებით ${a} : {b}$, ჯამში ${total}$ ლიტრი. რამდენია პირველი ნაწილი?",
+              "solution": "\\dfrac{{a}}{{a} + {b}} \\cdot {total} = {x}"
+            },
+            "percent-find-whole": {
+              "prompt": "რიცხვის ${p}\\%$-ია ${part}$. იპოვე რიცხვი.",
+              "solution": "\\dfrac{{p}}{100} {variable} = {part} \\\\ {variable} = {x}"
+            },
+            "mean-of-two": {
+              "prompt": "{name}-ს ქულაა ${a}$, საშუალო ორი ქულისა ${m}$. რა არის მეორე ქულა?",
+              "solution": "\\dfrac{{a} + {variable}}{2} = {m} \\\\ {variable} = {x}"
+            },
+            "two-ages-now": {
+              "prompt": "{name} ${a}$-ით უფროსია {name2}-ზე. ${b}$ წელში {name} იქნება {name2}-ის ასაკის სამმაგი. რამდენი წლისაა {name2} ახლა?",
+              "solution": "({variable} + {a} + {b}) = 3({variable} + {b}) \\\\ {variable} = {x}"
+            },
+            "two-digit-value": {
+              "prompt": "ორნიშნა რიცხვის ათეულების ციფრია ${a}$, ერთეულებისა ${b}$. რა რიცხვია?",
+              "solution": "10\\cdot{a} + {b} = {x}"
+            },
+            "work-together": {
+              "prompt": "{name} სამუშაოს ასრულებს ${a}$ საათში, {name2} — ${b}$ საათში. რამდენ საათში დაამთავრებენ ერთად?",
+              "solution": "\\dfrac{1}{{a}} + \\dfrac{1}{{b}} = \\dfrac{{a} + {b}}{{a}{b}} \\\\ t = \\dfrac{{a}{b}}{{a} + {b}} = {x}"
+            },
+            "mixture-percent": {
+              "prompt": "${n1}$ ლიტრი ${p1}$\\%$ ხსნარს ვურევთ ${n2}$ ლიტრ ${p2}$\\%$-ს. რა პროცენტიანია ნაზავი?",
+              "solution": "\\dfrac{{n1}\\cdot{p1} + {n2}\\cdot{p2}}{{n1} + {n2}} = {x}"
+            },
+            "boat-current": {
+              "prompt": "ნავის საკუთარი სიჩქარეა ${b}$ კმ/სთ, დინებისა ${c}$. რა სიჩქარით მიდის დინების საწინააღმდეგოდ?",
+              "solution": "{b} - {c} = {x}"
+            },
+            "two-goods-prices": {
+              "prompt": "${n1}$ ფანქარი და ${n2}$ რვეული ღირს ${t1}$ ლარი. ${m1}$ ფანქარი და ${m2}$ რვეული — ${t2}$ ლარი. რა ღირს ერთი ფანქარი?",
+              "solution": "{n1}{variable} + {n2}y = {t1},\\; {m1}{variable} + {m2}y = {t2} \\\\ {variable} = {x}"
+            },
+            "age-past-twice": {
+              "prompt": "${a}$ წლის წინ {name} ორჯერ უფროსი იყო {name2}-ზე. ახლა {name} ${b}$-ით უფროსია. რამდენი წლისაა {name2} ახლა?",
+              "solution": "{variable} + {b} - {a} = 2({variable} - {a}) \\\\ {variable} = {x}"
+            },
+            "simple-interest": {
+              "prompt": "${p}$ ლარი ${r}\\%$ წლიური პროცენტით ${t}$ წელიწადში. რა არის მარტივი პროცენტი?",
+              "solution": "I = \\dfrac{{p} \\cdot {r} \\cdot {t}}{100} = {x}"
+            },
+            "round-trip": {
+              "prompt": "წასვლა ${v1}$ კმ/სთ, დაბრუნება ${v2}$ კმ/სთ. მანძილი ერთი მიმართულებით ${d}$ კმ. რა არის მთლიანი დრო?",
+              "solution": "t = \\dfrac{{d}}{{v1}} + \\dfrac{{d}}{{v2}} = {x}"
+            },
+            "fraction-word": {
+              "prompt": "რიცხვის $\\dfrac{{a}}{{b}}$-ია ${part}$. იპოვე რიცხვი.",
+              "solution": "\\dfrac{{a}}{{b}} {variable} = {part} \\\\ {variable} = {x}"
+            },
+            "three-consecutive": {
+              "prompt": "სამი მიმდევრობითი მთელი რიცხვის ნამრავლია ${p}$, შუა რიცხვია ${m}$. შეამოწმე და ჩაწერე რიცხვები.",
+              "solution": "({m}-1)\\cdot{m}\\cdot({m}+1) = {p} \\\\ {x},\\; {m},\\; {y}"
+            },
+            "reverse-digits": {
+              "prompt": "ორნიშნა რიცხვი ${n}$-ით მეტია თავის შებრუნებულზე. ათეულების ციფრი ${a}$-ით მეტია ერთეულზე. იპოვე რიცხვი.",
+              "solution": "10{variable} + ({variable}-{a}) - 10({variable}-{a}) - {variable} = {n} \\\\ {x}"
+            },
+            "pipes-fill-empty": {
+              "prompt": "მილი ავსებს აუზს ${a}$ საათში, მეორე ცლის ${b}$ საათში. ორივე ერთად რამდენ საათში აავსებს ცარიელ აუზს?",
+              "solution": "\\dfrac{1}{{a}} - \\dfrac{1}{{b}} = \\dfrac{{b}-{a}}{{a}{b}} \\\\ t = \\dfrac{{a}{b}}{{b}-{a}} = {x}"
+            }
+          }
+        },
+        "basicGraphing": {
+          "templates": {
+            "quadrant": {
+              "prompt": "რომელ მეოთხედში მდებარეობს წერტილი ${point}$?",
+              "solution": "${x}$"
+            },
+            "on-x-axis": {
+              "prompt": "წერტილი ${point}$ რომელ ღერძზეა?",
+              "solution": "$x$-ღერძი"
+            },
+            "on-y-axis": {
+              "prompt": "წერტილი ${point}$ რომელ ღერძზეა?",
+              "solution": "$y$-ღერძი"
+            },
+            "horizontal-line": {
+              "prompt": "ჩაწერე ჰორიზონტალური წრფის განტოლება, რომელიც გადის წერტილზე ${point}$.",
+              "solution": "$y = {k}$"
+            },
+            "vertical-line": {
+              "prompt": "ჩაწერე ვერტიკალური წრფის განტოლება, რომელიც გადის წერტილზე ${point}$.",
+              "solution": "$x = {k}$"
+            },
+            "slope-origin": {
+              "prompt": "იპოვე წრფის დახრილობა, რომელიც გადის წერტილებზე $O(0, 0)$ და ${point}$.",
+              "solution": "$m = {m}$"
+            },
+            "y-intercept": {
+              "prompt": "იპოვე წრფის ${eq}$ გადაკვეთა $y$-ღერძთან.",
+              "solution": "${intercept}$"
+            },
+            "x-intercept": {
+              "prompt": "იპოვე წრფის ${eq}$ გადაკვეთა $x$-ღერძთან.",
+              "solution": "${intercept}$"
+            },
+            "linear-value": {
+              "prompt": "მოცემულია ${eq}$. იპოვე $y$, როცა $x = {k}$.",
+              "solution": "$y = {y}$"
+            },
+            "point-on-line": {
+              "prompt": "წრფე ${eq}$ გადის წერტილზე $({x}, y)$. იპოვე $y$.",
+              "solution": "$y = {y}$"
+            },
+            "slope-horizontal": {
+              "prompt": "იპოვე წრფის დახრილობა, რომელიც გადის წერტილებზე ${p1}$ და ${p2}$.",
+              "solution": "$m = 0$"
+            },
+            "slope-rise-run": {
+              "prompt": "წრფეზე $\\Delta x = {run}$ და $\\Delta y = {rise}$. იპოვე დახრილობა.",
+              "solution": "$m = \\dfrac{{rise}}{{run}} = {m}$"
+            },
+            "slope-two-points": {
+              "prompt": "იპოვე წრფის დახრილობა, რომელიც გადის წერტილებზე ${p1}$ და ${p2}$.",
+              "solution": "$m = \\dfrac{{y2} - {y1}}{{x2} - {x1}} = {m}$"
+            },
+            "midpoint": {
+              "prompt": "იპოვე მონაკვეთის შუაწერტილი, რომლის ბოლოებია ${p1}$ და ${p2}$.",
+              "solution": "$M = {mid}$"
+            },
+            "distance": {
+              "prompt": "იპოვე მანძილი წერტილებს ${p1}$ და ${p2}$ შორის.",
+              "solution": "$d = \\sqrt{({x2}-{x1})^2 + ({y2}-{y1})^2} = {d}$"
+            },
+            "write-slope-intercept": {
+              "prompt": "ჩაწერე წრფის განტოლება, თუ დახრილობაა ${m}$ და $y$-გადაკვეთა ${b}$.",
+              "solution": "${eq}$"
+            },
+            "point-slope": {
+              "prompt": "წრფე გადის წერტილზე ${point}$ და აქვს დახრილობა ${m}$. ჩაწერე განტოლება სახით $y = mx + b$.",
+              "solution": "${eq}$"
+            },
+            "parallel-line": {
+              "prompt": "იპოვე ${eq1}$-ის პარალელური წრფის განტოლება, რომელიც გადის წერტილზე ${point}$.",
+              "solution": "${eq}$"
+            },
+            "standard-intercepts": {
+              "prompt": "იპოვე წრფის ${eq}$ გადაკვეთის წერტილები კოორდინატთა ღერძებთან.",
+              "solution": "$x$-ღერძი: ${xint}$; $y$-ღერძი: ${yint}$"
+            },
+            "two-points-equation": {
+              "prompt": "ჩაწერე წრფის განტოლება, რომელიც გადის წერტილებზე ${p1}$ და ${p2}$.",
+              "solution": "${eq}$"
+            },
+            "both-intercepts": {
+              "prompt": "იპოვე წრფის ${eq}$ გადაკვეთის წერტილები ღერძებთან.",
+              "solution": "$x$-ღერძი: ${xint}$; $y$-ღერძი: ${yint}$"
+            },
+            "abs-vertex": {
+              "prompt": "იპოვე ფუნქციის ${eq}$ წვერო.",
+              "solution": "${vertex}$"
+            },
+            "parabola-shift": {
+              "prompt": "იპოვე პარაბოლის ${eq}$ წვერო.",
+              "solution": "${vertex}$"
+            },
+            "lines-intersect": {
+              "prompt": "იპოვე წრფეების ${eq1}$ და ${eq2}$ გადაკვეთის წერტილი.",
+              "solution": "${point}$"
+            },
+            "perpendicular-line": {
+              "prompt": "იპოვე ${eq1}$-ის მართობული წრფის განტოლება, რომელიც გადის წერტილზე ${point}$.",
+              "solution": "${eq}$"
+            },
+            "vertex-form": {
+              "prompt": "იპოვე პარაბოლის ${eq}$ წვერო.",
+              "solution": "${vertex}$"
+            },
+            "complete-square": {
+              "prompt": "იპოვე პარაბოლის ${eq}$ წვერო.",
+              "solution": "${eq2}$ \\\\ ${vertex}$"
+            },
+            "parabola-x-intercepts": {
+              "prompt": "იპოვე პარაბოლის ${eq}$ გადაკვეთის წერტილები $x$-ღერძთან.",
+              "solution": "${p1}$,\\; ${p2}$"
+            },
+            "axis-symmetry": {
+              "prompt": "იპოვე პარაბოლის ${eq}$ სიმეტრიის ღერძი.",
+              "solution": "$x = {h}$"
+            },
+            "circle-center": {
+              "prompt": "იპოვე წრის ${eq}$ ცენტრი და რადიუსი.",
+              "solution": "ცენტრი ${center}$, $r = {r}$"
+            },
+            "line-parabola": {
+              "prompt": "იპოვე ${eq1}$-ისა და ${eq2}$-ის გადაკვეთის წერტილები.",
+              "solution": "${p1}$,\\; ${p2}$"
+            },
+            "abs-scaled": {
+              "prompt": "იპოვე ფუნქციის ${eq}$ წვერო.",
+              "solution": "${vertex}$"
+            },
+            "inverse-linear": {
+              "prompt": "იპოვე შებრუნებული ფუნქცია: ${eq}$.",
+              "solution": "${inv}$"
+            },
+            "quadratic-y-intercept": {
+              "prompt": "იპოვე პარაბოლის ${eq}$ გადაკვეთა $y$-ღერძთან.",
+              "solution": "${intercept}$"
+            },
+            "intercept-count": {
+              "prompt": "რამდენ წერტილში კვეთს გრაფიკი ${eq}$ აბსცისათა ღერძს?",
+              "solution": "${n}$"
+            },
+            "parabola-range": {
+              "prompt": "იპოვე ფუნქციის ${eq}$ მნიშვნელობათა სიმრავლე.",
+              "solution": "$y {rel} {k}$"
+            }
+          }
         },
         "tools": {
           "label": "მასწავლებლის ხელსაწყოები",
@@ -1003,7 +1303,7 @@
           },
           "import": {
             "title": "იმპორტი",
-            "hint": "საკუთარი ამოცანების ატვირთვა LaTeX-ით ან ტექსტით."
+            "hint": "აკრიფე ამოცანა, ატვირთე ფოტო, ან ჩატვირთე JSON ოჯახი."
           },
           "variants": {
             "title": "ვარიანტები",
@@ -1034,19 +1334,91 @@
           "keep": "შენახვა ნაკრებში",
           "discard": "უარყოფა",
           "batchHint": "დაგენერირებული ამოცანები ჩნდება სიაში. შეინახე ნაკრებში ან უარყავი.",
+          "algorithmHint": "ჩვენი ალგორითმები ირჩევენ სხვადასხვა ტიპის ამოცანას თემის ბიბლიოთეკიდან. AI არ გამოიყენება — პასუხს ითვლის კოდი.",
           "mode": "რეჟიმი",
-          "modeTemplates": "შაბლონები",
+          "modeAlgorithms": "ალგორითმები",
           "modeDiverse": "სხვადასხვა ტიპი",
           "request": "მოთხოვნა",
           "requestPlaceholder": "მაგ. 5 ამოცანა ალგებრული კომბინატორიკიდან",
           "requestHint": "შემოწმებულ რეჟიმში პირობას გვთავაზობს მოდელი, პასუხს ითვლის Math.js (ტრიგონომეტრია, ლოგარითმები, კომბინატორიკა, რიცხვთა თეორია, სტატისტიკა და სხვა).",
-          "plainHint": "შეუმოწმებელ რეჟიმში მოდელი ფიქრობს, როგორც საკუთარ ჩატში. ინახება პირობა და სრული ამოხსნა — Math.js არ ამოწმებს.",
+          "plainHint": "შეუმოწმებელ რეჟიმში მოდელი ფიქრობს ღრმად და სწრაფად, როგორც საკუთარ ჩატში. ინახება პირობა და სრული ამოხსნა — Math.js არ ამოწმებს.",
           "checkMode": "შემოწმება",
           "modeVerified": "Math.js შემოწმება",
           "modePlain": "შეუმოწმებელი AI",
           "anyTopic": "ნებისმიერი თემა",
           "anyDifficulty": "ნებისმიერი სირთულე",
           "anyYear": "ნებისმიერი კლასი",
+          "kind": "ტიპი",
+          "anyKind": "ყველა ტიპი",
+          "kindGroups": {
+            "foundational-pre-algebra": "ელემენტარული და კლასიკური ალგებრა"
+          },
+          "kinds": {
+            "order-of-operations": "მოქმედებათა რიგი",
+            "numerical-simplification": "რიცხვითი გამოსახულების გამარტივება",
+            "linear-equations-inequalities": "წრფივი განტოლებები და უტოლობები",
+            "linear-one-step": "წრფივი განტოლება (ერთი ნაბიჯი)",
+            "quadratic-equations-inequalities": "კვადრატული განტოლებები და უტოლობები",
+            "higher-degree-equations-inequalities": "მაღალი ხარისხის მრავალწევრული განტოლებები და უტოლობები",
+            "rational-equations-inequalities": "რაციონალური განტოლებები და უტოლობები",
+            "radical-equations-inequalities": "ირაციონალური განტოლებები და უტოლობები",
+            "absolute-value-parametric": "მოდული და პარამეტრიანი განტოლებები",
+            "domain-range": "განსაზღვრის არე და მნიშვნელობათა სიმრავლე",
+            "composition-of-functions": "ფუნქციათა კომპოზიცია",
+            "inverse-functions": "ინვერსიული ფუნქციები",
+            "graphical-transformations": "გრაფიკის წანაცვლებები და გარდაქმნები",
+            "polynomial-functions": "მრავალწევრული ფუნქციები",
+            "exponential-functions": "მაჩვენებლიანი ფუნქციები",
+            "logarithmic-functions": "ლოგარითმული ფუნქციები",
+            "arithmetic-progressions": "არითმეტიკული პროგრესიები",
+            "geometric-progressions": "გეომეტრიული პროგრესიები",
+            "infinite-geometric-series": "უსასრულო კრებადი გეომეტრიული მწკრივები",
+            "binomial-expansion": "ბინომის თეორემა და პასკალის სამკუთხედი",
+            "root-finding-algorithms": "ფესვის პოვნის ალგორითმები",
+            "linear-lcd-dynamic": "წრფივი განტოლება წილადებით",
+            "polynomial-simplification": "მრავალწევრის გამარტივება",
+            "polynomial-factoring": "მრავალწევრის მამრავლებად დაშლა",
+            "synthetic-division": "სინთეტიკური გაყოფა",
+            "polynomial-interpolation": "მრავალწევრული ინტერპოლაცია",
+            "proportions-ratios": "პროპორციები და შეფარდებები",
+            "word-problems": "სიტყვიერი ამოცანები",
+            "basic-graphing": "გრაფიკების საწყისები",
+            "quadratic-monic": "კვადრატული განტოლება",
+            "quadratic-scaled": "კვადრატული განტოლება (კოეფიციენტით)",
+            "quadratic-pure": "არასრული კვადრატული განტოლება",
+            "vieta-squares": "ვიეტას ფორმულები",
+            "system-2x2": "ორი უცნობიანი სისტემა",
+            "pythagoras-hyp": "პითაგორას თეორემა — ჰიპოტენუზა",
+            "pythagoras-leg": "პითაგორას თეორემა — კათეტი",
+            "rectangle-area": "მართკუთხედის ფართობი",
+            "triangle-area": "სამკუთხედის ფართობი",
+            "circle-circumference": "წრის სიგრძე",
+            "similar-ratio": "მსგავსი სამკუთხედები",
+            "function-linear": "წრფივი ფუნქცია",
+            "function-quadratic": "კვადრატული ფუნქცია",
+            "function-composition": "ფუნქციათა კომპოზიცია",
+            "linear-inverse": "შებრუნებული ფუნქცია",
+            "arithmetic-term": "არითმეტიკული პროგრესია",
+            "percent-of": "რიცხვის პროცენტი",
+            "percent-whole": "მთელი რიცხვი პროცენტიდან",
+            "percent-increase": "პროცენტული მატება",
+            "percent-decrease": "პროცენტული კლება",
+            "percent-successive": "თანმიმდევრული პროცენტები",
+            "derivative-power": "ხარისხის წარმოებული",
+            "derivative-quadratic": "კვადრატული ფუნქციის წარმოებული",
+            "derivative-at": "წარმოებული წერტილში",
+            "derivative-sum": "ჯამის წარმოებული",
+            "antiderivative-power": "ხარისხის პირველადი",
+            "vector-magnitude": "ვექტორის სიგრძე",
+            "vector-dot": "სკალარული ნამრავლი",
+            "vector-add": "ვექტორების ჯამი",
+            "vector-scalar": "ვექტორის სკალარზე გამრავლება",
+            "midpoint": "შუაწერტილი",
+            "binomial-choose": "ბინომური კოეფიციენტი",
+            "factorial": "ფაქტორიალი",
+            "permutations": "გადანაცვლება",
+            "counting-product": "გამრავლების წესი"
+          },
           "classifyHint": "თემა, სირთულე და კლასი ინახება თითოეული ამოცანიდან — არა ამ ფილტრებიდან.",
           "model": "მოდელი",
           "limitLabel": "საიტის დღიური ლიმიტი",
@@ -1117,6 +1489,63 @@
           "needFormula": "ამ ამოცანას არ აქვს ფორმულა ვარიანტებისთვის. ჯერ დააგენერირე AI-ით.",
           "noneVerified": "სუფთა რიცხვები ვერ მოიძებნა. სცადე ხელახლა.",
           "sourceLabel": "საწყისი ამოცანა"
+        },
+        "importFamily": {
+          "title": "აჩვენე მაგალითიდან",
+          "hint": "აკრიფე ამოცანა, ატვირთე სკრინშოტი ან ხელნაწერი, ან ჩატვირთე JSON ოჯახი. შევამოწმებთ და ძრავა ახალ რიცხვებს ჩასვამს.",
+          "close": "იმპორტის დახურვა",
+          "source": "წყარო",
+          "sourceType": "ტექსტი",
+          "sourceScreenshot": "სკრინშოტი",
+          "sourceHandwriting": "ხელნაწერი",
+          "sourceJson": "JSON ფაილი",
+          "sourceJsonPaste": "JSON ჩასმა",
+          "typeLabel": "ამოცანის ტექსტი",
+          "typePlaceholder": "მაგ. ამოხსენი 3x + 2 = 14",
+          "typeHint": "მოდელი აქცევს ამას JSON ოჯახად (პარამეტრები, გამოთვლილი მნიშვნელობები, LaTeX). განტოლებები, არითმეტიკა და ბინომური გაშლა მხარდაჭერილია.",
+          "photoLabel": "სურათი",
+          "photoHint": "PNG, JPEG ან WebP. წარწერა დიდი და კონტრასტული იყოს.",
+          "handwritingHint": "გადაიღე გვერდი ზემოდან. აირიდე ბზინვარება.",
+          "jsonLabel": "შაბლონის ფაილი",
+          "jsonHint": "ოჯახის ფაილი, როგორც linear-one-step.json. AI არ გამოიყენება — ძრავა პირდაპირ კითხულობს.",
+          "jsonPasteLabel": "JSON ტექსტი",
+          "jsonPasteHint": "ჩასვი დაკოპირებული ოჯახის ობიექტი. AI არ გამოიყენება — Zod ამოწმებს სქემას, ძრავა კი ახალ რიცხვებს სვამს.",
+          "jsonPastePlaceholder": "{ \"id\": \"…\", \"variants\": [ … ] }",
+          "jsonPasteRead": "JSON-ის წაკითხვა",
+          "analyze": "JSON-ად გარდაქმნა",
+          "building": "მუშავდება…",
+          "jsonPreview": "JSON ოჯახი",
+          "preview": "გადახედვა",
+          "checkCas": "math.js-ით შემოწმება",
+          "checkCasOk": "math.js ეთანხმება: {value}",
+          "checkCasFail": "math.js-მა ეს ინსტანცია უარყო.",
+          "checkCasNoFormula": "შესამოწმებელი რიცხვითი ფორმულა არ არის. დაამატე formula ან პასუხის derived ველი.",
+          "checkCasMismatch": "math.js-მა მიიღო {got}, შაბლონის პასუხია {expected}.",
+          "build": "ამოცანების გენერაცია",
+          "unsupported": "ეს მაგალითი ვერ იქცევა განმეორებად ოჯახად. მტკიცებულებები და გრძელი სიტყვიერი ამოცანები არ შედის. განტოლებები, არითმეტიკა და ბინომური გაშლა შედის.",
+          "invalidJson": "ეს არ არის სწორი JSON.",
+          "invalidTemplate": "JSON არ ემთხვევა ამოცანის ოჯახის სქემას.",
+          "diagnoseTitle": "რატომ ვერ წაიკითხა",
+          "diagnoseDetails": "ტექნიკური დეტალები",
+          "diagnoseJson": "ტექსტი არ არის სწორი JSON (მძიმე, ბრჭყალი ან ზედმეტი მძიმე).",
+          "diagnoseName": "პარამეტრის ან derived სახელი არასწორია. გამოიყენე ასო, ციფრი და ქვედა ტირე; მაქსიმუმ 24 სიმბოლო.",
+          "diagnoseEnum": "topic, difficulty, year ან instructionId არ არის დაშვებულ სიაში.",
+          "diagnoseLength": "prompt ან ამოხსნის ნაბიჯი ძალიან გრძელია.",
+          "diagnoseMissing": "აკლია სავალდებულო ველი (prompt, solution ან variants).",
+          "diagnoseCollide": "ერთი და იგივე სახელი არის params-სა და derived-ში.",
+          "diagnoseSample": "სქემა სწორია, მაგრამ რიცხვების შერჩევა ვერ მოხერხდა (derived, constraint ან slot).",
+          "diagnoseSchema": "JSON ოჯახის ფორმა არ ემთხვევა ძრავის სქემას.",
+          "fileTooLarge": "ფაილი ძალიან დიდია.",
+          "badImage": "გამოიყენე PNG, JPEG ან WebP სურათი.",
+          "empty": "ჯერ აკრიფე ამოცანა ან ატვირთე ფაილი.",
+          "errorMissingKey": "ამ მოდელს სერვერზე API გასაღები არ აქვს.",
+          "errorInvalidKey": "API გასაღები უარყოფილია.",
+          "errorLimit": "ამ მოდელის დღიური ლიმიტი ამოწურულია.",
+          "errorFailed": "მაგალითის გარდაქმნა ვერ მოხერხდა. სცადე ხელახლა.",
+          "errorBadOutput": "მოდელის პასუხი ვერ გამოვიყენეთ.",
+          "errorUnauthorized": "ამ მოქმედებისთვის საჭიროა მასწავლებლის ანგარიში.",
+          "errorBilling": "ამ API გასაღებს კრედიტი არ აქვს.",
+          "errorTimeout": "მოდელს დიდი დრო დასჭირდა. სცადე უფრო ნათელი ფოტო ან ტექსტი."
         },
         "stats": {
           "inBank": "ბანკში",

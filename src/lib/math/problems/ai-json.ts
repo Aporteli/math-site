@@ -185,6 +185,8 @@ function normalizeInstruction(raw: unknown) {
     missingside: "missingSide",
     pythagoras: "missingSide",
     expand: "expand",
+    factor: "factor",
+    simplify: "simplify",
   };
   return aliases[key] ?? "evaluate";
 }

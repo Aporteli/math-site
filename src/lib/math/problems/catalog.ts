@@ -34,7 +34,7 @@ export interface ProblemBankTool {
  */
 export const PROBLEM_BANK_TOOLS: ProblemBankTool[] = [
   { id: "generate", icon: Sparkles, status: "ready" },
-  { id: "import", icon: FileUp, status: "soon" },
+  { id: "import", icon: FileUp, status: "ready" },
   { id: "variants", icon: Shuffle, status: "ready" },
   {
     id: "worksheet",
@@ -59,6 +59,16 @@ export function topicLabel(
     return topics[topic as ProblemTopic];
   }
   return topic.replaceAll("-", " ");
+}
+
+export function kindLabel(
+  kinds: ProblemBankCopy["generate"]["kinds"],
+  id: string,
+) {
+  if (Object.hasOwn(kinds, id)) {
+    return kinds[id as keyof typeof kinds];
+  }
+  return id.replaceAll("-", " ");
 }
 
 export function topicsInBank(problems: BankProblem[]) {

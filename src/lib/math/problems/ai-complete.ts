@@ -22,14 +22,14 @@ import {
 
 const TIMEOUT_MS = 45_000;
 const REASONER_TIMEOUT_MS = 90_000;
-const CHAT_TIMEOUT_MS = 120_000;
+const CHAT_TIMEOUT_MS = 75_000;
 const DEFAULT_MAX_TOKENS = 4096;
 const CHAT_MAX_TOKENS = 8192;
 
 const SCHOOL_SYSTEM =
   "You generate school math problems. Reply with a JSON object only.";
 const CHAT_SYSTEM =
-  "You are chatting with a mathematics teacher, the same way you do on your own chat site. Think privately as deeply as you normally would. When you are done, reply with a JSON object only.";
+  "You are a contest mathematician. Think at high depth and at speed: full multi-step olympiad reasoning, no easy drills, no wandering. Then reply with a JSON object only.";
 
 const GROQ_CHAT_PREFERENCE = [
   "llama-3.3-70b-versatile",
@@ -370,7 +370,9 @@ async function completeGemini(model: AiModelDef, input: ProposeInput, prompt: st
   }
   if (freeThink) {
     generationConfig.maxOutputTokens = CHAT_MAX_TOKENS;
-    generationConfig.thinkingConfig = { thinkingLevel: "HIGH" };
+    generationConfig.thinkingConfig = /gemini-3/.test(model.apiModel)
+      ? { thinkingLevel: "HIGH", includeThoughts: false }
+      : { thinkingBudget: 8192, includeThoughts: false };
   }
 
   const body: Record<string, unknown> = {
@@ -391,7 +393,7 @@ async function completeGemini(model: AiModelDef, input: ProposeInput, prompt: st
     return geminiText(payload);
   } catch (error) {
     if (freeThink && error instanceof ProviderError && error.status === 400) {
-      delete generationConfig.thinkingConfig;
+      delete generationConfig.responseSchema;
       const payload = (await postJson(
         url,
         { "x-goog-api-key": key },
@@ -430,19 +432,19 @@ async function completeAnthropic(
     ? [
         {
           model: model.apiModel,
-          max_tokens: 16000,
-          temperature: 1,
-          system,
-          thinking: { type: "enabled", budget_tokens: 8000 },
-          messages,
-        },
-        {
-          model: model.apiModel,
-          max_tokens: 16000,
+          max_tokens: 12000,
           temperature: 1,
           system,
           thinking: { type: "adaptive" },
           output_config: { effort: "high" },
+          messages,
+        },
+        {
+          model: model.apiModel,
+          max_tokens: 12000,
+          temperature: 1,
+          system,
+          thinking: { type: "enabled", budget_tokens: 6000 },
           messages,
         },
       ]
@@ -473,6 +475,10 @@ async function completeAnthropic(
     }
   }
 
+  if (!(lastError instanceof ProviderError) || lastError.status !== 400) {
+    throw lastError;
+  }
+
   const payload = await postJson(
     "https://api.anthropic.com/v1/messages",
     headers,
@@ -483,11 +489,9 @@ async function completeAnthropic(
       system,
       messages,
     },
-    freeThink ? CHAT_TIMEOUT_MS : TIMEOUT_MS,
+    TIMEOUT_MS,
   );
-  const text = anthropicText(payload);
-  if (!text && lastError) throw lastError;
-  return text;
+  return anthropicText(payload);
 }
 
 async function completeCloudflare(
@@ -524,47 +528,56 @@ async function completeGroq(
   freeThink: boolean,
 ) {
   const key = envValue("GROQ_API_KEY");
-  const models = (await groqChatModels(model.apiModel, key)).slice(0, 2);
+  const models = (await groqChatModels(model.apiModel, key)).slice(
+    0,
+    freeThink ? 1 : 2,
+  );
   let lastError: unknown = new ProviderError(
     "No Groq chat model is available for this key.",
     404,
   );
-  const timeout = Math.min(freeThink ? CHAT_TIMEOUT_MS : TIMEOUT_MS, 45_000);
+  const timeout = freeThink ? 60_000 : TIMEOUT_MS;
   const system = freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM;
+  const efforts = freeThink ? (["high", "medium"] as const) : (["low"] as const);
 
   for (const apiModel of models) {
     const canReason = /gpt-oss|qwen/i.test(apiModel);
-    try {
-      const text = await completeOpenAiCompat(
-        "https://api.groq.com/openai/v1/chat/completions",
-        key,
-        apiModel,
-        prompt,
-        {
-          temperature,
-          jsonMode: false,
-          maxTokens: 2048,
-          timeout,
-          system,
-          ...(canReason
-            ? { reasoningEffort: "low", reasoningFormat: "hidden" }
-            : {}),
-        },
-      );
-      if (text.trim()) return text;
-      lastError = new Error("bad_output");
-    } catch (error) {
-      lastError = error;
-      const salvage = failedGeneration(error);
-      if (salvage.trim()) return salvage;
-      if (
-        isRequestTooLarge(error) ||
-        (error instanceof ProviderError &&
-          (error.status === 400 || error.status === 429))
-      ) {
-        continue;
+    for (const effort of canReason ? efforts : ([undefined] as const)) {
+      try {
+        const text = await completeOpenAiCompat(
+          "https://api.groq.com/openai/v1/chat/completions",
+          key,
+          apiModel,
+          prompt,
+          {
+            temperature: freeThink ? 1 : temperature,
+            jsonMode: false,
+            maxTokens: freeThink ? 3072 : 2048,
+            timeout,
+            system,
+            ...(effort
+              ? {
+                  reasoningEffort: effort,
+                  reasoningFormat: "hidden",
+                }
+              : {}),
+          },
+        );
+        if (text.trim()) return text;
+        lastError = new Error("bad_output");
+      } catch (error) {
+        lastError = error;
+        const salvage = failedGeneration(error);
+        if (salvage.trim()) return salvage;
+        if (
+          isRequestTooLarge(error) ||
+          (error instanceof ProviderError &&
+            (error.status === 400 || error.status === 429))
+        ) {
+          continue;
+        }
+        throw error;
       }
-      throw error;
     }
   }
 
@@ -572,7 +585,6 @@ async function completeGroq(
 }
 
 const DEEPSEEK_JSON_TIMEOUT_MS = 60_000;
-const DEEPSEEK_RETRY_TIMEOUT_MS = 45_000;
 
 function deepseekSystem(input: ProposeInput) {
   return input.check === "plain" ? CHAT_SYSTEM : SCHOOL_SYSTEM;
@@ -587,58 +599,66 @@ async function completeDeepseek(
   const key = envValue("DEEPSEEK_API_KEY");
   const url = "https://api.deepseek.com/chat/completions";
   const system = deepseekSystem(input);
+  const freeThink = input.check === "plain";
   const reasoner = model.id === "deepseek-r1";
 
-  const attempts = reasoner
-    ? [
-        {
+  const options = reasoner
+    ? {
+        jsonMode: false as const,
+        timeout: CHAT_TIMEOUT_MS,
+        maxTokens: 12_288,
+        system,
+      }
+    : freeThink
+      ? {
+          temperature: 1,
           jsonMode: false as const,
-          timeout: DEEPSEEK_JSON_TIMEOUT_MS,
-          maxTokens: 8192,
+          enableThinking: true,
+          reasoningEffort: "high",
+          timeout: CHAT_TIMEOUT_MS,
+          maxTokens: 16_384,
           system,
-        },
-      ]
-    : [
-        {
+        }
+      : {
           temperature,
           jsonMode: true as const,
           disableThinking: true,
           timeout: DEEPSEEK_JSON_TIMEOUT_MS,
           maxTokens: 8192,
           system,
-        },
-        {
-          temperature,
-          jsonMode: false as const,
-          disableThinking: true,
-          timeout: DEEPSEEK_RETRY_TIMEOUT_MS,
-          maxTokens: 4096,
-          system,
-        },
-      ];
+        };
 
-  let lastError: unknown = new Error("failed");
-  for (const options of attempts) {
-    try {
-      const text = await completeOpenAiCompat(
-        url,
-        key,
-        model.apiModel,
-        prompt,
-        options,
-      );
-      if (text.trim()) return text;
-      lastError = new Error("bad_output");
-    } catch (error) {
-      lastError = error;
-      const retry =
-        isRetryableProviderError(error) ||
-        (error instanceof ProviderError && error.status === 400);
-      if (!retry) throw error;
+  try {
+    const text = await completeOpenAiCompat(
+      url,
+      key,
+      model.apiModel,
+      prompt,
+      options,
+    );
+    if (text.trim()) return text;
+    throw new Error("bad_output");
+  } catch (error) {
+    if (
+      !freeThink ||
+      reasoner ||
+      !(error instanceof ProviderError) ||
+      error.status !== 400
+    ) {
+      throw error;
     }
   }
 
-  throw lastError;
+  const text = await completeOpenAiCompat(url, key, model.apiModel, prompt, {
+    temperature: 1,
+    jsonMode: false,
+    enableThinking: true,
+    timeout: CHAT_TIMEOUT_MS,
+    maxTokens: 16_384,
+    system,
+  });
+  if (!text.trim()) throw new Error("bad_output");
+  return text;
 }
 
 async function completeText(model: AiModelDef, input: ProposeInput, prompt: string) {
@@ -660,11 +680,14 @@ async function completeText(model: AiModelDef, input: ProposeInput, prompt: stri
         model.apiModel,
         prompt,
         {
-          temperature,
-          jsonMode: true,
+          temperature: freeThink ? 1 : temperature,
+          jsonMode: false,
           system,
           maxTokens: freeThink ? CHAT_MAX_TOKENS : DEFAULT_MAX_TOKENS,
           timeout: freeThink ? CHAT_TIMEOUT_MS : TIMEOUT_MS,
+          ...(freeThink && /^(o[1-4]|gpt-5)/i.test(model.apiModel)
+            ? { reasoningEffort: "high" }
+            : {}),
         },
       );
     case "huggingface":
@@ -675,7 +698,7 @@ async function completeText(model: AiModelDef, input: ProposeInput, prompt: stri
         prompt,
         {
           temperature,
-          jsonMode: true,
+          jsonMode: false,
           system,
           maxTokens: freeThink ? 4096 : 3072,
           timeout: freeThink ? CHAT_TIMEOUT_MS : TIMEOUT_MS,
@@ -719,6 +742,51 @@ export async function proposeProblems(
   return parseProblemPayload(text, input.check) as
     | VerifiedProblemDraft[]
     | PlainProblemDraft[];
+}
+
+const TEMPLATE_SYSTEM =
+  "You convert one school math example into a reusable JSON problem family. Reply with a JSON object only.";
+
+/** Gemini JSON completion with optional image parts (template import). */
+export async function completeGeminiUserParts(options: {
+  model: AiModelDef;
+  prompt: string;
+  image?: { mimeType: string; data: string };
+  timeout?: number;
+}): Promise<string> {
+  const key = envValue("GEMINI_API_KEY");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${options.model.apiModel}:generateContent`;
+  const parts: Record<string, unknown>[] = [{ text: options.prompt }];
+  if (options.image) {
+    parts.push({
+      inlineData: {
+        mimeType: options.image.mimeType,
+        data: options.image.data,
+      },
+    });
+  }
+
+  const generationConfig: Record<string, unknown> = {
+    responseMimeType: "application/json",
+  };
+  if (!/gemini-3/.test(options.model.apiModel)) {
+    generationConfig.temperature = 0.2;
+  }
+
+  const payload = (await postJson(
+    url,
+    { "x-goog-api-key": key },
+    {
+      contents: [{ role: "user", parts }],
+      generationConfig,
+      systemInstruction: { parts: [{ text: TEMPLATE_SYSTEM }] },
+    },
+    options.timeout ?? 60_000,
+  )) as GeminiResponse;
+
+  const text = geminiText(payload);
+  if (!text.trim()) throw new Error("bad_output");
+  return text;
 }
 
 export type { AiCheckMode };
