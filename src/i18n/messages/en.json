@@ -1100,6 +1100,7 @@
           "errorInvalidKey": "This API key was rejected. Paste a new key in .env and restart the server.",
           "errorLimit": "This model’s daily limit is used up.",
           "errorFailed": "Generation failed. Try again.",
+          "errorBadOutput": "The model replied in a form we could not use. Try Unchecked AI, or another model.",
           "errorNoneVerified": "No problem matched the request or passed the checker. Try another request or Unchecked AI.",
           "errorUnauthorized": "A teacher account is required for this action.",
           "errorBilling": "This API key has no credit. Unchecked AI still calls the same paid API. Add OpenAI credit at platform.openai.com/account/billing, or pick Gemini / Groq.",

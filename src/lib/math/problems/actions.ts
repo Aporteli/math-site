@@ -66,7 +66,12 @@ export async function generateDiverseProblemsAction(
     return { ok: false, error: "failed" };
   }
 
-  return generateDiverseProblems(parsed.data);
+  try {
+    return await generateDiverseProblems(parsed.data);
+  } catch (error) {
+    console.error("AI generate action failed", error instanceof Error ? error.message : error);
+    return { ok: false, error: "failed" };
+  }
 }
 
 export async function loadAiModelStatusAction(): Promise<AiModelStatus[]> {

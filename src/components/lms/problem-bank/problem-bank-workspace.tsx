@@ -443,6 +443,7 @@ export function ProblemBankWorkspace({
           limit_exceeded: copy.generate.errorLimit,
           billing: copy.generate.errorBilling,
           timeout: copy.generate.errorTimeout,
+          bad_output: copy.generate.errorBadOutput,
         } as const;
         setNotice(messages[result.error]);
         return;

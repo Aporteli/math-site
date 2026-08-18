@@ -26,21 +26,6 @@ export type GenerateDiverseProblemsInput = z.infer<
   typeof generateDiverseProblemsSchema
 >;
 
-const topicSlug = z
-  .string()
-  .trim()
-  .min(1)
-  .max(64)
-  .transform((value) =>
-    value
-      .toLowerCase()
-      .replace(/['’]/g, "")
-      .replace(/[^a-z0-9\u10a0-\u10ff-]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 48),
-  )
-  .pipe(z.string().min(1).max(48));
-
 const variablesSchema = z
   .array(
     z.object({
@@ -53,7 +38,7 @@ const variablesSchema = z
 
 export const verifiedProblemDraftSchema = z.object({
   kind: z.string().trim().min(1).max(48),
-  topic: topicSlug,
+  topic: z.string().trim().min(1).max(48),
   difficulty: z.enum(PROBLEM_DIFFICULTIES),
   year: z.enum(PROBLEM_YEARS),
   instructionId: z.enum(PROBLEM_INSTRUCTIONS),
@@ -65,7 +50,7 @@ export const verifiedProblemDraftSchema = z.object({
 
 export const plainProblemDraftSchema = z.object({
   kind: z.string().trim().min(1).max(48),
-  topic: topicSlug,
+  topic: z.string().trim().min(1).max(48),
   difficulty: z.enum(PROBLEM_DIFFICULTIES),
   year: z.enum(PROBLEM_YEARS),
   instructionId: z.enum(PROBLEM_INSTRUCTIONS).default("evaluate"),
@@ -169,4 +154,5 @@ export type DiverseGenerateError =
   | "none_verified"
   | "limit_exceeded"
   | "billing"
-  | "timeout";
+  | "timeout"
+  | "bad_output";

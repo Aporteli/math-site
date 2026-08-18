@@ -12,6 +12,14 @@ function extractJsonText(text: string) {
     .replace(/<think>[\s\S]*?<\/think>/gi, "")
     .replace(/```(?:json)?/gi, "")
     .trim();
+  const marker = stripped.search(/"problems"\s*:/);
+  if (marker >= 0) {
+    const start = stripped.lastIndexOf("{", marker);
+    const end = stripped.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      return stripped.slice(start, end + 1).replace(/,\s*([}\]])/g, "$1");
+    }
+  }
   const start = stripped.indexOf("{");
   const end = stripped.lastIndexOf("}");
   if (start < 0 || end <= start) return "";
@@ -81,14 +89,14 @@ function decodeJson(text: string): unknown {
     } catch {
       const salvaged = salvageTruncatedJson(repaired);
       if (salvaged) return salvaged;
-      throw new Error("failed");
+      throw new Error("bad_output");
     }
   }
 }
 
 export function parseJsonPayload(text: string) {
   const candidate = extractJsonText(text);
-  if (!candidate) throw new Error("failed");
+  if (!candidate) throw new Error("bad_output");
   const parsed = decodeJson(candidate);
   if (typeof parsed === "string") return parseJsonPayload(parsed);
   return parsed;
@@ -96,10 +104,14 @@ export function parseJsonPayload(text: string) {
 
 function asNumber(value: unknown) {
   if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) {
-    return Number(value);
-  }
-  return null;
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed || /[iI]/.test(trimmed)) return null;
+  if (Number.isFinite(Number(trimmed))) return Number(trimmed);
+  const match = trimmed.match(/-?\d+(?:\.\d+)?/);
+  if (!match) return null;
+  const parsed = Number(match[0]);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function asText(value: unknown) {
@@ -178,11 +190,54 @@ function normalizeInstruction(raw: unknown) {
 }
 
 function normalizeDifficulty(raw: unknown) {
-  const key = String(raw ?? "medium").trim().toLowerCase();
+  const key = String(raw ?? "medium").trim().toLowerCase().replace(/[\s_-]+/g, "");
   if (key === "easy" || key === "medium" || key === "hard") return key;
+  if (
+    key.includes("hard") ||
+    key.includes("contest") ||
+    key.includes("olymp") ||
+    key.includes("difficult")
+  ) {
+    return "hard";
+  }
+  if (key.includes("easy") || key.includes("simple")) return "easy";
   return "medium";
 }
 
+function coerceTopic(raw: string) {
+  const slug = raw
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9\u10a0-\u10ff-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+  return slug || "algebra";
+}
+
+function variablesFromFormula(formula: string) {
+  const reserved = new Set([
+    "pi",
+    "e",
+    "tau",
+    "sin",
+    "cos",
+    "tan",
+    "log",
+    "ln",
+    "sqrt",
+    "abs",
+    "pow",
+    "min",
+    "max",
+  ]);
+  const names = [
+    ...new Set(formula.match(/\b[a-zA-Z][a-zA-Z0-9]{0,11}\b/g) ?? []),
+  ].filter((name) => !reserved.has(name.toLowerCase()));
+  return names.slice(0, 8).map((name, index) => ({
+    name,
+    value: index + 2,
+  }));
+}
 function formulaFrom(rec: Record<string, unknown>) {
   const direct = rec.formula ?? rec.expression ?? rec.expr ?? rec.mathjs ?? rec.math;
   if (typeof direct === "string") return direct;
@@ -200,23 +255,29 @@ function normalizeProblem(raw: unknown, check: AiCheckMode) {
     .trim()
     .slice(0, 48) || "problem";
   const promptMax = check === "plain" ? 4000 : 800;
+  const formula = formulaFrom(rec).slice(0, 320);
+  const variables = normalizeVariables(rec.variables ?? rec.vars ?? rec.params);
+  const promptTex = asText(
+    rec.promptTex ?? rec.prompt ?? rec.statement ?? rec.question ?? rec.stem,
+  ).slice(0, promptMax);
+  const solutionTex =
+    asText(rec.solutionTex ?? rec.solution ?? rec.answer ?? rec.working).slice(
+      0,
+      check === "plain" ? 12000 : 4000,
+    ) || (check === "plain" ? promptTex : "");
   return {
-    kind,
-    topic: asText(rec.topic ?? rec.subject ?? "algebra") || "algebra",
+    kind: kind.replace(/\s+/g, "-").slice(0, 48) || "problem",
+    topic: coerceTopic(asText(rec.topic ?? rec.subject ?? "algebra")),
     difficulty: normalizeDifficulty(rec.difficulty),
     year: normalizeYear(rec.year ?? rec.yearGroup) ?? "9",
     instructionId: normalizeInstruction(rec.instructionId ?? rec.instruction),
-    promptTex: asText(
-      rec.promptTex ?? rec.prompt ?? rec.statement ?? rec.question ?? rec.stem,
-    ).slice(0, promptMax),
+    promptTex,
     promptTemplate: rec.promptTemplate
       ? asText(rec.promptTemplate).slice(0, promptMax)
       : undefined,
-    formula: formulaFrom(rec).slice(0, 320),
-    variables: normalizeVariables(rec.variables ?? rec.vars ?? rec.params),
-    solutionTex: asText(
-      rec.solutionTex ?? rec.solution ?? rec.answer ?? rec.working,
-    ).slice(0, check === "plain" ? 12000 : 4000),
+    formula,
+    variables: variables.length > 0 ? variables : variablesFromFormula(formula),
+    solutionTex,
   };
 }
 
@@ -241,12 +302,22 @@ function normalizePayload(raw: unknown, check: AiCheckMode) {
 }
 
 export function parseProblemPayload(text: string, check: AiCheckMode) {
-  if (!text.trim()) throw new Error("failed");
+  if (!text.trim()) throw new Error("bad_output");
   const schema =
     check === "verified" ? verifiedProblemDraftSchema : plainProblemDraftSchema;
   const problems: (VerifiedProblemDraft | PlainProblemDraft)[] = [];
   let firstIssues: string[] | undefined;
-  for (const item of normalizePayload(parseJsonPayload(text), check).problems) {
+  let rawItems: unknown[] = [];
+  try {
+    rawItems = normalizePayload(parseJsonPayload(text), check).problems;
+  } catch {
+    console.error(
+      "AI JSON parse failed",
+      text.slice(0, 280).replace(/\s+/g, " "),
+    );
+    throw new Error("bad_output");
+  }
+  for (const item of rawItems) {
     const parsed = schema.safeParse(item);
     if (parsed.success) {
       problems.push(parsed.data);
@@ -257,10 +328,13 @@ export function parseProblemPayload(text: string, check: AiCheckMode) {
     );
   }
   if (problems.length === 0) {
-    if (firstIssues?.length) {
-      console.error("AI draft schema rejected", firstIssues);
-    }
-    throw new Error("failed");
+    console.error(
+      "AI draft schema rejected",
+      firstIssues ?? ["no problems in payload"],
+      `raw=${rawItems.length}`,
+      text.slice(0, 280).replace(/\s+/g, " "),
+    );
+    throw new Error("bad_output");
   }
   return problems;
 }

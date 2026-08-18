@@ -116,9 +116,9 @@ export function buildUncheckedChatPrompt(input: ProposeInput) {
     "When you are done thinking, reply with JSON only:",
     '{"problems":[{"kind":"short-unique-slug","topic":"quadratic-equation","difficulty":"hard","year":"12","instructionId":"evaluate","promptTex":"...","solutionTex":"..."}]}',
     "promptTex = the full problem a student reads (natural sentences, maths in $...$).",
-    "solutionTex = a complete chat-style solution with steps, not a one-line answer.",
+    "solutionTex = stepped working, not a one-line answer. Keep each solution under 12 short lines so the JSON can finish.",
     "kind must be unique. year is 7-12. difficulty is easy, medium, or hard.",
-    "Escape backslashes in LaTeX inside JSON strings (write \\\\frac not \\frac).",
+    "Finish the whole JSON object. Escape backslashes in LaTeX (write \\\\frac not \\frac).",
   ]
     .filter(Boolean)
     .join("\n");

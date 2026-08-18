@@ -35,23 +35,29 @@ const GROQ_CHAT_PREFERENCE = [
   "llama-3.3-70b-versatile",
   "meta-llama/llama-3.3-70b-versatile",
   "llama-3.1-70b-versatile",
+  "qwen/qwen3.6-27b",
   "openai/gpt-oss-120b",
   "openai/gpt-oss-20b",
-  "qwen/qwen3.6-27b",
 ] as const;
 
-const GROQ_SKIP = /whisper|guard|orpheus|tts|canopy|compound/i;
-const GROQ_MAX_TOKEN_STEPS = [5500, 3500] as const;
+const GROQ_SKIP = /whisper|guard|orpheus|tts|canopy|compound|allam/i;
 
 export class ProviderError extends Error {
   readonly status: number;
   readonly code: string;
+  readonly details: Record<string, unknown> | undefined;
 
-  constructor(message: string, status: number, code = "") {
+  constructor(
+    message: string,
+    status: number,
+    code = "",
+    details?: Record<string, unknown>,
+  ) {
     super(message);
     this.name = "ProviderError";
     this.status = status;
     this.code = code;
+    this.details = details;
   }
 }
 
@@ -59,6 +65,7 @@ export function classifyProviderError(error: unknown): DiverseGenerateError {
   if (error instanceof Error) {
     if (error.message === "missing_key") return "missing_key";
     if (error.message === "limit_exceeded") return "limit_exceeded";
+    if (error.message === "bad_output") return "bad_output";
     if (
       error.name === "TimeoutError" ||
       error.name === "AbortError" ||
@@ -89,7 +96,12 @@ export function classifyProviderError(error: unknown): DiverseGenerateError {
     ) {
       return "billing";
     }
-    if (error.status === 502 || error.status === 503 || error.status === 529) {
+    if (
+      error.status === 429 ||
+      error.status === 502 ||
+      error.status === 503 ||
+      error.status === 529
+    ) {
       return "timeout";
     }
   }
@@ -157,6 +169,7 @@ async function postJson(
       errorMessage(payload, "failed"),
       response.status,
       errorCode(payload),
+      payload,
     );
   }
   return payload;
@@ -166,28 +179,39 @@ function jsonish(text: string) {
   return /"problems"\s*:|"promptTex"\s*:|"formula"\s*:/.test(text);
 }
 
+function failedGeneration(error: unknown) {
+  if (!(error instanceof ProviderError) || !error.details) return "";
+  const payload = error.details.error;
+  if (!payload || typeof payload !== "object") return "";
+  const text = (payload as { failed_generation?: unknown }).failed_generation;
+  return typeof text === "string" ? text : "";
+}
+
 function openAiContent(payload: Record<string, unknown>) {
   const choices = payload.choices as
     | {
         message?: {
           content?: string | { text?: string }[] | null;
           reasoning_content?: string;
+          reasoning?: string;
         };
       }[]
     | undefined;
   const message = choices?.[0]?.message;
   const content = message?.content;
-  if (typeof content === "string" && content.trim()) return content;
-  if (Array.isArray(content)) {
-    return content.map((part) => part.text ?? "").join("");
-  }
-  if (
-    typeof message?.reasoning_content === "string" &&
-    jsonish(message.reasoning_content)
-  ) {
-    return message.reasoning_content;
-  }
-  return "";
+  const contentText = Array.isArray(content)
+    ? content.map((part) => part.text ?? "").join("")
+    : typeof content === "string"
+      ? content
+      : "";
+  const reasoning =
+    (typeof message?.reasoning_content === "string"
+      ? message.reasoning_content
+      : "") ||
+    (typeof message?.reasoning === "string" ? message.reasoning : "");
+  if (jsonish(contentText)) return contentText;
+  if (jsonish(reasoning)) return reasoning;
+  return contentText.trim() || reasoning;
 }
 
 let groqModelsCache: { at: number; ids: string[] } | null = null;
@@ -293,8 +317,12 @@ async function completeOpenAiCompat(
     );
     return openAiContent(payload);
   } catch (error) {
+    const salvage = failedGeneration(error);
+    if (jsonish(salvage)) return salvage;
     if (
       options.jsonMode &&
+      !options.enableThinking &&
+      !options.reasoningEffort &&
       error instanceof ProviderError &&
       error.status === 400
     ) {
@@ -496,95 +524,58 @@ async function completeGroq(
   freeThink: boolean,
 ) {
   const key = envValue("GROQ_API_KEY");
-  const models = await groqChatModels(model.apiModel, key);
+  const models = (await groqChatModels(model.apiModel, key)).slice(0, 2);
   let lastError: unknown = new ProviderError(
     "No Groq chat model is available for this key.",
     404,
   );
-  const tokenSteps = freeThink ? ([4096, 2500] as const) : GROQ_MAX_TOKEN_STEPS;
-  const efforts = freeThink ? (["high", "medium"] as const) : (["low"] as const);
+  const timeout = Math.min(freeThink ? CHAT_TIMEOUT_MS : TIMEOUT_MS, 45_000);
+  const system = freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM;
 
   for (const apiModel of models) {
     const canReason = /gpt-oss|qwen/i.test(apiModel);
-    const effortList = canReason ? efforts : ([undefined] as const);
-
-    for (const effort of effortList) {
-      const reasoning = effort
-        ? {
-            reasoningEffort: effort,
-            reasoningFormat: freeThink ? "parsed" : "hidden",
-          }
-        : {};
-
-      for (const maxTokens of tokenSteps) {
-        try {
-          return await completeOpenAiCompat(
-            "https://api.groq.com/openai/v1/chat/completions",
-            key,
-            apiModel,
-            prompt,
-            {
-              temperature,
-              jsonMode: true,
-              maxTokens,
-              timeout: freeThink ? CHAT_TIMEOUT_MS : TIMEOUT_MS,
-              system: freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM,
-              ...reasoning,
-            },
-          );
-        } catch (error) {
-          lastError = error;
-          if (isRequestTooLarge(error)) continue;
-          if (error instanceof ProviderError && error.status === 400) break;
-          throw error;
-        }
+    try {
+      const text = await completeOpenAiCompat(
+        "https://api.groq.com/openai/v1/chat/completions",
+        key,
+        apiModel,
+        prompt,
+        {
+          temperature,
+          jsonMode: false,
+          maxTokens: 2048,
+          timeout,
+          system,
+          ...(canReason
+            ? { reasoningEffort: "low", reasoningFormat: "hidden" }
+            : {}),
+        },
+      );
+      if (text.trim()) return text;
+      lastError = new Error("bad_output");
+    } catch (error) {
+      lastError = error;
+      const salvage = failedGeneration(error);
+      if (salvage.trim()) return salvage;
+      if (
+        isRequestTooLarge(error) ||
+        (error instanceof ProviderError &&
+          (error.status === 400 || error.status === 429))
+      ) {
+        continue;
       }
+      throw error;
     }
   }
 
   throw lastError;
 }
 
-const DEEPSEEK_THINK_MAX_TOKENS = 24_000;
-const DEEPSEEK_ANSWER_MAX_TOKENS = 8192;
+const DEEPSEEK_JSON_TIMEOUT_MS = 60_000;
+const DEEPSEEK_RETRY_TIMEOUT_MS = 45_000;
 
-function deepseekThinkOptions(
-  model: AiModelDef,
-  input: ProposeInput,
-  temperature: number,
-) {
-  const freeThink = input.check === "plain";
-  const system = freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM;
-
-  if (model.id === "deepseek-r1") {
-    return {
-      jsonMode: false as const,
-      timeout: CHAT_TIMEOUT_MS,
-      maxTokens: DEEPSEEK_THINK_MAX_TOKENS,
-      system,
-    };
-  }
-
-  if (freeThink || model.id === "deepseek-v4-pro") {
-    return {
-      temperature,
-      jsonMode: true as const,
-      enableThinking: true,
-      reasoningEffort: "high",
-      timeout: CHAT_TIMEOUT_MS,
-      maxTokens: DEEPSEEK_THINK_MAX_TOKENS,
-      system,
-    };
-  }
-
-  return {
-    temperature,
-    jsonMode: true as const,
-    disableThinking: true,
-    timeout: 60_000,
-    maxTokens: 4096,
-    system,
-  };
+function deepseekSystem(input: ProposeInput) {
+  return input.check === "plain" ? CHAT_SYSTEM : SCHOOL_SYSTEM;
 }
 
 async function completeDeepseek(
@@ -595,36 +586,59 @@ async function completeDeepseek(
 ) {
   const key = envValue("DEEPSEEK_API_KEY");
   const url = "https://api.deepseek.com/chat/completions";
-  const first = deepseekThinkOptions(model, input, temperature);
-  const canFallback =
-    model.id !== "deepseek-r1" && first.enableThinking === true;
+  const system = deepseekSystem(input);
+  const reasoner = model.id === "deepseek-r1";
 
-  try {
-    const text = await completeOpenAiCompat(
-      url,
-      key,
-      model.apiModel,
-      prompt,
-      first,
-    );
-    if (text.trim()) return text;
-    if (!canFallback) throw new Error("failed");
-  } catch (error) {
-    const badRequest =
-      error instanceof ProviderError && error.status === 400;
-    if (!canFallback || (!isRetryableProviderError(error) && !badRequest)) {
-      throw error;
+  const attempts = reasoner
+    ? [
+        {
+          jsonMode: false as const,
+          timeout: DEEPSEEK_JSON_TIMEOUT_MS,
+          maxTokens: 8192,
+          system,
+        },
+      ]
+    : [
+        {
+          temperature,
+          jsonMode: true as const,
+          disableThinking: true,
+          timeout: DEEPSEEK_JSON_TIMEOUT_MS,
+          maxTokens: 8192,
+          system,
+        },
+        {
+          temperature,
+          jsonMode: false as const,
+          disableThinking: true,
+          timeout: DEEPSEEK_RETRY_TIMEOUT_MS,
+          maxTokens: 4096,
+          system,
+        },
+      ];
+
+  let lastError: unknown = new Error("failed");
+  for (const options of attempts) {
+    try {
+      const text = await completeOpenAiCompat(
+        url,
+        key,
+        model.apiModel,
+        prompt,
+        options,
+      );
+      if (text.trim()) return text;
+      lastError = new Error("bad_output");
+    } catch (error) {
+      lastError = error;
+      const retry =
+        isRetryableProviderError(error) ||
+        (error instanceof ProviderError && error.status === 400);
+      if (!retry) throw error;
     }
   }
 
-  return completeOpenAiCompat(url, key, model.apiModel, prompt, {
-    temperature,
-    jsonMode: true,
-    disableThinking: true,
-    timeout: REASONER_TIMEOUT_MS,
-    maxTokens: DEEPSEEK_ANSWER_MAX_TOKENS,
-    system: input.check === "plain" ? CHAT_SYSTEM : SCHOOL_SYSTEM,
-  });
+  throw lastError;
 }
 
 async function completeText(model: AiModelDef, input: ProposeInput, prompt: string) {
@@ -696,13 +710,15 @@ export async function proposeProblems(
       ? buildUncheckedChatPrompt(input)
       : buildProblemPrompt(input, {
           compact:
+            model.provider === "deepseek" ||
             model.provider === "groq" ||
             model.provider === "huggingface" ||
-            model.provider === "cloudflare" ||
-            model.id === "deepseek-v4-flash",
+            model.provider === "cloudflare",
         });
   const text = await completeText(model, input, prompt);
-  return parseProblemPayload(text, input.check);
+  return parseProblemPayload(text, input.check) as
+    | VerifiedProblemDraft[]
+    | PlainProblemDraft[];
 }
 
 export type { AiCheckMode };
