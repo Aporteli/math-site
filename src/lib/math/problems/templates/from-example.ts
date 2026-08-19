@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { locales } from "@/i18n/config";
-import {
-  completeGeminiUserParts,
-  classifyProviderError,
-} from "../ai-complete";
+import { completeGeminiUserParts, classifyProviderError } from "../ai-complete";
 import { repairJsonEscapes } from "../ai-json";
 import { AI_MODEL_IDS, DEFAULT_AI_MODEL, getAiModel } from "../ai-models";
 import { assertModelAvailable, recordModelUse } from "../ai-limits";
@@ -173,9 +170,12 @@ function normalizeMathInput(text: string) {
 }
 
 function mathLetter(code: number): string | null {
-  if (code >= 0x1d400 && code <= 0x1d419) return String.fromCharCode(65 + (code - 0x1d400));
-  if (code >= 0x1d41a && code <= 0x1d433) return String.fromCharCode(97 + (code - 0x1d41a));
-  if (code >= 0x1d434 && code <= 0x1d44d) return String.fromCharCode(65 + (code - 0x1d434));
+  if (code >= 0x1d400 && code <= 0x1d419)
+    return String.fromCharCode(65 + (code - 0x1d400));
+  if (code >= 0x1d41a && code <= 0x1d433)
+    return String.fromCharCode(97 + (code - 0x1d41a));
+  if (code >= 0x1d434 && code <= 0x1d44d)
+    return String.fromCharCode(65 + (code - 0x1d434));
   if (code >= 0x1d44e && code <= 0x1d467) {
     const i = code - 0x1d44e;
     if (i === 7) return "h";
@@ -245,10 +245,7 @@ function signedIntBand(
   return intBand(value, span, 1);
 }
 
-function rBand(
-  r: number,
-  n: number,
-): { int: [number, number]; nonzero: true } {
+function rBand(r: number, n: number): { int: [number, number]; nonzero: true } {
   return {
     int: [Math.max(1, r - 2), Math.min(n - 1, r + 2)],
     nonzero: true,
@@ -456,7 +453,8 @@ function tryStaticFormulaFamily(text: string): ProblemTemplate | null {
   const tex = stripMathDelimiters(text);
   if (tex.length < 8 || !/=/.test(tex)) return null;
   if (looksLikeGeneralTermIdentity(text)) return null;
-  if (looksLikeResampleable(text) && !looksLikePhysicsFormula(text)) return null;
+  if (looksLikeResampleable(text) && !looksLikePhysicsFormula(text))
+    return null;
 
   const parsed = parseProblemTemplate({
     id: "typed-formula",
@@ -484,11 +482,60 @@ function extractObject(text: string) {
   return repairJsonEscapes(stripped.slice(start, end + 1));
 }
 
+function buildPhotoPrompt(input: ProposeTemplateInput, previousError?: string) {
+  const extra = input.text
+    ? `\nTeacher notes / typed text:\n${input.text}`
+    : "";
+  const retry = previousError
+    ? `\nThe previous JSON failed:\n${previousError}\nReturn a corrected object. Never return {"unsupported":true}.\n`
+    : "";
+
+  return `Read the attached image (printed stem, screenshot, handwriting, sketch).
+Turn WHAT YOU CAN SEE into one JSON problem family. Never return {"unsupported":true}.
+
+Priority:
+1. Copy the printed problem in the page language (Georgian, English, Russian, …). Keep the wording.
+2. Keep numbers as written, including roots and degrees ($\\sqrt{3}$, $30^{\\circ}$).
+3. If resampling is unclear, use empty params and empty derived — one static variant is OK.
+4. If integers clearly resample, you MAY replace them with {{slots}} and add params.
+5. Put readable handwritten working into solutionSteps as LaTeX. If the writing is unreadable, give one short correct solution in LaTeX.
+6. There is no diagram field. Describe the figure pricesly in the prompt.
+7. Wrap math in $...$. Do not invent a different task.
+9. Text is always in Georgian
+
+
+JSON shape:
+{
+  "id": "short-latin-slug",
+  "topic": "geometry",
+  "difficulties": ["medium"],
+  "years": ["8"],
+  "instructionId": "solve",
+  "variants": [{
+    "id": "main",
+    "params": {},
+    "derived": {},
+    "constraints": [],
+    "prompt": "...",
+    "solutionSteps": ["..."],
+    "years": ["8"],
+    "difficulties": ["medium"]
+  }]
+}
+
+topic one of: algebra, equations, geometry, functions, percent, calculus, vectors, combinatorics.
+instructionId one of: solve, evaluate, findDerivative, percentOf, missingSide, expand, factor, simplify.
+Keep prompt under 4000 characters and each solution step under 1600.
+${retry}${extra}`;
+}
+
 function buildPrompt(input: ProposeTemplateInput, previousError?: string) {
-  const source = input.image
-    ? "Read the math problem in the attached image (typed, screenshot, or handwriting)."
-    : "Read the math problem in the teacher text below.";
-  const extra = input.text ? `\nTeacher notes / typed problem:\n${input.text}` : "";
+  if (input.image) return buildPhotoPrompt(input, previousError);
+
+  const source = "Read the math problem in the teacher text below.";
+  const extra = input.text
+    ? `\nTeacher notes / typed problem:\n${input.text}`
+    : "";
   const localeHint =
     input.locale === "ka"
       ? "Instruction labels are not stored in JSON; keep prompt and solutionSteps as math LaTeX only."
@@ -527,11 +574,13 @@ Put those same integers in variant.example so the preview shows the teacher's in
 Rules:
 - params: int [min,max] with optional nonzero/exclude, or pick lists. Strings are only for an unknown letter.
 - derived: math.js using param names only. Implicit multiply is OK: 3k, k(k+1). No words. For x^{12-3r} use derived pn = p*n and coeff = p+q, then x^{{{pn}} - {{coeff}} r}.
+- Geometry params (school → olympiad): sides a b c, angles A B C or alpha beta gamma, heights ha hb hc, medians ma, bisectors wa, inradius r, circumradius R, exradii ra rb rc, semiperimeter s, area S. Greek letters are allowed as param names.
+- Geometry derived helpers: heron(a,b,c), sasArea(a,b,C), inradius(a,b,c), circumradius(a,b,c), lawCosSide(b,c,A), medianTo(a,b,c), defectTriangle(A,B,C), excessTriangle(A,B,C), brahmagupta(a,b,c,d), eulerInCirc(R,r).
 - constraints: a comparison (a != d, d > 0, 1 < a < 5), and/or (a > 0 and a != d), or a math.js expr that must be nonzero (mod(a,b)).
 - prompt / solutionSteps: LaTeX with {{name}} or formatters {{linear a b v}}, {{signed a}}, {{texFrac n d}}, {{abs n}}, {{lead c x^3}} {{term c2 x^2}}. Do not wrap literal names like r, x, x_1 or \\text{AM} in {{}}.
 - LaTeX exponents/subscripts need an extra brace around the slot: x^{{{p}}}, \\\\binom{{{n}}}{r}.
 - Adjacent slots concatenate digits: never {{q}}{{r}} for a product; write {{q}}\\\\cdot{{r}} or a derived qr.
-- 1–6 variants of the same family. difficulties and years must match the example's school level.
+- 1–6 variants of the same family. Label each variant with years ("7"–"12") and difficulties (easy, medium, hard). Teacher cards may use grade: 8 and difficulty: "easy".
 - topic must be one of: algebra, equations, geometry, functions, percent, calculus, vectors, combinatorics.
 - instructionId one of: solve, evaluate, findDerivative, percentOf, missingSide, expand, factor, simplify.
 - ${localeHint}
@@ -606,9 +655,7 @@ export async function proposeTemplateFromExample(
   }
   const requested = getAiModel(input.model);
   const gemini =
-    requested?.provider === "gemini"
-      ? requested
-      : getAiModel(DEFAULT_AI_MODEL);
+    requested?.provider === "gemini" ? requested : getAiModel(DEFAULT_AI_MODEL);
   if (!gemini) return { ok: false, error: "failed" };
 
   try {
@@ -632,9 +679,11 @@ export async function proposeTemplateFromExample(
     let result = parseTemplateText(text);
 
     if (!result.ok && result.error === "invalid") {
-      const schemaHint = looksLikeGeneralTermIdentity(input.text)
-        ? "JSON did not match the schema. Follow the binomial identity example. Keep T_{r+1} and the letter r. Sample n,a,p,q only. instructionId expand. Use \\\\binom{{{n}}}{r} and derived pn = p*n, coeff = p+q."
-        : "JSON did not match the problem family schema. Follow the example exactly.";
+      const schemaHint = input.image
+        ? "JSON did not match the schema. Return one static variant: empty params, empty derived, prompt = the stem you can read (keep the page language), solutionSteps = readable working or one short LaTeX solution. Never return unsupported."
+        : looksLikeGeneralTermIdentity(input.text)
+          ? "JSON did not match the schema. Follow the binomial identity example. Keep T_{r+1} and the letter r. Sample n,a,p,q only. instructionId expand. Use \\\\binom{{{n}}}{r} and derived pn = p*n, coeff = p+q."
+          : "JSON did not match the problem family schema. Follow the example exactly.";
       text = await completeGeminiUserParts({
         model: gemini,
         prompt: buildPrompt(input, schemaHint),
@@ -644,13 +693,16 @@ export async function proposeTemplateFromExample(
     }
 
     if (!result.ok && result.error === "unsupported") {
-      const retryHint = looksLikeGeneralTermIdentity(input.text) || looksLikeBinomial(input.text)
-        ? "This is a binomial general-term IDENTITY in r. Do NOT return unsupported. Do NOT rewrite it as 'T_k in the expansion of'. Follow the binomial identity example. Keep r as a letter."
-        : looksLikeLinearSolve(input.text)
-          ? "This is an equation to solve after expanding. Do NOT return unsupported. Use the expand-both-sides linear example."
-          : looksLikeResampleable(input.text)
-            ? "This is school math with resampleable numbers. Do NOT return unsupported. Follow the closest example (evaluate, linear, or binomial)."
-            : "";
+      const retryHint = input.image
+        ? "Do NOT return unsupported. Return a static family with empty params. Transcribe the stem you can read. Keep the page language. Put any readable solution into solutionSteps."
+        : looksLikeGeneralTermIdentity(input.text) ||
+            looksLikeBinomial(input.text)
+          ? "This is a binomial general-term IDENTITY in r. Do NOT return unsupported. Do NOT rewrite it as 'T_k in the expansion of'. Follow the binomial identity example. Keep r as a letter."
+          : looksLikeLinearSolve(input.text)
+            ? "This is an equation to solve after expanding. Do NOT return unsupported. Use the expand-both-sides linear example."
+            : looksLikeResampleable(input.text)
+              ? "This is school math with resampleable numbers. Do NOT return unsupported. Follow the closest example (evaluate, linear, or binomial)."
+              : "";
       if (retryHint) {
         text = await completeGeminiUserParts({
           model: gemini,
@@ -661,7 +713,11 @@ export async function proposeTemplateFromExample(
       }
     }
 
-    if (result.ok && familyChangedTheTask(input.text, result.template)) {
+    if (
+      result.ok &&
+      !input.image &&
+      familyChangedTheTask(input.text, result.template)
+    ) {
       text = await completeGeminiUserParts({
         model: gemini,
         prompt: buildPrompt(

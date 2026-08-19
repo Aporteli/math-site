@@ -12,6 +12,8 @@ import { Check, ChevronDown } from "lucide-react";
 export interface SelectOption<T extends string = string> {
   value: T;
   label: string;
+  marked?: boolean;
+  hint?: string;
 }
 
 export interface SelectHeading {
@@ -202,8 +204,16 @@ export function SelectMenu<T extends string>({
           triggerClassName,
         ].join(" ")}
       >
-        <span className="min-w-0 truncate">
-          {selected && isOption(selected) ? selected.label : ""}
+        <span className="flex min-w-0 items-center gap-2 truncate">
+          {selected && isOption(selected) && selected.marked ? (
+            <span
+              className="size-1.5 shrink-0 rounded-full bg-brass"
+              aria-hidden="true"
+            />
+          ) : null}
+          <span className="min-w-0 truncate">
+            {selected && isOption(selected) ? selected.label : ""}
+          </span>
         </span>
         <ChevronDown
           className={`size-4 shrink-0 text-muted transition-transform ${
@@ -242,6 +252,9 @@ export function SelectMenu<T extends string>({
                 ref={isActive ? activeRef : undefined}
                 role="option"
                 aria-selected={isSelected}
+                aria-label={
+                  item.hint ? `${item.label}. ${item.hint}` : undefined
+                }
                 onMouseEnter={() => setActive(index)}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => selectValue(item.value)}
@@ -254,7 +267,15 @@ export function SelectMenu<T extends string>({
                       : "text-body hover:bg-paper hover:text-navy",
                 ].join(" ")}
               >
-                <span className="min-w-0 break-words">{item.label}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  {item.marked ? (
+                    <span
+                      className="size-1.5 shrink-0 rounded-full bg-brass"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                  <span className="min-w-0 break-words">{item.label}</span>
+                </span>
                 {isSelected ? (
                   <Check className="size-4 shrink-0 text-brass" aria-hidden="true" />
                 ) : null}

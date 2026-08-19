@@ -18,6 +18,23 @@ import {
   proposeTemplateSchema,
   type ProposeTemplateResult,
 } from "./templates/from-example";
+import { generateFromTemplate } from "./algorithms";
+import { classifyTemplateGenerateFilter } from "./templates/engine";
+import { stampFamilySource } from "./variants";
+import {
+  deleteTeacherFamily,
+  loadTeacherFamilies,
+  loadTeacherFamily,
+  saveTeacherFamily,
+  createTeacherKind,
+  type SavedProblemFamily,
+} from "./family-persist";
+import {
+  createFamilyKindSchema,
+  familyIdSchema,
+  generateFromFamilySchema,
+  saveFamilySchema,
+} from "./family-schema";
 import {
   deleteTeacherProblem,
   loadDraftLessonSet,
@@ -32,6 +49,22 @@ import {
 import type { BankProblem } from "./types";
 
 export type PersistError = "unauthorized" | "failed";
+
+export type FamilyActionError =
+  | PersistError
+  | "invalid"
+  | "slug_taken"
+  | "not_found"
+  | "empty"
+  | "no_match";
+
+export type SaveFamilyResult =
+  | { ok: true; family: SavedProblemFamily }
+  | { ok: false; error: FamilyActionError };
+
+export type GenerateFromFamilyResult =
+  | { ok: true; problems: BankProblem[] }
+  | { ok: false; error: FamilyActionError };
 
 export type SaveProblemsResult =
   | { ok: true; saved: BankProblem[]; idMap: Record<string, string> }
@@ -195,6 +228,110 @@ export async function syncLessonSetAction(
     return { ok: true, lessonSetIds: [...lessonSetIds, ...catalogIds], saved, idMap };
   } catch (error) {
     console.error("Failed to sync lesson set", error);
+    return { ok: false, error: "failed" };
+  }
+}
+
+export async function loadTeacherFamiliesAction(): Promise<SavedProblemFamily[]> {
+  const user = await requireTeacherRecord();
+  if (!user) return [];
+  try {
+    return await loadTeacherFamilies(user.id);
+  } catch (error) {
+    console.error("Failed to load teacher families", error);
+    return [];
+  }
+}
+
+export async function saveFamilyAction(raw: unknown): Promise<SaveFamilyResult> {
+  const user = await requireTeacherRecord();
+  if (!user) return { ok: false, error: "unauthorized" };
+
+  const parsed = saveFamilySchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+
+  try {
+    const result = await saveTeacherFamily(user.id, parsed.data);
+    if (result.ok) revalidateTeacherProblems();
+    return result;
+  } catch (error) {
+    console.error("Failed to save problem family", error);
+    return { ok: false, error: "failed" };
+  }
+}
+
+export async function createFamilyKindAction(
+  raw: unknown,
+): Promise<SaveFamilyResult> {
+  const user = await requireTeacherRecord();
+  if (!user) return { ok: false, error: "unauthorized" };
+
+  const parsed = createFamilyKindSchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+
+  try {
+    const result = await createTeacherKind(user.id, parsed.data);
+    if (result.ok) revalidateTeacherProblems();
+    return result;
+  } catch (error) {
+    console.error("Failed to create family kind", error);
+    return { ok: false, error: "failed" };
+  }
+}
+
+export async function deleteFamilyAction(familyId: string) {
+  const user = await requireTeacherRecord();
+  if (!user) return { ok: false as const, error: "unauthorized" as const };
+
+  const parsed = familyIdSchema.safeParse(familyId);
+  if (!parsed.success) return { ok: false as const, error: "failed" as const };
+
+  try {
+    const deleted = await deleteTeacherFamily(user.id, parsed.data);
+    if (!deleted) return { ok: false as const, error: "not_found" as const };
+    revalidateTeacherProblems();
+    return { ok: true as const };
+  } catch (error) {
+    console.error("Failed to delete problem family", error);
+    return { ok: false as const, error: "failed" as const };
+  }
+}
+
+export async function generateFromFamilyAction(
+  raw: unknown,
+): Promise<GenerateFromFamilyResult> {
+  const user = await requireTeacherRecord();
+  if (!user) return { ok: false, error: "unauthorized" };
+
+  const parsed = generateFromFamilySchema.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+
+  try {
+    const family = await loadTeacherFamily(user.id, parsed.data.id);
+    if (!family) return { ok: false, error: "not_found" };
+
+    const problems = stampFamilySource(
+      generateFromTemplate(JSON.parse(family.json) as unknown, {
+        count: parsed.data.count,
+        difficulty: parsed.data.difficulty,
+        year: parsed.data.year,
+        locale: parsed.data.locale,
+      }),
+      family,
+    );
+    if (problems.length === 0) {
+      const status = classifyTemplateGenerateFilter(
+        JSON.parse(family.json) as unknown,
+        {
+          difficulty: parsed.data.difficulty,
+          year: parsed.data.year,
+        },
+      );
+      return { ok: false, error: status === "no_match" ? "no_match" : "empty" };
+    }
+    return { ok: true, problems };
+  } catch (error) {
+    console.error("Failed to generate from family", error);
     return { ok: false, error: "failed" };
   }
 }

@@ -1,6 +1,25 @@
 import type { BankProblem } from "./types";
 
 /** Curated starter bank. Replace with Prisma rows when the LMS schema lands. */
+export const HIDDEN_SEED_COOKIE = "problem-bank-hidden-seeds";
+
+export function parseHiddenSeedIds(raw: string | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((id) => id.trim())
+    .filter((id) => id.startsWith("bank-") && id.length <= 64);
+}
+
+export function withoutHiddenSeeds(
+  problems: readonly BankProblem[],
+  hidden: readonly string[],
+): BankProblem[] {
+  if (hidden.length === 0) return [...problems];
+  const skip = new Set(hidden);
+  return problems.filter((problem) => !skip.has(problem.id));
+}
+
 export const SEED_PROBLEM_BANK: BankProblem[] = [
   {
     id: "bank-lin-01",

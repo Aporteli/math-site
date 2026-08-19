@@ -205,6 +205,7 @@ export function evaluateCas(
         ? {}
         : sanitizeVariables(
             names.map((name) => ({ name, value: filtered[name]! })),
+            { allowReserved: true },
           );
     const node = parse(formula);
     assertSafeAst(node, new Set(Object.keys(variables)));
@@ -423,9 +424,10 @@ export function casVerifiedPromptGuide(difficulty?: ProblemDifficulty) {
     "Logs: log (natural), log(x, base), log2, log10, log1p. ln(x) and lg(x) are rewritten to log and log10.",
     "Rounding and order: abs sign floor ceil round fix min max.",
     "Number theory: gcd lcm mod invmod bitAnd bitOr, plus school helpers totient divisorSum divisorCount primeQ evenQ oddQ coprimeQ digitSum powmod fibonacci lucas.",
-    "Combinatorics: factorial combinations permutations nCr nPr choose perm binomial combinationsWithRep catalan bellNumbers stirlingS2 composition multinomial3 subfactorial fallingFactorial risingFactorial doubleFactorial.",
+    "Combinatorics: factorial combinations permutations nCr nPr choose comb perm binomial combinationsWithRep catalan bellNumbers stirlingS2 composition multinomial3 subfactorial fallingFactorial risingFactorial doubleFactorial.",
     "Sequences: triangular pentagonal hexagonal tetrahedral squarePyramidal arithNth arithSum geoNth geoSum.",
-    "Geometry (scalar args only): heron triangleArea rectArea pythagHyp pythagLeg distance2 distance3 hypot3 manhattan2 cubeVolume cuboidVolume, and pi-coefficients circlePi spherePi conePi cylinderPi (answer is the coefficient of pi).",
+    "Geometry params may be school letters a b c r R s h A B C or Greek alpha beta gamma theta phi, including olympiad r R ra ha ma wa d O I H.",
+    "Geometry helpers: heron sasArea asaArea heightToSide inradius circumradius exradiusA medianTo bisectorTo lawCosSide lawSinSide semiperimeter equilateralArea, rectArea pythagHyp distance2, brahmagupta eulerInCirc powerPoint stewartD shoelace3 defectTriangle excessTriangle, and pi-coefficients circlePi circumferencePi sectorPi spherePi conePi cylinderPi frustumPi (coefficient of pi).",
     "Percent and algebra: percentOf percentWhat percentChange increaseBy decreaseBy discriminant quadraticRootP quadraticRootM slope lineAt midpoint lerp simpleInterest.",
     "Statistics of listed scalars (not arrays): sum prod mean median mad std variance.",
     "Special: gamma erf lgamma zeta bernoulli compare add subtract multiply divide.",
@@ -530,6 +532,7 @@ function scopeForFormula(formula: string, scope: Record<string, number>) {
 
 export function sanitizeVariables(
   entries: { name: string; value: number }[],
+  options?: { allowReserved?: boolean },
 ): Record<string, number> {
   if (entries.length === 0 || entries.length > 12) {
     throw new Error("variables");
@@ -538,7 +541,9 @@ export function sanitizeVariables(
   const variables: Record<string, number> = {};
   for (const entry of entries) {
     const name = entry.name.trim();
-    if (!NAME.test(name) || RESERVED.has(name)) throw new Error("name");
+    if (!NAME.test(name) || (!options?.allowReserved && RESERVED.has(name))) {
+      throw new Error("name");
+    }
     if (name in variables) throw new Error("dup");
     if (!Number.isFinite(entry.value) || Math.abs(entry.value) > VARIABLE_ABS_MAX) {
       throw new Error("value");
@@ -627,7 +632,7 @@ export function verifyFormula(
 ): CasOk | CasFail {
   try {
     const formula = sanitizeFormula(rawFormula);
-    const variables = sanitizeVariables(rawVariables);
+    const variables = sanitizeVariables(rawVariables, { allowReserved: true });
     const node = parse(formula);
     assertSafeAst(node, new Set(Object.keys(variables)));
 

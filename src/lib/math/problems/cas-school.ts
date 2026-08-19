@@ -1,4 +1,5 @@
 import { combinations, permutations } from "mathjs";
+import { CAS_GEOMETRY_SCOPE } from "./cas-geometry";
 
 function num(value: unknown): number {
   const n = typeof value === "number" ? value : Number(value);
@@ -59,6 +60,7 @@ export const CAS_SCHOOL_SCOPE: Record<string, Fn> = {
   rad2deg: (x) => toDeg(num(x)),
 
   choose: (n, k) => num(combinations(num(n), num(k))),
+  comb: (n, k) => num(combinations(num(n), num(k))),
   perm: (n, k) => num(permutations(num(n), num(k))),
   binomial: (n, k) => num(combinations(num(n), num(k))),
 
@@ -308,6 +310,7 @@ export const CAS_SCHOOL_SCOPE: Record<string, Fn> = {
   heaviside: (x) => (num(x) >= 0 ? 1 : 0),
   celsiusToF: (c) => (num(c) * 9) / 5 + 32,
   fahrenheitToC: (f) => ((num(f) - 32) * 5) / 9,
+  ...CAS_GEOMETRY_SCOPE,
 };
 
 export const CAS_SCHOOL_FUNCTIONS = Object.keys(CAS_SCHOOL_SCOPE) as [

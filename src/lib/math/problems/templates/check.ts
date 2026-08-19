@@ -81,3 +81,30 @@ export function checkTemplateProblem(
   }
   return { ok: true, value: cas.value, expected };
 }
+
+/** Check a generated card: family JSON when present, else the problem's own formula. */
+export function checkBankProblem(
+  problem: BankProblem,
+  familyJson?: string | null,
+): TemplateCasCheck {
+  if (familyJson) {
+    try {
+      const parsed = JSON.parse(familyJson) as unknown;
+      const result = checkTemplateProblem(parsed, problem);
+      if (result.ok || result.reason !== "no_formula") return result;
+    } catch {
+      /* Fall through to the instance formula. */
+    }
+  }
+
+  const formula = problem.formula?.trim();
+  const all = problem.variables ?? {};
+  if (!formula || Object.keys(all).length === 0) {
+    return { ok: false, reason: "no_formula" };
+  }
+
+  const entries = formulaVariables(formula, all);
+  const cas = verifyFormula(formula, entries);
+  if (!cas.ok) return { ok: false, reason: "cas" };
+  return { ok: true, value: cas.value, expected: cas.value };
+}

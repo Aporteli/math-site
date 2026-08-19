@@ -64,14 +64,15 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  coursesTaught Course[]      @relation("CourseTeacher")
-  enrollments   Enrollment[]
-  problems      Problem[]
-  problemSets   ProblemSet[]
-  submissions   Submission[]
-  gradesGiven   Grade[]       @relation("GradedBy")
-  attendance    Attendance[]
-  lessonNotes   LessonNote[]
+  coursesTaught   Course[]         @relation("CourseTeacher")
+  enrollments     Enrollment[]
+  problems        Problem[]
+  problemFamilies ProblemFamily[]
+  problemSets     ProblemSet[]
+  submissions     Submission[]
+  gradesGiven     Grade[]          @relation("GradedBy")
+  attendance      Attendance[]
+  lessonNotes     LessonNote[]
 
   @@map("users")
 }
@@ -143,6 +144,30 @@ model Problem {
   @@index([authorId, topic, difficulty])
   @@index([yearGroup, source])
   @@map("problems")
+}
+
+/// Teacher-authored JSON family: fixed stem, resampled integers.
+/// Distinct from Problem rows, which store frozen instances.
+model ProblemFamily {
+  id            String   @id @default(cuid())
+  authorId      String
+  slug          String   @db.VarChar(64)
+  title         String   @db.VarChar(120)
+  topic         String   @db.VarChar(64)
+  instructionId String   @db.VarChar(64)
+  template      Json
+  parentId      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  author   User            @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  parent   ProblemFamily?  @relation("FamilySubtitles", fields: [parentId], references: [id], onDelete: Restrict)
+  children ProblemFamily[] @relation("FamilySubtitles")
+
+  @@unique([authorId, slug])
+  @@index([authorId, topic])
+  @@index([authorId, parentId])
+  @@map("problem_families")
 }
 
 /// Teacher lesson set (what "Add to set" will persist).

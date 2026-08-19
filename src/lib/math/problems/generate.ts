@@ -1,6 +1,8 @@
 export {
   algorithmOptionsForTopic,
   groupedKindsForTopic,
+  classifyTemplateGenerateFilter,
+  collectTemplateGenerateLabels,
   generateFromTemplate,
   generateProblems,
   generateProblemsSchema,

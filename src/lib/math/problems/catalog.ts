@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   FileUp,
+  Layers,
   LineChart,
   Printer,
   Send,
@@ -35,6 +36,7 @@ export interface ProblemBankTool {
 export const PROBLEM_BANK_TOOLS: ProblemBankTool[] = [
   { id: "generate", icon: Sparkles, status: "ready" },
   { id: "import", icon: FileUp, status: "ready" },
+  { id: "families", icon: Layers, status: "ready" },
   { id: "variants", icon: Shuffle, status: "ready" },
   {
     id: "worksheet",

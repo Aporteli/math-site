@@ -1,4 +1,5 @@
 import { evaluateTemplateExpr, numberToTex } from "../cas";
+import { polishStudentTex } from "../tex";
 import {
   aligned,
   linear,
@@ -13,17 +14,26 @@ import type {
   GeneratedProblem,
   ProblemAlgorithm,
 } from "../algorithms/types";
-import type { GeneratorDifficulty } from "../types";
+import {
+  PROBLEM_DIFFICULTIES,
+  PROBLEM_YEARS,
+  toGeneratorDifficulty,
+  type GeneratorDifficulty,
+  type ProblemDifficulty,
+  type ProblemYear,
+} from "../types";
 import { parseProblemTemplateOrThrow } from "./adapt";
 import { inferTemplateFormula } from "./check";
+import { closeParamIndexSlots, exprUsesOnlyKnownNames } from "./slot-markup";
 import type {
   LeafParamSpec,
   ParamSpec,
   ProblemTemplate,
   TemplateVariant,
 } from "./schema";
+import { expandWorkRateFamily } from "./work-rate";
 
-const SAMPLE_RETRIES = 48;
+const SAMPLE_RETRIES = 80;
 const INT_RETRIES = 64;
 /** Innermost `{{...}}` only — so LaTeX `x^{{{p}}}` becomes `x^{2}`, not slot `{p`. */
 const SLOT = /\{\{\s*([^{}]+?)\s*\}\}/g;
@@ -118,6 +128,17 @@ function numericScope(values: Record<string, SlotValue>): Record<string, number>
   return scope;
 }
 
+function interpolateDerivedString(
+  expr: string,
+  scope: Record<string, number>,
+): string {
+  return expr.replace(/\b[A-Za-z][A-Za-z0-9_]*\b/g, (name) => {
+    if (!Object.hasOwn(scope, name)) return name;
+    const value = scope[name]!;
+    return Number.isInteger(value) ? String(value) : String(value);
+  });
+}
+
 function applyDerived(
   variant: TemplateVariant,
   values: Record<string, SlotValue>,
@@ -125,7 +146,14 @@ function applyDerived(
   for (const [name, expr] of Object.entries(variant.derived)) {
     const result = evaluateTemplateExpr(expr, numericScope(values));
     if (!result.ok) {
-      if (result.reason === "sym") continue;
+      if (result.reason === "sym") {
+        values[name] = interpolateDerivedString(expr, numericScope(values));
+        continue;
+      }
+      if (result.reason === "unsafe") {
+        values[name] = interpolateDerivedString(expr, numericScope(values));
+        continue;
+      }
       if (result.reason === "unclean" || result.reason === "nonreal") {
         return false;
       }
@@ -247,21 +275,35 @@ function renderExprSlot(expr: string, values: Record<string, SlotValue>): string
  */
 const BROKEN_EXPR_SLOT =
   /\{\{\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}(?!\})(\s*[+\-*/^]\s*[^}]*?)\}\}/g;
+const MATRIX_SIZE_SLOT =
+  /_\{+\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}\s*\\times\s*\{+\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}+/g;
+const ADJACENT_SLOTS =
+  /\{\{\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}\}\{\{\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}\}/g;
 
 function rewriteBrokenSlots(
   template: string,
   values: Record<string, SlotValue>,
 ): string {
-  return template.replace(
+  const names = new Set(Object.keys(values));
+  const known = (name: string) => names.has(name);
+  let out = template.replace(MATRIX_SIZE_SLOT, (full, a: string, b: string) =>
+    known(a) && known(b) ? `_{{{${a}}} \\times {{${b}}}}` : full,
+  );
+  out = closeParamIndexSlots(out, names);
+  out = out.replace(
     BROKEN_EXPR_SLOT,
     (full, name: string, rest: string, offset: number) => {
-      if (!(name in values)) return full;
-      const wrapped = offset > 0 && template[offset - 1] === "{";
-      const alreadyClosed = template[offset + full.length] === "}";
+      if (!known(name) || !exprUsesOnlyKnownNames(rest, names)) return full;
+      const wrapped = offset > 0 && out[offset - 1] === "{";
+      const alreadyClosed = out[offset + full.length] === "}";
       const closer = wrapped && !alreadyClosed ? "}" : "";
       return `{{${name}${rest}}}${closer}`;
     },
   );
+  out = out.replace(ADJACENT_SLOTS, (full, a: string, b: string) =>
+    known(a) && known(b) ? `{{${a}}}\\cdot{{${b}}}` : full,
+  );
+  return out;
 }
 
 function render(template: string, values: Record<string, SlotValue>): string {
@@ -290,6 +332,138 @@ function render(template: string, values: Record<string, SlotValue>): string {
   });
 }
 
+function variantYears(variant: TemplateVariant, template: ProblemTemplate) {
+  return variant.years?.length ? variant.years : template.years;
+}
+
+function variantDifficulties(
+  variant: TemplateVariant,
+  template: ProblemTemplate,
+) {
+  return variant.difficulties?.length
+    ? variant.difficulties
+    : template.difficulties;
+}
+
+export function matchingTemplateVariants(
+  template: ProblemTemplate,
+  filters: { difficulty?: ProblemDifficulty; year?: ProblemYear } = {},
+): TemplateVariant[] {
+  return template.variants.filter((variant) => {
+    if (filters.difficulty) {
+      const diffs = variantDifficulties(variant, template);
+      if (!diffs.includes(filters.difficulty)) return false;
+    }
+    if (filters.year) {
+      const years = variantYears(variant, template);
+      if (!years.includes(filters.year)) return false;
+    }
+    return true;
+  });
+}
+
+export function classifyTemplateGenerateFilter(
+  raw: unknown,
+  filters: { difficulty?: ProblemDifficulty; year?: ProblemYear } = {},
+): "ok" | "empty" | "no_match" {
+  try {
+    const template = expandWorkRateFamily(parseProblemTemplateOrThrow(raw));
+    if (template.variants.length === 0) return "empty";
+    return matchingTemplateVariants(template, filters).length > 0
+      ? "ok"
+      : "no_match";
+  } catch {
+    return "empty";
+  }
+}
+
+export function matchingTemplateCount(
+  raw: unknown,
+  filters: { difficulty?: ProblemDifficulty; year?: ProblemYear } = {},
+): number {
+  try {
+    const template = expandWorkRateFamily(parseProblemTemplateOrThrow(raw));
+    return matchingTemplateVariants(template, filters).length;
+  } catch {
+    return 0;
+  }
+}
+
+export function collectTemplateGenerateLabels(raw: unknown): {
+  years: ProblemYear[];
+  difficulties: ProblemDifficulty[];
+} {
+  try {
+    const template = expandWorkRateFamily(parseProblemTemplateOrThrow(raw));
+    const years = new Set<ProblemYear>();
+    const difficulties = new Set<ProblemDifficulty>();
+    for (const variant of template.variants) {
+      for (const year of variantYears(variant, template)) years.add(year);
+      for (const difficulty of variantDifficulties(variant, template)) {
+        difficulties.add(difficulty);
+      }
+    }
+    return {
+      years: PROBLEM_YEARS.filter((year) => years.has(year)),
+      difficulties: PROBLEM_DIFFICULTIES.filter((difficulty) =>
+        difficulties.has(difficulty),
+      ),
+    };
+  } catch {
+    return { years: [], difficulties: [] };
+  }
+}
+
+function stampVariantLabels(
+  variant: TemplateVariant,
+  template: ProblemTemplate,
+  ctx: AlgorithmContext,
+): { year: ProblemYear; difficulty: ProblemDifficulty } {
+  const years = variantYears(variant, template);
+  const diffs = variantDifficulties(variant, template);
+  const year =
+    ctx.filterYear && years.includes(ctx.filterYear)
+      ? ctx.filterYear
+      : (years[0] ?? ctx.year);
+  const difficulty: ProblemDifficulty =
+    ctx.filterDifficulty && diffs.includes(ctx.filterDifficulty)
+      ? ctx.filterDifficulty
+      : (diffs[0] ?? ctx.filterDifficulty ?? "medium");
+  return { year, difficulty };
+}
+
+function pickVariant(
+  ctx: AlgorithmContext,
+  template: ProblemTemplate,
+): TemplateVariant | null {
+  const variants = template.variants;
+  const first = variants[0];
+  if (!first) return null;
+  if (ctx.variantId) {
+    return variants.find((variant) => variant.id === ctx.variantId) ?? first;
+  }
+  const pool = ctx.skipMatchFilter
+    ? variants
+    : matchingTemplateVariants(template, {
+        difficulty: ctx.filterDifficulty,
+        year: ctx.filterYear,
+      });
+  if (pool.length === 0) return null;
+  if (ctx.anchorExample) {
+    return (
+      pool.find(
+        (variant) =>
+          variant.example != null && Object.keys(variant.example).length > 0,
+      ) ?? pool[0] ??
+      null
+    );
+  }
+  if (ctx.variantIndex != null) {
+    return pool[ctx.variantIndex % pool.length] ?? null;
+  }
+  return pick(ctx.rng, pool);
+}
+
 function instantiateVariant(
   template: ProblemTemplate,
   variant: TemplateVariant,
@@ -308,10 +482,12 @@ function instantiateVariant(
     if (!applyDerived(variant, values)) continue;
     if (!constraintsHold(variant, values)) continue;
 
-    const promptTex = render(variant.prompt, values);
-    const solutionTex = variant.solutionSteps
-      ? aligned(variant.solutionSteps.map((step) => render(step, values)))
-      : render(variant.solution ?? "", values);
+    const promptTex = polishStudentTex(render(variant.prompt, values));
+    const solutionTex = polishStudentTex(
+      variant.solutionSteps
+        ? aligned(variant.solutionSteps.map((step) => render(step, values)))
+        : render(variant.solution ?? "", values),
+    );
 
     const formula = inferTemplateFormula(variant);
     return problem({
@@ -328,15 +504,30 @@ function instantiateVariant(
 }
 
 export function compileTemplate(raw: unknown): ProblemAlgorithm {
-  const template = parseProblemTemplateOrThrow(raw);
+  const template = expandWorkRateFamily(parseProblemTemplateOrThrow(raw));
   return {
     id: template.id,
     topic: template.topic,
     difficulties: template.difficulties,
     years: template.years,
+    variantCount: template.variants.length,
     generate(ctx) {
-      const variant = pick(ctx.rng, template.variants);
-      return instantiateVariant(template, variant, ctx);
+      const variant = pickVariant(ctx, template);
+      if (!variant) {
+        throw new Error("NO_TEMPLATE_MATCH");
+      }
+      const labels = stampVariantLabels(variant, template, ctx);
+      const sampled = instantiateVariant(template, variant, {
+        ...ctx,
+        difficulty: toGeneratorDifficulty(labels.difficulty),
+        year: labels.year,
+      });
+      return {
+        ...sampled,
+        kind: variant.id ? `${template.id}/${variant.id}` : template.id,
+        difficulty: labels.difficulty,
+        year: labels.year,
+      };
     },
   };
 }

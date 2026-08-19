@@ -34,11 +34,18 @@ export {
   type ProblemToolStatus,
 } from "./catalog";
 
-export { SEED_PROBLEM_BANK } from "./bank";
+export {
+  HIDDEN_SEED_COOKIE,
+  SEED_PROBLEM_BANK,
+  parseHiddenSeedIds,
+  withoutHiddenSeeds,
+} from "./bank";
 
 export {
   algorithmOptionsForTopic,
   groupedKindsForTopic,
+  classifyTemplateGenerateFilter,
+  collectTemplateGenerateLabels,
   generateFromTemplate,
   generateProblems,
   generateProblemsSchema,
@@ -65,7 +72,15 @@ export {
 
 export type { AiModelStatus } from "./ai-limits";
 
-export { canVary, generateVariants } from "./variants";
+export { canVary, canResampleProblem, familyCanResample, generateVariants, stampFamilySource, templateJsonForProblem } from "./variants";
+export { checkBankProblem, checkTemplateProblem } from "./templates/check";
+
+export type { SavedProblemFamily } from "./family-persist";
+
+export {
+  familyKindValue,
+  parseFamilyKind,
+} from "./family-kind";
 
 export {
   isCatalogSeedId,

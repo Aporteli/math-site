@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { polishStudentTex } from "@/lib/math/problems/tex";
 
 type Segment =
   | { type: "text"; value: string }
@@ -38,14 +39,13 @@ function splitMathSegments(input: string): Segment[] {
   return segments.length > 0 ? segments : [{ type: "text", value: input }];
 }
 
-/** `$y = -x that passes through$` — keep the formula, restore the words. */
+/** `$b = 8\, ხოლო კუთხე$` — keep the formula, restore the words. */
 function peelProseFromMath(segment: Segment): Segment[] {
   if (segment.type !== "math") return [segment];
-  if (/\\[a-zA-Z]+/.test(segment.value)) return [segment];
-  const leak = /(?<!\\)[\p{L}]{3,}\s+[\p{L}]{3,}/u.exec(segment.value);
+  const leak = /(?<!\\)[\p{L}]{3,}(?:\s+[\p{L}]{2,})+/u.exec(segment.value);
   if (!leak) return [segment];
   const mathPart = segment.value.slice(0, leak.index).trimEnd();
-  const textPart = segment.value.slice(mathPart.length);
+  const textPart = segment.value.slice(leak.index);
   const parts: Segment[] = [];
   if (mathPart) {
     parts.push({ type: "math", value: mathPart, display: segment.display });
@@ -62,7 +62,11 @@ function looksLikeProse(tex: string) {
 
 function renderKatex(tex: string, node: HTMLElement, displayMode: boolean) {
   try {
-    katex.render(tex, node, { throwOnError: false, displayMode });
+    katex.render(tex, node, {
+      throwOnError: false,
+      displayMode,
+      errorColor: "currentColor",
+    });
   } catch {
     node.textContent = tex;
   }
@@ -83,13 +87,14 @@ export function KatexPreview({
     const node = ref.current;
     if (!node) return;
     node.replaceChildren();
+    const prepared = polishStudentTex(tex);
 
-    if (!looksLikeProse(tex)) {
-      renderKatex(tex, node, displayMode);
+    if (!looksLikeProse(prepared)) {
+      renderKatex(prepared, node, displayMode);
       return;
     }
 
-    const segments = splitMathSegments(tex).flatMap(peelProseFromMath);
+    const segments = splitMathSegments(prepared).flatMap(peelProseFromMath);
     const onlyMath =
       segments.length === 1 && segments[0]?.type === "math" ? segments[0] : null;
     if (onlyMath) {

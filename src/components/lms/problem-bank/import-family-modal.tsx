@@ -4,15 +4,17 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ClipboardPaste, FileJson, Image, PenLine, Type, X } from "lucide-react";
 import { KatexPreview } from "@/components/math/katex-preview";
-import { proposeTemplateAction } from "@/lib/math/problems/actions";
+import { proposeTemplateAction, saveFamilyAction } from "@/lib/math/problems/actions";
 import {
   generateFromTemplate,
+  classifyTemplateGenerateFilter,
   replaceTokens,
   type AiModelId,
   type BankProblem,
   type ProblemBankCopy,
   type ProblemDifficulty,
   type ProblemYear,
+  type SavedProblemFamily,
 } from "@/lib/math/problems";
 import { checkTemplateProblem } from "@/lib/math/problems/templates/check";
 import {
@@ -37,6 +39,7 @@ interface ImportFamilyModalProps {
   model: AiModelId;
   onClose: () => void;
   onCreated: (problems: BankProblem[]) => void;
+  onFamilySaved?: (family: SavedProblemFamily) => void;
 }
 
 function diagnosisHint(
@@ -58,6 +61,10 @@ function diagnosisHint(
       return copy.diagnoseCollide;
     case "sample":
       return copy.diagnoseSample;
+    case "empty":
+      return copy.diagnoseEmpty;
+    case "no_match":
+      return copy.diagnoseNoMatch;
     default:
       return copy.diagnoseSchema;
   }
@@ -182,6 +189,7 @@ export function ImportFamilyModal({
   model,
   onClose,
   onCreated,
+  onFamilySaved,
 }: ImportFamilyModalProps) {
   const titleId = useId();
   const family = copy.importFamily;
@@ -190,6 +198,7 @@ export function ImportFamilyModal({
   const [jsonText, setJsonText] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [savingFamily, setSavingFamily] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [casNotice, setCasNotice] = useState<string | null>(null);
   const [casOk, setCasOk] = useState<boolean | null>(null);
@@ -321,13 +330,48 @@ export function ImportFamilyModal({
         year: year === "any" ? undefined : year,
       });
       if (created.length === 0) {
-        setNotice(family.errorFailed);
+        const status = classifyTemplateGenerateFilter(read.template, {
+          difficulty: difficulty === "any" ? undefined : difficulty,
+          year: year === "any" ? undefined : year,
+        });
+        setNotice(
+          status === "no_match"
+            ? copy.familyCenter.noMatchGenerate
+            : copy.familyCenter.emptyGenerate,
+        );
         return;
       }
       onCreated(created);
       onClose();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : family.errorFailed);
+    }
+  }
+
+  async function saveFamily() {
+    setNotice(null);
+    const read = readTemplateJson(jsonText);
+    if (!read.ok) {
+      setNotice(family.invalidTemplate);
+      return;
+    }
+    setSavingFamily(true);
+    try {
+      const result = await saveFamilyAction({ json: jsonText });
+      if (!result.ok) {
+        setNotice(
+          result.error === "unauthorized"
+            ? family.errorUnauthorized
+            : result.error === "slug_taken"
+              ? family.errorSlugTaken
+              : family.errorFailed,
+        );
+        return;
+      }
+      onFamilySaved?.(result.family);
+      setNotice(family.familySaved);
+    } finally {
+      setSavingFamily(false);
     }
   }
 
@@ -585,6 +629,18 @@ export function ImportFamilyModal({
                   onClick={buildProblems}
                 >
                   {family.build}
+                </button>
+                <button
+                  type="button"
+                  className="rounded-xl border border-navy/20 bg-white px-4 py-2 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint disabled:opacity-60"
+                  disabled={
+                    Boolean(preview?.diagnosis) ||
+                    !preview?.problem ||
+                    savingFamily
+                  }
+                  onClick={() => void saveFamily()}
+                >
+                  {savingFamily ? family.savingFamily : family.saveFamily}
                 </button>
               </div>
             </>

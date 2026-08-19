@@ -1,7 +1,8 @@
 import type { ZodError } from "zod";
 import { generateFromTemplate, type GenerateProblemsInput } from "../algorithms";
 import type { BankProblem } from "../types";
-import { parseProblemTemplate } from "./adapt";
+import { parseProblemTemplate, parseTeacherJson } from "./adapt";
+import { matchingTemplateVariants } from "./engine";
 import type { ProblemTemplate } from "./schema";
 
 export type DiagnoseHint =
@@ -12,6 +13,8 @@ export type DiagnoseHint =
   | "missing"
   | "collide"
   | "sample"
+  | "empty"
+  | "no_match"
   | "schema";
 
 export interface TemplateDiagnosis {
@@ -81,7 +84,7 @@ export function readTemplateJson(
   | { ok: false; diagnosis: TemplateDiagnosis } {
   let parsedJson: unknown;
   try {
-    parsedJson = JSON.parse(raw) as unknown;
+    parsedJson = parseTeacherJson(raw);
   } catch (error) {
     const detail = error instanceof Error ? error.message : "";
     return {
@@ -108,6 +111,17 @@ export function previewTemplateJson(
   | { ok: false; diagnosis: TemplateDiagnosis } {
   const read = readTemplateJson(raw);
   if (!read.ok) return read;
+  if (read.template.variants.length === 0) {
+    return { ok: false, diagnosis: { hint: "empty", lines: [] } };
+  }
+  if (
+    matchingTemplateVariants(read.template, {
+      difficulty: input.difficulty,
+      year: input.year,
+    }).length === 0
+  ) {
+    return { ok: false, diagnosis: { hint: "no_match", lines: [] } };
+  }
 
   try {
     const [problem] = generateFromTemplate(read.template, {

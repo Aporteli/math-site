@@ -2,17 +2,19 @@
 
 import { useEffect, useId, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Check, Copy, Eye, EyeOff, Library, Plus, Save, Shuffle, Trash2, X } from "lucide-react";
+import { Calculator, Check, ChevronDown, Copy, Eye, EyeOff, Library, Plus, Save, Shuffle, Trash2, X } from "lucide-react";
 import { KatexPreview } from "@/components/math/katex-preview";
 import { PageHero } from "@/components/ui/page-hero";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { ImportFamilyModal } from "@/components/lms/problem-bank/import-family-modal";
+import { FamilyControlCenter } from "@/components/lms/problem-bank/family-control-center";
 import { localePath, type Locale } from "@/i18n/config";
 import {
   generateDiverseProblemsAction,
   deleteProblemAction,
   loadAiModelStatusAction,
   loadTeacherBankAction,
+  loadTeacherFamiliesAction,
   saveProblemsAction,
   syncLessonSetAction,
 } from "@/lib/math/problems/actions";
@@ -27,12 +29,23 @@ import {
   AI_MODEL_IDS,
   DEFAULT_AI_MODEL,
   filterProblems,
+  familyKindValue,
   generateDiverseProblemsSchema,
+  generateFromTemplate,
+  classifyTemplateGenerateFilter,
+  collectTemplateGenerateLabels,
   generateProblems,
   generateProblemsSchema,
   generateVariants,
   canVary,
+  canResampleProblem,
+  stampFamilySource,
+  checkBankProblem,
+  parseFamilyKind,
+  templateJsonForProblem,
+  HIDDEN_SEED_COOKIE,
   isCatalogSeedId,
+  parseHiddenSeedIds,
   isUnsavedId,
   toPersistInput,
   replaceCount,
@@ -51,7 +64,9 @@ import {
   type ProblemFilters,
   type ProblemTopic,
   type ProblemYear,
+  type SavedProblemFamily,
 } from "@/lib/math/problems";
+import { setCookie } from "@/lib/helpers/cookies";
 
 const fieldClass =
   "w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
@@ -62,6 +77,38 @@ function sourceBadgeLabel(copy: ProblemBankCopy, problem: BankProblem) {
   if (problem.templateId === "ai-plain") return copy.sources.unchecked;
   if (problem.templateId === "ai-verified") return copy.sources.verified;
   return copy.sources[problem.source];
+}
+
+function hideCatalogSeed(id: string) {
+  const hidden = new Set(parseHiddenSeedIds(readCookie(HIDDEN_SEED_COOKIE)));
+  hidden.add(id);
+  setCookie(HIDDEN_SEED_COOKIE, [...hidden].join(","));
+}
+
+function generateLabelsFromFamilies(list: SavedProblemFamily[]) {
+  const years = new Set<ProblemYear>();
+  const difficulties = new Set<ProblemDifficulty>();
+  for (const family of list) {
+    try {
+      const labels = collectTemplateGenerateLabels(
+        JSON.parse(family.json) as unknown,
+      );
+      for (const year of labels.years) years.add(year);
+      for (const difficulty of labels.difficulties) {
+        difficulties.add(difficulty);
+      }
+    } catch {
+      /* skip unreadable family json */
+    }
+  }
+  return { years, difficulties };
+}
+
+function readCookie(name: string) {
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`));
+  return match?.slice(name.length + 1);
 }
 
 type GenerateCopy = ProblemBankCopy["generate"];
@@ -148,6 +195,7 @@ interface ProblemBankWorkspaceProps {
   copy: ProblemBankCopy;
   initialBank: BankProblem[];
   initialLessonSetIds: string[];
+  initialFamilies?: SavedProblemFamily[];
 }
 
 export function ProblemBankWorkspace({
@@ -157,6 +205,7 @@ export function ProblemBankWorkspace({
   copy,
   initialBank,
   initialLessonSetIds,
+  initialFamilies = [],
 }: ProblemBankWorkspaceProps) {
   const searchId = useId();
   const genId = useId();
@@ -168,8 +217,12 @@ export function ProblemBankWorkspace({
   const [lessonSetIds, setLessonSetIds] = useState<string[]>(initialLessonSetIds);
   const [draftIds, setDraftIds] = useState<string[]>([]);
   const [showSolution, setShowSolution] = useState(false);
-  const [panel, setPanel] = useState<"generate" | "variants" | null>("generate");
+  const [panel, setPanel] = useState<
+    "generate" | "variants" | "families" | null
+  >("generate");
   const [importOpen, setImportOpen] = useState(false);
+  const [families, setFamilies] = useState<SavedProblemFamily[]>(initialFamilies);
+  const [focusFamilyId, setFocusFamilyId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [genTopic, setGenTopic] = useState<ProblemTopic | "any">("any");
   const [genKind, setGenKind] = useState<string>("any");
@@ -178,7 +231,9 @@ export function ProblemBankWorkspace({
   );
   const [genYear, setGenYear] = useState<ProblemYear | "any">("any");
   const [genCount, setGenCount] = useState(5);
-  const [genMode, setGenMode] = useState<"algorithms" | "diverse">("diverse");
+  const [genMode, setGenMode] = useState<
+    "algorithms" | "diverse" | "families"
+  >("diverse");
   const [genCheck, setGenCheck] = useState<AiCheckMode>("verified");
   const [genModel, setGenModel] = useState<AiModelId>(DEFAULT_AI_MODEL);
   const [modelStatus, setModelStatus] = useState<AiModelStatus[]>([]);
@@ -186,6 +241,21 @@ export function ProblemBankWorkspace({
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [variantCount, setVariantCount] = useState(5);
+  const [familyQuery, setFamilyQuery] = useState("");
+  const [genSubtitle, setGenSubtitle] = useState("any");
+  const [casNotice, setCasNotice] = useState<string | null>(null);
+  const [casOk, setCasOk] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (initialFamilies.length > 0) return;
+    let cancelled = false;
+    void loadTeacherFamiliesAction().then((loaded) => {
+      if (!cancelled && loaded.length > 0) setFamilies(loaded);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [initialFamilies.length]);
 
   useEffect(() => {
     let cancelled = false;
@@ -229,6 +299,11 @@ export function ProblemBankWorkspace({
     (problem) => problem.source === "generated" || problem.source === "ai",
   ).length;
 
+  useEffect(() => {
+    setCasNotice(null);
+    setCasOk(null);
+  }, [selectedId]);
+
   function updateFilter<K extends keyof ProblemFilters>(
     key: K,
     value: ProblemFilters[K],
@@ -239,7 +314,237 @@ export function ProblemBankWorkspace({
   function selectGenTopic(value: ProblemTopic | "any") {
     setGenTopic(value);
     setGenKind("any");
+    setGenSubtitle("any");
+    setFamilyQuery("");
   }
+
+  const selectedKindFamily =
+    families.find(
+      (family) =>
+        !family.parentId &&
+        family.slug === parseFamilyKind(genKind) &&
+        (genTopic === "any" || family.topic === genTopic),
+    ) ?? null;
+
+  const kindSubtitles = selectedKindFamily
+    ? families.filter((family) => family.parentId === selectedKindFamily.id)
+    : [];
+
+  const selectedSubtitleFamily =
+    genSubtitle === "any"
+      ? null
+      : (kindSubtitles.find(
+          (family) => family.slug === parseFamilyKind(genSubtitle),
+        ) ?? null);
+
+  const familyKindOptions = families
+    .filter((family) => {
+      if (family.parentId) return false;
+      if (genTopic !== "any" && family.topic !== genTopic) return false;
+      const q = familyQuery.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        (family.title ?? "").toLowerCase().includes(q) ||
+        family.slug.toLowerCase().includes(q)
+      );
+    })
+    .map((family) => ({
+      value: familyKindValue(family.slug),
+      label: family.title || family.slug,
+    }));
+
+  const algorithmKindOptions =
+    genTopic === "any"
+      ? [{ value: "any", label: copy.generate.anyKind }]
+      : [
+          { value: "any", label: copy.generate.anyKind },
+          ...groupedKindsForTopic(genTopic).flatMap((group) => [
+            ...(group.groupId
+              ? [
+                  {
+                    heading: copy.generate.kindGroups[group.groupId],
+                  },
+                ]
+              : []),
+            ...group.kinds.map((option) => ({
+              value: option.id,
+              label: kindLabel(copy.generate.kinds, option.id),
+            })),
+          ]),
+        ];
+
+  const subtitleOptions = kindSubtitles.map((family) => ({
+    value: familyKindValue(family.slug),
+    label: family.title || family.slug,
+  }));
+
+  const familyGenerateTargets: SavedProblemFamily[] = selectedSubtitleFamily
+    ? [selectedSubtitleFamily]
+    : selectedKindFamily
+      ? kindSubtitles.length > 0
+        ? kindSubtitles
+        : [selectedKindFamily]
+      : families.flatMap((family) => {
+          if (family.parentId) return [];
+          if (genTopic !== "any" && family.topic !== genTopic) return [];
+          const q = familyQuery.trim().toLowerCase();
+          if (
+            q &&
+            !(family.title ?? "").toLowerCase().includes(q) &&
+            !family.slug.toLowerCase().includes(q)
+          ) {
+            return [];
+          }
+          const kids = families.filter((item) => item.parentId === family.id);
+          return kids.length > 0 ? kids : [family];
+        });
+
+  const familyGenerateLabels = generateLabelsFromFamilies(familyGenerateTargets);
+
+  function generateFilters() {
+    return {
+      difficulty: genDifficulty === "any" ? undefined : genDifficulty,
+      year: genYear === "any" ? undefined : genYear,
+    };
+  }
+
+  function familyGenerateMissNotice(raw: unknown) {
+    const status = classifyTemplateGenerateFilter(raw, generateFilters());
+    return status === "no_match"
+      ? copy.familyCenter.noMatchGenerate
+      : copy.familyCenter.emptyGenerate;
+  }
+
+  function generateFromFamilyKind(family: SavedProblemFamily) {
+    try {
+      const raw = JSON.parse(family.json) as unknown;
+      const created = stampFamilySource(
+        generateFromTemplate(raw, {
+          count: genCount,
+          locale,
+          ...generateFilters(),
+        }),
+        family,
+      );
+      if (created.length === 0) {
+        setNotice(familyGenerateMissNotice(raw));
+        return;
+      }
+      applyCreated(created);
+      setNotice(null);
+    } catch {
+      setNotice(copy.familyCenter.errorFailed);
+    }
+  }
+
+  function generateFromFamilyList(list: SavedProblemFamily[]) {
+    if (list.length === 0) return;
+    if (list.length === 1) {
+      generateFromFamilyKind(list[0]!);
+      return;
+    }
+    try {
+      const filters = generateFilters();
+      const usable = list.filter((family) => {
+        try {
+          return (
+            classifyTemplateGenerateFilter(
+              JSON.parse(family.json) as unknown,
+              filters,
+            ) === "ok"
+          );
+        } catch {
+          return false;
+        }
+      });
+      if (usable.length === 0) {
+        const anyCards = list.some((family) => {
+          try {
+            return (
+              classifyTemplateGenerateFilter(
+                JSON.parse(family.json) as unknown,
+                {},
+              ) !== "empty"
+            );
+          } catch {
+            return false;
+          }
+        });
+        setNotice(
+          anyCards
+            ? copy.familyCenter.noMatchGenerate
+            : copy.familyCenter.emptyGenerate,
+        );
+        return;
+      }
+      const created: BankProblem[] = [];
+      let remaining = genCount;
+      for (let i = 0; i < usable.length; i += 1) {
+        const left = usable.length - i;
+        const count =
+          i === usable.length - 1
+            ? remaining
+            : Math.max(1, Math.floor(remaining / left));
+        remaining -= count;
+        created.push(
+          ...stampFamilySource(
+            generateFromTemplate(JSON.parse(usable[i]!.json) as unknown, {
+              count,
+              locale,
+              ...filters,
+            }),
+            usable[i]!,
+          ),
+        );
+      }
+      if (created.length === 0) {
+        setNotice(copy.familyCenter.noMatchGenerate);
+        return;
+      }
+      applyCreated(created);
+      setNotice(null);
+    } catch {
+      setNotice(copy.familyCenter.errorFailed);
+    }
+  }
+
+  function generateSelectedKind(kind: SavedProblemFamily, subtitle: SavedProblemFamily | null) {
+    if (subtitle) {
+      generateFromFamilyKind(subtitle);
+      return;
+    }
+    const kids = families.filter((family) => family.parentId === kind.id);
+    if (kids.length > 0) generateFromFamilyList(kids);
+    else generateFromFamilyKind(kind);
+  }
+
+  function selectGenKind(value: string) {
+    setGenKind(value);
+    setGenSubtitle("any");
+    const slug = parseFamilyKind(value);
+    const family = slug
+      ? (families.find(
+          (item) =>
+            !item.parentId &&
+            item.slug === slug &&
+            (genTopic === "any" || item.topic === genTopic),
+        ) ?? null)
+      : null;
+    if (family) generateSelectedKind(family, null);
+  }
+
+  function selectGenSubtitle(value: string) {
+    setGenSubtitle(value);
+    if (!selectedKindFamily) return;
+    if (value === "any") {
+      generateSelectedKind(selectedKindFamily, null);
+      return;
+    }
+    const slug = parseFamilyKind(value);
+    const family = kindSubtitles.find((item) => item.slug === slug) ?? null;
+    generateSelectedKind(selectedKindFamily, family);
+  }
+
 
   function remapIds(ids: string[], idMap: Record<string, string>) {
     return ids.map((id) => idMap[id] ?? id);
@@ -342,7 +647,9 @@ export function ProblemBankWorkspace({
   }
 
   async function discardProblem(id: string) {
-    if (!isUnsavedId(id)) {
+    if (isCatalogSeedId(id)) {
+      hideCatalogSeed(id);
+    } else if (!isUnsavedId(id)) {
       setSaving(true);
       const result = await deleteProblemAction(id);
       setSaving(false);
@@ -431,7 +738,20 @@ export function ProblemBankWorkspace({
   async function onGenerate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    if (genMode === "families") {
+      if (selectedKindFamily) {
+        generateSelectedKind(selectedKindFamily, selectedSubtitleFamily);
+        return;
+      }
+      setNotice(copy.generate.kindJsonNeedFamily);
+      return;
+    }
+
     if (genMode === "algorithms") {
+      if (selectedKindFamily) {
+        generateSelectedKind(selectedKindFamily, selectedSubtitleFamily);
+        return;
+      }
       const parsed = generateProblemsSchema.safeParse({
         topic: genTopic === "any" ? undefined : genTopic,
         kind: genKind === "any" ? undefined : genKind,
@@ -502,26 +822,46 @@ export function ProblemBankWorkspace({
       setNotice(copy.variantPanel.needProblem);
       return;
     }
-    if (!canVary(selected)) {
+    const template = templateJsonForProblem(selected, families);
+    if (!canVary(selected, template)) {
       setNotice(copy.variantPanel.needFormula);
       return;
     }
 
-    const created = generateVariants(selected, variantCount);
-    if (created.length === 0) {
-      setNotice(copy.variantPanel.noneVerified);
-      return;
-    }
+    try {
+      const created = generateVariants(selected, variantCount, {
+        template: template ?? undefined,
+        locale,
+      });
+      if (created.length === 0) {
+        let familyRaw: unknown = null;
+        if (template) {
+          try {
+            familyRaw = JSON.parse(template) as unknown;
+          } catch {
+            familyRaw = null;
+          }
+        }
+        setNotice(
+          !canResampleProblem(selected, familyRaw)
+            ? copy.variantPanel.needSlots
+            : copy.variantPanel.noneVerified,
+        );
+        return;
+      }
 
-    applyCreated(created);
-    setNotice(null);
+      applyCreated(created);
+      setNotice(null);
+    } catch {
+      setNotice(copy.variantPanel.noneVerified);
+    }
   }
 
   function onTool(id: ProblemBankToolId) {
     const tool = PROBLEM_BANK_TOOLS.find((item) => item.id === id);
     if (!tool) return;
 
-    if (id === "generate" || id === "variants") {
+    if (id === "generate" || id === "variants" || id === "families") {
       setPanel((current) => (current === id ? null : id));
       setNotice(null);
       return;
@@ -558,7 +898,7 @@ export function ProblemBankWorkspace({
         <p className="mb-3 text-sm font-semibold tracking-wide text-brass">
           {copy.tools.label}
         </p>
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
           {PROBLEM_BANK_TOOLS.map((tool) => {
             const Icon = tool.icon;
             const item = copy.tools[tool.id];
@@ -602,7 +942,9 @@ export function ProblemBankWorkspace({
                     type="button"
                     className={className}
                     aria-pressed={
-                      tool.id === "generate" || tool.id === "variants"
+                      tool.id === "generate" ||
+                      tool.id === "variants" ||
+                      tool.id === "families"
                         ? panel === tool.id
                         : tool.id === "import"
                           ? importOpen
@@ -637,6 +979,34 @@ export function ProblemBankWorkspace({
             applyCreated(created);
             setNotice(null);
           }}
+          onFamilySaved={(family) => {
+            setFamilies((current) => [
+              family,
+              ...current.filter((item) => item.id !== family.id),
+            ]);
+            setFocusFamilyId(family.id);
+            setPanel("families");
+            setNotice(copy.importFamily.familySaved);
+          }}
+        />
+      ) : null}
+
+      {panel === "families" ? (
+        <FamilyControlCenter
+          locale={locale}
+          copy={copy}
+          families={families}
+          count={genCount}
+          difficulty={genDifficulty}
+          year={genYear}
+          preferredId={focusFamilyId}
+          onClose={() => setPanel(null)}
+          onFamiliesChange={setFamilies}
+          onCreated={(created) => {
+            applyCreated(created);
+          }}
+          onNewFamily={() => setImportOpen(true)}
+          onPreferredConsumed={() => setFocusFamilyId(null)}
         />
       ) : null}
 
@@ -659,7 +1029,9 @@ export function ProblemBankWorkspace({
                   ? genCheck === "plain"
                     ? copy.generate.plainHint
                     : copy.generate.requestHint
-                  : copy.generate.algorithmHint}
+                  : genMode === "families"
+                    ? copy.generate.familyHint
+                    : copy.generate.algorithmHint}
               </p>
             </div>
             <button
@@ -699,9 +1071,34 @@ export function ProblemBankWorkspace({
                     : "text-body hover:text-navy",
                 ].join(" ")}
                 aria-pressed={genMode === "algorithms"}
-                onClick={() => setGenMode("algorithms")}
+                onClick={() => {
+                  if (parseFamilyKind(genKind)) {
+                    setGenKind("any");
+                    setGenSubtitle("any");
+                  }
+                  setGenMode("algorithms");
+                }}
               >
                 {copy.generate.modeAlgorithms}
+              </button>
+              <button
+                type="button"
+                className={[
+                  "rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors",
+                  genMode === "families"
+                    ? "bg-white text-navy shadow-sm"
+                    : "text-body hover:text-navy",
+                ].join(" ")}
+                aria-pressed={genMode === "families"}
+                onClick={() => {
+                  if (!parseFamilyKind(genKind) && genKind !== "any") {
+                    setGenKind("any");
+                    setGenSubtitle("any");
+                  }
+                  setGenMode("families");
+                }}
+              >
+                {copy.generate.modeFamilies}
               </button>
             </div>
             {genMode === "diverse" ? (
@@ -740,97 +1137,110 @@ export function ProblemBankWorkspace({
             ) : null}
           </div>
           {genMode === "diverse" ? (
-            <div className="rounded-2xl border border-hairline-soft bg-paper p-3">
-              <label
-                htmlFor={`${genId}-model`}
-                className="block text-sm font-medium text-ink"
-              >
-                {copy.generate.model}
-              </label>
-              <SelectMenu
-                id={`${genId}-model`}
-                className="mt-1.5 max-w-md"
-                value={genModel}
-                onChange={(value) => setGenModel(value as AiModelId)}
-                options={AI_MODEL_IDS.map((id) => ({
-                  value: id,
-                  label: copy.generate.models[id],
-                }))}
-              />
-              {selectedModelStatus ? (
+            <details className="group rounded-2xl border border-hairline-soft bg-paper p-3">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+                <span className="min-w-0">
+                  <span className="block text-sm font-medium text-ink">
+                    {copy.generate.model}
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-muted group-open:hidden">
+                    {copy.generate.models[genModel]}
+                  </span>
+                </span>
+                <ChevronDown
+                  className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180"
+                  aria-hidden="true"
+                />
+              </summary>
+              <div className="mt-3">
+                <label htmlFor={`${genId}-model`} className="sr-only">
+                  {copy.generate.model}
+                </label>
+                <SelectMenu
+                  id={`${genId}-model`}
+                  className="max-w-md"
+                  value={genModel}
+                  onChange={(value) => setGenModel(value as AiModelId)}
+                  options={AI_MODEL_IDS.map((id) => ({
+                    value: id,
+                    label: copy.generate.models[id],
+                  }))}
+                />
+                {selectedModelStatus ? (
                   <p className="mt-2 text-xs text-body">
                     {walletHint(copy.generate, selectedModelStatus.wallet)}
                   </p>
                 ) : null}
-              <p className="mt-3 text-xs font-medium text-muted">
-                {copy.generate.walletLabel}
-              </p>
-              <ul className="mt-1.5 flex flex-wrap gap-1.5">
-                {uniqueProviders(modelStatus).map((status) => {
-                  const selected =
-                    selectedModelStatus?.provider === status.provider;
-                  return (
-                    <li key={status.provider}>
-                      <button
-                        type="button"
-                        className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${walletTone(status.wallet, selected)}`}
-                        onClick={() => {
-                          if (selectedModelStatus?.provider === status.provider) {
-                            return;
-                          }
-                          setGenModel(status.id);
-                        }}
-                      >
-                        {copy.generate.providers[status.provider]}
-                        <span className="ms-1.5 text-[10px] opacity-80">
-                          {walletChipLabel(copy.generate, status.wallet)}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-              <p className="mt-3 text-xs font-medium text-muted">
-                {copy.generate.limitLabel}
-              </p>
-              <ul className="mt-1.5 flex flex-wrap gap-1.5">
-                {modelStatus.map((status) => {
-                  const selected = status.id === genModel;
-                  const tone = !status.configured
-                    ? "border-hairline bg-white text-muted"
-                    : status.limit > 0 && status.remaining <= 0
-                      ? "border-brass/20 bg-brass-tint/40 text-brass-strong"
-                      : selected
-                        ? "border-navy/20 bg-navy-tint text-navy"
-                        : "border-hairline bg-white text-body";
-                  const detail = !status.configured
-                    ? copy.generate.limitNoKey
-                    : status.limit > 0 && status.remaining <= 0
-                      ? copy.generate.limitExhausted
-                      : status.limit === 0
-                        ? copy.generate.limitReady
-                        : replaceTokens(copy.generate.limitUsed, {
-                            used: status.used,
-                            limit: status.limit,
-                          });
+                <p className="mt-3 text-xs font-medium text-muted">
+                  {copy.generate.walletLabel}
+                </p>
+                <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                  {uniqueProviders(modelStatus).map((status) => {
+                    const selected =
+                      selectedModelStatus?.provider === status.provider;
+                    return (
+                      <li key={status.provider}>
+                        <button
+                          type="button"
+                          className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${walletTone(status.wallet, selected)}`}
+                          onClick={() => {
+                            if (selectedModelStatus?.provider === status.provider) {
+                              return;
+                            }
+                            setGenModel(status.id);
+                          }}
+                        >
+                          {copy.generate.providers[status.provider]}
+                          <span className="ms-1.5 text-[10px] opacity-80">
+                            {walletChipLabel(copy.generate, status.wallet)}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-3 text-xs font-medium text-muted">
+                  {copy.generate.limitLabel}
+                </p>
+                <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                  {modelStatus.map((status) => {
+                    const selected = status.id === genModel;
+                    const tone = !status.configured
+                      ? "border-hairline bg-white text-muted"
+                      : status.limit > 0 && status.remaining <= 0
+                        ? "border-brass/20 bg-brass-tint/40 text-brass-strong"
+                        : selected
+                          ? "border-navy/20 bg-navy-tint text-navy"
+                          : "border-hairline bg-white text-body";
+                    const detail = !status.configured
+                      ? copy.generate.limitNoKey
+                      : status.limit > 0 && status.remaining <= 0
+                        ? copy.generate.limitExhausted
+                        : status.limit === 0
+                          ? copy.generate.limitReady
+                          : replaceTokens(copy.generate.limitUsed, {
+                              used: status.used,
+                              limit: status.limit,
+                            });
 
-                  return (
-                    <li key={status.id}>
-                      <button
-                        type="button"
-                        className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${tone}`}
-                        onClick={() => setGenModel(status.id)}
-                      >
-                        {copy.generate.models[status.id]}
-                        <span className="ms-1.5 text-[10px] opacity-80">
-                          {detail}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+                    return (
+                      <li key={status.id}>
+                        <button
+                          type="button"
+                          className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${tone}`}
+                          onClick={() => setGenModel(status.id)}
+                        >
+                          {copy.generate.models[status.id]}
+                          <span className="ms-1.5 text-[10px] opacity-80">
+                            {detail}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </details>
           ) : null}
           {genMode === "diverse" ? (
             <label className="block rounded-2xl border border-hairline-soft bg-paper p-3 text-sm font-medium text-ink">
@@ -845,7 +1255,7 @@ export function ProblemBankWorkspace({
             </label>
           ) : null}
           <div className="rounded-2xl border border-brass/10 bg-brass-tint/30 p-3">
-          {genMode === "algorithms" ? (
+          {genMode === "algorithms" || genMode === "families" ? (
             <div className="space-y-3">
               <div className="max-w-md">
                 <label
@@ -870,44 +1280,93 @@ export function ProblemBankWorkspace({
                   ]}
                 />
               </div>
-              {genTopic !== "any" ? (
+              {(genMode === "algorithms" && genTopic !== "any") ||
+              genMode === "families" ? (
                 <div className="rounded-2xl border border-hairline bg-white p-3">
                   <p className="text-sm font-semibold text-ink">
-                    {copy.topics[genTopic]}
+                    {genTopic === "any"
+                      ? copy.generate.modeFamilies
+                      : copy.topics[genTopic]}
                   </p>
-                  <div className="mt-3 max-w-md">
-                    <label
-                      htmlFor={`${genId}-kind`}
-                      className="block text-sm font-medium text-ink"
-                    >
-                      {copy.generate.kind}
+                  {genMode === "families" ? (
+                    <label className="mt-3 block text-sm font-medium text-ink">
+                      {copy.familyCenter.search}
+                      <input
+                        id={`${genId}-family-search`}
+                        className={`${fieldClass} mt-1.5`}
+                        type="search"
+                        value={familyQuery}
+                        placeholder={copy.familyCenter.searchPlaceholder}
+                        onChange={(event) => setFamilyQuery(event.target.value)}
+                      />
                     </label>
-                    <SelectMenu
-                      id={`${genId}-kind`}
-                      className="mt-1.5"
-                      value={genKind}
-                      onChange={setGenKind}
-                      options={[
-                        {
-                          value: "any",
-                          label: copy.generate.anyKind,
-                        },
-                        ...groupedKindsForTopic(genTopic).flatMap((group) => [
-                          ...(group.groupId
-                            ? [
-                                {
-                                  heading:
-                                    copy.generate.kindGroups[group.groupId],
-                                },
-                              ]
-                            : []),
-                          ...group.kinds.map((option) => ({
-                            value: option.id,
-                            label: kindLabel(copy.generate.kinds, option.id),
-                          })),
-                        ]),
-                      ]}
-                    />
+                  ) : null}
+                  <div className="mt-3">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+                      <div className="min-w-0 flex-1">
+                        <label
+                          htmlFor={`${genId}-kind`}
+                          className="block text-sm font-medium text-ink"
+                        >
+                          {genMode === "families"
+                            ? copy.generate.family
+                            : copy.generate.kind}
+                        </label>
+                        <SelectMenu
+                          id={`${genId}-kind`}
+                          className="mt-1.5"
+                          value={genKind}
+                          onChange={selectGenKind}
+                          options={
+                            genMode === "families"
+                              ? [
+                                  {
+                                    value: "any",
+                                    label: copy.generate.anyFamily,
+                                  },
+                                  ...familyKindOptions,
+                                ]
+                              : algorithmKindOptions
+                          }
+                        />
+                      </div>
+                      {genMode === "families" ? (
+                        <div className="min-w-0 flex-1">
+                          <label
+                            htmlFor={`${genId}-subtitle`}
+                            className="block text-sm font-medium text-ink"
+                          >
+                            {copy.generate.subtitle}
+                          </label>
+                          {selectedKindFamily ? (
+                            <p className="mt-0.5 text-xs text-muted">
+                              {replaceTokens(copy.familyCenter.underFamily, {
+                                parent:
+                                  selectedKindFamily.title ||
+                                  selectedKindFamily.slug,
+                              })}
+                            </p>
+                          ) : null}
+                          <SelectMenu
+                            id={`${genId}-subtitle`}
+                            className="mt-1.5"
+                            value={genSubtitle}
+                            onChange={selectGenSubtitle}
+                            disabled={
+                              !selectedKindFamily ||
+                              subtitleOptions.length === 0
+                            }
+                            options={[
+                              {
+                                value: "any",
+                                label: copy.generate.anySubtitle,
+                              },
+                              ...subtitleOptions,
+                            ]}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               ) : null}
@@ -931,10 +1390,19 @@ export function ProblemBankWorkspace({
                         value: "any" as const,
                         label: copy.generate.anyDifficulty,
                       },
-                      ...PROBLEM_DIFFICULTIES.map((difficulty) => ({
-                        value: difficulty,
-                        label: copy.difficulties[difficulty],
-                      })),
+                      ...PROBLEM_DIFFICULTIES.map((difficulty) => {
+                        const marked =
+                          genMode === "families" &&
+                          familyGenerateLabels.difficulties.has(difficulty);
+                        return {
+                          value: difficulty,
+                          label: copy.difficulties[difficulty],
+                          marked,
+                          hint: marked
+                            ? copy.generate.labelInFamily
+                            : undefined,
+                        };
+                      }),
                     ]}
                   />
                 </div>
@@ -954,10 +1422,19 @@ export function ProblemBankWorkspace({
                     }
                     options={[
                       { value: "any" as const, label: copy.generate.anyYear },
-                      ...PROBLEM_YEARS.map((year) => ({
-                        value: year,
-                        label: copy.years[year],
-                      })),
+                      ...PROBLEM_YEARS.map((year) => {
+                        const marked =
+                          genMode === "families" &&
+                          familyGenerateLabels.years.has(year);
+                        return {
+                          value: year,
+                          label: copy.years[year],
+                          marked,
+                          hint: marked
+                            ? copy.generate.labelInFamily
+                            : undefined,
+                        };
+                      }),
                     ]}
                   />
                 </div>
@@ -1090,7 +1567,11 @@ export function ProblemBankWorkspace({
             </div>
           </div>
           )}
-          <p className="mt-3 text-sm text-muted">{copy.generate.classifyHint}</p>
+          {genMode === "families" ? (
+            <p className="mt-3 text-sm text-muted">{copy.generate.familyFilterHint}</p>
+          ) : (
+            <p className="mt-3 text-sm text-muted">{copy.generate.classifyHint}</p>
+          )}
           </div>
           {draftIds.length > 0 ? (
             <div className="mt-4 flex flex-wrap gap-3">
@@ -1431,7 +1912,7 @@ export function ProblemBankWorkspace({
                     {saving ? copy.generate.saving : copy.generate.saveToBank}
                   </button>
                 ) : null}
-                {canVary(selected) ? (
+                {canVary(selected, templateJsonForProblem(selected, families)) ? (
                   <button
                     type="button"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-hairline px-4 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
@@ -1444,15 +1925,62 @@ export function ProblemBankWorkspace({
                     {copy.variantPanel.submit}
                   </button>
                 ) : null}
-                {selected.source !== "bank" ? (
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-hairline px-4 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
-                    onClick={() => void discardProblem(selected.id)}
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
+                  onClick={() => {
+                    const family = copy.importFamily;
+                    const result = checkBankProblem(
+                      selected,
+                      templateJsonForProblem(selected, families),
+                    );
+                    if (result.ok) {
+                      setCasOk(true);
+                      setCasNotice(
+                        replaceTokens(family.checkCasOk, { value: result.value }),
+                      );
+                      return;
+                    }
+                    setCasOk(false);
+                    if (result.reason === "no_formula") {
+                      setCasNotice(family.checkCasNoFormula);
+                      return;
+                    }
+                    if (result.reason === "mismatch") {
+                      setCasNotice(
+                        replaceTokens(family.checkCasMismatch, {
+                          got: result.got ?? "",
+                          expected: result.expected ?? "",
+                        }),
+                      );
+                      return;
+                    }
+                    setCasNotice(family.checkCasFail);
+                  }}
+                >
+                  <Calculator className="size-4" aria-hidden="true" />
+                  {copy.importFamily.checkCas}
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-hairline px-4 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
+                  onClick={() => void discardProblem(selected.id)}
+                >
+                  <Trash2 className="size-4" aria-hidden="true" />
+                  {selected.source === "bank"
+                    ? copy.generate.remove
+                    : copy.generate.discard}
+                </button>
+                {casNotice ? (
+                  <p
+                    className={
+                      casOk
+                        ? "text-sm text-navy"
+                        : "text-sm text-brass-strong"
+                    }
                   >
-                    <Trash2 className="size-4" aria-hidden="true" />
-                    {copy.generate.discard}
-                  </button>
+                    {casNotice}
+                  </p>
                 ) : null}
               </div>
             </>

@@ -2,7 +2,7 @@ import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "@/generated/prisma/client";
 
 /** Bump when `schema.prisma` changes so `next dev` does not keep a stale client. */
-const PRISMA_GENERATION = "problem-topic-varchar";
+const PRISMA_GENERATION = "problem-family-subtitle-delete-restrict";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -19,10 +19,18 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
+function hasCurrentDelegates(client: PrismaClient | undefined) {
+  if (!client) return false;
+  const family = (client as { problemFamily?: { findMany?: unknown } })
+    .problemFamily;
+  return typeof family?.findMany === "function";
+}
+
 if (
   process.env.NODE_ENV !== "production" &&
   globalForPrisma.prisma &&
-  globalForPrisma.prismaGeneration !== PRISMA_GENERATION
+  (globalForPrisma.prismaGeneration !== PRISMA_GENERATION ||
+    !hasCurrentDelegates(globalForPrisma.prisma))
 ) {
   void globalForPrisma.prisma.$disconnect();
   globalForPrisma.prisma = undefined;

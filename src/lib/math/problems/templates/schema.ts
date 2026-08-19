@@ -69,6 +69,8 @@ export const templateVariantSchema = z
         z.union([z.number().finite(), z.string().min(1).max(12)]),
       )
       .optional(),
+    years: z.array(z.enum(PROBLEM_YEARS)).min(1).max(6).optional(),
+    difficulties: z.array(z.enum(PROBLEM_DIFFICULTIES)).min(1).max(4).optional(),
   })
   .refine(
     (variant) =>
@@ -82,13 +84,15 @@ export const templateVariantSchema = z
     { message: "param and derived names collide" },
   );
 
+export const FAMILY_VARIANT_MAX = 1000;
+
 export const problemTemplateSchema = z.object({
   id: z.string().trim().min(1).max(64),
   topic: z.enum(PROBLEM_TOPICS),
   difficulties: z.array(z.enum(PROBLEM_DIFFICULTIES)).min(1),
   years: z.array(z.enum(PROBLEM_YEARS)).min(1),
   instructionId: z.enum(PROBLEM_INSTRUCTIONS),
-  variants: z.array(templateVariantSchema).min(1).max(24),
+  variants: z.array(templateVariantSchema).max(FAMILY_VARIANT_MAX),
 });
 
 export type IntParamSpec = z.infer<typeof intParamSchema>;

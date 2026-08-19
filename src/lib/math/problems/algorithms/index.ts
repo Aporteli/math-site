@@ -17,7 +17,12 @@ import { equationsAlgorithms } from "./equations";
 import { functionsAlgorithms } from "./functions";
 import { geometryAlgorithms } from "./geometry";
 import { percentAlgorithms } from "./percent";
-import { compileTemplate } from "../templates/engine";
+import {
+  classifyTemplateGenerateFilter,
+  collectTemplateGenerateLabels,
+  compileTemplate,
+  matchingTemplateCount,
+} from "../templates/engine";
 import { templateAlgorithms } from "../templates";
 import { mulberry32, pick, shuffle } from "./rng";
 import type { ProblemAlgorithm } from "./types";
@@ -221,6 +226,11 @@ function emitGenerated(
   algorithm: ProblemAlgorithm,
   input: GenerateProblemsInput,
   seed: number,
+  pickOpts?: {
+    variantIndex?: number;
+    variantId?: string;
+    skipMatchFilter?: boolean;
+  },
 ): BankProblem {
   const rng = mulberry32(seed);
   const requested = input.difficulty;
@@ -244,6 +254,11 @@ function emitGenerated(
     seed,
     locale: input.locale,
     anchorExample: input.anchorExample,
+    variantIndex: pickOpts?.variantIndex,
+    variantId: pickOpts?.variantId,
+    filterDifficulty: input.difficulty,
+    filterYear: input.year,
+    skipMatchFilter: pickOpts?.skipMatchFilter,
   });
   return {
     id: `gen-${algorithm.id}-${seed}`,
@@ -258,10 +273,30 @@ function emitGenerated(
   };
 }
 
+/** Cycle through every family skeleton. Offset comes from the batch seed. */
+export function batchVariantIndex(
+  index: number,
+  variantCount: number,
+  offset = 0,
+) {
+  if (variantCount <= 1) return 0;
+  const start = ((offset % variantCount) + variantCount) % variantCount;
+  return (start + index) % variantCount;
+}
+
+export type GenerateFromTemplateOptions = {
+  variantId?: string;
+  /** Resample one skeleton only (variants of the selected card). */
+  pinVariant?: boolean;
+  /** Pin by index when the skeleton has no id. */
+  variantIndex?: number;
+};
+
 /** Compile a JSON family in memory and sample `count` problems from it. */
 export function generateFromTemplate(
   rawTemplate: unknown,
   raw: GenerateProblemsInput,
+  options?: GenerateFromTemplateOptions,
 ): BankProblem[] {
   const algorithm = compileTemplate(rawTemplate);
   const input = generateProblemsSchema.parse({
@@ -269,11 +304,43 @@ export function generateFromTemplate(
     topic: algorithm.topic,
     kind: algorithm.id,
   });
+  const skipMatchFilter = Boolean(options?.pinVariant || options?.variantId);
   const root =
     input.seed ?? Date.now() ^ Math.floor(Math.random() * 0x7fffffff);
+  let variantCount = algorithm.variantCount ?? 1;
+  if (variantCount === 0) return [];
+  if (!skipMatchFilter) {
+    variantCount = matchingTemplateCount(rawTemplate, {
+      difficulty: input.difficulty,
+      year: input.year,
+    });
+    if (variantCount === 0) return [];
+  }
   const problems: BankProblem[] = [];
   for (let i = 0; i < input.count; i += 1) {
-    problems.push(emitGenerated(algorithm, input, root + i * 9973));
+    const variantIndex = options?.variantId
+      ? undefined
+      : options?.variantIndex != null
+        ? options.variantIndex
+        : options?.pinVariant
+          ? 0
+          : batchVariantIndex(i, variantCount, root);
+    try {
+      problems.push(
+        emitGenerated(algorithm, input, root + i * 9973, {
+          variantIndex,
+          variantId: options?.variantId,
+          skipMatchFilter,
+        }),
+      );
+    } catch (error) {
+      if (error instanceof Error && error.message === "NO_TEMPLATE_MATCH") {
+        return [];
+      }
+      throw error;
+    }
   }
   return problems;
 }
+
+export { classifyTemplateGenerateFilter, collectTemplateGenerateLabels };
