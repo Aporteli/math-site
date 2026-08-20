@@ -1651,7 +1651,7 @@ export function ProblemBankWorkspace({
               <div className={`grid gap-3 sm:grid-cols-2 ${genTopic !== 'any' ? 'lg:grid-cols-6' : 'lg:grid-cols-5'}`}>
                 <div>
                   <label htmlFor={`${genId}-topic`} className="block text-sm font-medium text-ink">
-                    {copy.generate.topic}
+                    {copy.generate.topic} 
                   </label>
                   <SelectMenu
                     id={`${genId}-topic`}
