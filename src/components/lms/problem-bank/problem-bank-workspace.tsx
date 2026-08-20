@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Calculator,
   Check,
@@ -18,20 +18,37 @@ import {
   Shuffle,
   Trash2,
   X,
-} from "lucide-react";
-import { KatexPreview } from "@/components/math/katex-preview";
-import { PageHero } from "@/components/ui/page-hero";
-import { SelectMenu } from "@/components/ui/select-menu";
-import { ImportFamilyModal } from "@/components/lms/problem-bank/import-family-modal";
-import { CreateCustomCardModal } from "@/components/lms/problem-bank/create-custom-card-modal";
-import { EditProblemModal } from "@/components/lms/problem-bank/edit-problem-modal";
-import { FullSolutionModal } from "@/components/lms/problem-bank/full-solution-modal";
-import { FamilyControlCenter } from "@/components/lms/problem-bank/family-control-center";
-import { ProblemCardMenu } from "@/components/lms/problem-bank/problem-card-menu";
-import { TeacherAiChatPanel } from "@/components/lms/problem-bank/teacher-ai-chat-panel";
-import { AiProviderIcon } from "@/components/lms/problem-bank/ai-provider-icon";
-import { defaultLocale, localePath, locales, type Locale } from "@/i18n/config";
-import { handlePlainTextPaste } from "@/lib/helpers/plain-text-paste";
+} from 'lucide-react';
+import { KatexPreview } from '@/components/math/katex-preview';
+import { PageHero } from '@/components/ui/page-hero';
+import { SelectMenu } from '@/components/ui/select-menu';
+import { CopyPromptButton } from './copy-prompt-button';
+import { StatRow } from './stat-row';
+import { FilterSelect } from './filter-select';
+import {
+  fieldClass,
+  panelClass,
+  sourceBadgeLabel,
+  problemBranchLabel,
+  hideCatalogSeed,
+  generateLabelsFromFamilies,
+  walletAmount,
+  walletChipLabel,
+  walletHint,
+  walletTone,
+  uniqueProviders,
+  difficultyTone,
+} from './helpers';
+import { ImportFamilyModal } from '@/components/lms/problem-bank/import-family-modal';
+import { CreateCustomCardModal } from '@/components/lms/problem-bank/create-custom-card-modal';
+import { EditProblemModal } from '@/components/lms/problem-bank/edit-problem-modal';
+import { FullSolutionModal } from '@/components/lms/problem-bank/full-solution-modal';
+import { FamilyControlCenter } from '@/components/lms/problem-bank/family-control-center';
+import { ProblemCardMenu } from '@/components/lms/problem-bank/problem-card-menu';
+import { TeacherAiChatPanel } from '@/components/lms/problem-bank/teacher-ai-chat-panel';
+import { AiProviderIcon } from '@/components/lms/problem-bank/ai-provider-icon';
+import { defaultLocale, localePath, locales, type Locale } from '@/i18n/config';
+import { handlePlainTextPaste } from '@/lib/helpers/plain-text-paste';
 import {
   generateDiverseProblemsAction,
   copyLabToBankAction,
@@ -45,7 +62,7 @@ import {
   saveProblemsAction,
   saveToLabAction,
   syncLessonSetAction,
-} from "@/lib/math/problems/actions";
+} from '@/lib/math/problems/actions';
 import {
   EMPTY_PROBLEM_FILTERS,
   PROBLEM_BANK_TOOLS,
@@ -92,160 +109,9 @@ import {
   type ProblemTopic,
   type ProblemYear,
   type SavedProblemFamily,
-} from "@/lib/math/problems";
-import {
-  childrenOf,
-  taxonomyLabel,
-  type TaxonomyNodeDto,
-} from "@/lib/math/problems/taxonomy-shared";
-import { stashProblemForLab, takeProblemForLab } from "@/lib/math/problems/lab-transfer";
-import { setCookie } from "@/lib/helpers/cookies";
-
-const fieldClass =
-  "w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
-
-const panelClass =
-  "rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5";
-
-function sourceBadgeLabel(copy: ProblemBankCopy, problem: BankProblem) {
-  if (problem.templateId === "ai-verified") return copy.sources.verified;
-  if (problem.templateId === "ai-plain") return copy.sources.unchecked;
-  return copy.sources[problem.source];
-}
-
-/** Prefer curriculum Branch name; fall back to legacy topic label. */
-function problemBranchLabel(
-  copy: ProblemBankCopy,
-  problem: BankProblem,
-  nodes: TaxonomyNodeDto[],
-  locale: Locale,
-) {
-  const byId = new Map(nodes.map((node) => [node.id, node]));
-
-  if (problem.branchId) {
-    const branch = byId.get(problem.branchId);
-    if (branch?.level === "branch") return taxonomyLabel(branch, locale);
-  }
-
-  if (problem.topicNodeId) {
-    const topic = byId.get(problem.topicNodeId);
-    if (topic?.parentId) {
-      const branch = byId.get(topic.parentId);
-      if (branch?.level === "branch") return taxonomyLabel(branch, locale);
-    }
-  }
-
-  return topicLabel(copy.topics, problem.topic);
-}
-
-function hideCatalogSeed(id: string) {
-  const hidden = new Set(parseHiddenSeedIds(readCookie(HIDDEN_SEED_COOKIE)));
-  hidden.add(id);
-  setCookie(HIDDEN_SEED_COOKIE, [...hidden].join(","));
-}
-
-function generateLabelsFromFamilies(list: SavedProblemFamily[]) {
-  const years = new Set<ProblemYear>();
-  const difficulties = new Set<ProblemDifficulty>();
-  for (const family of list) {
-    try {
-      const labels = collectTemplateGenerateLabels(
-        JSON.parse(family.json) as unknown,
-      );
-      for (const year of labels.years) years.add(year);
-      for (const difficulty of labels.difficulties) {
-        difficulties.add(difficulty);
-      }
-    } catch {
-      /* skip unreadable family json */
-    }
-  }
-  return { years, difficulties };
-}
-
-function readCookie(name: string) {
-  const match = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(`${name}=`));
-  return match?.slice(name.length + 1);
-}
-
-type GenerateCopy = ProblemBankCopy["generate"];
-
-function walletAmount(copy: GenerateCopy, wallet: AiModelStatus["wallet"]) {
-  if (wallet.balance && wallet.currency) {
-    return replaceTokens(copy.walletAmount, {
-      amount: wallet.balance,
-      currency: wallet.currency,
-    });
-  }
-  return "";
-}
-
-function walletChipLabel(copy: GenerateCopy, wallet: AiModelStatus["wallet"]) {
-  switch (wallet.state) {
-    case "missing_key":
-      return copy.limitNoKey;
-    case "invalid_key":
-      return copy.walletInvalid;
-    case "needs_billing":
-      return copy.walletNeedsBilling;
-    case "ready": {
-      const amount = walletAmount(copy, wallet);
-      if (amount) return amount;
-      return wallet.kind === "free" ? copy.walletFree : copy.walletReady;
-    }
-    default:
-      return wallet.kind === "free" ? copy.walletFree : copy.walletUnknown;
-  }
-}
-
-function walletHint(copy: GenerateCopy, wallet: AiModelStatus["wallet"]) {
-  switch (wallet.state) {
-    case "missing_key":
-      return copy.walletHintMissing;
-    case "invalid_key":
-      return copy.walletHintInvalid;
-    case "needs_billing":
-      return copy.walletHintNeedsBilling;
-    case "ready": {
-      if (wallet.kind === "free") return copy.walletHintReadyFree;
-      const detail = walletAmount(copy, wallet) || copy.walletReady;
-      return replaceTokens(copy.walletHintReadyPaid, { detail });
-    }
-    default:
-      return wallet.kind === "free"
-        ? copy.walletHintReadyFree
-        : copy.walletHintUnknown;
-  }
-}
-
-function walletTone(wallet: AiModelStatus["wallet"], selected: boolean) {
-  if (wallet.state === "needs_billing" || wallet.state === "invalid_key") {
-    return "border-brass/20 bg-brass-tint/40 text-brass-strong";
-  }
-  if (wallet.state === "missing_key") {
-    return "border-hairline bg-white text-muted";
-  }
-  if (selected) return "border-navy/20 bg-navy-tint text-navy";
-  return "border-hairline bg-white text-body";
-}
-
-function uniqueProviders(status: AiModelStatus[]) {
-  const seen = new Set<string>();
-  return status.filter((item) => {
-    if (seen.has(item.provider)) return false;
-    seen.add(item.provider);
-    return true;
-  });
-}
-
-const difficultyTone: Record<ProblemDifficulty, string> = {
-  easy: "bg-navy-tint text-navy",
-  medium: "bg-brass-tint text-brass",
-  hard: "border border-hairline bg-paper-deep text-brass-strong",
-  olympiad: "bg-navy text-brass-soft",
-};
+} from '@/lib/math/problems';
+import { childrenOf, taxonomyLabel, type TaxonomyNodeDto } from '@/lib/math/problems/taxonomy-shared';
+import { stashProblemForLab, takeProblemForLab } from '@/lib/math/problems/lab-transfer';
 
 interface ProblemBankWorkspaceProps {
   locale: Locale;
@@ -258,7 +124,7 @@ interface ProblemBankWorkspaceProps {
   /** When true, load saved bank problems if the initial list is only catalog seeds. */
   hydrateSavedBank?: boolean;
   visibleToolIds?: ProblemBankToolId[];
-  initialPanel?: "generate" | "variants" | "families" | "chat" | null;
+  initialPanel?: 'generate' | 'variants' | 'families' | 'chat' | null;
   showGenerateVariants?: boolean;
   showSendToLab?: boolean;
   showCreateCard?: boolean;
@@ -282,14 +148,14 @@ export function ProblemBankWorkspace({
   initialFamilies = [],
   hydrateSavedBank = true,
   visibleToolIds,
-  initialPanel = "generate",
+  initialPanel = 'generate',
   showGenerateVariants = true,
   showSendToLab = false,
   showCreateCard = false,
   showSaveToLab = false,
   initialLabIds = [],
   enableSlashPrompts = false,
-  slashPromptsUserId = "",
+  slashPromptsUserId = '',
   taxonomyNodes = [],
 }: ProblemBankWorkspaceProps) {
   const router = useRouter();
@@ -297,49 +163,38 @@ export function ProblemBankWorkspace({
   const genId = useId();
   const [bank, setBank] = useState<BankProblem[]>(initialBank);
   const [filters, setFilters] = useState<ProblemFilters>(EMPTY_PROBLEM_FILTERS);
-  const [selectedId, setSelectedId] = useState<string | null>(
-    initialBank[0]?.id ?? null,
-  );
-  const [lessonSetIds, setLessonSetIds] =
-    useState<string[]>(initialLessonSetIds);
+  const [selectedId, setSelectedId] = useState<string | null>(initialBank[0]?.id ?? null);
+  const [lessonSetIds, setLessonSetIds] = useState<string[]>(initialLessonSetIds);
   const [labIds, setLabIds] = useState<string[]>(initialLabIds);
   const [draftIds, setDraftIds] = useState<string[]>([]);
   const [showSolution, setShowSolution] = useState(false);
-  const [panel, setPanel] = useState<
-    "generate" | "variants" | "families" | "chat" | null
-  >(initialPanel);
+  const [panel, setPanel] = useState<'generate' | 'variants' | 'families' | 'chat' | null>(initialPanel);
   const [importOpen, setImportOpen] = useState(false);
   const [customCardOpen, setCustomCardOpen] = useState(false);
   const [editingProblem, setEditingProblem] = useState<BankProblem | null>(null);
-  const [taxonomyTree, setTaxonomyTree] =
-    useState<TaxonomyNodeDto[]>(taxonomyNodes);
+  const [taxonomyTree, setTaxonomyTree] = useState<TaxonomyNodeDto[]>(taxonomyNodes);
   const [selectedProblemIds, setSelectedProblemIds] = useState<string[]>([]);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressTriggeredRef = useRef(false);
   const [fullSolutionOpen, setFullSolutionOpen] = useState(false);
-  const [families, setFamilies] =
-    useState<SavedProblemFamily[]>(initialFamilies);
+  const [families, setFamilies] = useState<SavedProblemFamily[]>(initialFamilies);
   const [focusFamilyId, setFocusFamilyId] = useState<string | null>(null);
   const [problemChatOpen, setProblemChatOpen] = useState(false);
-  const [problemChatDraft, setProblemChatDraft] = useState("");
+  const [problemChatDraft, setProblemChatDraft] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
-  const [genTopic, setGenTopic] = useState<ProblemTopic | "any">("any");
-  const [genKind, setGenKind] = useState<string>("any");
-  const [genDifficulty, setGenDifficulty] = useState<ProblemDifficulty | "any">(
-    "any",
-  );
-  const [genYear, setGenYear] = useState<ProblemYear | "any">("any");
+  const [genTopic, setGenTopic] = useState<ProblemTopic | 'any'>('any');
+  const [genKind, setGenKind] = useState<string>('any');
+  const [genDifficulty, setGenDifficulty] = useState<ProblemDifficulty | 'any'>('any');
+  const [genYear, setGenYear] = useState<ProblemYear | 'any'>('any');
   const [genCount, setGenCount] = useState(5);
-  const [genMode, setGenMode] = useState<"algorithms" | "diverse" | "families">(
-    "diverse",
-  );
-  const [genCheck, setGenCheck] = useState<AiCheckMode>("verified");
+  const [genMode, setGenMode] = useState<'algorithms' | 'diverse' | 'families'>('diverse');
+  const [genCheck, setGenCheck] = useState<AiCheckMode>('verified');
   const [genReplyLocale, setGenReplyLocale] = useState<Locale>(defaultLocale);
   const [genModel, setGenModel] = useState<AiModelId>(DEFAULT_AI_MODEL);
   const [modelStatus, setModelStatus] = useState<AiModelStatus[]>([]);
-  const [genRequest, setGenRequest] = useState("");
+  const [genRequest, setGenRequest] = useState('');
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [variantCount, setVariantCount] = useState(5);
@@ -389,9 +244,7 @@ export function ProblemBankWorkspace({
       if (cancelled || result.problems.length === 0) return;
       setBank((current) => {
         const ids = new Set(current.map((problem) => problem.id));
-        const incoming = result.problems.filter(
-          (problem) => !ids.has(problem.id),
-        );
+        const incoming = result.problems.filter((problem) => !ids.has(problem.id));
         return incoming.length > 0 ? [...incoming, ...current] : current;
       });
       setLessonSetIds(result.lessonSetIds);
@@ -412,9 +265,9 @@ export function ProblemBankWorkspace({
     const topicIdsByBranchId: Record<string, string[]> = {};
     const topicSlugsByBranchId: Record<string, string[]> = {};
     for (const node of taxonomyTree) {
-      if (node.level !== "topic") continue;
+      if (node.level !== 'topic') continue;
       topicSlugById[node.id] = node.slug;
-      const branchId = node.parentId ?? "";
+      const branchId = node.parentId ?? '';
       if (!branchId) continue;
       (topicIdsByBranchId[branchId] ??= []).push(node.id);
       (topicSlugsByBranchId[branchId] ??= []).push(node.slug);
@@ -423,38 +276,27 @@ export function ProblemBankWorkspace({
   }, [taxonomyTree]);
 
   const visible = filterProblems(bank, filters, taxonomyFilterContext);
-  const visibleIds = useMemo(
-    () => visible.map((problem) => problem.id),
-    [visible],
-  );
+  const visibleIds = useMemo(() => visible.map((problem) => problem.id), [visible]);
   const selectedVisibleIds = useMemo(
     () => selectedProblemIds.filter((id) => visibleIds.includes(id)),
     [selectedProblemIds, visibleIds],
   );
-  const allVisibleSelected =
-    visibleIds.length > 0 && selectedVisibleIds.length === visibleIds.length;
+  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleIds.length === visibleIds.length;
 
-  const branchOptions = useMemo(
-    () => childrenOf(taxonomyTree, null, "branch").map((n) => n.id),
-    [taxonomyTree],
-  );
+  const branchOptions = useMemo(() => childrenOf(taxonomyTree, null, 'branch').map((n) => n.id), [taxonomyTree]);
   const topicOptions = useMemo(() => {
-    if (filters.branchId === "all") {
-      return taxonomyTree.filter((n) => n.level === "topic").map((n) => n.id);
+    if (filters.branchId === 'all') {
+      return taxonomyTree.filter((n) => n.level === 'topic').map((n) => n.id);
     }
-    return childrenOf(taxonomyTree, filters.branchId, "topic").map((n) => n.id);
+    return childrenOf(taxonomyTree, filters.branchId, 'topic').map((n) => n.id);
   }, [taxonomyTree, filters.branchId]);
   const subtopicOptions = useMemo(() => {
-    if (filters.topicNodeId === "all") return [] as string[];
-    return childrenOf(taxonomyTree, filters.topicNodeId, "subtopic").map(
-      (n) => n.id,
-    );
+    if (filters.topicNodeId === 'all') return [] as string[];
+    return childrenOf(taxonomyTree, filters.topicNodeId, 'subtopic').map((n) => n.id);
   }, [taxonomyTree, filters.topicNodeId]);
   const conceptOptions = useMemo(() => {
-    if (filters.subtopicId === "all") return [] as string[];
-    return childrenOf(taxonomyTree, filters.subtopicId, "concept").map(
-      (n) => n.id,
-    );
+    if (filters.subtopicId === 'all') return [] as string[];
+    return childrenOf(taxonomyTree, filters.subtopicId, 'concept').map((n) => n.id);
   }, [taxonomyTree, filters.subtopicId]);
 
   const taxonomyLabels = useMemo(() => {
@@ -465,51 +307,41 @@ export function ProblemBankWorkspace({
     return labels;
   }, [taxonomyTree, locale]);
 
-  function updateTaxonomyFilter(
-    key: "branchId" | "topicNodeId" | "subtopicId" | "conceptId",
-    value: string,
-  ) {
+  function updateTaxonomyFilter(key: 'branchId' | 'topicNodeId' | 'subtopicId' | 'conceptId', value: string) {
     setFilters((current) => {
       const next = { ...current, [key]: value };
-      if (key === "branchId") {
-        next.topicNodeId = "all";
-        next.subtopicId = "all";
-        next.conceptId = "all";
-      } else if (key === "topicNodeId") {
-        next.subtopicId = "all";
-        next.conceptId = "all";
-      } else if (key === "subtopicId") {
-        next.conceptId = "all";
+      if (key === 'branchId') {
+        next.topicNodeId = 'all';
+        next.subtopicId = 'all';
+        next.conceptId = 'all';
+      } else if (key === 'topicNodeId') {
+        next.subtopicId = 'all';
+        next.conceptId = 'all';
+      } else if (key === 'subtopicId') {
+        next.conceptId = 'all';
       }
       return next;
     });
   }
   const selected = bank.find((problem) => problem.id === selectedId) ?? null;
-  const selectedModelStatus = modelStatus.find(
-    (status) => status.id === genModel,
-  );
+  const selectedModelStatus = modelStatus.find((status) => status.id === genModel);
   const lessonSet = lessonSetIds
     .map((id) => bank.find((problem) => problem.id === id))
     .filter((problem): problem is BankProblem => Boolean(problem));
-  const generatedCount = bank.filter(
-    (problem) => problem.source === "generated" || problem.source === "ai",
-  ).length;
+  const generatedCount = bank.filter((problem) => problem.source === 'generated' || problem.source === 'ai').length;
 
   useEffect(() => {
     setCasNotice(null);
     setCasOk(null);
   }, [selectedId]);
 
-  function updateFilter<K extends keyof ProblemFilters>(
-    key: K,
-    value: ProblemFilters[K],
-  ) {
+  function updateFilter<K extends keyof ProblemFilters>(key: K, value: ProblemFilters[K]) {
     setFilters((current) => ({ ...current, [key]: value }));
   }
 
-  function selectGenTopic(value: ProblemTopic | "any") {
+  function selectGenTopic(value: ProblemTopic | 'any') {
     setGenTopic(value);
-    setGenKind("any");
+    setGenKind('any');
   }
 
   const selectedKindFamily =
@@ -517,7 +349,7 @@ export function ProblemBankWorkspace({
       (family) =>
         !family.parentId &&
         family.slug === parseFamilyKind(genKind) &&
-        (genTopic === "any" || family.topic === genTopic),
+        (genTopic === 'any' || family.topic === genTopic),
     ) ?? null;
 
   const familyKindOptions = families.map((family) => ({
@@ -526,16 +358,13 @@ export function ProblemBankWorkspace({
   }));
 
   const selectedGenerateFamily =
-    genKind === "any"
-      ? null
-      : (families.find((family) => family.slug === parseFamilyKind(genKind)) ??
-        null);
+    genKind === 'any' ? null : (families.find((family) => family.slug === parseFamilyKind(genKind)) ?? null);
 
   const algorithmKindOptions =
-    genTopic === "any"
-      ? [{ value: "any", label: copy.generate.anyKind }]
+    genTopic === 'any'
+      ? [{ value: 'any', label: copy.generate.anyKind }]
       : [
-          { value: "any", label: copy.generate.anyKind },
+          { value: 'any', label: copy.generate.anyKind },
           ...groupedKindsForTopic(genTopic).flatMap((group) => [
             ...(group.groupId
               ? [
@@ -551,29 +380,23 @@ export function ProblemBankWorkspace({
           ]),
         ];
 
-  const familyGenerateTargets: SavedProblemFamily[] = selectedGenerateFamily
-    ? [selectedGenerateFamily]
-    : families;
+  const familyGenerateTargets: SavedProblemFamily[] = selectedGenerateFamily ? [selectedGenerateFamily] : families;
 
-  const familyGenerateLabels = generateLabelsFromFamilies(
-    familyGenerateTargets,
-  );
+  const familyGenerateLabels = generateLabelsFromFamilies(familyGenerateTargets);
   const visibleTools = visibleToolIds
     ? PROBLEM_BANK_TOOLS.filter((tool) => visibleToolIds.includes(tool.id))
     : PROBLEM_BANK_TOOLS;
 
   function generateFilters() {
     return {
-      difficulty: genDifficulty === "any" ? undefined : genDifficulty,
-      year: genYear === "any" ? undefined : genYear,
+      difficulty: genDifficulty === 'any' ? undefined : genDifficulty,
+      year: genYear === 'any' ? undefined : genYear,
     };
   }
 
   function familyGenerateMissNotice(raw: unknown) {
     const status = classifyTemplateGenerateFilter(raw, generateFilters());
-    return status === "no_match"
-      ? copy.familyCenter.noMatchGenerate
-      : copy.familyCenter.emptyGenerate;
+    return status === 'no_match' ? copy.familyCenter.noMatchGenerate : copy.familyCenter.emptyGenerate;
   }
 
   function generateFromFamilyKind(family: SavedProblemFamily) {
@@ -594,11 +417,7 @@ export function ProblemBankWorkspace({
       applyCreated(created);
       setNotice(null);
     } catch (error) {
-      setNotice(
-        error instanceof Error && error.message.trim()
-          ? error.message
-          : copy.generate.errorFailed,
-      );
+      setNotice(error instanceof Error && error.message.trim() ? error.message : copy.generate.errorFailed);
     }
   }
 
@@ -612,12 +431,7 @@ export function ProblemBankWorkspace({
       const filters = generateFilters();
       const usable = list.filter((family) => {
         try {
-          return (
-            classifyTemplateGenerateFilter(
-              JSON.parse(family.json) as unknown,
-              filters,
-            ) === "ok"
-          );
+          return classifyTemplateGenerateFilter(JSON.parse(family.json) as unknown, filters) === 'ok';
         } catch {
           return false;
         }
@@ -625,31 +439,19 @@ export function ProblemBankWorkspace({
       if (usable.length === 0) {
         const anyCards = list.some((family) => {
           try {
-            return (
-              classifyTemplateGenerateFilter(
-                JSON.parse(family.json) as unknown,
-                {},
-              ) !== "empty"
-            );
+            return classifyTemplateGenerateFilter(JSON.parse(family.json) as unknown, {}) !== 'empty';
           } catch {
             return false;
           }
         });
-        setNotice(
-          anyCards
-            ? copy.familyCenter.noMatchGenerate
-            : copy.familyCenter.emptyGenerate,
-        );
+        setNotice(anyCards ? copy.familyCenter.noMatchGenerate : copy.familyCenter.emptyGenerate);
         return;
       }
       const created: BankProblem[] = [];
       let remaining = genCount;
       for (let i = 0; i < usable.length; i += 1) {
         const left = usable.length - i;
-        const count =
-          i === usable.length - 1
-            ? remaining
-            : Math.max(1, Math.floor(remaining / left));
+        const count = i === usable.length - 1 ? remaining : Math.max(1, Math.floor(remaining / left));
         remaining -= count;
         created.push(
           ...stampFamilySource(
@@ -669,11 +471,7 @@ export function ProblemBankWorkspace({
       applyCreated(created);
       setNotice(null);
     } catch (error) {
-      setNotice(
-        error instanceof Error && error.message.trim()
-          ? error.message
-          : copy.generate.errorFailed,
-      );
+      setNotice(error instanceof Error && error.message.trim() ? error.message : copy.generate.errorFailed);
     }
   }
 
@@ -685,21 +483,16 @@ export function ProblemBankWorkspace({
 
   function selectGenKind(value: string) {
     setGenKind(value);
-    if (genMode === "families") {
+    if (genMode === 'families') {
       const slug = parseFamilyKind(value);
-      const family = slug
-        ? (families.find((item) => item.slug === slug) ?? null)
-        : null;
+      const family = slug ? (families.find((item) => item.slug === slug) ?? null) : null;
       if (family) generateFromFamilyKind(family);
       return;
     }
     const slug = parseFamilyKind(value);
     const family = slug
       ? (families.find(
-          (item) =>
-            !item.parentId &&
-            item.slug === slug &&
-            (genTopic === "any" || item.topic === genTopic),
+          (item) => !item.parentId && item.slug === slug && (genTopic === 'any' || item.topic === genTopic),
         ) ?? null)
       : null;
     if (family) generateSelectedKind(family);
@@ -709,30 +502,22 @@ export function ProblemBankWorkspace({
     return ids.map((id) => idMap[id] ?? id);
   }
 
-  function mergeSaved(
-    current: BankProblem[],
-    saved: BankProblem[],
-    idMap: Record<string, string>,
-  ) {
+  function mergeSaved(current: BankProblem[], saved: BankProblem[], idMap: Record<string, string>) {
     const replaced = new Set(Object.keys(idMap));
     const savedIds = new Set(saved.map((problem) => problem.id));
-    const rest = current.filter(
-      (problem) => !replaced.has(problem.id) && !savedIds.has(problem.id),
-    );
+    const rest = current.filter((problem) => !replaced.has(problem.id) && !savedIds.has(problem.id));
     return [...saved, ...rest];
   }
 
-  function persistErrorMessage(error: "unauthorized" | "failed") {
-    return error === "unauthorized"
-      ? copy.generate.errorUnauthorized
-      : copy.generate.saveFailed;
+  function persistErrorMessage(error: 'unauthorized' | 'failed') {
+    return error === 'unauthorized' ? copy.generate.errorUnauthorized : copy.generate.saveFailed;
   }
 
   async function saveProblems(problems: BankProblem[]) {
     if (problems.length === 0) return null;
     let payload;
     try {
-      payload = problems.map((problem) => toPersistInput(problem, "bank"));
+      payload = problems.map((problem) => toPersistInput(problem, 'bank'));
     } catch {
       setNotice(copy.generate.saveFailed);
       return null;
@@ -746,19 +531,11 @@ export function ProblemBankWorkspace({
     // On the lab page, bank saves must not stay in the lab list.
     if (showSaveToLab) {
       const originalIds = new Set(problems.map((problem) => problem.id));
-      setBank((current) =>
-        current.filter((problem) => !originalIds.has(problem.id)),
-      );
-      setDraftIds((current) =>
-        current.filter((id) => !originalIds.has(id)),
-      );
+      setBank((current) => current.filter((problem) => !originalIds.has(problem.id)));
+      setDraftIds((current) => current.filter((id) => !originalIds.has(id)));
       setLabIds((current) => current.filter((id) => !originalIds.has(id)));
-      setSelectedId((current) =>
-        current && originalIds.has(current) ? null : current,
-      );
-      setNotice(
-        replaceTokens(copy.generate.saved, { count: result.saved.length }),
-      );
+      setSelectedId((current) => (current && originalIds.has(current) ? null : current));
+      setNotice(replaceTokens(copy.generate.saved, { count: result.saved.length }));
       return result;
     }
 
@@ -769,20 +546,16 @@ export function ProblemBankWorkspace({
         result.idMap,
       ),
     );
-    setSelectedId((current) =>
-      current ? (result.idMap[current] ?? current) : current,
-    );
+    setSelectedId((current) => (current ? (result.idMap[current] ?? current) : current));
     setLessonSetIds((current) => remapIds(current, result.idMap));
-    setNotice(
-      replaceTokens(copy.generate.saved, { count: result.saved.length }),
-    );
+    setNotice(replaceTokens(copy.generate.saved, { count: result.saved.length }));
     return result;
   }
 
   async function saveProblemToLab(problem: BankProblem) {
     let payload;
     try {
-      payload = [toPersistInput(problem, "lab")];
+      payload = [toPersistInput(problem, 'lab')];
     } catch {
       setNotice(copy.generate.saveFailed);
       return;
@@ -801,9 +574,7 @@ export function ProblemBankWorkspace({
           result.idMap,
         ),
       );
-      setSelectedId((current) =>
-        current ? (result.idMap[current] ?? current) : current,
-      );
+      setSelectedId((current) => (current ? (result.idMap[current] ?? current) : current));
       setLessonSetIds((current) => remapIds(current, result.idMap));
       setLabIds(result.labIds);
       setNotice(copy.cardMenu.savedToLab);
@@ -816,14 +587,10 @@ export function ProblemBankWorkspace({
     const originalId = editingProblem?.id ?? problem.id;
     const inLab =
       showSaveToLab &&
-      (labIds.includes(originalId) ||
-        problem.collection === "lab" ||
-        editingProblem?.collection === "lab");
+      (labIds.includes(originalId) || problem.collection === 'lab' || editingProblem?.collection === 'lab');
 
     if (isUnsavedId(originalId)) {
-      setBank((current) =>
-        current.map((item) => (item.id === originalId ? problem : item)),
-      );
+      setBank((current) => current.map((item) => (item.id === originalId ? problem : item)));
       setNotice(copy.editCard.saved);
       return true;
     }
@@ -831,31 +598,24 @@ export function ProblemBankWorkspace({
     let payload;
     try {
       payload = [
-        toPersistInput(
-          { ...problem, id: originalId, collection: inLab ? "lab" : "bank" },
-          inLab ? "lab" : "bank",
-        ),
+        toPersistInput({ ...problem, id: originalId, collection: inLab ? 'lab' : 'bank' }, inLab ? 'lab' : 'bank'),
       ];
     } catch {
       setNotice(copy.editCard.errorFailed);
       return false;
     }
 
-    const result = inLab
-      ? await saveToLabAction(payload)
-      : await saveProblemsAction(payload);
+    const result = inLab ? await saveToLabAction(payload) : await saveProblemsAction(payload);
     if (!result.ok) {
       setNotice(persistErrorMessage(result.error));
       return false;
     }
 
     setBank((current) => mergeSaved(current, result.saved, result.idMap));
-    setSelectedId((current) =>
-      current ? (result.idMap[current] ?? current) : current,
-    );
+    setSelectedId((current) => (current ? (result.idMap[current] ?? current) : current));
     setLessonSetIds((current) => remapIds(current, result.idMap));
-    if (inLab && "labIds" in result) {
-      setLabIds(result.labIds);
+    if (inLab && 'labIds' in result) {
+      setLabIds((result as { labIds: string[] }).labIds);
     }
     setNotice(copy.editCard.saved);
     return true;
@@ -888,9 +648,7 @@ export function ProblemBankWorkspace({
       setLabIds((current) => current.filter((id) => id !== problem.id));
       setBank((current) => current.filter((item) => item.id !== problem.id));
       setDraftIds((current) => current.filter((id) => id !== problem.id));
-      setSelectedProblemIds((current) =>
-        current.filter((id) => id !== problem.id),
-      );
+      setSelectedProblemIds((current) => current.filter((id) => id !== problem.id));
       if (selectedId === problem.id) {
         setSelectedId(null);
         setShowSolution(false);
@@ -907,9 +665,7 @@ export function ProblemBankWorkspace({
       }
       setLabIds((current) => current.filter((id) => id !== problem.id));
       setBank((current) => current.filter((item) => item.id !== problem.id));
-      setSelectedProblemIds((current) =>
-        current.filter((id) => id !== problem.id),
-      );
+      setSelectedProblemIds((current) => current.filter((id) => id !== problem.id));
       if (selectedId === problem.id) {
         setSelectedId(null);
         setShowSolution(false);
@@ -947,16 +703,12 @@ export function ProblemBankWorkspace({
       ),
     );
 
-    setSelectedId((current) =>
-      current ? (result.idMap[current] ?? current) : current,
-    );
+    setSelectedId((current) => (current ? (result.idMap[current] ?? current) : current));
     setLessonSetIds(result.lessonSetIds);
   }
 
   async function toggleInSet(id: string) {
-    const next = lessonSetIds.includes(id)
-      ? lessonSetIds.filter((item) => item !== id)
-      : [...lessonSetIds, id];
+    const next = lessonSetIds.includes(id) ? lessonSetIds.filter((item) => item !== id) : [...lessonSetIds, id];
     setSaving(true);
     try {
       await persistLessonSet(next);
@@ -976,9 +728,7 @@ export function ProblemBankWorkspace({
         }
         setLabIds((current) => current.filter((item) => item !== id));
         setBank((current) => current.filter((problem) => problem.id !== id));
-        setSelectedProblemIds((current) =>
-          current.filter((item) => item !== id),
-        );
+        setSelectedProblemIds((current) => current.filter((item) => item !== id));
         if (selectedId === id) {
           setSelectedId(null);
           setShowSolution(false);
@@ -1034,15 +784,10 @@ export function ProblemBankWorkspace({
     }
 
     const idSet = new Set(ids);
-    const labPersisted = ids.filter(
-      (id) => showSaveToLab && labIds.includes(id) && !isUnsavedId(id),
-    );
+    const labPersisted = ids.filter((id) => showSaveToLab && labIds.includes(id) && !isUnsavedId(id));
     const seedIds = ids.filter((id) => isCatalogSeedId(id));
     const bankPersisted = ids.filter(
-      (id) =>
-        !isUnsavedId(id) &&
-        !isCatalogSeedId(id) &&
-        !(showSaveToLab && labIds.includes(id)),
+      (id) => !isUnsavedId(id) && !isCatalogSeedId(id) && !(showSaveToLab && labIds.includes(id)),
     );
 
     setSaving(true);
@@ -1090,9 +835,7 @@ export function ProblemBankWorkspace({
       if (bankPersisted.length > 0 || seedIds.length > 0) {
         await persistLessonSet(nextSet, nextBank);
       }
-      setNotice(
-        replaceTokens(copy.removeSelectedDone, { count: ids.length }),
-      );
+      setNotice(replaceTokens(copy.removeSelectedDone, { count: ids.length }));
     } finally {
       setSaving(false);
     }
@@ -1149,9 +892,7 @@ export function ProblemBankWorkspace({
       setBulkSelectMode(false);
       return;
     }
-    setSelectedProblemIds((current) => [
-      ...new Set([...current, ...visibleIds]),
-    ]);
+    setSelectedProblemIds((current) => [...new Set([...current, ...visibleIds])]);
   }
 
   useEffect(() => {
@@ -1187,33 +928,30 @@ export function ProblemBankWorkspace({
     setBank((current) => [...created, ...current]);
 
     // შესწორება: ახალი ამოცანების დამატება არსებულ draftIds-ში ზედწერის ნაცვლად
-    setDraftIds((current) => [
-      ...created.map((problem) => problem.id),
-      ...current,
-    ]);
+    setDraftIds((current) => [...created.map((problem) => problem.id), ...current]);
 
     setSelectedId(created[0]?.id ?? null);
     setShowSolution(false);
     setFilters({
-      query: "",
-      branchId: "all",
-      topicNodeId: "all",
-      subtopicId: "all",
-      conceptId: "all",
-      difficulty: "all",
-      year: "all",
-      origin: created.every((problem) => problem.templateId === "ai-plain")
-        ? "unchecked"
-        : created.every((problem) => problem.templateId === "ai-verified")
-          ? "verified"
-          : (created[0]?.source ?? "all"),
+      query: '',
+      branchId: 'all',
+      topicNodeId: 'all',
+      subtopicId: 'all',
+      conceptId: 'all',
+      difficulty: 'all',
+      year: 'all',
+      origin: created.every((problem) => problem.templateId === 'ai-plain')
+        ? 'unchecked'
+        : created.every((problem) => problem.templateId === 'ai-verified')
+          ? 'verified'
+          : (created[0]?.source ?? 'all'),
     });
   }
 
   async function onGenerate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (genMode === "families") {
+    if (genMode === 'families') {
       if (familyGenerateTargets.length === 0) {
         setNotice(copy.generate.kindJsonNeedFamily);
         return;
@@ -1222,16 +960,16 @@ export function ProblemBankWorkspace({
       return;
     }
 
-    if (genMode === "algorithms") {
+    if (genMode === 'algorithms') {
       if (selectedKindFamily) {
         generateSelectedKind(selectedKindFamily);
         return;
       }
       const parsed = generateProblemsSchema.safeParse({
-        topic: genTopic === "any" ? undefined : genTopic,
-        kind: genKind === "any" ? undefined : genKind,
-        difficulty: genDifficulty === "any" ? undefined : genDifficulty,
-        year: genYear === "any" ? undefined : genYear,
+        topic: genTopic === 'any' ? undefined : genTopic,
+        kind: genKind === 'any' ? undefined : genKind,
+        difficulty: genDifficulty === 'any' ? undefined : genDifficulty,
+        year: genYear === 'any' ? undefined : genYear,
         count: genCount,
         locale,
       });
@@ -1243,9 +981,9 @@ export function ProblemBankWorkspace({
 
     const parsed = generateDiverseProblemsSchema.safeParse({
       request: genRequest,
-      topic: genTopic === "any" ? undefined : genTopic,
-      difficulty: genDifficulty === "any" ? undefined : genDifficulty,
-      year: genYear === "any" ? undefined : genYear,
+      topic: genTopic === 'any' ? undefined : genTopic,
+      difficulty: genDifficulty === 'any' ? undefined : genDifficulty,
+      year: genYear === 'any' ? undefined : genYear,
       count: Math.min(8, genCount),
       locale: genReplyLocale,
       check: genCheck,
@@ -1318,9 +1056,7 @@ export function ProblemBankWorkspace({
           }
         }
         setNotice(
-          !canResampleProblem(selected, familyRaw)
-            ? copy.variantPanel.needSlots
-            : copy.variantPanel.noneVerified,
+          !canResampleProblem(selected, familyRaw) ? copy.variantPanel.needSlots : copy.variantPanel.noneVerified,
         );
         return;
       }
@@ -1352,24 +1088,19 @@ export function ProblemBankWorkspace({
     const tool = PROBLEM_BANK_TOOLS.find((item) => item.id === id);
     if (!tool) return;
 
-    if (
-      id === "generate" ||
-      id === "variants" ||
-      id === "families" ||
-      id === "chat"
-    ) {
+    if (id === 'generate' || id === 'variants' || id === 'families' || id === 'chat') {
       setPanel((current) => (current === id ? null : id));
       setNotice(null);
       return;
     }
 
-    if (id === "import") {
+    if (id === 'import') {
       setImportOpen(true);
       setNotice(null);
       return;
     }
 
-    if (tool.status === "soon") {
+    if (tool.status === 'soon') {
       setNotice(copy.tools[id].hint);
     }
   }
@@ -1383,18 +1114,17 @@ export function ProblemBankWorkspace({
         description={subtitle}
         aside={
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-1">
-            <Stat
+            <StatRow
               label={showSaveToLab ? copy.stats.inLab : copy.stats.inBank}
               value={showSaveToLab ? labIds.length : bank.length}
             />
-            <Stat label={copy.stats.selected} value={lessonSet.length} />
-            <Stat label={copy.stats.generated} value={generatedCount} />
+            <StatRow label={copy.stats.selected} value={lessonSet.length} />
+            <StatRow label={copy.stats.generated} value={generatedCount} />
             {showCreateCard ? (
               <button
                 type="button"
                 className="col-span-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-hairline bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm transition-colors hover:border-navy/30 hover:bg-navy-tint/40 sm:col-span-1"
-                onClick={() => setCustomCardOpen(true)}
-              >
+                onClick={() => setCustomCardOpen(true)}>
                 {copy.customCard.open}
               </button>
             ) : null}
@@ -1403,86 +1133,71 @@ export function ProblemBankWorkspace({
       />
 
       {visibleTools.length > 0 ? (
-      <section className="mt-6" aria-label={copy.tools.label}>
-        <p className="mb-3 text-sm font-semibold tracking-wide text-brass">
-          {copy.tools.label}
-        </p>
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
-          {visibleTools.map((tool) => {
-            const Icon = tool.icon;
-            const item = copy.tools[tool.id];
-            const className = [
-              "flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all",
-              tool.status === "ready" &&
-              (panel === tool.id || (tool.id === "import" && importOpen))
-                ? "border-navy/30 bg-navy-tint shadow-sm"
-                : "border-hairline bg-white shadow-sm hover:border-navy/30 hover:shadow-md",
-            ].join(" ");
+        <section className="mt-6" aria-label={copy.tools.label}>
+          <p className="mb-3 text-sm font-semibold tracking-wide text-brass">{copy.tools.label}</p>
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+            {visibleTools.map((tool) => {
+              const Icon = tool.icon;
+              const item = copy.tools[tool.id];
+              const className = [
+                'flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all',
+                tool.status === 'ready' && (panel === tool.id || (tool.id === 'import' && importOpen))
+                  ? 'border-navy/30 bg-navy-tint shadow-sm'
+                  : 'border-hairline bg-white shadow-sm hover:border-navy/30 hover:shadow-md',
+              ].join(' ');
 
-            const body = (
-              <>
-                <span className="flex items-start gap-2">
-                  <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
-                    <Icon className="size-4" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0 text-sm font-semibold text-ink">
-                    {item.title}
-                  </span>
-                  {tool.status === "soon" ? (
-                    <span className="ml-auto shrink-0 rounded-full bg-brass-tint px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brass">
-                      {copy.soon}
+              const body = (
+                <>
+                  <span className="flex items-start gap-2">
+                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
+                      <Icon className="size-4" aria-hidden="true" />
                     </span>
-                  ) : null}
-                </span>
-                <span className="flex-1 text-xs leading-relaxed text-muted">
-                  {item.hint}
-                </span>
-              </>
-            );
+                    <span className="min-w-0 text-sm font-semibold text-ink">{item.title}</span>
+                    {tool.status === 'soon' ? (
+                      <span className="ml-auto shrink-0 rounded-full bg-brass-tint px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brass">
+                        {copy.soon}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="flex-1 text-xs leading-relaxed text-muted">{item.hint}</span>
+                </>
+              );
 
-            return (
-              <li key={tool.id} className="h-full">
-                {tool.status === "link" && tool.href ? (
-                  <Link
-                    href={localePath(locale, tool.href)}
-                    className={className}
-                  >
-                    {body}
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    className={className}
-                    aria-pressed={
-                      tool.id === "generate" ||
-                      tool.id === "variants" ||
-                      tool.id === "families" ||
-                      tool.id === "chat"
-                        ? panel === tool.id
-                        : tool.id === "import"
-                          ? importOpen
-                          : undefined
-                    }
-                    onClick={() => onTool(tool.id)}
-                  >
-                    {body}
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-        {notice ? (
-          <button
-            type="button"
-            className="mt-3 w-full cursor-pointer rounded-xl border border-brass/20 bg-brass-tint px-4 py-3 text-left text-sm text-brass-strong transition-colors hover:border-brass/40 hover:bg-brass-tint/80"
-            aria-label={copy.dismissNotice}
-            onClick={() => setNotice(null)}
-          >
-            {notice}
-          </button>
-        ) : null}
-      </section>
+              return (
+                <li key={tool.id} className="h-full">
+                  {tool.status === 'link' && tool.href ? (
+                    <Link href={localePath(locale, tool.href)} className={className}>
+                      {body}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      className={className}
+                      aria-pressed={
+                        tool.id === 'generate' || tool.id === 'variants' || tool.id === 'families' || tool.id === 'chat'
+                          ? panel === tool.id
+                          : tool.id === 'import'
+                            ? importOpen
+                            : undefined
+                      }
+                      onClick={() => onTool(tool.id)}>
+                      {body}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          {notice ? (
+            <button
+              type="button"
+              className="mt-3 w-full cursor-pointer rounded-xl border border-brass/20 bg-brass-tint px-4 py-3 text-left text-sm text-brass-strong transition-colors hover:border-brass/40 hover:bg-brass-tint/80"
+              aria-label={copy.dismissNotice}
+              onClick={() => setNotice(null)}>
+              {notice}
+            </button>
+          ) : null}
+        </section>
       ) : null}
 
       {customCardOpen ? (
@@ -1500,15 +1215,13 @@ export function ProblemBankWorkspace({
               ? async (problem) => {
                   let payload;
                   try {
-                    payload = [toPersistInput(problem, "lab")];
+                    payload = [toPersistInput(problem, 'lab')];
                   } catch {
                     return false;
                   }
                   const result = await saveToLabAction(payload);
                   if (!result.ok) return false;
-                  setBank((current) =>
-                    mergeSaved(current, result.saved, result.idMap),
-                  );
+                  setBank((current) => mergeSaved(current, result.saved, result.idMap));
                   setLabIds(result.labIds);
                   setSelectedId(result.saved[0]?.id ?? problem.id);
                   setShowSolution(false);
@@ -1545,18 +1258,15 @@ export function ProblemBankWorkspace({
             setNotice(null);
           }}
           onFamilySaved={(family) => {
-            setFamilies((current) => [
-              family,
-              ...current.filter((item) => item.id !== family.id),
-            ]);
+            setFamilies((current) => [family, ...current.filter((item) => item.id !== family.id)]);
             setFocusFamilyId(family.id);
-            setPanel("families");
+            setPanel('families');
             setNotice(copy.importFamily.familySaved);
           }}
         />
       ) : null}
 
-      {panel === "families" ? (
+      {panel === 'families' ? (
         <FamilyControlCenter
           locale={locale}
           copy={copy}
@@ -1575,7 +1285,7 @@ export function ProblemBankWorkspace({
         />
       ) : null}
 
-      {panel === "chat" ? (
+      {panel === 'chat' ? (
         <TeacherAiChatPanel
           copy={copy.chat}
           fullCopy={copy}
@@ -1588,17 +1298,11 @@ export function ProblemBankWorkspace({
           slashPromptsUserId={slashPromptsUserId}
           className="mt-6"
           onSavedProblems={(saved, target, meta) => {
-            setBank((current) =>
-              mergeSaved(current, saved, meta?.idMap ?? {}),
-            );
-            if (target === "lab" && meta?.labIds) {
+            setBank((current) => mergeSaved(current, saved, meta?.idMap ?? {}));
+            if (target === 'lab' && meta?.labIds) {
               setLabIds(meta.labIds);
             }
-            setNotice(
-              target === "lab"
-                ? copy.chat.savedToLab
-                : copy.chat.savedToBank,
-            );
+            setNotice(target === 'lab' ? copy.chat.savedToLab : copy.chat.savedToBank);
           }}
         />
       ) : null}
@@ -1626,42 +1330,28 @@ export function ProblemBankWorkspace({
               onClose={() => setProblemChatOpen(false)}
               className="max-h-[min(85vh,56rem)] overflow-y-auto"
               onSavedProblems={(saved, target, meta) => {
-                setBank((current) =>
-                  mergeSaved(current, saved, meta?.idMap ?? {}),
-                );
-                if (target === "lab" && meta?.labIds) {
+                setBank((current) => mergeSaved(current, saved, meta?.idMap ?? {}));
+                if (target === 'lab' && meta?.labIds) {
                   setLabIds(meta.labIds);
                 }
-                setNotice(
-                  target === "lab"
-                    ? copy.chat.savedToLab
-                    : copy.chat.savedToBank,
-                );
+                setNotice(target === 'lab' ? copy.chat.savedToLab : copy.chat.savedToBank);
               }}
             />
           </div>
         </div>
       ) : null}
 
-      {panel === "generate" ? (
-        <form
-          onSubmit={onGenerate}
-          className={`${panelClass} mt-6 space-y-4`}
-          aria-labelledby="generate-heading"
-        >
+      {panel === 'generate' ? (
+        <form onSubmit={onGenerate} className={`${panelClass} mt-6 space-y-4`} aria-labelledby="generate-heading">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hairline pb-4">
-            <h2
-              id="generate-heading"
-              className="text-lg font-semibold tracking-tight text-ink"
-            >
+            <h2 id="generate-heading" className="text-lg font-semibold tracking-tight text-ink">
               {copy.generate.title}
             </h2>
             <button
               type="button"
               className="inline-flex size-9 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
               aria-label={copy.generate.close}
-              onClick={() => setPanel(null)}
-            >
+              onClick={() => setPanel(null)}>
               <X className="size-4" aria-hidden="true" />
             </button>
           </div>
@@ -1670,89 +1360,72 @@ export function ProblemBankWorkspace({
               <div
                 className="flex w-full flex-col gap-1 rounded-xl border border-navy/15 bg-white/80 p-1 sm:inline-flex sm:w-auto sm:flex-row"
                 role="group"
-                aria-label={copy.generate.mode}
-              >
+                aria-label={copy.generate.mode}>
                 <button
                   type="button"
                   className={[
-                    "w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5",
-                    genMode === "diverse"
-                      ? "bg-white text-navy shadow-sm"
-                      : "text-body hover:text-navy",
-                  ].join(" ")}
-                  aria-pressed={genMode === "diverse"}
-                  onClick={() => setGenMode("diverse")}
-                >
+                    'w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
+                    genMode === 'diverse' ? 'bg-white text-navy shadow-sm' : 'text-body hover:text-navy',
+                  ].join(' ')}
+                  aria-pressed={genMode === 'diverse'}
+                  onClick={() => setGenMode('diverse')}>
                   {copy.generate.modeDiverse}
                 </button>
                 <button
                   type="button"
                   className={[
-                    "w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5",
-                    genMode === "algorithms"
-                      ? "bg-white text-navy shadow-sm"
-                      : "text-body hover:text-navy",
-                  ].join(" ")}
-                  aria-pressed={genMode === "algorithms"}
+                    'w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
+                    genMode === 'algorithms' ? 'bg-white text-navy shadow-sm' : 'text-body hover:text-navy',
+                  ].join(' ')}
+                  aria-pressed={genMode === 'algorithms'}
                   onClick={() => {
                     if (parseFamilyKind(genKind)) {
-                      setGenKind("any");
+                      setGenKind('any');
                     }
-                    setGenMode("algorithms");
-                  }}
-                >
+                    setGenMode('algorithms');
+                  }}>
                   {copy.generate.modeAlgorithms}
                 </button>
                 <button
                   type="button"
                   className={[
-                    "w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5",
-                    genMode === "families"
-                      ? "bg-white text-navy shadow-sm"
-                      : "text-body hover:text-navy",
-                  ].join(" ")}
-                  aria-pressed={genMode === "families"}
+                    'w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
+                    genMode === 'families' ? 'bg-white text-navy shadow-sm' : 'text-body hover:text-navy',
+                  ].join(' ')}
+                  aria-pressed={genMode === 'families'}
                   onClick={() => {
-                    if (!parseFamilyKind(genKind) && genKind !== "any") {
-                      setGenKind("any");
+                    if (!parseFamilyKind(genKind) && genKind !== 'any') {
+                      setGenKind('any');
                     }
-                    setGenMode("families");
-                  }}
-                >
+                    setGenMode('families');
+                  }}>
                   {copy.generate.modeFamilies}
                 </button>
               </div>
-              {genMode === "diverse" ? (
+              {genMode === 'diverse' ? (
                 <>
                   <div
                     className="flex w-full flex-col gap-1 rounded-xl border border-navy/15 bg-white/80 p-1 sm:inline-flex sm:w-auto sm:flex-row"
                     role="group"
-                    aria-label={copy.generate.checkMode}
-                  >
+                    aria-label={copy.generate.checkMode}>
                     <button
                       type="button"
                       className={[
-                        "w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5",
-                        genCheck === "verified"
-                          ? "bg-white text-navy shadow-sm"
-                          : "text-body hover:text-navy",
-                      ].join(" ")}
-                      aria-pressed={genCheck === "verified"}
-                      onClick={() => setGenCheck("verified")}
-                    >
+                        'w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
+                        genCheck === 'verified' ? 'bg-white text-navy shadow-sm' : 'text-body hover:text-navy',
+                      ].join(' ')}
+                      aria-pressed={genCheck === 'verified'}
+                      onClick={() => setGenCheck('verified')}>
                       {copy.generate.modeVerified}
                     </button>
                     <button
                       type="button"
                       className={[
-                        "w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5",
-                        genCheck === "plain"
-                          ? "bg-white text-navy shadow-sm"
-                          : "text-body hover:text-navy",
-                      ].join(" ")}
-                      aria-pressed={genCheck === "plain"}
-                      onClick={() => setGenCheck("plain")}
-                    >
+                        'w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
+                        genCheck === 'plain' ? 'bg-white text-navy shadow-sm' : 'text-body hover:text-navy',
+                      ].join(' ')}
+                      aria-pressed={genCheck === 'plain'}
+                      onClick={() => setGenCheck('plain')}>
                       {copy.generate.modePlain}
                     </button>
                   </div>
@@ -1773,12 +1446,10 @@ export function ProblemBankWorkspace({
               ) : null}
             </div>
           </div>
-          {genMode === "diverse" ? (
+          {genMode === 'diverse' ? (
             <details className="group rounded-2xl border border-hairline-soft bg-paper p-3">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
-                <span className="text-sm font-medium text-ink">
-                  {copy.generate.model}
-                </span>
+                <span className="text-sm font-medium text-ink">{copy.generate.model}</span>
                 <ChevronDown
                   className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180"
                   aria-hidden="true"
@@ -1799,35 +1470,24 @@ export function ProblemBankWorkspace({
                   }))}
                 />
                 {selectedModelStatus ? (
-                  <p className="mt-2 text-xs text-body">
-                    {walletHint(copy.generate, selectedModelStatus.wallet)}
-                  </p>
+                  <p className="mt-2 text-xs text-body">{walletHint(copy.generate, selectedModelStatus.wallet)}</p>
                 ) : null}
-                <p className="mt-3 text-xs font-medium text-muted">
-                  {copy.generate.walletLabel}
-                </p>
+                <p className="mt-3 text-xs font-medium text-muted">{copy.generate.walletLabel}</p>
                 <ul className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
                   {uniqueProviders(modelStatus).map((status) => {
-                    const selected =
-                      selectedModelStatus?.provider === status.provider;
+                    const selected = selectedModelStatus?.provider === status.provider;
                     return (
                       <li key={status.provider} className="min-w-0">
                         <button
                           type="button"
                           className={`flex h-full w-full items-start gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors ${walletTone(status.wallet, selected)}`}
                           onClick={() => {
-                            if (
-                              selectedModelStatus?.provider === status.provider
-                            ) {
+                            if (selectedModelStatus?.provider === status.provider) {
                               return;
                             }
                             setGenModel(status.id);
-                          }}
-                        >
-                          <AiProviderIcon
-                            provider={status.provider}
-                            className="mt-0.5 size-4 shrink-0"
-                          />
+                          }}>
+                          <AiProviderIcon provider={status.provider} className="mt-0.5 size-4 shrink-0" />
                           <span className="min-w-0 flex-1">
                             <span className="block w-full truncate text-[11px] font-medium">
                               {copy.generate.providers[status.provider]}
@@ -1841,19 +1501,17 @@ export function ProblemBankWorkspace({
                     );
                   })}
                 </ul>
-                <p className="mt-3 text-xs font-medium text-muted">
-                  {copy.generate.limitLabel}
-                </p>
+                <p className="mt-3 text-xs font-medium text-muted">{copy.generate.limitLabel}</p>
                 <ul className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
                   {modelStatus.map((status) => {
                     const selected = status.id === genModel;
                     const tone = !status.configured
-                      ? "border-hairline bg-white text-muted"
+                      ? 'border-hairline bg-white text-muted'
                       : status.limit > 0 && status.remaining <= 0
-                        ? "border-brass/20 bg-brass-tint/40 text-brass-strong"
+                        ? 'border-brass/20 bg-brass-tint/40 text-brass-strong'
                         : selected
-                          ? "border-navy/20 bg-navy-tint text-navy"
-                          : "border-hairline bg-white text-body";
+                          ? 'border-navy/20 bg-navy-tint text-navy'
+                          : 'border-hairline bg-white text-body';
                     const detail = !status.configured
                       ? copy.generate.limitNoKey
                       : status.limit > 0 && status.remaining <= 0
@@ -1870,19 +1528,13 @@ export function ProblemBankWorkspace({
                         <button
                           type="button"
                           className={`flex h-full w-full items-start gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors ${tone}`}
-                          onClick={() => setGenModel(status.id)}
-                        >
-                          <AiProviderIcon
-                            provider={status.provider}
-                            className="mt-0.5 size-4 shrink-0"
-                          />
+                          onClick={() => setGenModel(status.id)}>
+                          <AiProviderIcon provider={status.provider} className="mt-0.5 size-4 shrink-0" />
                           <span className="min-w-0 flex-1">
                             <span className="block w-full truncate text-[11px] font-medium">
                               {copy.generate.models[status.id]}
                             </span>
-                            <span className="mt-0.5 block w-full truncate text-[10px] opacity-80">
-                              {detail}
-                            </span>
+                            <span className="mt-0.5 block w-full truncate text-[10px] opacity-80">{detail}</span>
                           </span>
                         </button>
                       </li>
@@ -1892,7 +1544,7 @@ export function ProblemBankWorkspace({
               </div>
             </details>
           ) : null}
-          {genMode === "diverse" ? (
+          {genMode === 'diverse' ? (
             <label className="block rounded-2xl border border-hairline-soft bg-paper p-3 text-sm font-medium text-ink">
               {copy.generate.request}
               <textarea
@@ -1901,20 +1553,15 @@ export function ProblemBankWorkspace({
                 placeholder={copy.generate.requestPlaceholder}
                 maxLength={400}
                 onChange={(event) => setGenRequest(event.target.value)}
-                onPaste={(event) =>
-                  handlePlainTextPaste(event, genRequest, setGenRequest, 400)
-                }
+                onPaste={(event) => handlePlainTextPaste(event, genRequest, setGenRequest, 400)}
               />
             </label>
           ) : null}
           <div className="rounded-2xl border border-brass/10 bg-brass-tint/30 p-3 sm:p-4">
-            {genMode === "families" ? (
+            {genMode === 'families' ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <div>
-                  <label
-                    htmlFor={`${genId}-family`}
-                    className="block text-sm font-medium text-ink"
-                  >
+                  <label htmlFor={`${genId}-family`} className="block text-sm font-medium text-ink">
                     {copy.generate.family}
                   </label>
                   <SelectMenu
@@ -1924,7 +1571,7 @@ export function ProblemBankWorkspace({
                     onChange={selectGenKind}
                     options={[
                       {
-                        value: "any",
+                        value: 'any',
                         label: copy.generate.anyFamily,
                       },
                       ...familyKindOptions,
@@ -1932,64 +1579,49 @@ export function ProblemBankWorkspace({
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor={`${genId}-difficulty`}
-                    className="block text-sm font-medium text-ink"
-                  >
+                  <label htmlFor={`${genId}-difficulty`} className="block text-sm font-medium text-ink">
                     {copy.generate.difficulty}
                   </label>
                   <SelectMenu
                     id={`${genId}-difficulty`}
                     className="mt-1.5"
                     value={genDifficulty}
-                    onChange={(value) =>
-                      setGenDifficulty(value as ProblemDifficulty | "any")
-                    }
+                    onChange={(value) => setGenDifficulty(value as ProblemDifficulty | 'any')}
                     options={[
                       {
-                        value: "any" as const,
+                        value: 'any' as const,
                         label: copy.generate.anyDifficulty,
                       },
                       ...PROBLEM_DIFFICULTIES.map((difficulty) => {
-                        const marked =
-                          familyGenerateLabels.difficulties.has(difficulty);
+                        const marked = familyGenerateLabels.difficulties.has(difficulty);
                         return {
                           value: difficulty,
                           label: copy.difficulties[difficulty],
                           marked,
-                          hint: marked
-                            ? copy.generate.labelInFamily
-                            : undefined,
+                          hint: marked ? copy.generate.labelInFamily : undefined,
                         };
                       }),
                     ]}
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor={`${genId}-year`}
-                    className="block text-sm font-medium text-ink"
-                  >
+                  <label htmlFor={`${genId}-year`} className="block text-sm font-medium text-ink">
                     {copy.generate.year}
                   </label>
                   <SelectMenu
                     id={`${genId}-year`}
                     className="mt-1.5"
                     value={genYear}
-                    onChange={(value) =>
-                      setGenYear(value as ProblemYear | "any")
-                    }
+                    onChange={(value) => setGenYear(value as ProblemYear | 'any')}
                     options={[
-                      { value: "any" as const, label: copy.generate.anyYear },
+                      { value: 'any' as const, label: copy.generate.anyYear },
                       ...PROBLEM_YEARS.map((year) => {
                         const marked = familyGenerateLabels.years.has(year);
                         return {
                           value: year,
                           label: copy.years[year],
                           marked,
-                          hint: marked
-                            ? copy.generate.labelInFamily
-                            : undefined,
+                          hint: marked ? copy.generate.labelInFamily : undefined,
                         };
                       }),
                     ]}
@@ -2003,49 +1635,32 @@ export function ProblemBankWorkspace({
                     min={1}
                     max={12}
                     value={genCount}
-                    onChange={(event) =>
-                      setGenCount(
-                        Math.min(
-                          12,
-                          Math.max(1, Number(event.target.value) || 1),
-                        ),
-                      )
-                    }
+                    onChange={(event) => setGenCount(Math.min(12, Math.max(1, Number(event.target.value) || 1)))}
                   />
                 </label>
                 <div className="flex items-end">
                   <button
                     type="submit"
                     disabled={generating}
-                    className="inline-flex h-[38px] w-full items-center justify-center rounded-xl bg-navy px-4 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60"
-                  >
+                    className="inline-flex h-[38px] w-full items-center justify-center rounded-xl bg-navy px-4 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
                     {generating ? copy.generate.busy : copy.generate.submit}
                   </button>
                 </div>
               </div>
-            ) : genMode === "algorithms" ? (
-              <div
-                className={`grid gap-3 sm:grid-cols-2 ${
-                  genTopic !== "any" ? "lg:grid-cols-6" : "lg:grid-cols-5"
-                }`}
-              >
+            ) : genMode === 'algorithms' ? (
+              <div className={`grid gap-3 sm:grid-cols-2 ${genTopic !== 'any' ? 'lg:grid-cols-6' : 'lg:grid-cols-5'}`}>
                 <div>
-                  <label
-                    htmlFor={`${genId}-topic`}
-                    className="block text-sm font-medium text-ink"
-                  >
+                  <label htmlFor={`${genId}-topic`} className="block text-sm font-medium text-ink">
                     {copy.generate.topic}
                   </label>
                   <SelectMenu
                     id={`${genId}-topic`}
                     className="mt-1.5"
                     value={genTopic}
-                    onChange={(value) =>
-                      selectGenTopic(value as ProblemTopic | "any")
-                    }
+                    onChange={(value) => selectGenTopic(value as ProblemTopic | 'any')}
                     options={[
                       {
-                        value: "any" as const,
+                        value: 'any' as const,
                         label: copy.generate.anyTopic,
                       },
                       ...PROBLEM_TOPICS.map((topic) => ({
@@ -2055,12 +1670,9 @@ export function ProblemBankWorkspace({
                     ]}
                   />
                 </div>
-                {genTopic !== "any" ? (
+                {genTopic !== 'any' ? (
                   <div>
-                    <label
-                      htmlFor={`${genId}-kind`}
-                      className="block text-sm font-medium text-ink"
-                    >
+                    <label htmlFor={`${genId}-kind`} className="block text-sm font-medium text-ink">
                       {copy.generate.kind}
                     </label>
                     <SelectMenu
@@ -2073,22 +1685,17 @@ export function ProblemBankWorkspace({
                   </div>
                 ) : null}
                 <div>
-                  <label
-                    htmlFor={`${genId}-difficulty`}
-                    className="block text-sm font-medium text-ink"
-                  >
+                  <label htmlFor={`${genId}-difficulty`} className="block text-sm font-medium text-ink">
                     {copy.generate.difficulty}
                   </label>
                   <SelectMenu
                     id={`${genId}-difficulty`}
                     className="mt-1.5"
                     value={genDifficulty}
-                    onChange={(value) =>
-                      setGenDifficulty(value as ProblemDifficulty | "any")
-                    }
+                    onChange={(value) => setGenDifficulty(value as ProblemDifficulty | 'any')}
                     options={[
                       {
-                        value: "any" as const,
+                        value: 'any' as const,
                         label: copy.generate.anyDifficulty,
                       },
                       ...PROBLEM_DIFFICULTIES.map((difficulty) => ({
@@ -2099,21 +1706,16 @@ export function ProblemBankWorkspace({
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor={`${genId}-year`}
-                    className="block text-sm font-medium text-ink"
-                  >
+                  <label htmlFor={`${genId}-year`} className="block text-sm font-medium text-ink">
                     {copy.generate.year}
                   </label>
                   <SelectMenu
                     id={`${genId}-year`}
                     className="mt-1.5"
                     value={genYear}
-                    onChange={(value) =>
-                      setGenYear(value as ProblemYear | "any")
-                    }
+                    onChange={(value) => setGenYear(value as ProblemYear | 'any')}
                     options={[
-                      { value: "any" as const, label: copy.generate.anyYear },
+                      { value: 'any' as const, label: copy.generate.anyYear },
                       ...PROBLEM_YEARS.map((year) => ({
                         value: year,
                         label: copy.years[year],
@@ -2129,22 +1731,14 @@ export function ProblemBankWorkspace({
                     min={1}
                     max={12}
                     value={genCount}
-                    onChange={(event) =>
-                      setGenCount(
-                        Math.min(
-                          12,
-                          Math.max(1, Number(event.target.value) || 1),
-                        ),
-                      )
-                    }
+                    onChange={(event) => setGenCount(Math.min(12, Math.max(1, Number(event.target.value) || 1)))}
                   />
                 </label>
                 <div className="flex items-end">
                   <button
                     type="submit"
                     disabled={generating}
-                    className="inline-flex h-[38px] w-full items-center justify-center rounded-xl bg-navy px-4 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60"
-                  >
+                    className="inline-flex h-[38px] w-full items-center justify-center rounded-xl bg-navy px-4 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
                     {generating ? copy.generate.busy : copy.generate.submit}
                   </button>
                 </div>
@@ -2152,21 +1746,16 @@ export function ProblemBankWorkspace({
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <div>
-                  <label
-                    htmlFor={`${genId}-topic`}
-                    className="block text-sm font-medium text-ink"
-                  >
+                  <label htmlFor={`${genId}-topic`} className="block text-sm font-medium text-ink">
                     {copy.generate.topic}
                   </label>
                   <SelectMenu
                     id={`${genId}-topic`}
                     className="mt-1.5"
                     value={genTopic}
-                    onChange={(value) =>
-                      selectGenTopic(value as ProblemTopic | "any")
-                    }
+                    onChange={(value) => selectGenTopic(value as ProblemTopic | 'any')}
                     options={[
-                      { value: "any" as const, label: copy.generate.anyTopic },
+                      { value: 'any' as const, label: copy.generate.anyTopic },
                       ...PROBLEM_TOPICS.map((topic) => ({
                         value: topic,
                         label: copy.topics[topic],
@@ -2175,22 +1764,17 @@ export function ProblemBankWorkspace({
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor={`${genId}-difficulty`}
-                    className="block text-sm font-medium text-ink"
-                  >
+                  <label htmlFor={`${genId}-difficulty`} className="block text-sm font-medium text-ink">
                     {copy.generate.difficulty}
                   </label>
                   <SelectMenu
                     id={`${genId}-difficulty`}
                     className="mt-1.5"
                     value={genDifficulty}
-                    onChange={(value) =>
-                      setGenDifficulty(value as ProblemDifficulty | "any")
-                    }
+                    onChange={(value) => setGenDifficulty(value as ProblemDifficulty | 'any')}
                     options={[
                       {
-                        value: "any" as const,
+                        value: 'any' as const,
                         label: copy.generate.anyDifficulty,
                       },
                       ...PROBLEM_DIFFICULTIES.map((difficulty) => ({
@@ -2201,21 +1785,16 @@ export function ProblemBankWorkspace({
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor={`${genId}-year`}
-                    className="block text-sm font-medium text-ink"
-                  >
+                  <label htmlFor={`${genId}-year`} className="block text-sm font-medium text-ink">
                     {copy.generate.year}
                   </label>
                   <SelectMenu
                     id={`${genId}-year`}
                     className="mt-1.5"
                     value={genYear}
-                    onChange={(value) =>
-                      setGenYear(value as ProblemYear | "any")
-                    }
+                    onChange={(value) => setGenYear(value as ProblemYear | 'any')}
                     options={[
-                      { value: "any" as const, label: copy.generate.anyYear },
+                      { value: 'any' as const, label: copy.generate.anyYear },
                       ...PROBLEM_YEARS.map((year) => ({
                         value: year,
                         label: copy.years[year],
@@ -2231,22 +1810,14 @@ export function ProblemBankWorkspace({
                     min={1}
                     max={8}
                     value={genCount}
-                    onChange={(event) =>
-                      setGenCount(
-                        Math.min(
-                          8,
-                          Math.max(1, Number(event.target.value) || 1),
-                        ),
-                      )
-                    }
+                    onChange={(event) => setGenCount(Math.min(8, Math.max(1, Number(event.target.value) || 1)))}
                   />
                 </label>
                 <div className="flex items-end gap-2">
                   <button
                     type="submit"
                     disabled={generating}
-                    className="inline-flex w-full items-center justify-center rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60"
-                  >
+                    className="inline-flex w-full items-center justify-center rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
                     {generating ? copy.generate.busy : copy.generate.submit}
                   </button>
                 </div>
@@ -2259,8 +1830,7 @@ export function ProblemBankWorkspace({
                 type="button"
                 disabled={saving}
                 className="inline-flex items-center gap-2 text-sm font-medium text-navy hover:text-navy-strong disabled:opacity-60"
-                onClick={() => void saveDraftsToBank()}
-              >
+                onClick={() => void saveDraftsToBank()}>
                 <Save className="size-4" aria-hidden="true" />
                 {saving ? copy.generate.saving : copy.generate.saveToBank}
               </button>
@@ -2268,8 +1838,7 @@ export function ProblemBankWorkspace({
                 type="button"
                 disabled={saving}
                 className="text-sm font-medium text-navy hover:text-navy-strong disabled:opacity-60"
-                onClick={() => void keepAllDrafts()}
-              >
+                onClick={() => void keepAllDrafts()}>
                 {copy.generate.keepAll}
               </button>
             </div>
@@ -2277,44 +1846,33 @@ export function ProblemBankWorkspace({
         </form>
       ) : null}
 
-      {panel === "variants" ? (
+      {panel === 'variants' ? (
         <form
           onSubmit={onVariants}
           className={`${panelClass} mt-6 space-y-4 bg-paper`}
-          aria-labelledby="variants-heading"
-        >
+          aria-labelledby="variants-heading">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hairline pb-4">
-            <h2
-              id="variants-heading"
-              className="text-lg font-semibold tracking-tight text-ink"
-            >
+            <h2 id="variants-heading" className="text-lg font-semibold tracking-tight text-ink">
               {copy.variantPanel.title}
             </h2>
             <button
               type="button"
               className="inline-flex size-9 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
               aria-label={copy.variantPanel.close}
-              onClick={() => setPanel(null)}
-            >
+              onClick={() => setPanel(null)}>
               <X className="size-4" aria-hidden="true" />
             </button>
           </div>
           {selected ? (
             <div className="mt-4 rounded-xl bg-paper-deep px-4 py-3">
-              <p className="text-xs font-semibold tracking-wide text-muted">
-                {copy.variantPanel.sourceLabel}
-              </p>
-              <p className="mt-1 text-sm font-medium text-ink">
-                {copy.instructions[selected.instructionId]}
-              </p>
+              <p className="text-xs font-semibold tracking-wide text-muted">{copy.variantPanel.sourceLabel}</p>
+              <p className="mt-1 text-sm font-medium text-ink">{copy.instructions[selected.instructionId]}</p>
               <div className="mt-2 overflow-x-auto">
                 <KatexPreview tex={selected.promptTex} className="text-ink" />
               </div>
             </div>
           ) : (
-            <p className="mt-4 text-sm text-body">
-              {copy.variantPanel.needProblem}
-            </p>
+            <p className="mt-4 text-sm text-body">{copy.variantPanel.needProblem}</p>
           )}
           <div className="mt-4 flex flex-wrap items-end gap-3">
             <label className="block min-w-[8rem] text-sm font-medium text-ink">
@@ -2325,17 +1883,12 @@ export function ProblemBankWorkspace({
                 min={1}
                 max={12}
                 value={variantCount}
-                onChange={(event) =>
-                  setVariantCount(
-                    Math.min(12, Math.max(1, Number(event.target.value) || 1)),
-                  )
-                }
+                onChange={(event) => setVariantCount(Math.min(12, Math.max(1, Number(event.target.value) || 1)))}
               />
             </label>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong"
-            >
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong">
               <Shuffle className="size-4" aria-hidden="true" />
               {copy.variantPanel.submit}
             </button>
@@ -2358,7 +1911,7 @@ export function ProblemBankWorkspace({
               type="search"
               value={filters.query}
               placeholder={copy.searchPlaceholder}
-              onChange={(event) => updateFilter("query", event.target.value)}
+              onChange={(event) => updateFilter('query', event.target.value)}
             />
 
             <div className="space-y-2.5 border-t border-hairline-soft pt-3">
@@ -2369,7 +1922,7 @@ export function ProblemBankWorkspace({
                 allLabel={copy.allBranches}
                 options={branchOptions}
                 labels={taxonomyLabels}
-                onChange={(value) => updateTaxonomyFilter("branchId", value)}
+                onChange={(value) => updateTaxonomyFilter('branchId', value)}
               />
               <FilterSelect
                 key="filter-topic"
@@ -2378,7 +1931,7 @@ export function ProblemBankWorkspace({
                 allLabel={copy.allTopics}
                 options={topicOptions}
                 labels={taxonomyLabels}
-                onChange={(value) => updateTaxonomyFilter("topicNodeId", value)}
+                onChange={(value) => updateTaxonomyFilter('topicNodeId', value)}
               />
               <FilterSelect
                 key="filter-subtopic"
@@ -2387,7 +1940,7 @@ export function ProblemBankWorkspace({
                 allLabel={copy.allSubtopics}
                 options={subtopicOptions}
                 labels={taxonomyLabels}
-                onChange={(value) => updateTaxonomyFilter("subtopicId", value)}
+                onChange={(value) => updateTaxonomyFilter('subtopicId', value)}
               />
               <FilterSelect
                 key="filter-concept"
@@ -2396,7 +1949,7 @@ export function ProblemBankWorkspace({
                 allLabel={copy.allConcepts}
                 options={conceptOptions}
                 labels={taxonomyLabels}
-                onChange={(value) => updateTaxonomyFilter("conceptId", value)}
+                onChange={(value) => updateTaxonomyFilter('conceptId', value)}
               />
             </div>
 
@@ -2408,7 +1961,7 @@ export function ProblemBankWorkspace({
                 allLabel={copy.allDifficulties}
                 options={PROBLEM_DIFFICULTIES}
                 labels={copy.difficulties}
-                onChange={(value) => updateFilter("difficulty", value)}
+                onChange={(value) => updateFilter('difficulty', value)}
               />
               <FilterSelect
                 key="filter-year"
@@ -2417,7 +1970,7 @@ export function ProblemBankWorkspace({
                 allLabel={copy.allYears}
                 options={PROBLEM_YEARS}
                 labels={copy.years}
-                onChange={(value) => updateFilter("year", value)}
+                onChange={(value) => updateFilter('year', value)}
               />
               <FilterSelect
                 key="filter-origin"
@@ -2426,23 +1979,21 @@ export function ProblemBankWorkspace({
                 allLabel={copy.allOrigins}
                 options={PROBLEM_FILTER_ORIGINS}
                 labels={copy.sources}
-                onChange={(value) => updateFilter("origin", value)}
+                onChange={(value) => updateFilter('origin', value)}
               />
             </div>
           </div>
           <button
             type="button"
             className="mt-4 shrink-0 border-t border-hairline pt-3 text-left text-sm font-medium text-navy hover:text-navy-strong"
-            onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}
-          >
+            onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
             {copy.resetFilters}
           </button>
         </aside>
 
         <section
           className={`${panelClass} order-3 flex min-h-[20rem] min-w-0 flex-col xl:order-2 xl:min-h-0`}
-          aria-label={copy.listLabel}
-        >
+          aria-label={copy.listLabel}>
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-hairline pb-3">
             <p className="text-sm text-muted" aria-live="polite">
               {replaceCount(copy.results, visible.length)}
@@ -2463,8 +2014,7 @@ export function ProblemBankWorkspace({
                     type="button"
                     className="inline-flex items-center gap-1 rounded-lg bg-paper px-2 py-1 text-xs font-medium text-body hover:text-navy disabled:opacity-50"
                     disabled={saving}
-                    onClick={() => void discardSelectedProblems()}
-                  >
+                    onClick={() => void discardSelectedProblems()}>
                     <Trash2 className="size-3.5" aria-hidden="true" />
                     {confirmBulkDelete
                       ? replaceTokens(copy.confirmRemoveSelected, {
@@ -2476,8 +2026,7 @@ export function ProblemBankWorkspace({
                 <button
                   type="button"
                   className="text-xs font-medium text-muted hover:text-navy"
-                  onClick={exitBulkSelectMode}
-                >
+                  onClick={exitBulkSelectMode}>
                   {copy.exitBulkSelect}
                 </button>
               </div>
@@ -2501,12 +2050,11 @@ export function ProblemBankWorkspace({
                   <li
                     key={problem.id}
                     className={[
-                      "relative select-none rounded-xl border transition-colors",
+                      'relative select-none rounded-xl border transition-colors',
                       active
-                        ? "border-navy/20 bg-navy-tint/70"
-                        : "border-hairline-soft bg-white hover:border-hairline hover:bg-paper-deep/80",
-                    ].join(" ")}
-                  >
+                        ? 'border-navy/20 bg-navy-tint/70'
+                        : 'border-hairline-soft bg-white hover:border-hairline hover:bg-paper-deep/80',
+                    ].join(' ')}>
                     <div className="flex items-start gap-2 px-3.5 py-3 pe-12">
                       {bulkSelectMode ? (
                         <input
@@ -2520,11 +2068,11 @@ export function ProblemBankWorkspace({
                       ) : null}
                       <button
                         type="button"
-                        aria-current={active ? "true" : undefined}
+                        aria-current={active ? 'true' : undefined}
                         className={[
-                          "flex min-w-0 flex-1 flex-col gap-2.5 text-left transition-colors",
-                          active ? "text-ink" : "hover:text-navy",
-                        ].join(" ")}
+                          'flex min-w-0 flex-1 flex-col gap-2.5 text-left transition-colors',
+                          active ? 'text-ink' : 'hover:text-navy',
+                        ].join(' ')}
                         onPointerDown={(event) => {
                           if (event.button !== 0) return;
                           beginCardLongPress(problem.id);
@@ -2543,66 +2091,46 @@ export function ProblemBankWorkspace({
                           }
                           setSelectedId(problem.id);
                           setShowSolution(false);
-                        }}
-                      >
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${difficultyTone[problem.difficulty]}`}
-                        >
-                          {copy.difficulties[problem.difficulty]}
-                        </span>
-                        <span className="text-xs font-medium text-muted">
-                          {problemBranchLabel(
-                            copy,
-                            problem,
-                            taxonomyTree,
-                            locale,
-                          )}
-                        </span>
-                        {problem.year ? (
-                          <span className="text-xs text-muted">
-                            {copy.years[problem.year]}
-                          </span>
-                        ) : null}
-                        {problem.source !== "bank" ? (
-                          <span className="rounded-full bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
-                            {sourceBadgeLabel(copy, problem)}
-                          </span>
-                        ) : null}
-                        {inSet ? (
-                          <span className="ml-auto text-[11px] font-semibold text-navy">
-                            {copy.inSet}
-                          </span>
-                        ) : null}
-                        {showSaveToLab && labIds.includes(problem.id) ? (
+                        }}>
+                        <span className="flex flex-wrap items-center gap-2">
                           <span
-                            className={[
-                              "rounded-full bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass",
-                              inSet ? "" : "ml-auto",
-                            ].join(" ")}
-                          >
-                            {copy.stats.inLab}
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${difficultyTone[problem.difficulty]}`}>
+                            {copy.difficulties[problem.difficulty]}
                           </span>
-                        ) : null}
-                        {!showSaveToLab &&
-                        !isUnsavedId(problem.id) &&
-                        !isCatalogSeedId(problem.id) ? (
-                          <span
-                            className={[
-                              "rounded-full bg-navy-tint px-2 py-0.5 text-[11px] font-semibold text-navy",
-                              inSet ? "" : "ml-auto",
-                            ].join(" ")}
-                          >
-                            {copy.stats.inBank}
+                          <span className="text-xs font-medium text-muted">
+                            {problemBranchLabel(copy, problem, taxonomyTree, locale)}
                           </span>
-                        ) : null}
-                      </span>
-                      <span className="block min-w-0 overflow-x-auto hide-scrollbar">
-                        <KatexPreview
-                          tex={problem.promptTex}
-                          className="text-ink [&_.katex]:text-[0.95rem]"
-                        />
-                      </span>
+                          {problem.year ? <span className="text-xs text-muted">{copy.years[problem.year]}</span> : null}
+                          {problem.source !== 'bank' ? (
+                            <span className="rounded-full bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
+                              {sourceBadgeLabel(copy, problem)}
+                            </span>
+                          ) : null}
+                          {inSet ? (
+                            <span className="ml-auto text-[11px] font-semibold text-navy">{copy.inSet}</span>
+                          ) : null}
+                          {showSaveToLab && labIds.includes(problem.id) ? (
+                            <span
+                              className={[
+                                'rounded-full bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass',
+                                inSet ? '' : 'ml-auto',
+                              ].join(' ')}>
+                              {copy.stats.inLab}
+                            </span>
+                          ) : null}
+                          {!showSaveToLab && !isUnsavedId(problem.id) && !isCatalogSeedId(problem.id) ? (
+                            <span
+                              className={[
+                                'rounded-full bg-navy-tint px-2 py-0.5 text-[11px] font-semibold text-navy',
+                                inSet ? '' : 'ml-auto',
+                              ].join(' ')}>
+                              {copy.stats.inBank}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="block min-w-0 overflow-x-auto hide-scrollbar">
+                          <KatexPreview tex={problem.promptTex} className="text-ink [&_.katex]:text-[0.95rem]" />
+                        </span>
                       </button>
                     </div>
                     <ProblemCardMenu
@@ -2613,10 +2141,7 @@ export function ProblemBankWorkspace({
                       showSendToLab={showSendToLab}
                       showSaveToLab={showSaveToLab}
                       showGenerateVariants={showGenerateVariants}
-                      canGenerateVariants={canVary(
-                        problem,
-                        templateJsonForProblem(problem, families),
-                      )}
+                      canGenerateVariants={canVary(problem, templateJsonForProblem(problem, families))}
                       onEdit={(item) => {
                         setSelectedId(item.id);
                         setEditingProblem(item);
@@ -2628,31 +2153,19 @@ export function ProblemBankWorkspace({
                         showSendToLab
                           ? (item) => {
                               stashProblemForLab(item);
-                              router.push(localePath(locale, "/teacher/lab"));
+                              router.push(localePath(locale, '/teacher/lab'));
                             }
                           : undefined
                       }
-                      onSaveToLab={
-                        showSaveToLab
-                          ? (item) => void saveProblemToLab(item)
-                          : undefined
-                      }
-                      onSaveToBank={
-                        showSaveToLab
-                          ? (item) => void copyProblemToBank(item)
-                          : undefined
-                      }
-                      onRemoveFromLab={
-                        showSaveToLab
-                          ? (item) => void removeProblemFromLab(item)
-                          : undefined
-                      }
+                      onSaveToLab={showSaveToLab ? (item) => void saveProblemToLab(item) : undefined}
+                      onSaveToBank={showSaveToLab ? (item) => void copyProblemToBank(item) : undefined}
+                      onRemoveFromLab={showSaveToLab ? (item) => void removeProblemFromLab(item) : undefined}
                       onGenerateVariants={
                         showGenerateVariants
                           ? (item) => {
                               setSelectedId(item.id);
                               setShowSolution(false);
-                              setPanel("variants");
+                              setPanel('variants');
                               setNotice(null);
                             }
                           : undefined
@@ -2668,224 +2181,188 @@ export function ProblemBankWorkspace({
 
         <section
           className="order-2 flex min-h-0 min-w-0 flex-col rounded-2xl border border-navy/10 bg-navy-tint/25 p-4 shadow-sm sm:p-5 xl:order-3"
-          aria-label={copy.previewLabel}
-        >
+          aria-label={copy.previewLabel}>
           {selected ? (
             <>
               <p className="shrink-0 border-b border-navy/10 pb-3 text-sm font-semibold tracking-wide text-brass">
                 {copy.prompt}
               </p>
               <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-y-auto pe-0.5">
-              <div className="group relative min-w-0 overflow-x-auto rounded-xl bg-paper-deep px-4 py-5 pe-12">
-                <KatexPreview
-                  tex={selected.promptTex}
-                  displayMode
-                  className="block min-w-0 text-ink"
-                />
-                <CopyPromptButton
-                  text={selected.promptTex}
-                  copyLabel={copy.copyPrompt}
-                  copiedLabel={copy.copiedPrompt}
-                />
-              </div>
-              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted">
-                <span>
-                  {problemBranchLabel(copy, selected, taxonomyTree, locale)}
-                </span>
-                <span aria-hidden="true">·</span>
-                <span>{copy.difficulties[selected.difficulty]}</span>
-                {selected.year ? (
-                  <>
-                    <span aria-hidden="true">·</span>
-                    <span>{copy.years[selected.year]}</span>
-                  </>
-                ) : null}
-                {showSaveToLab && labIds.includes(selected.id) ? (
-                  <span className="rounded-full bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
-                    {copy.stats.inLab}
-                  </span>
-                ) : null}
-                {!showSaveToLab &&
-                !isUnsavedId(selected.id) &&
-                !isCatalogSeedId(selected.id) ? (
-                  <span className="rounded-full bg-navy-tint px-2 py-0.5 text-[11px] font-semibold text-navy">
-                    {copy.stats.inBank}
-                  </span>
-                ) : null}
-              </div>
+                <div className="group relative min-w-0 overflow-x-auto rounded-xl bg-paper-deep px-4 py-5 pe-12">
+                  <KatexPreview tex={selected.promptTex} displayMode className="block min-w-0 text-ink" />
+                  <CopyPromptButton
+                    text={selected.promptTex}
+                    copyLabel={copy.copyPrompt}
+                    copiedLabel={copy.copiedPrompt}
+                  />
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-muted">
+                  <span>{problemBranchLabel(copy, selected, taxonomyTree, locale)}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{copy.difficulties[selected.difficulty]}</span>
+                  {selected.year ? (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>{copy.years[selected.year]}</span>
+                    </>
+                  ) : null}
+                  {showSaveToLab && labIds.includes(selected.id) ? (
+                    <span className="rounded-full bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
+                      {copy.stats.inLab}
+                    </span>
+                  ) : null}
+                  {!showSaveToLab && !isUnsavedId(selected.id) && !isCatalogSeedId(selected.id) ? (
+                    <span className="rounded-full bg-navy-tint px-2 py-0.5 text-[11px] font-semibold text-navy">
+                      {copy.stats.inBank}
+                    </span>
+                  ) : null}
+                </div>
 
-              <div className="mt-4 border-t border-navy/10 pt-4">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 text-sm font-medium text-navy hover:text-navy-strong"
-                  onClick={() => setShowSolution((value) => !value)}
-                >
+                <div className="mt-4 border-t border-navy/10 pt-4">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-navy hover:text-navy-strong"
+                    onClick={() => setShowSolution((value) => !value)}>
+                    {showSolution ? (
+                      <EyeOff className="size-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="size-4" aria-hidden="true" />
+                    )}
+                    {showSolution ? copy.hideSolution : copy.showSolution}
+                  </button>
                   {showSolution ? (
-                    <EyeOff className="size-4" aria-hidden="true" />
-                  ) : (
-                    <Eye className="size-4" aria-hidden="true" />
-                  )}
-                  {showSolution ? copy.hideSolution : copy.showSolution}
-                </button>
-                {showSolution ? (
-                  <>
-                    <div className="mt-3 max-h-64 overflow-y-auto overflow-x-auto rounded-xl border border-hairline bg-white px-4 py-4 sm:max-h-80">
-                      <p className="mb-2 text-xs font-semibold tracking-wide text-muted">
-                        {copy.solution}
-                      </p>
-                      <KatexPreview
-                        tex={selected.solutionTex}
-                        className="block whitespace-pre-wrap break-words text-ink [&_.katex-display]:my-2 [&_.katex]:text-[1.05rem]"
-                      />
-                    </div>
+                    <>
+                      <div className="mt-3 max-h-64 overflow-y-auto overflow-x-auto rounded-xl border border-hairline bg-white px-4 py-4 sm:max-h-80">
+                        <p className="mb-2 text-xs font-semibold tracking-wide text-muted">{copy.solution}</p>
+                        <KatexPreview
+                          tex={selected.solutionTex}
+                          className="block whitespace-pre-wrap break-words text-ink [&_.katex-display]:my-2 [&_.katex]:text-[1.05rem]"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-navy hover:text-navy-strong"
+                        onClick={() => setFullSolutionOpen(true)}>
+                        <Expand className="size-4" aria-hidden="true" />
+                        {copy.fullSolution.open}
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+
+                <div className="mt-4 flex flex-col gap-2 border-t border-navy/10 pt-4">
+                  <button
+                    type="button"
+                    className={
+                      lessonSetIds.includes(selected.id)
+                        ? 'inline-flex items-center justify-center gap-2 rounded-xl border border-navy/30 bg-navy-tint px-4 py-2.5 text-sm font-semibold text-navy'
+                        : 'inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong'
+                    }
+                    onClick={() => void toggleInSet(selected.id)}>
+                    {lessonSetIds.includes(selected.id) ? (
+                      <>
+                        <X className="size-4" aria-hidden="true" />
+                        {copy.removeFromSet}
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="size-4" aria-hidden="true" />
+                        {copy.addToSet}
+                      </>
+                    )}
+                  </button>
+                  {isUnsavedId(selected.id) && selected.source !== 'bank' ? (
                     <button
                       type="button"
-                      className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-navy hover:text-navy-strong"
-                      onClick={() => setFullSolutionOpen(true)}
-                    >
-                      <Expand className="size-4" aria-hidden="true" />
-                      {copy.fullSolution.open}
+                      disabled={saving}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/30 bg-navy-tint px-4 py-2.5 text-sm font-semibold text-navy disabled:opacity-60"
+                      onClick={() => {
+                        void (async () => {
+                          setSaving(true);
+                          try {
+                            await saveProblems([selected]);
+                          } finally {
+                            setSaving(false);
+                          }
+                        })();
+                      }}>
+                      <Save className="size-4" aria-hidden="true" />
+                      {saving ? copy.generate.saving : copy.generate.saveToBank}
                     </button>
-                  </>
-                ) : null}
-              </div>
-
-              <div className="mt-4 flex flex-col gap-2 border-t border-navy/10 pt-4">
-                <button
-                  type="button"
-                  className={
-                    lessonSetIds.includes(selected.id)
-                      ? "inline-flex items-center justify-center gap-2 rounded-xl border border-navy/30 bg-navy-tint px-4 py-2.5 text-sm font-semibold text-navy"
-                      : "inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong"
-                  }
-                  onClick={() => void toggleInSet(selected.id)}
-                >
-                  {lessonSetIds.includes(selected.id) ? (
-                    <>
-                      <X className="size-4" aria-hidden="true" />
-                      {copy.removeFromSet}
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="size-4" aria-hidden="true" />
-                      {copy.addToSet}
-                    </>
-                  )}
-                </button>
-                {isUnsavedId(selected.id) && selected.source !== "bank" ? (
-                  <button
-                    type="button"
-                    disabled={saving}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/30 bg-navy-tint px-4 py-2.5 text-sm font-semibold text-navy disabled:opacity-60"
-                    onClick={() => {
-                      void (async () => {
-                        setSaving(true);
-                        try {
-                          await saveProblems([selected]);
-                        } finally {
-                          setSaving(false);
-                        }
-                      })();
-                    }}
-                  >
-                    <Save className="size-4" aria-hidden="true" />
-                    {saving ? copy.generate.saving : copy.generate.saveToBank}
-                  </button>
-                ) : null}
-                {showGenerateVariants &&
-                canVary(
-                  selected,
-                  templateJsonForProblem(selected, families),
-                ) ? (
+                  ) : null}
+                  {showGenerateVariants && canVary(selected, templateJsonForProblem(selected, families)) ? (
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
+                      onClick={() => {
+                        setPanel('variants');
+                        setNotice(null);
+                      }}>
+                      <Shuffle className="size-4" aria-hidden="true" />
+                      {copy.variantPanel.submit}
+                    </button>
+                  ) : null}
+                  {showSendToLab ? (
+                    <button
+                      type="button"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
+                      onClick={() => {
+                        stashProblemForLab(selected);
+                        router.push(localePath(locale, '/teacher/lab'));
+                      }}>
+                      <FlaskConical className="size-4" aria-hidden="true" />
+                      {copy.actions.sendToLab}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
                     onClick={() => {
-                      setPanel("variants");
-                      setNotice(null);
-                    }}
-                  >
-                    <Shuffle className="size-4" aria-hidden="true" />
-                    {copy.variantPanel.submit}
+                      const family = copy.importFamily;
+                      const result = checkBankProblem(selected, templateJsonForProblem(selected, families));
+                      if (result.ok) {
+                        setCasOk(true);
+                        setCasNotice(
+                          replaceTokens(family.checkCasOk, {
+                            value: result.value,
+                          }),
+                        );
+                        return;
+                      }
+                      setCasOk(false);
+                      if (result.reason === 'no_formula') {
+                        setCasNotice(family.checkCasNoFormula);
+                        return;
+                      }
+                      if (result.reason === 'mismatch') {
+                        setCasNotice(
+                          replaceTokens(family.checkCasMismatch, {
+                            got: result.got ?? '',
+                            expected: result.expected ?? '',
+                          }),
+                        );
+                        return;
+                      }
+                      setCasNotice(family.checkCasFail);
+                    }}>
+                    <Calculator className="size-4" aria-hidden="true" />
+                    {copy.importFamily.checkCas}
                   </button>
-                ) : null}
-                {showSendToLab ? (
                   <button
                     type="button"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
-                    onClick={() => {
-                      stashProblemForLab(selected);
-                      router.push(localePath(locale, "/teacher/lab"));
-                    }}
-                  >
-                    <FlaskConical className="size-4" aria-hidden="true" />
-                    {copy.actions.sendToLab}
+                    onClick={() => void discardProblem(selected.id)}>
+                    <Trash2 className="size-4" aria-hidden="true" />
+                    {selected.source === 'bank' ? copy.generate.remove : copy.generate.discard}
                   </button>
-                ) : null}
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
-                  onClick={() => {
-                    const family = copy.importFamily;
-                    const result = checkBankProblem(
-                      selected,
-                      templateJsonForProblem(selected, families),
-                    );
-                    if (result.ok) {
-                      setCasOk(true);
-                      setCasNotice(
-                        replaceTokens(family.checkCasOk, {
-                          value: result.value,
-                        }),
-                      );
-                      return;
-                    }
-                    setCasOk(false);
-                    if (result.reason === "no_formula") {
-                      setCasNotice(family.checkCasNoFormula);
-                      return;
-                    }
-                    if (result.reason === "mismatch") {
-                      setCasNotice(
-                        replaceTokens(family.checkCasMismatch, {
-                          got: result.got ?? "",
-                          expected: result.expected ?? "",
-                        }),
-                      );
-                      return;
-                    }
-                    setCasNotice(family.checkCasFail);
-                  }}
-                >
-                  <Calculator className="size-4" aria-hidden="true" />
-                  {copy.importFamily.checkCas}
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
-                  onClick={() => void discardProblem(selected.id)}
-                >
-                  <Trash2 className="size-4" aria-hidden="true" />
-                  {selected.source === "bank"
-                    ? copy.generate.remove
-                    : copy.generate.discard}
-                </button>
-                {casNotice ? (
-                  <p
-                    className={
-                      casOk ? "text-sm text-navy" : "text-sm text-brass-strong"
-                    }
-                  >
-                    {casNotice}
-                  </p>
-                ) : null}
-              </div>
+                  {casNotice ? (
+                    <p className={casOk ? 'text-sm text-navy' : 'text-sm text-brass-strong'}>{casNotice}</p>
+                  ) : null}
+                </div>
               </div>
             </>
           ) : (
-            <p className="flex flex-1 items-center text-sm leading-relaxed text-body">
-              {copy.previewEmpty}
-            </p>
+            <p className="flex flex-1 items-center text-sm leading-relaxed text-body">{copy.previewEmpty}</p>
           )}
         </section>
       </div>
@@ -2907,9 +2384,7 @@ export function ProblemBankWorkspace({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold tracking-tight text-ink">
             {copy.lessonSet}
-            <span className="ml-2 text-sm font-medium text-muted">
-              {replaceCount(copy.results, lessonSet.length)}
-            </span>
+            <span className="ml-2 text-sm font-medium text-muted">{replaceCount(copy.results, lessonSet.length)}</span>
           </h2>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
             {lessonSet.length > 0 ? (
@@ -2926,21 +2401,18 @@ export function ProblemBankWorkspace({
                       setSaving(false);
                     }
                   })();
-                }}
-              >
+                }}>
                 {copy.clearSet}
               </button>
             ) : null}
             <Link
-              href={localePath(locale, "/teacher/problems")}
-              className="inline-flex items-center justify-center rounded-full bg-navy px-3 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong sm:py-1.5"
-            >
+              href={localePath(locale, '/teacher/problems')}
+              className="inline-flex items-center justify-center rounded-full bg-navy px-3 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong sm:py-1.5">
               {copy.actions.openLab}
             </Link>
             <Link
-              href={localePath(locale, "/teacher/homework")}
-              className="inline-flex items-center justify-center rounded-full border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy sm:py-1.5"
-            >
+              href={localePath(locale, '/teacher/homework')}
+              className="inline-flex items-center justify-center rounded-full border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy sm:py-1.5">
               {copy.actions.openHomework}
             </Link>
           </div>
@@ -2952,29 +2424,21 @@ export function ProblemBankWorkspace({
             {lessonSet.map((problem, index) => (
               <li
                 key={problem.id}
-                className="inline-flex max-w-full items-center gap-1 rounded-full border border-hairline bg-paper py-1 pr-1 pl-3 text-sm text-ink"
-              >
+                className="inline-flex max-w-full items-center gap-1 rounded-full border border-hairline bg-paper py-1 pr-1 pl-3 text-sm text-ink">
                 <button
                   type="button"
                   className="inline-flex min-w-0 max-w-[min(100%,16rem)] items-center gap-2 overflow-hidden hover:text-navy sm:max-w-[18rem]"
-                  onClick={() => setSelectedId(problem.id)}
-                >
-                  <span className="shrink-0 font-semibold text-navy">
-                    {index + 1}
-                  </span>
+                  onClick={() => setSelectedId(problem.id)}>
+                  <span className="shrink-0 font-semibold text-navy">{index + 1}</span>
                   <span className="min-w-0 overflow-x-auto">
-                    <KatexPreview
-                      tex={problem.promptTex}
-                      className="whitespace-nowrap [&_.katex]:text-[0.9rem]"
-                    />
+                    <KatexPreview tex={problem.promptTex} className="whitespace-nowrap [&_.katex]:text-[0.9rem]" />
                   </span>
                 </button>
                 <button
                   type="button"
                   className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-navy"
                   aria-label={copy.removeFromSet}
-                  onClick={() => void toggleInSet(problem.id)}
-                >
+                  onClick={() => void toggleInSet(problem.id)}>
                   <X className="size-3.5" aria-hidden="true" />
                 </button>
               </li>
@@ -2982,92 +2446,6 @@ export function ProblemBankWorkspace({
           </ul>
         )}
       </section>
-    </div>
-  );
-}
-
-function CopyPromptButton({
-  text,
-  copyLabel,
-  copiedLabel,
-}: {
-  text: string;
-  copyLabel: string;
-  copiedLabel: string;
-}) {
-  const [copied, setCopied] = useState(false);
-
-  async function copyText() {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {
-      setCopied(false);
-    }
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => void copyText()}
-      aria-label={copied ? copiedLabel : copyLabel}
-      className="absolute top-2 right-2 inline-flex size-9 items-center justify-center rounded-lg border border-hairline bg-white text-muted opacity-100 shadow-sm transition-opacity hover:border-navy/30 hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/15 sm:size-8 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus-visible:opacity-100"
-    >
-      {copied ? (
-        <Check className="size-3.5 text-navy" aria-hidden="true" />
-      ) : (
-        <Copy className="size-3.5" aria-hidden="true" />
-      )}
-    </button>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <p className="flex flex-col gap-0.5 text-sm sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-      <span className="text-muted">{label}</span>
-      <span className="text-lg font-semibold tabular-nums text-ink">
-        {value}
-      </span>
-    </p>
-  );
-}
-
-function FilterSelect<T extends string>({
-  label,
-  value,
-  allLabel,
-  options,
-  labels,
-  onChange,
-}: {
-  label: string;
-  value: T | "all";
-  allLabel: string;
-  options: readonly T[];
-  labels: Record<string, string>;
-  onChange: (value: T | "all") => void;
-}) {
-  const id = useId();
-
-  return (
-    <div>
-      <label htmlFor={id} className="sr-only">
-        {label}
-      </label>
-      <SelectMenu
-        id={id}
-        value={value}
-        onChange={onChange}
-        options={[
-          { value: "all" as const, label: allLabel },
-          ...options.map((option) => ({
-            value: option,
-            label: labels[option],
-          })),
-        ]}
-      />
     </div>
   );
 }
