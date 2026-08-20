@@ -26,6 +26,21 @@ export type GenerateDiverseProblemsInput = z.infer<
   typeof generateDiverseProblemsSchema
 >;
 
+export const aiChatTurnSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string().trim().min(1).max(10000),
+});
+
+export const teacherAiChatSchema = z.object({
+  model: z.enum(AI_MODEL_IDS).default(DEFAULT_AI_MODEL),
+  locale: z.enum(locales),
+  message: z.string().trim().min(1).max(10000),
+  history: z.array(aiChatTurnSchema).max(20).default([]),
+});
+
+export type AiChatTurn = z.infer<typeof aiChatTurnSchema>;
+export type TeacherAiChatInput = z.infer<typeof teacherAiChatSchema>;
+
 const variablesSchema = z
   .array(
     z.object({
@@ -156,3 +171,5 @@ export type DiverseGenerateError =
   | "billing"
   | "timeout"
   | "bad_output";
+
+export type TeacherAiChatError = Exclude<DiverseGenerateError, "none_verified">;

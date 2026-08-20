@@ -56,6 +56,12 @@ function peelProseFromMath(segment: Segment): Segment[] {
 
 function looksLikeProse(tex: string) {
   if (/\$|\\\(|\\\[/.test(tex)) return true;
+  // Non-ASCII letters (Georgian/Cyrillic/…) must stay outside math mode —
+  // KaTeX drops spaces between words if the whole string is one formula.
+  if (/[^\u0000-\u007f]/u.test(tex) && /\p{L}/u.test(tex)) return true;
+  // Long mixed chat/AI blobs must never be fed to KaTeX as one formula.
+  if (tex.length > 400 && /[\p{L}]{3,}/u.test(tex)) return true;
+  if (/[A-Za-z]{2,}\s+[A-Za-z]{2,}/.test(tex)) return true;
   if (/\\[a-zA-Z]+/.test(tex) || /[_^]\{/.test(tex)) return false;
   return /[\p{L}]{2,}\s+[\p{L}]{2,}/u.test(tex);
 }
@@ -112,7 +118,9 @@ export function KatexPreview({
       }
 
       const math = document.createElement("span");
-      math.className = segment.display ? "block my-2 overflow-x-auto" : "inline";
+      math.className = segment.display
+        ? "block my-2 overflow-x-auto hide-scrollbar"
+        : "inline";
       renderKatex(segment.value, math, segment.display);
       node.appendChild(math);
     }

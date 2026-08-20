@@ -6,8 +6,23 @@ import { AI_MODEL_IDS, DEFAULT_AI_MODEL, getAiModel } from "../ai-models";
 import { assertModelAvailable, recordModelUse } from "../ai-limits";
 import { rememberProviderWallet } from "../ai-billing";
 import type { DiverseGenerateError } from "../ai-schema";
-import { parseProblemTemplate } from "./adapt";
-import type { ProblemTemplate } from "./schema";
+import { adaptExternalTemplate, parseProblemTemplate } from "./adapt";
+import type { ImportIssue } from "./audit";
+import { problemTemplateSchema, type ProblemTemplate } from "./schema";
+import { PROBLEM_DIFFICULTIES, PROBLEM_YEARS } from "../types";
+
+/** Photo OCR often invents a single year/difficulty; open labels so Generate is not blocked. */
+function openPhotoFamilyLabels(template: ProblemTemplate): ProblemTemplate {
+  return {
+    ...template,
+    years: [...PROBLEM_YEARS],
+    difficulties: [...PROBLEM_DIFFICULTIES],
+    variants: template.variants.map((variant) => {
+      const { years: _years, difficulties: _difficulties, ...rest } = variant;
+      return rest;
+    }),
+  };
+}
 
 export const proposeTemplateSchema = z
   .object({
@@ -29,7 +44,12 @@ export type ProposeTemplateInput = z.infer<typeof proposeTemplateSchema>;
 
 export type ProposeTemplateResult =
   | { ok: true; template: ProblemTemplate; json: string }
-  | { ok: false; error: DiverseGenerateError | "unsupported" | "invalid" };
+  | {
+      ok: false;
+      error: DiverseGenerateError | "unsupported" | "invalid";
+      issues?: ImportIssue[];
+      json?: string;
+    };
 
 const SOLVE_EXAMPLE = `{
   "id": "linear-one-step",
@@ -493,34 +513,51 @@ function buildPhotoPrompt(input: ProposeTemplateInput, previousError?: string) {
   return `Read the attached image (printed stem, screenshot, handwriting, sketch).
 Turn WHAT YOU CAN SEE into one JSON problem family. Never return {"unsupported":true}.
 
+MULTIPLE PROBLEMS (critical):
+- Scan the WHOLE image top to bottom and left to right.
+- If the image shows 2, 3, or more distinct numbered tasks (e.g. #9 and #10), create ONE variant for EACH problem.
+- Do NOT stop after the first problem. Do NOT merge different stems into one prompt.
+- Use unique variant ids such as "p1", "p2", "p9", "p10" matching the printed numbers when visible.
+- Keep each problem's own printed stem and its own handwritten solution with that variant.
+
 Priority:
-1. Copy the printed problem in the page language (Georgian, English, Russian, …). Keep the wording.
+1. Copy each printed problem in the page language (Georgian, English, Russian, …). Keep the wording.
 2. Keep numbers as written, including roots and degrees ($\\sqrt{3}$, $30^{\\circ}$).
-3. If resampling is unclear, use empty params and empty derived — one static variant is OK.
+3. If resampling is unclear, use empty params and empty derived — static variants are OK.
 4. If integers clearly resample, you MAY replace them with {{slots}} and add params.
-5. Put readable handwritten working into solutionSteps as LaTeX. If the writing is unreadable, give one short correct solution in LaTeX.
-6. There is no diagram field. Describe the figure pricesly in the prompt.
+5. Put readable handwritten working into that variant's solutionSteps as short LaTeX lines (max 8 steps, each under 800 characters). Prefer the final answer over a long write-up.
+6. There is no diagram field. Describe the figure briefly in the prompt.
 7. Wrap math in $...$. Do not invent a different task.
-9. Text is always in Georgian
+8. Text / prompt language: use Georgian when the printed stem is Georgian.
+9. Do NOT invent year or difficulty. Unless the page clearly prints a grade/year, set years to ["7","8","9","10","11","12"] and difficulties to ["easy","medium","hard"]. Never pin a single guessed year like ["8"] alone.
+10. Prefer empty params and empty derived for geometry screenshots.
 
 
-JSON shape:
+JSON shape (example with TWO problems — always emit as many variants as distinct problems you see):
 {
   "id": "short-latin-slug",
   "topic": "geometry",
-  "difficulties": ["medium"],
-  "years": ["8"],
+  "difficulties": ["easy", "medium", "hard"],
+  "years": ["7", "8", "9", "10", "11", "12"],
   "instructionId": "solve",
-  "variants": [{
-    "id": "main",
-    "params": {},
-    "derived": {},
-    "constraints": [],
-    "prompt": "...",
-    "solutionSteps": ["..."],
-    "years": ["8"],
-    "difficulties": ["medium"]
-  }]
+  "variants": [
+    {
+      "id": "p10",
+      "params": {},
+      "derived": {},
+      "constraints": [],
+      "prompt": "first problem stem...",
+      "solutionSteps": ["$m = 10 + 2\\\\sqrt{3}$"]
+    },
+    {
+      "id": "p9",
+      "params": {},
+      "derived": {},
+      "constraints": [],
+      "prompt": "second problem stem...",
+      "solutionSteps": ["$M_1N_1 = 3$"]
+    }
+  ]
 }
 
 topic one of: algebra, equations, geometry, functions, percent, calculus, vectors, combinatorics.
@@ -600,6 +637,31 @@ ${BINOMIAL_EXAMPLE}
 ${retry}${extra}`;
 }
 
+function pathOf(path: readonly PropertyKey[]) {
+  return path.map(String).filter(Boolean).join(".") || "(root)";
+}
+
+function zodIssues(raw: unknown): ImportIssue[] {
+  const adapted = adaptExternalTemplate(raw);
+  const parsed = problemTemplateSchema.safeParse(adapted);
+  if (parsed.success) return [];
+  return parsed.error.issues.slice(0, 24).map((issue) => ({
+    item: "AI JSON",
+    path: pathOf(issue.path),
+    message: issue.message,
+  }));
+}
+
+function formatIssueHint(issues: ImportIssue[]) {
+  if (issues.length === 0) {
+    return "JSON did not match the schema. Return a static family with empty params/derived. Create one short variant for every distinct problem. years as strings. lowercase difficulties. short solutionSteps.";
+  }
+  return `JSON did not match the schema:\n${issues
+    .slice(0, 12)
+    .map((issue) => `- ${issue.path}: ${issue.message}`)
+    .join("\n")}\nFix every issue. Prefer empty params/derived. Keep solutionSteps short. Include every distinct problem as its own variant.`;
+}
+
 function parseTemplateText(text: string): ProposeTemplateResult {
   const snippet = extractObject(text);
   if (!snippet) return { ok: false, error: "bad_output" };
@@ -608,7 +670,7 @@ function parseTemplateText(text: string): ProposeTemplateResult {
   try {
     raw = JSON.parse(snippet) as unknown;
   } catch {
-    return { ok: false, error: "bad_output" };
+    return { ok: false, error: "bad_output", json: snippet };
   }
 
   if (
@@ -622,7 +684,13 @@ function parseTemplateText(text: string): ProposeTemplateResult {
 
   const parsed = parseProblemTemplate(raw);
   if (!parsed.success) {
-    return { ok: false, error: "invalid" };
+    const issues = zodIssues(raw);
+    return {
+      ok: false,
+      error: "invalid",
+      issues,
+      json: JSON.stringify(adaptExternalTemplate(raw), null, 2),
+    };
   }
 
   return {
@@ -680,7 +748,7 @@ export async function proposeTemplateFromExample(
 
     if (!result.ok && result.error === "invalid") {
       const schemaHint = input.image
-        ? "JSON did not match the schema. Return one static variant: empty params, empty derived, prompt = the stem you can read (keep the page language), solutionSteps = readable working or one short LaTeX solution. Never return unsupported."
+        ? formatIssueHint(result.issues ?? [])
         : looksLikeGeneralTermIdentity(input.text)
           ? "JSON did not match the schema. Follow the binomial identity example. Keep T_{r+1} and the letter r. Sample n,a,p,q only. instructionId expand. Use \\\\binom{{{n}}}{r} and derived pn = p*n, coeff = p+q."
           : "JSON did not match the problem family schema. Follow the example exactly.";
@@ -694,7 +762,7 @@ export async function proposeTemplateFromExample(
 
     if (!result.ok && result.error === "unsupported") {
       const retryHint = input.image
-        ? "Do NOT return unsupported. Return a static family with empty params. Transcribe the stem you can read. Keep the page language. Put any readable solution into solutionSteps."
+        ? "Do NOT return unsupported. Return a static family with empty params. Transcribe EVERY distinct problem in the image as its own variant. Keep the page language. Put each problem's readable solution into that variant's solutionSteps."
         : looksLikeGeneralTermIdentity(input.text) ||
             looksLikeBinomial(input.text)
           ? "This is a binomial general-term IDENTITY in r. Do NOT return unsupported. Do NOT rewrite it as 'T_k in the expansion of'. Follow the binomial identity example. Keep r as a letter."
@@ -735,6 +803,14 @@ export async function proposeTemplateFromExample(
     if (result.ok) {
       await recordModelUse(gemini.id);
       await rememberProviderWallet(gemini.provider, "ready");
+      if (input.image) {
+        const opened = openPhotoFamilyLabels(result.template);
+        return {
+          ok: true,
+          template: opened,
+          json: JSON.stringify(opened, null, 2),
+        };
+      }
       return result;
     }
 

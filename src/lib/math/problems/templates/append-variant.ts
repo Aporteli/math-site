@@ -1,5 +1,6 @@
 import type { ProblemDifficulty, ProblemYear } from "../types";
 import { parseProblemTemplate, parseTeacherJson } from "./adapt";
+import { auditImportJson, type ImportIssue } from "./audit";
 import { FAMILY_VARIANT_MAX } from "./schema";
 import type { ProblemTemplate, TemplateVariant } from "./schema";
 
@@ -115,7 +116,37 @@ export type IncomingFamilyLabels = {
 
 export type MergeIncomingFamilyResult =
   | { ok: true; json: string; added: number }
-  | { ok: false; reason: "json" | "schema" | "full" | "family" };
+  | {
+      ok: false;
+      reason: "json" | "schema" | "full" | "family";
+      issues?: ImportIssue[];
+    };
+
+/** Audit pasted cards, then the family after a simulated merge. */
+export function auditVariantPaste(
+  familyRaw: string,
+  incomingRaw: string,
+  labels: IncomingFamilyLabels = {},
+): ImportIssue[] {
+  if (!incomingRaw.replace(/^\uFEFF/, "").trim()) return [];
+
+  const cardIssues = auditImportJson(incomingRaw);
+  if (cardIssues.length > 0) return cardIssues;
+
+  const merge = mergeIncomingFamilyJson(familyRaw, incomingRaw, labels);
+  if (!merge.ok) {
+    return (
+      merge.issues ?? [
+        {
+          item: "merge",
+          path: "(root)",
+          message: merge.reason,
+        },
+      ]
+    );
+  }
+  return auditImportJson(merge.json);
+}
 
 /**
  * Keep the open family; append variants parsed from a pasted card,
@@ -132,15 +163,27 @@ export function mergeIncomingFamilyJson(
   }
 
   const familyParsed = parseFamilyText(familyRaw);
-  if (!familyParsed.success) return { ok: false, reason: "family" };
+  if (!familyParsed.success) {
+    return {
+      ok: false,
+      reason: "family",
+      issues: auditImportJson(familyRaw),
+    };
+  }
 
   let incomingParsed: ReturnType<typeof parseProblemTemplate>;
   try {
     incomingParsed = parseProblemTemplate(parseTeacherJson(incomingRaw));
   } catch {
-    return { ok: false, reason: "json" };
+    return { ok: false, reason: "json", issues: auditImportJson(incomingRaw) };
   }
-  if (!incomingParsed.success) return { ok: false, reason: "schema" };
+  if (!incomingParsed.success) {
+    return {
+      ok: false,
+      reason: "schema",
+      issues: auditImportJson(incomingRaw),
+    };
+  }
 
   const family = familyParsed.data;
   const incoming = incomingParsed.data;

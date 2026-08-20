@@ -384,9 +384,11 @@ export function templateFromProblem(
   )
     ? problem.difficulty
     : "medium";
-  const year = (PROBLEM_YEARS as readonly string[]).includes(problem.year)
-    ? problem.year
-    : "9";
+  const year =
+    problem.year &&
+    (PROBLEM_YEARS as readonly string[]).includes(problem.year)
+      ? problem.year
+      : "9";
 
   return {
     id: (problem.templateId || "auto-slot").slice(0, 64),

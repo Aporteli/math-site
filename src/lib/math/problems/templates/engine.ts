@@ -1,19 +1,9 @@
-import { evaluateTemplateExpr, numberToTex } from "../cas";
-import { polishStudentTex } from "../tex";
-import {
-  aligned,
-  linear,
-  monomial,
-  signed,
-  texFrac,
-} from "../algorithms/algebra/helpers";
-import { nonzero, pick, randInt } from "../algorithms/rng";
-import { problem } from "../algorithms/types";
-import type {
-  AlgorithmContext,
-  GeneratedProblem,
-  ProblemAlgorithm,
-} from "../algorithms/types";
+import { evaluateTemplateExpr, numberToTex } from '../cas';
+import { polishStudentTex } from '../tex';
+import { aligned, linear, monomial, signed, texFrac } from '../algorithms/algebra/helpers';
+import { nonzero, pick, randInt } from '../algorithms/rng';
+import { problem } from '../algorithms/types';
+import type { AlgorithmContext, GeneratedProblem, ProblemAlgorithm } from '../algorithms/types';
 import {
   PROBLEM_DIFFICULTIES,
   PROBLEM_YEARS,
@@ -21,38 +11,24 @@ import {
   type GeneratorDifficulty,
   type ProblemDifficulty,
   type ProblemYear,
-} from "../types";
-import { parseProblemTemplateOrThrow } from "./adapt";
-import { inferTemplateFormula } from "./check";
-import { closeParamIndexSlots, exprUsesOnlyKnownNames } from "./slot-markup";
-import type {
-  LeafParamSpec,
-  ParamSpec,
-  ProblemTemplate,
-  TemplateVariant,
-} from "./schema";
-import { expandWorkRateFamily } from "./work-rate";
+} from '../types';
+import { parseProblemTemplateOrThrow } from './adapt';
+import { inferTemplateFormula } from './check';
+import { closeParamIndexSlots, exprUsesOnlyKnownNames } from './slot-markup';
+import type { LeafParamSpec, ParamSpec, ProblemTemplate, TemplateVariant } from './schema';
+import { expandWorkRateFamily } from './work-rate';
 
 const SAMPLE_RETRIES = 80;
 const INT_RETRIES = 64;
 /** Innermost `{{...}}` only — so LaTeX `x^{{{p}}}` becomes `x^{2}`, not slot `{p`. */
 const SLOT = /\{\{\s*([^{}]+?)\s*\}\}/g;
 const INT_LITERAL = /^-?\d+$/;
-const FORMATTERS = new Set([
-  "linear",
-  "signed",
-  "texFrac",
-  "abs",
-  "lead",
-  "term",
-]);
+const FORMATTERS = new Set(['linear', 'signed', 'texFrac', 'abs', 'lead', 'term']);
 
 type SlotValue = number | string;
 
-function isIntParam(
-  spec: LeafParamSpec,
-): spec is Extract<LeafParamSpec, { int: [number, number] }> {
-  return "int" in spec;
+function isIntParam(spec: LeafParamSpec): spec is Extract<LeafParamSpec, { int: [number, number] }> {
+  return 'int' in spec;
 }
 
 function sampleLeaf(spec: LeafParamSpec, rng: () => number): SlotValue {
@@ -66,14 +42,11 @@ function sampleLeaf(spec: LeafParamSpec, rng: () => number): SlotValue {
     const n = spec.nonzero ? nonzero(rng, min, max) : randInt(rng, min, max);
     if (!excluded.has(n)) return n;
   }
-  throw new Error("int sample exhausted");
+  throw new Error('int sample exhausted');
 }
 
-function leafForDifficulty(
-  spec: ParamSpec,
-  difficulty: GeneratorDifficulty,
-): LeafParamSpec {
-  if (!("byDifficulty" in spec)) return spec;
+function leafForDifficulty(spec: ParamSpec, difficulty: GeneratorDifficulty): LeafParamSpec {
+  if (!('byDifficulty' in spec)) return spec;
   const chosen =
     spec.byDifficulty[difficulty] ??
     spec.byDifficulty.hard ??
@@ -86,14 +59,10 @@ function leafForDifficulty(
   return chosen;
 }
 
-function exampleFits(
-  spec: ParamSpec,
-  value: SlotValue,
-  difficulty: GeneratorDifficulty,
-): boolean {
+function exampleFits(spec: ParamSpec, value: SlotValue, difficulty: GeneratorDifficulty): boolean {
   const leaf = leafForDifficulty(spec, difficulty);
   if (isIntParam(leaf)) {
-    if (typeof value !== "number" || !Number.isInteger(value)) return false;
+    if (typeof value !== 'number' || !Number.isInteger(value)) return false;
     const [min, max] = leaf.int;
     if (value < min || value > max) return false;
     if (leaf.nonzero && value === 0) return false;
@@ -103,11 +72,7 @@ function exampleFits(
   return leaf.pick.some((item) => item === value);
 }
 
-function sampleParams(
-  variant: TemplateVariant,
-  ctx: AlgorithmContext,
-  useExample: boolean,
-): Record<string, SlotValue> {
+function sampleParams(variant: TemplateVariant, ctx: AlgorithmContext, useExample: boolean): Record<string, SlotValue> {
   const values: Record<string, SlotValue> = {};
   for (const [name, spec] of Object.entries(variant.params)) {
     const anchored = useExample ? variant.example?.[name] : undefined;
@@ -123,15 +88,12 @@ function sampleParams(
 function numericScope(values: Record<string, SlotValue>): Record<string, number> {
   const scope: Record<string, number> = {};
   for (const [name, value] of Object.entries(values)) {
-    if (typeof value === "number") scope[name] = value;
+    if (typeof value === 'number') scope[name] = value;
   }
   return scope;
 }
 
-function interpolateDerivedString(
-  expr: string,
-  scope: Record<string, number>,
-): string {
+function interpolateDerivedString(expr: string, scope: Record<string, number>): string {
   return expr.replace(/\b[A-Za-z][A-Za-z0-9_]*\b/g, (name) => {
     if (!Object.hasOwn(scope, name)) return name;
     const value = scope[name]!;
@@ -139,22 +101,19 @@ function interpolateDerivedString(
   });
 }
 
-function applyDerived(
-  variant: TemplateVariant,
-  values: Record<string, SlotValue>,
-): boolean {
+function applyDerived(variant: TemplateVariant, values: Record<string, SlotValue>): boolean {
   for (const [name, expr] of Object.entries(variant.derived)) {
     const result = evaluateTemplateExpr(expr, numericScope(values));
     if (!result.ok) {
-      if (result.reason === "sym") {
+      if (result.reason === 'sym') {
         values[name] = interpolateDerivedString(expr, numericScope(values));
         continue;
       }
-      if (result.reason === "unsafe") {
+      if (result.reason === 'unsafe') {
         values[name] = interpolateDerivedString(expr, numericScope(values));
         continue;
       }
-      if (result.reason === "unclean" || result.reason === "nonreal") {
+      if (result.reason === 'unclean' || result.reason === 'nonreal') {
         return false;
       }
       throw new Error(`derived ${name}: ${result.reason}`);
@@ -169,7 +128,7 @@ function constraintsHold(variant: TemplateVariant, values: Record<string, SlotVa
   for (const expr of variant.constraints) {
     const result = evaluateTemplateExpr(expr, scope);
     if (!result.ok) {
-      if (result.reason === "unclean" || result.reason === "nonreal") {
+      if (result.reason === 'unclean' || result.reason === 'nonreal') {
         return false;
       }
       throw new Error(`constraint ${expr}: ${result.reason}`);
@@ -179,11 +138,7 @@ function constraintsHold(variant: TemplateVariant, values: Record<string, SlotVa
   return true;
 }
 
-function resolveArg(
-  token: string,
-  values: Record<string, SlotValue>,
-  asLiteral = false,
-): SlotValue {
+function resolveArg(token: string, values: Record<string, SlotValue>, asLiteral = false): SlotValue {
   if (token in values) return values[token]!;
   if (INT_LITERAL.test(token)) return Number(token);
   if (asLiteral) return token;
@@ -191,23 +146,23 @@ function resolveArg(
 }
 
 function asNumber(value: SlotValue, label: string): number {
-  if (typeof value !== "number") {
+  if (typeof value !== 'number') {
     throw new Error(`${label} is not a number`);
   }
   return value;
 }
 
 function asLetter(value: SlotValue): string {
-  return typeof value === "string" ? value : String(value);
+  return typeof value === 'string' ? value : String(value);
 }
 
 function formatValue(value: SlotValue): string {
-  if (typeof value === "string") return value;
+  if (typeof value === 'string') return value;
   return numberToTex(value);
 }
 
 function formatPolyTerm(coef: number, body: string, leading: boolean) {
-  if (coef === 0) return "";
+  if (coef === 0) return '';
   const piece = monomial(coef, body);
   if (leading) return coef < 0 ? `-${piece}` : piece;
   return coef < 0 ? `- ${piece}` : `+ ${piece}`;
@@ -216,45 +171,35 @@ function formatPolyTerm(coef: number, body: string, leading: boolean) {
 function termBody(args: SlotValue[]) {
   return args
     .slice(1)
-    .map((value) => (typeof value === "string" ? value : formatValue(value)))
-    .join("");
+    .map((value) => (typeof value === 'string' ? value : formatValue(value)))
+    .join('');
 }
 
-function applyFormatter(
-  name: string,
-  args: SlotValue[],
-): string {
+function applyFormatter(name: string, args: SlotValue[]): string {
   switch (name) {
-    case "linear": {
-      if (args.length !== 3) throw new Error("linear needs a b v");
-      return linear(
-        asNumber(args[0]!, "linear a"),
-        asNumber(args[1]!, "linear b"),
-        asLetter(args[2]!),
-      );
+    case 'linear': {
+      if (args.length !== 3) throw new Error('linear needs a b v');
+      return linear(asNumber(args[0]!, 'linear a'), asNumber(args[1]!, 'linear b'), asLetter(args[2]!));
     }
-    case "signed": {
-      if (args.length !== 1) throw new Error("signed needs n");
-      return signed(asNumber(args[0]!, "signed n"));
+    case 'signed': {
+      if (args.length !== 1) throw new Error('signed needs n');
+      return signed(asNumber(args[0]!, 'signed n'));
     }
-    case "texFrac": {
-      if (args.length !== 2) throw new Error("texFrac needs n d");
-      return texFrac(
-        asNumber(args[0]!, "texFrac n"),
-        asNumber(args[1]!, "texFrac d"),
-      );
+    case 'texFrac': {
+      if (args.length !== 2) throw new Error('texFrac needs n d');
+      return texFrac(asNumber(args[0]!, 'texFrac n'), asNumber(args[1]!, 'texFrac d'));
     }
-    case "abs": {
-      if (args.length !== 1) throw new Error("abs needs n");
+    case 'abs': {
+      if (args.length !== 1) throw new Error('abs needs n');
       return `\\left|${formatValue(args[0]!)}\\right|`;
     }
-    case "lead": {
-      if (args.length < 1) throw new Error("lead needs coef");
-      return formatPolyTerm(asNumber(args[0]!, "lead coef"), termBody(args), true);
+    case 'lead': {
+      if (args.length < 1) throw new Error('lead needs coef');
+      return formatPolyTerm(asNumber(args[0]!, 'lead coef'), termBody(args), true);
     }
-    case "term": {
-      if (args.length < 1) throw new Error("term needs coef");
-      return formatPolyTerm(asNumber(args[0]!, "term coef"), termBody(args), false);
+    case 'term': {
+      if (args.length < 1) throw new Error('term needs coef');
+      return formatPolyTerm(asNumber(args[0]!, 'term coef'), termBody(args), false);
     }
     default:
       throw new Error(`unknown formatter ${name}`);
@@ -273,33 +218,25 @@ function renderExprSlot(expr: string, values: Record<string, SlotValue>): string
  * `T_{{{r}+1}}` / `T_{{{r} + 1}}` closes the slot too early.
  * Rewrite to `{{r + 1}}` so it evaluates (e.g. T_{3}).
  */
-const BROKEN_EXPR_SLOT =
-  /\{\{\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}(?!\})(\s*[+\-*/^]\s*[^}]*?)\}\}/g;
+const BROKEN_EXPR_SLOT = /\{\{\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}(?!\})(\s*[+\-*/^]\s*[^}]*?)\}\}/g;
 const MATRIX_SIZE_SLOT =
   /_\{+\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}\s*\\times\s*\{+\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}+/g;
-const ADJACENT_SLOTS =
-  /\{\{\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}\}\{\{\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}\}/g;
+const ADJACENT_SLOTS = /\{\{\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}\}\{\{\s*([A-Za-z][A-Za-z0-9_]{0,23})\s*\}\}/g;
 
-function rewriteBrokenSlots(
-  template: string,
-  values: Record<string, SlotValue>,
-): string {
+function rewriteBrokenSlots(template: string, values: Record<string, SlotValue>): string {
   const names = new Set(Object.keys(values));
   const known = (name: string) => names.has(name);
   let out = template.replace(MATRIX_SIZE_SLOT, (full, a: string, b: string) =>
     known(a) && known(b) ? `_{{{${a}}} \\times {{${b}}}}` : full,
   );
   out = closeParamIndexSlots(out, names);
-  out = out.replace(
-    BROKEN_EXPR_SLOT,
-    (full, name: string, rest: string, offset: number) => {
-      if (!known(name) || !exprUsesOnlyKnownNames(rest, names)) return full;
-      const wrapped = offset > 0 && out[offset - 1] === "{";
-      const alreadyClosed = out[offset + full.length] === "}";
-      const closer = wrapped && !alreadyClosed ? "}" : "";
-      return `{{${name}${rest}}}${closer}`;
-    },
-  );
+  out = out.replace(BROKEN_EXPR_SLOT, (full, name: string, rest: string, offset: number) => {
+    if (!known(name) || !exprUsesOnlyKnownNames(rest, names)) return full;
+    const wrapped = offset > 0 && out[offset - 1] === '{';
+    const alreadyClosed = out[offset + full.length] === '}';
+    const closer = wrapped && !alreadyClosed ? '}' : '';
+    return `{{${name}${rest}}}${closer}`;
+  });
   out = out.replace(ADJACENT_SLOTS, (full, a: string, b: string) =>
     known(a) && known(b) ? `{{${a}}}\\cdot{{${b}}}` : full,
   );
@@ -310,17 +247,15 @@ function render(template: string, values: Record<string, SlotValue>): string {
   return rewriteBrokenSlots(template, values).replace(SLOT, (_, inner: string) => {
     const trimmed = inner.trim();
     const tokens = trimmed.split(/\s+/).filter(Boolean);
-    if (tokens.length === 0) throw new Error("empty slot");
+    if (tokens.length === 0) throw new Error('empty slot');
 
     const head = tokens[0]!;
     if (tokens.length > 1 && FORMATTERS.has(head)) {
       const argTokens = tokens.slice(1);
-      const literalArgs = head === "term" || head === "lead";
+      const literalArgs = head === 'term' || head === 'lead';
       return applyFormatter(
         head,
-        argTokens.map((token, index) =>
-          resolveArg(token, values, literalArgs && index > 0),
-        ),
+        argTokens.map((token, index) => resolveArg(token, values, literalArgs && index > 0)),
       );
     }
 
@@ -336,13 +271,8 @@ function variantYears(variant: TemplateVariant, template: ProblemTemplate) {
   return variant.years?.length ? variant.years : template.years;
 }
 
-function variantDifficulties(
-  variant: TemplateVariant,
-  template: ProblemTemplate,
-) {
-  return variant.difficulties?.length
-    ? variant.difficulties
-    : template.difficulties;
+function variantDifficulties(variant: TemplateVariant, template: ProblemTemplate) {
+  return variant.difficulties?.length ? variant.difficulties : template.difficulties;
 }
 
 export function matchingTemplateVariants(
@@ -365,15 +295,13 @@ export function matchingTemplateVariants(
 export function classifyTemplateGenerateFilter(
   raw: unknown,
   filters: { difficulty?: ProblemDifficulty; year?: ProblemYear } = {},
-): "ok" | "empty" | "no_match" {
+): 'ok' | 'empty' | 'no_match' {
   try {
     const template = expandWorkRateFamily(parseProblemTemplateOrThrow(raw));
-    if (template.variants.length === 0) return "empty";
-    return matchingTemplateVariants(template, filters).length > 0
-      ? "ok"
-      : "no_match";
+    if (template.variants.length === 0) return 'empty';
+    return matchingTemplateVariants(template, filters).length > 0 ? 'ok' : 'no_match';
   } catch {
-    return "empty";
+    return 'empty';
   }
 }
 
@@ -405,9 +333,7 @@ export function collectTemplateGenerateLabels(raw: unknown): {
     }
     return {
       years: PROBLEM_YEARS.filter((year) => years.has(year)),
-      difficulties: PROBLEM_DIFFICULTIES.filter((difficulty) =>
-        difficulties.has(difficulty),
-      ),
+      difficulties: PROBLEM_DIFFICULTIES.filter((difficulty) => difficulties.has(difficulty)),
     };
   } catch {
     return { years: [], difficulties: [] };
@@ -421,21 +347,15 @@ function stampVariantLabels(
 ): { year: ProblemYear; difficulty: ProblemDifficulty } {
   const years = variantYears(variant, template);
   const diffs = variantDifficulties(variant, template);
-  const year =
-    ctx.filterYear && years.includes(ctx.filterYear)
-      ? ctx.filterYear
-      : (years[0] ?? ctx.year);
+  const year = ctx.filterYear && years.includes(ctx.filterYear) ? ctx.filterYear : (years[0] ?? ctx.year);
   const difficulty: ProblemDifficulty =
     ctx.filterDifficulty && diffs.includes(ctx.filterDifficulty)
       ? ctx.filterDifficulty
-      : (diffs[0] ?? ctx.filterDifficulty ?? "medium");
+      : (diffs[0] ?? ctx.filterDifficulty ?? 'medium');
   return { year, difficulty };
 }
 
-function pickVariant(
-  ctx: AlgorithmContext,
-  template: ProblemTemplate,
-): TemplateVariant | null {
+function pickVariant(ctx: AlgorithmContext, template: ProblemTemplate): TemplateVariant | null {
   const variants = template.variants;
   const first = variants[0];
   if (!first) return null;
@@ -451,11 +371,7 @@ function pickVariant(
   if (pool.length === 0) return null;
   if (ctx.anchorExample) {
     return (
-      pool.find(
-        (variant) =>
-          variant.example != null && Object.keys(variant.example).length > 0,
-      ) ?? pool[0] ??
-      null
+      pool.find((variant) => variant.example != null && Object.keys(variant.example).length > 0) ?? pool[0] ?? null
     );
   }
   if (ctx.variantIndex != null) {
@@ -469,16 +385,10 @@ function instantiateVariant(
   variant: TemplateVariant,
   ctx: AlgorithmContext,
 ): GeneratedProblem {
-  const label = variant.id
-    ? `${template.id}/${variant.id}`
-    : template.id;
+  const label = variant.id ? `${template.id}/${variant.id}` : template.id;
 
   for (let attempt = 0; attempt < SAMPLE_RETRIES; attempt += 1) {
-    const values = sampleParams(
-      variant,
-      ctx,
-      Boolean(ctx.anchorExample) && attempt === 0,
-    );
+    const values = sampleParams(variant, ctx, Boolean(ctx.anchorExample) && attempt === 0);
     if (!applyDerived(variant, values)) continue;
     if (!constraintsHold(variant, values)) continue;
 
@@ -486,7 +396,7 @@ function instantiateVariant(
     const solutionTex = polishStudentTex(
       variant.solutionSteps
         ? aligned(variant.solutionSteps.map((step) => render(step, values)))
-        : render(variant.solution ?? "", values),
+        : render(variant.solution ?? '', values),
     );
 
     const formula = inferTemplateFormula(variant);
@@ -495,7 +405,7 @@ function instantiateVariant(
       promptTex,
       solutionTex,
       promptTemplate: variant.prompt,
-      formula: formula ?? "",
+      formula: formula ?? '',
       variables: numericScope(values),
     });
   }
@@ -514,7 +424,7 @@ export function compileTemplate(raw: unknown): ProblemAlgorithm {
     generate(ctx) {
       const variant = pickVariant(ctx, template);
       if (!variant) {
-        throw new Error("NO_TEMPLATE_MATCH");
+        throw new Error('NO_TEMPLATE_MATCH');
       }
       const labels = stampVariantLabels(variant, template, ctx);
       const sampled = instantiateVariant(template, variant, {

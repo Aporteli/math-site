@@ -44,14 +44,14 @@ export const AI_MODELS: readonly AiModelDef[] = [
     provider: "gemini",
     apiModel: envModel("GEMINI_MODEL", "gemini-3.5-flash-lite"),
     env: ["GEMINI_API_KEY"],
-    dailyLimit: 50,
+    dailyLimit: 2000,
   },
   {
     id: "gemini-3.7-flash",
     provider: "gemini",
     apiModel: envModel("GEMINI_FLASH_MODEL", "gemini-3.7-flash"),
     env: ["GEMINI_API_KEY"],
-    dailyLimit: 30,
+    dailyLimit: 2000,
   },
   {
     id: "llama-3.3-70b",

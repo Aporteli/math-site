@@ -4,15 +4,19 @@ export {
   PROBLEM_DIFFICULTIES,
   PROBLEM_INSTRUCTIONS,
   PROBLEM_CHECKS,
+  PROBLEM_COLLECTIONS,
+  PROBLEM_FILTER_ORIGINS,
   PROBLEM_SOURCES,
   PROBLEM_TOPICS,
   PROBLEM_YEARS,
   toGeneratorDifficulty,
   type BankProblem,
   type GeneratorDifficulty,
+  type ProblemCollection,
   type ProblemDifficulty,
   type ProblemFilters,
   type ProblemCheck,
+  type ProblemFilterOrigin,
   type ProblemInstructionId,
   type ProblemSource,
   type ProblemTemplateId,
@@ -75,7 +79,14 @@ export type { AiModelStatus } from "./ai-limits";
 export { canVary, canResampleProblem, familyCanResample, generateVariants, stampFamilySource, templateJsonForProblem } from "./variants";
 export { checkBankProblem, checkTemplateProblem } from "./templates/check";
 
-export type { SavedProblemFamily } from "./family-persist";
+export {
+  chatCardsToBankProblems,
+  splitTeacherChatReply,
+  type ChatProblemCard,
+} from "./chat-cards";
+
+export type { ImportIssue } from "./templates/audit";
+export { auditImportJson } from "./templates/audit";
 
 export {
   familyKindValue,

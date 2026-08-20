@@ -36,6 +36,7 @@
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "roughjs": "^4.6.6",
+    "server-only": "^0.0.1",
     "three": "^0.185.1",
     "uploadthing": "^7.7.4",
     "zod": "^4.4.3"

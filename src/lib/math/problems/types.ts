@@ -19,9 +19,17 @@ export const PROBLEM_DIFFICULTIES = [
 
 export const PROBLEM_YEARS = ["7", "8", "9", "10", "11", "12"] as const;
 
-export const PROBLEM_SOURCES = ["bank", "generated", "ai"] as const;
+export const PROBLEM_SOURCES = ["bank", "generated", "ai", "custom"] as const;
+
+export const PROBLEM_COLLECTIONS = ["bank", "lab"] as const;
 
 export const PROBLEM_CHECKS = ["verified", "unchecked"] as const;
+
+/** Sidebar origin filter: card sources + verified / unchecked. */
+export const PROBLEM_FILTER_ORIGINS = [
+  ...PROBLEM_SOURCES,
+  ...PROBLEM_CHECKS,
+] as const;
 
 export const PROBLEM_INSTRUCTIONS = [
   "solve",
@@ -45,7 +53,9 @@ export function toGeneratorDifficulty(
 }
 export type ProblemYear = (typeof PROBLEM_YEARS)[number];
 export type ProblemSource = (typeof PROBLEM_SOURCES)[number];
+export type ProblemCollection = (typeof PROBLEM_COLLECTIONS)[number];
 export type ProblemCheck = (typeof PROBLEM_CHECKS)[number];
+export type ProblemFilterOrigin = (typeof PROBLEM_FILTER_ORIGINS)[number];
 export type ProblemInstructionId = (typeof PROBLEM_INSTRUCTIONS)[number];
 
 export type ProblemTemplateId = string;
@@ -55,8 +65,12 @@ export interface BankProblem {
   templateId: ProblemTemplateId;
   topic: string;
   difficulty: ProblemDifficulty;
-  year: ProblemYear;
+  year?: ProblemYear;
   source: ProblemSource;
+  /** Persisted home: bank and lab are separate. Defaults to bank. */
+  collection?: ProblemCollection;
+  /** Lab card id this bank card was cloned from (used to avoid duplicates). */
+  originId?: string;
   instructionId: ProblemInstructionId;
   promptTex: string;
   solutionTex: string;
@@ -70,22 +84,30 @@ export interface BankProblem {
   variables?: Record<string, number>;
   /** promptTex with `{{name}}` slots so variants can swap numbers locally. */
   promptTemplate?: string;
+  branchId?: string;
+  topicNodeId?: string;
+  subtopicId?: string;
+  conceptId?: string;
 }
 
 export interface ProblemFilters {
   query: string;
-  topic: string | "all";
+  branchId: string | "all";
+  topicNodeId: string | "all";
+  subtopicId: string | "all";
+  conceptId: string | "all";
   difficulty: ProblemDifficulty | "all";
   year: ProblemYear | "all";
-  source: ProblemSource | "all";
-  check: ProblemCheck | "all";
+  origin: ProblemFilterOrigin | "all";
 }
 
 export const EMPTY_PROBLEM_FILTERS: ProblemFilters = {
   query: "",
-  topic: "all",
+  branchId: "all",
+  topicNodeId: "all",
+  subtopicId: "all",
+  conceptId: "all",
   difficulty: "all",
   year: "all",
-  source: "all",
-  check: "all",
+  origin: "all",
 };

@@ -117,6 +117,15 @@ html::-webkit-scrollbar-thumb:hover,
   background-color: var(--color-muted);
 }
 
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

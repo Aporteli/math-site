@@ -33,6 +33,20 @@ enum ProblemSource {
   bank
   generated
   ai
+  custom
+}
+
+/// Where a persisted problem lives. Lab and bank are separate collections.
+enum ProblemCollection {
+  bank
+  lab
+}
+
+enum TaxonomyLevel {
+  branch
+  topic
+  subtopic
+  concept
 }
 
 enum EnrollmentStatus {
@@ -124,8 +138,11 @@ model Problem {
   templateId     String
   topic          String            @db.VarChar(64)
   difficulty     ProblemDifficulty
-  yearGroup      YearGroup
+  yearGroup      YearGroup?
   source         ProblemSource
+  collection     ProblemCollection @default(bank)
+  /** Lab problem id this bank card was cloned from (dedupe lab → bank). */
+  originId       String?
   instructionId  String
   promptTex      String            @db.Text
   solutionTex    String            @db.Text
@@ -135,15 +152,56 @@ model Problem {
   formula        String?           @db.Text
   variables      Json?
   promptTemplate String?           @db.Text
+  branchId       String?
+  topicNodeId    String?
+  subtopicId     String?
+  conceptId      String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
-  author User             @relation(fields: [authorId], references: [id], onDelete: Restrict)
-  items  ProblemSetItem[]
+  author   User          @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  items    ProblemSetItem[]
+  branch   TaxonomyNode? @relation("ProblemBranch", fields: [branchId], references: [id], onDelete: SetNull)
+  topicNode TaxonomyNode? @relation("ProblemTopic", fields: [topicNodeId], references: [id], onDelete: SetNull)
+  subtopic TaxonomyNode? @relation("ProblemSubtopic", fields: [subtopicId], references: [id], onDelete: SetNull)
+  concept  TaxonomyNode? @relation("ProblemConcept", fields: [conceptId], references: [id], onDelete: SetNull)
 
   @@index([authorId, topic, difficulty])
+  @@index([authorId, collection])
+  @@index([authorId, collection, originId])
   @@index([yearGroup, source])
+  @@index([branchId])
+  @@index([topicNodeId])
+  @@index([subtopicId])
+  @@index([conceptId])
   @@map("problems")
+}
+
+/// Editable curriculum tree: Branch → Topic → Subtopic → Concept.
+model TaxonomyNode {
+  id        String        @id @default(cuid())
+  level     TaxonomyLevel
+  slug      String        @db.VarChar(64)
+  nameKa    String        @db.VarChar(120)
+  nameEn    String        @db.VarChar(120)
+  nameRu    String        @db.VarChar(120)
+  parentId  String?
+  sortOrder Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  parent   TaxonomyNode?  @relation("TaxonomyTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children TaxonomyNode[] @relation("TaxonomyTree")
+
+  problemsAsBranch   Problem[] @relation("ProblemBranch")
+  problemsAsTopic    Problem[] @relation("ProblemTopic")
+  problemsAsSubtopic Problem[] @relation("ProblemSubtopic")
+  problemsAsConcept  Problem[] @relation("ProblemConcept")
+
+  @@unique([parentId, slug])
+  @@index([level, parentId])
+  @@index([sortOrder])
+  @@map("taxonomy_nodes")
 }
 
 /// Teacher-authored JSON family: fixed stem, resampled integers.

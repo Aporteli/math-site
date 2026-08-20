@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  PROBLEM_COLLECTIONS,
   PROBLEM_DIFFICULTIES,
   PROBLEM_INSTRUCTIONS,
   PROBLEM_SOURCES,
@@ -17,8 +18,10 @@ export const persistProblemSchema = z.object({
     .max(64)
     .regex(/^[\p{L}\p{N}-]+$/u),
   difficulty: z.enum(PROBLEM_DIFFICULTIES),
-  year: z.enum(PROBLEM_YEARS),
+  year: z.enum(PROBLEM_YEARS).optional(),
   source: z.enum(PROBLEM_SOURCES),
+  collection: z.enum(PROBLEM_COLLECTIONS).default("bank"),
+  originId: z.string().trim().min(1).max(128).optional(),
   instructionId: z.enum(PROBLEM_INSTRUCTIONS),
   promptTex: z.string().trim().min(1).max(4000),
   solutionTex: z.string().trim().min(1).max(12000),
@@ -28,6 +31,10 @@ export const persistProblemSchema = z.object({
   formula: z.string().trim().max(400).optional(),
   variables: z.record(z.string(), z.number().finite()).optional(),
   promptTemplate: z.string().trim().max(4000).optional(),
+  branchId: z.string().trim().min(1).max(64).optional(),
+  topicNodeId: z.string().trim().min(1).max(64).optional(),
+  subtopicId: z.string().trim().min(1).max(64).optional(),
+  conceptId: z.string().trim().min(1).max(64).optional(),
 });
 
 export const persistProblemsSchema = z
@@ -44,7 +51,7 @@ export function isCatalogSeedId(id: string) {
 }
 
 export function isUnsavedId(id: string) {
-  return /^(gen-|ai-|var-)/.test(id);
+  return /^(gen-|ai-|var-|custom-)/.test(id);
 }
 
 function toSeed(value: number | undefined) {
@@ -52,7 +59,10 @@ function toSeed(value: number | undefined) {
   return value | 0;
 }
 
-export function toPersistInput(problem: BankProblem): PersistProblemInput {
+export function toPersistInput(
+  problem: BankProblem,
+  collection: "bank" | "lab" = "bank",
+): PersistProblemInput {
   const parsed = persistProblemSchema.safeParse({
     clientId: problem.id.slice(0, 128),
     templateId: problem.templateId,
@@ -60,6 +70,8 @@ export function toPersistInput(problem: BankProblem): PersistProblemInput {
     difficulty: problem.difficulty,
     year: problem.year,
     source: problem.source,
+    collection: problem.collection ?? collection,
+    originId: problem.originId?.slice(0, 128) || undefined,
     instructionId: problem.instructionId,
     promptTex: problem.promptTex,
     solutionTex: problem.solutionTex,
@@ -69,6 +81,10 @@ export function toPersistInput(problem: BankProblem): PersistProblemInput {
     formula: problem.formula || undefined,
     variables: problem.variables,
     promptTemplate: problem.promptTemplate || undefined,
+    branchId: problem.branchId || undefined,
+    topicNodeId: problem.topicNodeId || undefined,
+    subtopicId: problem.subtopicId || undefined,
+    conceptId: problem.conceptId || undefined,
   });
   if (!parsed.success) {
     console.error("invalid persist payload", parsed.error.flatten());

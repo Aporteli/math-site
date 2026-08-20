@@ -2,7 +2,7 @@ import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "@/generated/prisma/client";
 
 /** Bump when `schema.prisma` changes so `next dev` does not keep a stale client. */
-const PRISMA_GENERATION = "problem-family-subtitle-delete-restrict";
+const PRISMA_GENERATION = "taxonomy-nodes-v1";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -23,7 +23,16 @@ function hasCurrentDelegates(client: PrismaClient | undefined) {
   if (!client) return false;
   const family = (client as { problemFamily?: { findMany?: unknown } })
     .problemFamily;
-  return typeof family?.findMany === "function";
+  if (typeof family?.findMany !== "function") return false;
+  // Detect stale clients that predate Problem.collection / originId.
+  const dmmf = (
+    client as {
+      _runtimeDataModel?: { models?: { Problem?: { fields?: { name: string }[] } } };
+    }
+  )._runtimeDataModel?.models?.Problem?.fields;
+  if (!Array.isArray(dmmf)) return true;
+  const names = new Set(dmmf.map((field) => field.name));
+  return names.has("collection") && names.has("originId");
 }
 
 if (

@@ -1,16 +1,19 @@
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ClipboardPaste, FileJson, Image, PenLine, Type, X } from "lucide-react";
 import { KatexPreview } from "@/components/math/katex-preview";
+import { AuditPanel } from "@/components/lms/problem-bank/audit-panel";
 import { proposeTemplateAction, saveFamilyAction } from "@/lib/math/problems/actions";
 import {
   generateFromTemplate,
   classifyTemplateGenerateFilter,
   replaceTokens,
+  auditImportJson,
   type AiModelId,
   type BankProblem,
+  type ImportIssue,
   type ProblemBankCopy,
   type ProblemDifficulty,
   type ProblemYear,
@@ -28,12 +31,34 @@ import type { Locale } from "@/i18n/config";
 const fieldClass =
   "w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
 
+const JSON_UPLOAD_MAX_BYTES = 25 * 1024 * 1024;
+const IMAGE_MIME = /^image\/(jpeg|png|webp)$/;
+
+function imageFileFromList(files: FileList | File[] | null | undefined) {
+  if (!files) return null;
+  for (const file of Array.from(files)) {
+    if (IMAGE_MIME.test(file.type)) return file;
+  }
+  return null;
+}
+
+function imageFileFromDataTransfer(data: DataTransfer | null | undefined) {
+  if (!data) return null;
+  const fromFiles = imageFileFromList(data.files);
+  if (fromFiles) return fromFiles;
+  for (const item of Array.from(data.items)) {
+    if (item.kind !== "file" || !IMAGE_MIME.test(item.type)) continue;
+    const file = item.getAsFile();
+    if (file) return file;
+  }
+  return null;
+}
+
 type SourceId = "type" | "screenshot" | "handwriting" | "json" | "jsonPaste";
 
 interface ImportFamilyModalProps {
   locale: Locale;
   copy: ProblemBankCopy;
-  count: number;
   difficulty: ProblemDifficulty | "any";
   year: ProblemYear | "any";
   model: AiModelId;
@@ -140,7 +165,7 @@ async function fileAsText(file: File) {
 }
 
 async function compressImage(file: File) {
-  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+  if (!IMAGE_MIME.test(file.type)) {
     throw new Error("badImage");
   }
   const objectUrl = URL.createObjectURL(file);
@@ -183,9 +208,8 @@ async function compressImage(file: File) {
 export function ImportFamilyModal({
   locale,
   copy,
-  count,
-  difficulty,
-  year,
+  difficulty: _difficulty,
+  year: _year,
   model,
   onClose,
   onCreated,
@@ -198,10 +222,12 @@ export function ImportFamilyModal({
   const [jsonText, setJsonText] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dropActive, setDropActive] = useState(false);
   const [savingFamily, setSavingFamily] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [casNotice, setCasNotice] = useState<string | null>(null);
   const [casOk, setCasOk] = useState<boolean | null>(null);
+  const [auditIssues, setAuditIssues] = useState<ImportIssue[]>([]);
 
   const sources: { id: SourceId; label: string; icon: typeof Type }[] = [
     { id: "type", label: family.sourceType, icon: Type },
@@ -231,22 +257,30 @@ export function ImportFamilyModal({
 
   const preview = useMemo(() => {
     if (!jsonText.trim()) return null;
+    // Import preview must not use the Generate panel year/difficulty filters —
+    // photo/typed JSON often pins its own labels and would otherwise show "no match".
     const result = previewTemplateJson(jsonText, {
       count: 1,
       locale,
-      difficulty: difficulty === "any" ? undefined : difficulty,
-      year: year === "any" ? undefined : year,
     });
     if (!result.ok) return { diagnosis: result.diagnosis };
     return { problem: result.problem };
-  }, [jsonText, locale, difficulty, year]);
+  }, [jsonText, locale]);
 
   function applyJsonText(raw: string) {
     setNotice(null);
     if (!raw.trim()) {
       setNotice(family.empty);
+      setAuditIssues([]);
       return;
     }
+    const issues = auditImportJson(raw);
+    if (issues.length > 0) {
+      setJsonText(raw);
+      setAuditIssues(issues);
+      return;
+    }
+    setAuditIssues([]);
     const read = readTemplateJson(raw);
     if (!read.ok) {
       setJsonText(raw);
@@ -257,7 +291,7 @@ export function ImportFamilyModal({
 
   async function onJsonFile(file: File) {
     setNotice(null);
-    if (file.size > 80_000) {
+    if (file.size > JSON_UPLOAD_MAX_BYTES) {
       setNotice(family.fileTooLarge);
       return;
     }
@@ -284,8 +318,13 @@ export function ImportFamilyModal({
       });
       if (!result.ok) {
         setNotice(errorText(family, result.error));
+        if (result.issues && result.issues.length > 0) {
+          setAuditIssues(result.issues);
+        }
+        if (result.json) setJsonText(result.json);
         return;
       }
+      setAuditIssues([]);
       setJsonText(result.json);
     } catch (error) {
       const code = error instanceof Error ? error.message : "failed";
@@ -294,6 +333,30 @@ export function ImportFamilyModal({
       setBusy(false);
     }
   }
+
+  const onImageFileRef = useRef(onImageFile);
+  onImageFileRef.current = onImageFile;
+
+  useEffect(() => {
+    if (source !== "screenshot" && source !== "handwriting") return;
+
+    function onPaste(event: ClipboardEvent) {
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        target.closest("textarea, input, [contenteditable='true']")
+      ) {
+        return;
+      }
+      const file = imageFileFromDataTransfer(event.clipboardData);
+      if (!file) return;
+      event.preventDefault();
+      void onImageFileRef.current(file);
+    }
+
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [source]);
 
   async function analyzeTyped() {
     if (!text.trim()) {
@@ -310,8 +373,13 @@ export function ImportFamilyModal({
       });
       if (!result.ok) {
         setNotice(errorText(family, result.error));
+        if (result.issues && result.issues.length > 0) {
+          setAuditIssues(result.issues);
+        }
+        if (result.json) setJsonText(result.json);
         return;
       }
+      setAuditIssues([]);
       setJsonText(result.json);
     } finally {
       setBusy(false);
@@ -323,17 +391,25 @@ export function ImportFamilyModal({
     const read = readTemplateJson(jsonText);
     if (!read.ok) return;
     try {
-      const created = generateFromTemplate(read.template, {
-        count,
-        locale,
-        difficulty: difficulty === "any" ? undefined : difficulty,
-        year: year === "any" ? undefined : year,
-      });
+      const variantCount = read.template.variants.length;
+      if (variantCount === 0) {
+        setNotice(copy.familyCenter.emptyGenerate);
+        return;
+      }
+      // One card per problem found in the import (image / typed / JSON) —
+      // do not reuse the Generate panel's default count (e.g. 5).
+      const created = Array.from({ length: variantCount }, (_, index) =>
+        generateFromTemplate(
+          read.template,
+          {
+            count: 1,
+            locale,
+          },
+          { pinVariant: true, variantIndex: index },
+        ),
+      ).flat();
       if (created.length === 0) {
-        const status = classifyTemplateGenerateFilter(read.template, {
-          difficulty: difficulty === "any" ? undefined : difficulty,
-          year: year === "any" ? undefined : year,
-        });
+        const status = classifyTemplateGenerateFilter(read.template, {});
         setNotice(
           status === "no_match"
             ? copy.familyCenter.noMatchGenerate
@@ -350,6 +426,12 @@ export function ImportFamilyModal({
 
   async function saveFamily() {
     setNotice(null);
+    const issues = auditImportJson(jsonText);
+    if (issues.length > 0) {
+      setAuditIssues(issues);
+      return;
+    }
+    setAuditIssues([]);
     const read = readTemplateJson(jsonText);
     if (!read.ok) {
       setNotice(family.invalidTemplate);
@@ -359,6 +441,10 @@ export function ImportFamilyModal({
     try {
       const result = await saveFamilyAction({ json: jsonText });
       if (!result.ok) {
+        if (result.issues && result.issues.length > 0) {
+          setAuditIssues(result.issues);
+          return;
+        }
         setNotice(
           result.error === "unauthorized"
             ? family.errorUnauthorized
@@ -407,9 +493,6 @@ export function ImportFamilyModal({
     }
   }
 
-  const photoHint =
-    source === "handwriting" ? family.handwritingHint : family.photoHint;
-
   return createPortal(
     <div className="fixed inset-0 z-[100] overflow-hidden">
       <button
@@ -426,12 +509,9 @@ export function ImportFamilyModal({
         className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-lg shadow-navy/10"
       >
         <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
-          <div>
-            <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
-              {family.title}
-            </h2>
-            <p className="mt-1 text-sm text-body">{family.hint}</p>
-          </div>
+          <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
+            {family.title}
+          </h2>
           <button
             type="button"
             className="inline-flex size-9 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
@@ -465,6 +545,7 @@ export function ImportFamilyModal({
                   setSource(item.id);
                   setNotice(null);
                   setFileName(null);
+                  setDropActive(false);
                 }}
               >
                 <Icon className="size-3.5" aria-hidden="true" />
@@ -487,7 +568,6 @@ export function ImportFamilyModal({
                 onChange={(event) => setText(event.target.value)}
                 placeholder={family.typePlaceholder}
               />
-              <p className="text-xs text-muted">{family.typeHint}</p>
               <button
                 type="button"
                 className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy-strong disabled:opacity-60"
@@ -516,7 +596,48 @@ export function ImportFamilyModal({
                   event.target.value = "";
                 }}
               />
-              <p className="text-xs text-muted">{photoHint}</p>
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label={family.photoDropLabel}
+                className={[
+                  "rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors",
+                  dropActive
+                    ? "border-navy bg-navy-tint/60"
+                    : "border-hairline bg-paper hover:border-navy/40",
+                  busy ? "pointer-events-none opacity-60" : "",
+                ].join(" ")}
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  setDropActive(true);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "copy";
+                  setDropActive(true);
+                }}
+                onDragLeave={(event) => {
+                  if (event.currentTarget.contains(event.relatedTarget as Node)) {
+                    return;
+                  }
+                  setDropActive(false);
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setDropActive(false);
+                  const file = imageFileFromDataTransfer(event.dataTransfer);
+                  if (file) void onImageFile(file);
+                  else setNotice(family.badImage);
+                }}
+                onPaste={(event) => {
+                  const file = imageFileFromDataTransfer(event.clipboardData);
+                  if (!file) return;
+                  event.preventDefault();
+                  void onImageFile(file);
+                }}
+              >
+                <p className="text-sm font-medium text-ink">{family.photoDropLabel}</p>
+              </div>
               {fileName ? (
                 <p className="text-xs text-ink">{fileName}</p>
               ) : null}
@@ -540,7 +661,6 @@ export function ImportFamilyModal({
                   event.target.value = "";
                 }}
               />
-              <p className="text-xs text-muted">{family.jsonHint}</p>
               {fileName ? (
                 <p className="text-xs text-ink">{fileName}</p>
               ) : null}
@@ -560,7 +680,6 @@ export function ImportFamilyModal({
                 placeholder={family.jsonPastePlaceholder}
                 spellCheck={false}
               />
-              <p className="text-xs text-muted">{family.jsonPasteHint}</p>
               <button
                 type="button"
                 className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy-strong"
@@ -572,6 +691,9 @@ export function ImportFamilyModal({
           ) : null}
 
           {notice ? <p className="text-sm text-brass-strong">{notice}</p> : null}
+          {auditIssues.length > 0 ? (
+            <AuditPanel copy={family} issues={auditIssues} />
+          ) : null}
 
           {jsonText && source !== "jsonPaste" ? (
             <>
@@ -636,6 +758,7 @@ export function ImportFamilyModal({
                   disabled={
                     Boolean(preview?.diagnosis) ||
                     !preview?.problem ||
+                    auditIssues.length > 0 ||
                     savingFamily
                   }
                   onClick={() => void saveFamily()}

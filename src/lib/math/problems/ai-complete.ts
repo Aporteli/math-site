@@ -19,6 +19,7 @@ import {
   temperatureFor,
   type ProposeInput,
 } from "./ai-prompt";
+import type { Locale } from "@/i18n/config";
 
 const TIMEOUT_MS = 45_000;
 const REASONER_TIMEOUT_MS = 90_000;
@@ -27,9 +28,25 @@ const DEFAULT_MAX_TOKENS = 4096;
 const CHAT_MAX_TOKENS = 8192;
 
 const SCHOOL_SYSTEM =
-  "You generate school math problems. Reply with a JSON object only.";
+  "You generate math problems. Reply with a JSON object only.";
 const CHAT_SYSTEM =
   "You are a contest mathematician. Think at high depth and at speed: full multi-step olympiad reasoning, no easy drills, no wandering. Then reply with a JSON object only.";
+const TEACHER_CHAT_SYSTEM =
+  "You are a teacher's in-site math assistant. Reply in ordinary readable prose: short paragraphs, numbered steps, and simple '-' bullet lists. Write every formula in LaTeX: inline math in $...$ and display equations on their own line in $$...$$. Avoid heavy Markdown." +
+  " When the teacher asks you to invent, write, generate, or propose one or more school problems:" +
+  " (1) In the readable prose, for EACH problem use this shape:\n- ამოცანა N (or Problem N)\nსტემი: <full student-facing stem with $...$ math>\nამოხსნა: <complete worked solution with steps and final answer>\n" +
+  " (2) AFTER that prose, append a machine block the site can parse. Prefer a fenced block:" +
+  '\n```math-site-problems\n{"problems":[{"promptTex":"...","solutionTex":"...","topic":"algebra","difficulty":"medium","year":"10"}]}\n```' +
+  " If you cannot use that fence name, a plain ```json fence or a raw JSON object with the same shape is also OK — put it at the very end." +
+  " JSON rules: 1–12 problems; promptTex and solutionTex MUST be the same full text as in the prose (not a shorter rewrite)." +
+  " promptTex = full stem including the instruction sentence, not only a formula." +
+  " solutionTex = FULL worked solution with numbered steps and the final answer." +
+  " CRITICAL for JSON strings: every LaTeX backslash must be doubled (write \\\\frac not \\frac, \\\\sum not \\sum)." +
+  " Put human-language words as normal Unicode text — never wrap sentences in \\text{...}." +
+  " Every formula inside promptTex/solutionTex must sit in $...$ or $$...$$; never leave bare \\frac or \\sum next to words." +
+  " topic is one of algebra,equations,geometry,functions,percent,calculus,vectors,combinatorics;" +
+  ' difficulty is easy|medium|hard|olympiad; year is optional "7"–"12".' +
+  " Do not emit that JSON when you are only explaining or chatting without giving new problems.";
 
 const GROQ_CHAT_PREFERENCE = [
   "llama-3.3-70b-versatile",
@@ -233,9 +250,7 @@ async function listGroqModels(apiKey: string) {
       response.status,
     );
   }
-  const ids = (payload.data ?? [])
-    .map((item) => item.id ?? "")
-    .filter(Boolean);
+  const ids = (payload.data ?? []).map((item) => item.id ?? "").filter(Boolean);
   groqModelsCache = { at: Date.now(), ids };
   return ids;
 }
@@ -265,7 +280,10 @@ async function groqChatModels(preferred: string, apiKey: string) {
     ...available,
   ]).filter((id) => available.includes(id));
   if (ordered.length === 0) {
-    throw new ProviderError("No Groq chat model is available for this key.", 404);
+    throw new ProviderError(
+      "No Groq chat model is available for this key.",
+      404,
+    );
   }
   return ordered;
 }
@@ -356,7 +374,11 @@ function geminiText(payload: GeminiResponse) {
     .trim();
 }
 
-async function completeGemini(model: AiModelDef, input: ProposeInput, prompt: string) {
+async function completeGemini(
+  model: AiModelDef,
+  input: ProposeInput,
+  prompt: string,
+) {
   const key = envValue("GEMINI_API_KEY");
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model.apiModel}:generateContent`;
   const freeThink = input.check === "plain";
@@ -407,7 +429,9 @@ async function completeGemini(model: AiModelDef, input: ProposeInput, prompt: st
 }
 
 function anthropicText(payload: Record<string, unknown>) {
-  const content = payload.content as { type?: string; text?: string }[] | undefined;
+  const content = payload.content as
+    | { type?: string; text?: string }[]
+    | undefined;
   return (content ?? [])
     .filter((block) => block.type === "text")
     .map((block) => block.text ?? "")
@@ -420,13 +444,14 @@ async function completeAnthropic(
   prompt: string,
   temperature: number,
   freeThink: boolean,
+  systemOverride?: string,
 ) {
   const headers = {
     "x-api-key": envValue("ANTHROPIC_API_KEY"),
     "anthropic-version": "2023-06-01",
   };
   const messages = [{ role: "user", content: prompt }];
-  const system = freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM;
+  const system = systemOverride ?? (freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM);
 
   const attempts: Record<string, unknown>[] = freeThink
     ? [
@@ -498,6 +523,7 @@ async function completeCloudflare(
   model: AiModelDef,
   prompt: string,
   freeThink: boolean,
+  systemOverride?: string,
 ) {
   const account = envValue("CLOUDFLARE_ACCOUNT_ID");
   const token = envValue("CLOUDFLARE_API_TOKEN");
@@ -509,7 +535,7 @@ async function completeCloudflare(
       messages: [
         {
           role: "system",
-          content: freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM,
+          content: systemOverride ?? (freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM),
         },
         { role: "user", content: prompt },
       ],
@@ -526,6 +552,7 @@ async function completeGroq(
   prompt: string,
   temperature: number,
   freeThink: boolean,
+  systemOverride?: string,
 ) {
   const key = envValue("GROQ_API_KEY");
   const models = (await groqChatModels(model.apiModel, key)).slice(
@@ -537,8 +564,10 @@ async function completeGroq(
     404,
   );
   const timeout = freeThink ? 60_000 : TIMEOUT_MS;
-  const system = freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM;
-  const efforts = freeThink ? (["high", "medium"] as const) : (["low"] as const);
+  const system = systemOverride ?? (freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM);
+  const efforts = freeThink
+    ? (["high", "medium"] as const)
+    : (["low"] as const);
 
   for (const apiModel of models) {
     const canReason = /gpt-oss|qwen/i.test(apiModel);
@@ -661,7 +690,11 @@ async function completeDeepseek(
   return text;
 }
 
-async function completeText(model: AiModelDef, input: ProposeInput, prompt: string) {
+async function completeText(
+  model: AiModelDef,
+  input: ProposeInput,
+  prompt: string,
+) {
   const temperature = temperatureFor(input);
   const freeThink = input.check === "plain";
   const system = freeThink ? CHAT_SYSTEM : SCHOOL_SYSTEM;
@@ -745,7 +778,43 @@ export async function proposeProblems(
 }
 
 const TEMPLATE_SYSTEM =
-  "You convert one school math example into a reusable JSON problem family. Reply with a JSON object only.";
+  "You convert every school math problem visible in the image or text into one JSON problem family. If the image shows multiple distinct tasks, emit one variants[] entry per task. Reply with a JSON object only.";
+// "You convert one school math example into a reusable JSON problem family. Reply with a JSON object only.";
+
+function buildTeacherChatPrompt(
+  locale: Locale,
+  message: string,
+  history: { role: "user" | "assistant"; content: string }[],
+) {
+  const language =
+    locale === "ka" ? "Georgian" : locale === "ru" ? "Russian" : "English";
+  const transcript = history
+    .slice(-20)
+    .map(
+      (turn) =>
+        `${turn.role === "user" ? "User" : "Assistant"}: ${turn.content}`,
+    )
+    .join("\n\n");
+
+  return [
+    `Always reply in ${language}.`,
+    "Focus on mathematics teaching, examples, explanations, and classroom help.",
+    "Use ordinary readable formatting: paragraphs, numbered steps, and '-' bullet lists.",
+    "Put every formula in LaTeX: inline in $...$ and display equations alone on a line in $$...$$.",
+    "Example display line: $$\\log_2(x^2 + y^2 + 2) = 1 + \\log_2(x + y)$$",
+    transcript ? `Conversation so far:\n${transcript}` : "",
+    `Latest user message:\n${message.trim()}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function normalizeTeacherChatReply(text: string) {
+  return text
+    .replace(/^```[\s\S]*?\n([\s\S]*?)```$/m, "$1")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
+}
 
 /** Gemini JSON completion with optional image parts (template import). */
 export async function completeGeminiUserParts(options: {
@@ -768,6 +837,7 @@ export async function completeGeminiUserParts(options: {
 
   const generationConfig: Record<string, unknown> = {
     responseMimeType: "application/json",
+    maxOutputTokens: CHAT_MAX_TOKENS,
   };
   if (!/gemini-3/.test(options.model.apiModel)) {
     generationConfig.temperature = 0.2;
@@ -781,12 +851,124 @@ export async function completeGeminiUserParts(options: {
       generationConfig,
       systemInstruction: { parts: [{ text: TEMPLATE_SYSTEM }] },
     },
-    options.timeout ?? 60_000,
+    options.timeout ?? (options.image ? 90_000 : 60_000),
   )) as GeminiResponse;
 
   const text = geminiText(payload);
   if (!text.trim()) throw new Error("bad_output");
   return text;
+}
+
+export async function completeTeacherChatMessage(options: {
+  modelId: AiModelId;
+  locale: Locale;
+  message: string;
+  history: { role: "user" | "assistant"; content: string }[];
+}) {
+  const model = getAiModel(options.modelId);
+  if (!model) throw new Error("failed");
+
+  const prompt = buildTeacherChatPrompt(
+    options.locale,
+    options.message,
+    options.history,
+  );
+  switch (model.provider) {
+    case "gemini": {
+      const key = envValue("GEMINI_API_KEY");
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model.apiModel}:generateContent`;
+      const generationConfig: Record<string, unknown> = {
+        maxOutputTokens: CHAT_MAX_TOKENS,
+      };
+      if (/gemini-3/.test(model.apiModel)) {
+        generationConfig.thinkingConfig = {
+          thinkingLevel: "MEDIUM",
+          includeThoughts: false,
+        };
+      }
+      const payload = (await postJson(
+        url,
+        { "x-goog-api-key": key },
+        {
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig,
+          systemInstruction: {
+            parts: [{ text: TEACHER_CHAT_SYSTEM }],
+          },
+        },
+        CHAT_TIMEOUT_MS,
+      )) as GeminiResponse;
+      const text = normalizeTeacherChatReply(geminiText(payload));
+      if (!text.trim()) throw new Error("bad_output");
+      return text;
+    }
+    case "groq":
+      return normalizeTeacherChatReply(
+        await completeGroq(model, prompt, 1, true, TEACHER_CHAT_SYSTEM),
+      );
+    case "deepseek":
+      return normalizeTeacherChatReply(
+        await completeOpenAiCompat(
+          "https://api.deepseek.com/chat/completions",
+          envValue("DEEPSEEK_API_KEY"),
+          model.apiModel,
+          prompt,
+          {
+            temperature: 1,
+            jsonMode: false,
+            timeout: CHAT_TIMEOUT_MS,
+            maxTokens: 8192,
+            system: TEACHER_CHAT_SYSTEM,
+            ...(model.id === "deepseek-r1" ? {} : { enableThinking: true }),
+          },
+        ),
+      );
+    case "openai":
+      return normalizeTeacherChatReply(
+        await completeOpenAiCompat(
+          "https://api.openai.com/v1/chat/completions",
+          envValue("OPENAI_API_KEY"),
+          model.apiModel,
+          prompt,
+          {
+            temperature: 1,
+            jsonMode: false,
+            system: TEACHER_CHAT_SYSTEM,
+            maxTokens: CHAT_MAX_TOKENS,
+            timeout: CHAT_TIMEOUT_MS,
+            ...(/^(o[1-4]|gpt-5)/i.test(model.apiModel)
+              ? { reasoningEffort: "high" }
+              : {}),
+          },
+        ),
+      );
+    case "huggingface":
+      return normalizeTeacherChatReply(
+        await completeOpenAiCompat(
+          "https://router.huggingface.co/v1/chat/completions",
+          envValue("HF_TOKEN"),
+          model.apiModel,
+          prompt,
+          {
+            temperature: 1,
+            jsonMode: false,
+            system: TEACHER_CHAT_SYSTEM,
+            maxTokens: 4096,
+            timeout: CHAT_TIMEOUT_MS,
+          },
+        ),
+      );
+    case "anthropic":
+      return normalizeTeacherChatReply(
+        await completeAnthropic(model, prompt, 1, true, TEACHER_CHAT_SYSTEM),
+      );
+    case "cloudflare":
+      return normalizeTeacherChatReply(
+        await completeCloudflare(model, prompt, true, TEACHER_CHAT_SYSTEM),
+      );
+    default:
+      throw new Error("failed");
+  }
 }
 
 export type { AiCheckMode };

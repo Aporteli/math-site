@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
@@ -36,6 +36,8 @@ export function DashboardFrame(props: DashboardFrameProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(props.initialCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -55,6 +57,34 @@ export function DashboardFrame(props: DashboardFrameProps) {
       document.body.style.overflow = "";
       document.removeEventListener("keydown", onKeyDown);
     };
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+
+    function onScroll() {
+      if (mobileOpen) {
+        setHeaderHidden(false);
+        lastScrollY.current = window.scrollY;
+        return;
+      }
+
+      const y = window.scrollY;
+      const delta = y - lastScrollY.current;
+
+      if (y < 12) {
+        setHeaderHidden(false);
+      } else if (delta > 6) {
+        setHeaderHidden(true);
+      } else if (delta < -6) {
+        setHeaderHidden(false);
+      }
+
+      lastScrollY.current = y;
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [mobileOpen]);
 
   function toggleCollapsed() {
@@ -148,7 +178,13 @@ export function DashboardFrame(props: DashboardFrameProps) {
           collapsed ? "lg:pl-[4.75rem]" : "lg:pl-72",
         ].join(" ")}
       >
-        <header className="sticky top-0 z-30 border-b border-hairline bg-paper/80 backdrop-blur-md">
+        <header
+          className={[
+            "sticky top-0 z-30 border-b border-hairline bg-paper/80 backdrop-blur-md",
+            "motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out",
+            headerHidden ? "-translate-y-full" : "translate-y-0",
+          ].join(" ")}
+        >
           <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
             <button
               type="button"

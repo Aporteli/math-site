@@ -2,6 +2,7 @@ import type { Prisma, ProblemFamily as ProblemFamilyRow } from "@/generated/pris
 import { prisma } from "@/lib/prisma";
 import { slugFromTitle, stubFamilyTemplate } from "./family-kind";
 import { parseProblemTemplate, parseTeacherJson } from "./templates/adapt";
+import { auditImportJson, type ImportIssue } from "./templates/audit";
 import type { ProblemTemplate } from "./templates/schema";
 import {
   PROBLEM_TOPICS,
@@ -138,8 +139,12 @@ export async function saveTeacherFamily(
   input: { json: string; id?: string; title?: string; topic?: string },
 ): Promise<
   | { ok: true; family: SavedProblemFamily }
-  | { ok: false; error: FamilyPersistError }
+  | { ok: false; error: FamilyPersistError; issues?: ImportIssue[] }
 > {
+  const issues = auditImportJson(input.json);
+  if (issues.length > 0) {
+    return { ok: false, error: "invalid", issues };
+  }
   const parsed = parseFamilyJson(input.json);
   if (!parsed.ok) return parsed;
 

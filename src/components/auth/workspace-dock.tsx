@@ -37,7 +37,7 @@ export function WorkspaceDock({
   }
 
   return (
-    <aside className="pointer-events-none fixed right-4 bottom-5 z-40 hidden min-[500px]:block sm:right-6 sm:bottom-6">
+    <aside className="pointer-events-none fixed left-4 bottom-5 z-40 hidden min-[500px]:block sm:left-6 sm:bottom-6">
       <Link
         href={href}
         className="pointer-events-auto flex max-w-xs items-center gap-3 rounded-2xl border border-hairline bg-white p-3 shadow-md transition-all hover:border-navy/30 hover:shadow-lg"

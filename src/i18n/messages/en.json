@@ -889,6 +889,7 @@
         "problems": "Problem bank",
         "reports": "Reports",
         "lab": "Teacher lab",
+        "admin": "Admin panel",
         "tools": "Tools",
         "students": "Students"
       },
@@ -917,6 +918,10 @@
           "title": "Teacher lab",
           "subtitle": "Pick problems by topic, difficulty and year group."
         },
+        "admin": {
+          "title": "Admin panel",
+          "subtitle": "Taxonomy, users, AI and site management tools."
+        },
         "tools": {
           "title": "Teaching tools",
           "subtitle": "Calculators, graphs and formula sheets for class work."
@@ -926,28 +931,146 @@
           "subtitle": "Groups, enrolments and each student’s progress."
         }
       },
+      "admin": {
+        "eyebrow": "Administration",
+        "title": "Admin panel",
+        "subtitle": "Site configuration, curriculum taxonomy and future management tools in one place.",
+        "sectionsNav": "Sections",
+        "comingSoon": "Coming soon",
+        "comingSoonHint": "This section is reserved. The layout is ready for tools we add next.",
+        "overviewHint": "Pick a section below or from the side menu. Curriculum taxonomy is live; other tools will land here step by step.",
+        "sections": {
+          "overview": {
+            "title": "Overview",
+            "description": "Map of admin tools and quick jumps."
+          },
+          "taxonomy": {
+            "title": "Curriculum taxonomy",
+            "description": "Branch → Topic → Subtopic → Concept. Changes show in bank filters."
+          },
+          "users": {
+            "title": "Users",
+            "description": "Accounts, demo users and profiles."
+          },
+          "roles": {
+            "title": "Roles & access",
+            "description": "ADMIN, TEACHER, STUDENT and permission rules."
+          },
+          "ai": {
+            "title": "AI models",
+            "description": "Models, limits and usage status."
+          },
+          "prompts": {
+            "title": "Slash prompts",
+            "description": "Admin templates for AI chat."
+          },
+          "content": {
+            "title": "Content & bank",
+            "description": "Problem moderation, families and seed content."
+          },
+          "storage": {
+            "title": "File storage",
+            "description": "Uploads, assignment attachments and object storage."
+          },
+          "lms": {
+            "title": "LMS settings",
+            "description": "Courses, enrolments, assignments and grading."
+          },
+          "analytics": {
+            "title": "Analytics",
+            "description": "Report configuration and class metrics."
+          },
+          "i18n": {
+            "title": "Translations",
+            "description": "UI copy and dictionary checks."
+          },
+          "locales": {
+            "title": "Locales",
+            "description": "ka / en / ru routing and default language."
+          },
+          "billing": {
+            "title": "Billing & AI budget",
+            "description": "Provider wallet and spend controls."
+          },
+          "featureFlags": {
+            "title": "Feature flags",
+            "description": "Toggle experimental features."
+          },
+          "system": {
+            "title": "System",
+            "description": "Health, migrations and technical settings."
+          }
+        }
+      },
+      "taxonomy": {
+        "title": "Curriculum taxonomy",
+        "subtitle": "Manage Branches → Topic → Subtopic → Concepts. Changes appear in problem filters.",
+        "levels": {
+          "branch": "Branch",
+          "topic": "Topic",
+          "subtopic": "Subtopic",
+          "concept": "Concept"
+        },
+        "nameKa": "Name (KA)",
+        "nameEn": "Name (EN)",
+        "nameRu": "Name (RU)",
+        "slug": "Slug",
+        "parent": "Parent",
+        "add": "Add",
+        "remove": "Remove",
+        "empty": "No nodes yet.",
+        "saved": "Saved.",
+        "error": "Could not save. Check parent and slug.",
+        "selectParent": "Select parent…"
+      },
       "problemBank": {
         "eyebrow": "Workspace",
         "searchLabel": "Search problems",
         "searchPlaceholder": "Text, topic or formula…",
         "filtersTitle": "Filters",
         "resetFilters": "Clear filters",
-        "allTopics": "All topics",
-        "allDifficulties": "All difficulties",
-        "allYears": "All year groups",
-        "allSources": "All sources",
-        "checkFilter": "Check",
-        "allChecks": "Verified & unchecked",
+        "branchFilter": "Branch",
+        "topicFilter": "Topic",
+        "subtopicFilter": "Subtopic",
+        "conceptFilter": "Concepts",
+        "allBranches": "Branches",
+        "allTopics": "Topics",
+        "allSubtopics": "Subtopics",
+        "allConcepts": "Concepts",
+        "allDifficulties": "Difficulties",
+        "allYears": "Year groups",
+        "originFilter": "Origin",
+        "allOrigins": "Origins",
         "results": "{count} problems",
+        "selectAllProblems": "Select all",
+        "selectProblem": "Select problem",
+        "clearProblemSelection": "Clear selection",
+        "exitBulkSelect": "Done",
+        "bulkSelectHint": "Press and hold a card for 1 second to select several.",
+        "removeSelectedProblems": "Delete selected",
+        "confirmRemoveSelected": "Delete {count}?",
+        "removeSelectedDone": "Deleted {count} problems.",
         "empty": "No problems match these filters.",
         "emptyHint": "Adjust the filters or generate a new set.",
         "previewEmpty": "Select a problem from the list to see the prompt and solution.",
         "prompt": "Prompt",
         "copyPrompt": "Copy prompt",
         "copiedPrompt": "Copied",
+        "dismissNotice": "Dismiss message",
         "solution": "Solution",
         "showSolution": "Show solution",
         "hideSolution": "Hide solution",
+        "fullSolution": {
+          "open": "Show full solution",
+          "title": "Full solution",
+          "close": "Close",
+          "print": "Print",
+          "printTitle": "Problem and solution",
+          "copy": "Copy",
+          "copied": "Copied",
+          "previous": "Previous",
+          "next": "Next"
+        },
         "addToSet": "Add to set",
         "removeFromSet": "Remove from set",
         "inSet": "In set",
@@ -985,6 +1108,7 @@
           "bank": "Bank",
           "generated": "Generated",
           "ai": "AI",
+          "custom": "Custom",
           "verified": "Verified",
           "unchecked": "Unchecked"
         },
@@ -1301,6 +1425,10 @@
             "title": "Generate",
             "hint": "New problems by topic, year group and difficulty."
           },
+          "chat": {
+            "title": "AI chat",
+            "hint": "Ask the model for lesson ideas, explanations, and fast math help."
+          },
           "import": {
             "title": "Import",
             "hint": "Type a problem, upload a photo, or load a JSON family."
@@ -1324,6 +1452,90 @@
           "graph": {
             "title": "Graph",
             "hint": "Open a function problem in the graphing calculator."
+          }
+        },
+        "chat": {
+          "title": "Teacher AI chat",
+          "hint": "Ephemeral teacher-only chat. Messages stay on this page until refresh.",
+          "launcher": "Ask AI",
+          "open": "Open AI chat",
+          "close": "Close AI chat",
+          "model": "Model",
+          "replyLanguage": "Answer language",
+          "languages": {
+            "en": "English",
+            "ka": "Georgian",
+            "ru": "Russian"
+          },
+          "limitLabel": "Site daily cap",
+          "limitUsed": "{used} / {limit}",
+          "limitReady": "Ready",
+          "limitNoKey": "No API key",
+          "limitExhausted": "Limit reached",
+          "clear": "Clear chat",
+          "emptyTitle": "Start a new chat",
+          "emptyHint": "Ask for lesson ideas, explanations, or new problems — generated problems become cards you can save to bank or lab.",
+          "you": "You",
+          "assistant": "AI",
+          "thinking": "Thinking…",
+          "inputLabel": "Message",
+          "inputPlaceholder": "e.g. Explain how to build 5 harder variants of this geometry task",
+          "previewLabel": "Math preview",
+          "disclaimer": "This chat is not saved. Refreshing the page clears it.",
+          "send": "Send",
+          "sending": "Sending…",
+          "emptyReply": "I do not have a reply yet. Try asking in a different way.",
+          "cardsTitle": "Problems from this reply",
+          "saveToBank": "Save to bank",
+          "saveToLab": "Save to lab",
+          "saveAllToBank": "Save all to bank",
+          "saveAllToLab": "Save all to lab",
+          "savingCard": "Saving…",
+          "savedToBank": "Saved to bank",
+          "savedToLab": "Saved to lab",
+          "saveFailed": "Could not save this card. Try again.",
+          "errorMissingKey": "This model has no API key on the server.",
+          "errorInvalidKey": "This API key was rejected. Paste a new key in .env and restart the server.",
+          "errorLimit": "This model’s daily limit is used up.",
+          "errorFailed": "The chat request failed. Try again.",
+          "errorBadOutput": "The model replied in a form we could not use. Try another model.",
+          "errorUnauthorized": "A teacher account is required for this action.",
+          "errorBilling": "This API key has no credit. Add credit or pick Gemini / Groq.",
+          "errorTimeout": "The model took too long. Try another model or a shorter message.",
+          "slashPrompts": {
+            "manage": "Prompts",
+            "manageTitle": "Slash prompts",
+            "manageHint": "In chat, type / then a name prefix to filter. Admin only.",
+            "nameLabel": "Name",
+            "namePlaceholder": "e.g. algebra5",
+            "bodyLabel": "Body",
+            "bodyPlaceholder": "Text inserted into the chat. Use [ ] or [example] for fill slots",
+            "add": "Add",
+            "remove": "Remove",
+            "empty": "No prompts yet. Add one below.",
+            "duplicate": "That name is already used",
+            "needBoth": "Fill in both name and body",
+            "noMatches": "No prompts start with that prefix",
+            "closeManage": "Close",
+            "menuLabel": "Prompt list",
+            "fillTitle": "Fill prompt",
+            "fillHint": "Tab — next [ ], Enter — insert into chat, Shift+Enter — new line.",
+            "fillInsert": "Insert",
+            "fillCancel": "Cancel"
+          },
+          "models": {
+            "gemini-flash-lite": "Gemini Flash Lite",
+            "gemini-3.7-flash": "Gemini 3.7 Flash",
+            "llama-3.3-70b": "Groq GPT-OSS 120B",
+            "deepseek-v4-flash": "DeepSeek V4 Flash",
+            "deepseek-v4-pro": "DeepSeek V4 Pro",
+            "deepseek-r1": "DeepSeek R1",
+            "gpt-4o-mini": "GPT-4o Mini",
+            "huggingface": "Hugging Face",
+            "claude-sonnet-5": "Claude 3.5 Sonnet",
+            "claude-haiku-4.5": "Claude Haiku 4.5",
+            "claude-3.5-haiku": "Claude 3.5 Haiku",
+            "cloudflare-workers-ai": "Cloudflare Workers AI"
           }
         },
         "generate": {
@@ -1531,10 +1743,11 @@
           "hint": "Add several problem types in the variants array. Generate mixes them, each with new numbers.",
           "close": "Close family center",
           "empty": "No saved families",
-          "emptyHint": "Create a family from import or a JSON file.",
-          "search": "Search",
-          "searchPlaceholder": "Slug or topic",
-          "newFamily": "New family",
+          "emptyHint": "Type a name above and add a family.",
+          "nameLabel": "Family name",
+          "namePlaceholder": "Family name",
+          "addFamily": "Add family",
+          "newFamily": "Import family",
           "jsonLabel": "Family JSON",
           "jsonFold": "Show family JSON",
           "jsonFoldHint": "Folded so the page stays short. Open only if you need to edit by hand.",
@@ -1579,7 +1792,7 @@
           "errorUnauthorized": "A teacher account is required for this action.",
           "errorSlugTaken": "You already have a family with this id. Change id or open the existing one.",
           "errorNotFound": "This family was not found.",
-          "selectHint": "Select a family from the list or create one from import.",
+          "selectHint": "Select a family from the list or add one by name.",
           "underFamily": "Subtitle of {parent}"
         },
         "importFamily": {
@@ -1597,6 +1810,8 @@
           "typeHint": "The model turns this into a JSON family (parameters, derived values, LaTeX). Equations, arithmetic, and binomial expansions are supported.",
           "photoLabel": "Image",
           "photoHint": "PNG, JPEG or WebP. Keep the writing large and high-contrast.",
+          "photoDropLabel": "Drop or paste image",
+          "photoDropHint": "Drag an image here, or paste a copied screenshot (Ctrl+V).",
           "handwritingHint": "Photograph the page from above. Avoid glare.",
           "jsonLabel": "Template file",
           "jsonHint": "A family file like linear-one-step.json. No AI — the engine reads it directly.",
@@ -1643,16 +1858,80 @@
           "saveFamily": "Save family",
           "savingFamily": "Saving…",
           "familySaved": "Family saved. Open the family center to edit it.",
-          "errorSlugTaken": "You already have a family with this id. Change the id."
+          "errorSlugTaken": "You already have a family with this id. Change the id.",
+          "auditTitle": "This JSON cannot be saved",
+          "auditHint": "Fix every issue below, then import again.",
+          "auditCount": "{count} issues"
         },
-        "stats": {
+          "stats": {
           "inBank": "In bank",
+          "inLab": "In lab",
           "selected": "In set",
           "generated": "New"
         },
         "actions": {
           "openLab": "Open problem bank",
-          "openHomework": "Open homework"
+          "openHomework": "Open homework",
+          "sendToLab": "Send to lab"
+        },
+        "cardMenu": {
+          "open": "Problem actions",
+          "edit": "Edit",
+          "askAi": "Ask AI",
+          "copyPrompt": "Copy prompt",
+          "saveToLab": "Save to lab",
+          "saveToBank": "Save to bank",
+          "removeFromLab": "Remove from lab",
+          "savedToLab": "Saved to lab",
+          "savedToBank": "Copied to bank as a new card",
+          "alreadyInBank": "This card is already in the bank — no duplicate created"
+        },
+        "editCard": {
+          "title": "Edit card",
+          "hint": "Change the problem, solution, difficulty, curriculum placement, or source.",
+          "close": "Close",
+          "cancel": "Cancel",
+          "save": "Save changes",
+          "saving": "Saving…",
+          "promptLabel": "Problem",
+          "promptPlaceholder": "Edit the problem text…",
+          "solutionLabel": "Solution",
+          "solutionPlaceholder": "Edit the solution or answer…",
+          "previewLabel": "Preview",
+          "topic": "Topic",
+          "difficulty": "Difficulty",
+          "year": "Grade",
+          "noYear": "No grade",
+          "source": "Source",
+          "errorEmptyPrompt": "Write the problem text first.",
+          "errorEmptySolution": "Write the solution first.",
+          "errorFailed": "Could not save these changes. Try again.",
+          "saved": "Card updated"
+        },
+        "customCard": {
+          "open": "Create card",
+          "title": "Create custom card",
+          "hint": "Type or paste a problem by hand. It saves straight to your bank.",
+          "close": "Close",
+          "cancel": "Cancel",
+          "save": "Save to bank",
+          "saveToLab": "Save to lab",
+          "saving": "Saving…",
+          "savingLab": "Saving to lab…",
+          "promptLabel": "Problem",
+          "promptPlaceholder": "Paste or type the full problem text…",
+          "answerLabel": "Answer",
+          "answerPlaceholder": "Final answer (optional)…",
+          "answerPreviewLabel": "Answer preview",
+          "explanationLabel": "Explanation",
+          "explanationPlaceholder": "Solution steps or explanation (optional)…",
+          "explanationPreviewLabel": "Explanation preview",
+          "topic": "Topic",
+          "difficulty": "Difficulty",
+          "year": "Year",
+          "noYear": "No year",
+          "errorEmptyPrompt": "Write the problem text first.",
+          "errorFailed": "Could not save this card. Try again."
         }
       }
     },
