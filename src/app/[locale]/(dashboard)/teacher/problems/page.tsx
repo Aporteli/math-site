@@ -1,33 +1,25 @@
-import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { connection } from "next/server";
-import { notFound } from "next/navigation";
-import { ProblemBankWorkspace } from "@/components/lms/problem-bank/problem-bank-workspace";
-import { teacherPageMetadata } from "@/components/lms/dashboard-page";
-import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
-import { getSession } from "@/lib/auth/session";
-import { ensureDbUser } from "@/lib/auth/ensure-user";
-import {
-  SEED_PROBLEM_BANK,
-  HIDDEN_SEED_COOKIE,
-  parseHiddenSeedIds,
-  withoutHiddenSeeds,
-} from "@/lib/math/problems";
-import {
-  loadDraftLessonSet,
-  loadTeacherProblems,
-} from "@/lib/math/problems/persist";
-import { loadTeacherFamilies } from "@/lib/math/problems/family-persist";
-import { canUseAdminSlashPrompts } from "@/lib/math/problems/slash-prompts-access";
-import { ensureDefaultTaxonomy } from "@/lib/math/problems/taxonomy";
+import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
+import { connection } from 'next/server';
+import { notFound } from 'next/navigation';
+import { ProblemBankWorkspace } from '@/components/lms/problem-bank/problem-bank-workspace';
+import { teacherPageMetadata } from '@/components/lms/dashboard-page';
+import { isLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { getSession } from '@/lib/auth/session';
+import { ensureDbUser } from '@/lib/auth/ensure-user';
+import { SEED_PROBLEM_BANK, HIDDEN_SEED_COOKIE, parseHiddenSeedIds, withoutHiddenSeeds } from '@/lib/math/problems';
+import { loadDraftLessonSet, loadTeacherProblems } from '@/lib/math/problems/persist';
+import { loadTeacherFamilies } from '@/lib/math/problems/family-persist';
+import { canUseAdminSlashPrompts } from '@/lib/math/problems/slash-prompts-access';
+import { ensureDefaultTaxonomy } from '@/lib/math/problems/taxonomy';
 
 type PageProps = { params: Promise<{ locale: string }> };
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return teacherPageMetadata("problems", params);
+  return teacherPageMetadata('problems', params);
 }
 
 export default async function TeacherProblemsPage({ params }: PageProps) {
@@ -39,9 +31,7 @@ export default async function TeacherProblemsPage({ params }: PageProps) {
   const dict = getDictionary(locale);
   const page = dict.dashboard.teacher.pages.problems;
   const session = await getSession();
-  const hiddenSeeds = parseHiddenSeedIds(
-    (await cookies()).get(HIDDEN_SEED_COOKIE)?.value,
-  );
+  const hiddenSeeds = parseHiddenSeedIds((await cookies()).get(HIDDEN_SEED_COOKIE)?.value);
   const catalog = withoutHiddenSeeds(SEED_PROBLEM_BANK, hiddenSeeds);
 
   let saved = catalog;
@@ -56,7 +46,7 @@ export default async function TeacherProblemsPage({ params }: PageProps) {
         loadTeacherProblems(user.id),
         loadDraftLessonSet(user.id),
         ensureDefaultTaxonomy().catch((error) => {
-          console.error("Failed to load taxonomy", error);
+          console.error('Failed to load taxonomy', error);
           return [] as Awaited<ReturnType<typeof ensureDefaultTaxonomy>>;
         }),
       ]);
@@ -66,10 +56,10 @@ export default async function TeacherProblemsPage({ params }: PageProps) {
       try {
         families = await loadTeacherFamilies(user.id);
       } catch (error) {
-        console.error("Failed to load teacher families", error);
+        console.error('Failed to load teacher families', error);
       }
     } catch (error) {
-      console.error("Failed to load teacher problem bank", error);
+      console.error('Failed to load teacher problem bank', error);
     }
   } else {
     try {
@@ -91,7 +81,7 @@ export default async function TeacherProblemsPage({ params }: PageProps) {
       initialLessonSetIds={lessonSetIds}
       initialFamilies={families}
       hydrateSavedBank
-      visibleToolIds={["worksheet", "assign", "graph"]}
+      visibleToolIds={['worksheet', 'assign', 'chat', 'import', 'graph', 'createCard']}
       initialPanel={null}
       showGenerateVariants={false}
       showSendToLab

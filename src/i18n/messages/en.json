@@ -1452,6 +1452,10 @@
           "graph": {
             "title": "Graph",
             "hint": "Open a function problem in the graphing calculator."
+          },
+          "createCard": {
+            "title": "Create card",
+            "hint": "Make a new problem card in the bank."
           }
         },
         "chat": {

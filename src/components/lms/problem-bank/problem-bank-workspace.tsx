@@ -1122,74 +1122,81 @@ export function ProblemBankWorkspace({
         }
       />
 
-      {visibleTools.length > 0 ? (
-        console.log(visibleTools, "visibleTools"),
-        <section className="mt-6" aria-label={copy.tools.label}>
-          <p className="mb-3 text-sm font-semibold tracking-wide text-brass">{copy.tools.label}</p>
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
-            {visibleTools.map((tool) => {
-              const Icon = tool.icon;
-              const item = copy.tools[tool.id];
-              const className = [
-                'flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all',
-                tool.status === 'ready' && (panel === tool.id || (tool.id === 'import' && importOpen))
-                  ? 'border-navy/30 bg-navy-tint shadow-sm'
-                  : 'border-hairline bg-white shadow-sm hover:border-navy/30 hover:shadow-md',
-              ].join(' ');
+      {visibleTools.length > 0
+        ? (console.log(visibleTools, 'visibleTools'),
+          (
+            <section className="mt-6" aria-label={copy.tools.label}>
+              <p className="mb-3 text-sm font-semibold tracking-wide text-brass">{copy.tools.label}</p>
+              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                {' '}
+                {visibleTools.map((tool) => {
+                  const Icon = tool.icon;
+                  const item = copy.tools[tool.id];
+                  const className = [
+                    'flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all',
+                    tool.status === 'ready' && (panel === tool.id || (tool.id === 'import' && importOpen))
+                      ? 'border-navy/30 bg-navy-tint shadow-sm'
+                      : 'border-hairline bg-white shadow-sm hover:border-navy/30 hover:shadow-md',
+                  ].join(' ');
 
-              const body = (
-                <>
-                  <span className="flex items-start gap-2">
-                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
-                      <Icon className="size-4" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0 text-sm font-semibold text-ink">{item.title}</span>
-                    {tool.status === 'soon' ? (
-                      <span className="ml-auto shrink-0 rounded-full bg-brass-tint px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brass">
-                        {copy.soon}
+                  const body = (
+                    <>
+                      <span className="flex items-start gap-2">
+                        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
+                          <Icon className="size-4" aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 text-sm font-semibold text-ink">{item.title}</span>
+                        {tool.status === 'soon' ? (
+                          <span className="ml-auto shrink-0 rounded-full bg-brass-tint px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brass">
+                            {copy.soon}
+                          </span>
+                        ) : null}
                       </span>
-                    ) : null}
-                  </span>
-                  <span className="flex-1 text-xs leading-relaxed text-muted">{item.hint}</span>
-                </>
-              );
+                      <span className="flex-1 text-xs leading-relaxed text-muted">{item.hint}</span>
+                    </>
+                  );
 
-              return (
-                <li key={tool.id} className="h-full">
-                  {tool.status === 'link' && tool.href ? (
-                    <Link href={localePath(locale, tool.href)} className={className}>
-                      {body}
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      className={className}
-                      aria-pressed={
-                        tool.id === 'generate' || tool.id === 'variants' || tool.id === 'families' || tool.id === 'chat'
-                          ? panel === tool.id
-                          : tool.id === 'import'
-                            ? importOpen
-                            : undefined
-                      }
-                      onClick={() => onTool(tool.id)}>
-                      {body}
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          {notice ? (
-            <button
-              type="button"
-              className="mt-3 w-full cursor-pointer rounded-xl border border-brass/20 bg-brass-tint px-4 py-3 text-left text-sm text-brass-strong transition-colors hover:border-brass/40 hover:bg-brass-tint/80"
-              aria-label={copy.dismissNotice}
-              onClick={() => setNotice(null)}>
-              {notice}
-            </button>
-          ) : null}
-        </section>
-      ) : null}
+                  return (
+                    <li key={tool.id} className="h-full">
+                      {tool.status === 'link' && tool.href ? (
+                        <Link href={localePath(locale, tool.href)} className={className}>
+                          {body}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          className={className}
+                          aria-pressed={
+                            tool.id === 'generate' ||
+                            tool.id === 'variants' ||
+                            tool.id === 'families' ||
+                            tool.id === 'chat' ||
+                            tool.id === 'createCard'
+                              ? panel === tool.id
+                              : tool.id === 'import'
+                                ? importOpen
+                                : undefined
+                          }
+                          onClick={() => onTool(tool.id)}>
+                          {body}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+              {notice ? (
+                <button
+                  type="button"
+                  className="mt-3 w-full cursor-pointer rounded-xl border border-brass/20 bg-brass-tint px-4 py-3 text-left text-sm text-brass-strong transition-colors hover:border-brass/40 hover:bg-brass-tint/80"
+                  aria-label={copy.dismissNotice}
+                  onClick={() => setNotice(null)}>
+                  {notice}
+                </button>
+              ) : null}
+            </section>
+          ))
+        : null}
 
       {customCardOpen ? (
         <CreateCustomCardModal
