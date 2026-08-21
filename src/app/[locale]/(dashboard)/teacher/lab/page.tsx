@@ -1,27 +1,24 @@
-import type { Metadata } from "next";
-import { connection } from "next/server";
-import { notFound } from "next/navigation";
-import { ProblemBankWorkspace } from "@/components/lms/problem-bank/problem-bank-workspace";
-import { teacherPageMetadata } from "@/components/lms/dashboard-page";
-import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
-import { getSession } from "@/lib/auth/session";
-import { ensureDbUser } from "@/lib/auth/ensure-user";
-import {
-  loadDraftLessonSet,
-  loadLabWorkspace,
-} from "@/lib/math/problems/persist";
-import { loadTeacherFamilies } from "@/lib/math/problems/family-persist";
-import type { BankProblem } from "@/lib/math/problems";
-import { canUseAdminSlashPrompts } from "@/lib/math/problems/slash-prompts-access";
-import { ensureDefaultTaxonomy } from "@/lib/math/problems/taxonomy";
+import type { Metadata } from 'next';
+import { connection } from 'next/server';
+import { notFound } from 'next/navigation';
+import { ProblemBankWorkspace } from '@/components/lms/problem-bank/problem-bank-workspace';
+import { teacherPageMetadata } from '@/components/lms/dashboard-page';
+import { isLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { getSession } from '@/lib/auth/session';
+import { ensureDbUser } from '@/lib/auth/ensure-user';
+import { loadDraftLessonSet, loadLabWorkspace } from '@/lib/math/problems/persist';
+import { loadTeacherFamilies } from '@/lib/math/problems/family-persist';
+import type { BankProblem } from '@/lib/math/problems';
+import { canUseAdminSlashPrompts } from '@/lib/math/problems/slash-prompts-access';
+import { ensureDefaultTaxonomy } from '@/lib/math/problems/taxonomy';
 
 type PageProps = { params: Promise<{ locale: string }> };
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return teacherPageMetadata("lab", params);
+  return teacherPageMetadata('lab', params);
 }
 
 export default async function TeacherLabPage({ params }: PageProps) {
@@ -31,6 +28,7 @@ export default async function TeacherLabPage({ params }: PageProps) {
   await connection();
 
   const dict = getDictionary(locale);
+  console.log(dict, 'dict');
   const page = dict.dashboard.teacher.pages.lab;
   const session = await getSession();
 
@@ -47,11 +45,11 @@ export default async function TeacherLabPage({ params }: PageProps) {
         loadDraftLessonSet(user.id),
         loadLabWorkspace(user.id),
         loadTeacherFamilies(user.id).catch((error) => {
-          console.error("Failed to load teacher families", error);
+          console.error('Failed to load teacher families', error);
           return [] as Awaited<ReturnType<typeof loadTeacherFamilies>>;
         }),
         ensureDefaultTaxonomy().catch((error) => {
-          console.error("Failed to load taxonomy", error);
+          console.error('Failed to load taxonomy', error);
           return [] as Awaited<ReturnType<typeof ensureDefaultTaxonomy>>;
         }),
       ]);
@@ -61,7 +59,7 @@ export default async function TeacherLabPage({ params }: PageProps) {
       families = loadedFamilies;
       taxonomyNodes = taxonomy;
     } catch (error) {
-      console.error("Failed to load teacher lab", error);
+      console.error('Failed to load teacher lab', error);
     }
   } else {
     try {
@@ -84,7 +82,7 @@ export default async function TeacherLabPage({ params }: PageProps) {
       initialLabIds={labIds}
       initialFamilies={families}
       hydrateSavedBank={false}
-      visibleToolIds={["generate", "chat", "import", "families", "variants"]}
+      visibleToolIds={['generate', 'chat', 'import', 'families', 'variants']}
       initialPanel={null}
       showCreateCard
       showSaveToLab
