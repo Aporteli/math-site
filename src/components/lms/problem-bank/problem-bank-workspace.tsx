@@ -309,9 +309,9 @@ export function ProblemBankWorkspace({
     return labels;
   }, [taxonomyTree, locale]);
 
- function updateTaxonomyFilter(key: TaxonomyFilterKey, value: string) {
-  setFilters((current) => getNextTaxonomyFilters(current, key, value));
-}
+  function updateTaxonomyFilter(key: TaxonomyFilterKey, value: string) {
+    setFilters((current) => getNextTaxonomyFilters(current, key, value));
+  }
 
   const selected = bank.find((problem) => problem.id === selectedId) ?? null;
   const selectedModelStatus = modelStatus.find((status) => status.id === genModel);
@@ -1123,6 +1123,7 @@ export function ProblemBankWorkspace({
       />
 
       {visibleTools.length > 0 ? (
+        console.log(visibleTools, "visibleTools"),
         <section className="mt-6" aria-label={copy.tools.label}>
           <p className="mb-3 text-sm font-semibold tracking-wide text-brass">{copy.tools.label}</p>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
@@ -1975,7 +1976,7 @@ export function ProblemBankWorkspace({
             <div className="border-t flex justify-center border-hairline-soft pt-3">
               <button
                 type="button"
-                className="mt-12 shrink-0 w-50 flex rounded-[15px] justify-center align-center border border-hairline p-3 text-center text-sm font-medium text-navy hover:text-navy-strong hover:border-navy-strong disabled:opacity-60 transition-all"
+                className="mt-12 shrink-0 w-50 flex rounded-[15px] justify-center align-center  border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
                 onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
                 {copy.resetFilters}
               </button>
