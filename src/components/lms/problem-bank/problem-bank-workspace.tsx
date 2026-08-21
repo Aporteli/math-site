@@ -170,7 +170,7 @@ export function ProblemBankWorkspace({
   const [labIds, setLabIds] = useState<string[]>(initialLabIds);
   const [draftIds, setDraftIds] = useState<string[]>([]);
   const [showSolution, setShowSolution] = useState(false);
-  const [panel, setPanel] = useState<'generate' | 'variants' | 'families' | 'chat' | null>(initialPanel);
+  const [panel, setPanel] = useState<'generate' | 'variants' | 'families' | 'chat' | 'createCard' | null>(initialPanel);
   const [importOpen, setImportOpen] = useState(false);
   const [customCardOpen, setCustomCardOpen] = useState(false);
   const [editingProblem, setEditingProblem] = useState<BankProblem | null>(null);
@@ -1090,6 +1090,12 @@ export function ProblemBankWorkspace({
       return;
     }
 
+    if (id === 'createCard') {
+      setCustomCardOpen(true);
+      setNotice(null);
+      return;
+    }
+
     if (tool.status === 'soon') {
       setNotice(copy.tools[id].hint);
     }
@@ -1110,14 +1116,6 @@ export function ProblemBankWorkspace({
             />
             <StatRow label={copy.stats.selected} value={lessonSet.length} />
             <StatRow label={copy.stats.generated} value={generatedCount} />
-            {showCreateCard ? (
-              <button
-                type="button"
-                className="col-span-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-hairline bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm transition-colors hover:border-navy/30 hover:bg-navy-tint/40 sm:col-span-1"
-                onClick={() => setCustomCardOpen(true)}>
-                {copy.customCard.open}
-              </button>
-            ) : null}
           </div>
         }
       />
@@ -1285,6 +1283,9 @@ export function ProblemBankWorkspace({
 
       {panel === 'chat' ? (
         <TeacherAiChatPanel
+          setGenModel={setGenMode}
+          selectedModelStatus={selectedModelStatus}
+          aiModelIds={AI_MODEL_IDS}
           copy={copy.chat}
           fullCopy={copy}
           model={genModel}
@@ -1315,6 +1316,9 @@ export function ProblemBankWorkspace({
           />
           <div className="relative z-10 w-full max-w-4xl">
             <TeacherAiChatPanel
+              setGenModel={setGenMode}
+              selectedModelStatus={selectedModelStatus}
+              aiModelIds={AI_MODEL_IDS}
               key={problemChatDraft}
               copy={copy.chat}
               fullCopy={copy}
@@ -1444,117 +1448,7 @@ export function ProblemBankWorkspace({
               ) : null}
             </div>
           </div>
-          {genMode === 'diverse' ? (
-            <details className="group rounded-2xl border border-hairline-soft bg-paper p-3">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
-                <span className="text-sm font-medium text-ink">{copy.generate.model}</span>
-                <ChevronDown
-                  className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180"
-                  aria-hidden="true"
-                />
-              </summary>
-              <div className="mt-3">
-                <label htmlFor={`${genId}-model`} className="sr-only">
-                  {copy.generate.model}
-                </label>
-                <SelectMenu
-                  id={`${genId}-model`}
-                  className="max-w-md"
-                  value={genModel}
-                  onChange={(value) => setGenModel(value as AiModelId)}
-                  options={AI_MODEL_IDS.map((id) => ({
-                    value: id,
-                    label: copy.generate.models[id],
-                  }))}
-                />
-                {selectedModelStatus ? (
-                  <p className="mt-2 text-xs text-body">{walletHint(copy.generate, selectedModelStatus.wallet)}</p>
-                ) : null}
-                <p className="mt-3 text-xs font-medium text-muted">{copy.generate.walletLabel}</p>
-                <ul className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
-                  {uniqueProviders(modelStatus).map((status) => {
-                    const selected = selectedModelStatus?.provider === status.provider;
-                    return (
-                      <li key={status.provider} className="min-w-0">
-                        <button
-                          type="button"
-                          className={`flex h-full w-full items-start gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors ${walletTone(status.wallet, selected)}`}
-                          onClick={() => {
-                            if (selectedModelStatus?.provider === status.provider) {
-                              return;
-                            }
-                            setGenModel(status.id);
-                          }}>
-                          <AiProviderIcon provider={status.provider} className="mt-0.5 size-4 shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block w-full truncate text-[11px] font-medium">
-                              {copy.generate.providers[status.provider]}
-                            </span>
-                            <span className="mt-0.5 block w-full truncate text-[10px] opacity-80">
-                              {walletChipLabel(copy.generate, status.wallet)}
-                            </span>
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <p className="mt-3 text-xs font-medium text-muted">{copy.generate.limitLabel}</p>
-                <ul className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
-                  {modelStatus.map((status) => {
-                    const selected = status.id === genModel;
-                    const tone = !status.configured
-                      ? 'border-hairline bg-white text-muted'
-                      : status.limit > 0 && status.remaining <= 0
-                        ? 'border-brass/20 bg-brass-tint/40 text-brass-strong'
-                        : selected
-                          ? 'border-navy/20 bg-navy-tint text-navy'
-                          : 'border-hairline bg-white text-body';
-                    const detail = !status.configured
-                      ? copy.generate.limitNoKey
-                      : status.limit > 0 && status.remaining <= 0
-                        ? copy.generate.limitExhausted
-                        : status.limit === 0
-                          ? copy.generate.limitReady
-                          : replaceTokens(copy.generate.limitUsed, {
-                              used: status.used,
-                              limit: status.limit,
-                            });
-
-                    return (
-                      <li key={status.id} className="min-w-0">
-                        <button
-                          type="button"
-                          className={`flex h-full w-full items-start gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors ${tone}`}
-                          onClick={() => setGenModel(status.id)}>
-                          <AiProviderIcon provider={status.provider} className="mt-0.5 size-4 shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block w-full truncate text-[11px] font-medium">
-                              {copy.generate.models[status.id]}
-                            </span>
-                            <span className="mt-0.5 block w-full truncate text-[10px] opacity-80">{detail}</span>
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </details>
-          ) : null}
-          {genMode === 'diverse' ? (
-            <label className="block rounded-2xl border border-hairline-soft bg-paper p-3 text-sm font-medium text-ink">
-              {copy.generate.request}
-              <textarea
-                className={`${fieldClass} mt-1.5 min-h-[4.5rem] resize-y`}
-                value={genRequest}
-                placeholder={copy.generate.requestPlaceholder}
-                maxLength={400}
-                onChange={(event) => setGenRequest(event.target.value)}
-                onPaste={(event) => handlePlainTextPaste(event, genRequest, setGenRequest, 400)}
-              />
-            </label>
-          ) : null}
+         
           <div className="rounded-2xl border border-brass/10 bg-brass-tint/30 p-3 sm:p-4">
             {genMode === 'families' ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -2424,12 +2318,11 @@ export function ProblemBankWorkspace({
             {lessonSet.map((problem, index) => (
               <li
                 key={problem.id}
-                className="inline-flex max-w-full items-center gap-1 rounded-full border border-hairline bg-paper py-1 pr-1 pl-3 text-sm text-ink">
+                className="inline-flex max-w-full items-center gap-1 rounded-2xl border border-hairline bg-paper py-1 pr-1 pl-3 text-sm text-ink">
                 <button
                   type="button"
                   className="inline-flex min-w-0 max-w-[min(100%,16rem)] items-center gap-2 overflow-hidden hover:text-navy sm:max-w-[18rem]"
                   onClick={() => setSelectedId(problem.id)}>
-                  <span className="shrink-0 font-semibold text-navy">{index + 1}</span>
                   <span className="min-w-0 overflow-x-auto">
                     <KatexPreview tex={problem.promptTex} className="whitespace-nowrap [&_.katex]:text-[0.9rem]" />
                   </span>

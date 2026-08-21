@@ -81,7 +81,7 @@ export default async function TeacherProblemsPage({ params }: PageProps) {
       initialLessonSetIds={lessonSetIds}
       initialFamilies={families}
       hydrateSavedBank
-      visibleToolIds={['worksheet', 'assign', 'chat', 'import', 'graph', 'createCard']}
+      visibleToolIds={['worksheet', 'assign', 'chat', 'import', 'createCard','variants']}
       initialPanel={null}
       showGenerateVariants={false}
       showSendToLab

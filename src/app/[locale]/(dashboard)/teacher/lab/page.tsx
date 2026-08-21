@@ -82,7 +82,7 @@ export default async function TeacherLabPage({ params }: PageProps) {
       initialLabIds={labIds}
       initialFamilies={families}
       hydrateSavedBank={false}
-      visibleToolIds={['generate', 'chat', 'import', 'families', 'variants']}
+      visibleToolIds={['generate', 'families', ]}
       initialPanel={null}
       showCreateCard
       showSaveToLab
