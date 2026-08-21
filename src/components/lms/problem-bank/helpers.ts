@@ -7,6 +7,7 @@ import {
   type ProblemDifficulty,
   type ProblemYear,
   type SavedProblemFamily,
+  type ProblemFilters,
 } from '@/lib/math/problems';
 import { collectTemplateGenerateLabels } from '@/lib/math/problems/generate';
 import { taxonomyLabel } from '@/lib/math/problems/taxonomy-shared';
@@ -153,3 +154,30 @@ export const difficultyTone: Record<ProblemDifficulty, string> = {
   hard: 'border border-hairline bg-paper-deep text-brass-strong',
   olympiad: 'bg-navy text-brass-soft',
 };
+
+// components/lms/problem-bank/helpers.ts
+
+export type TaxonomyFilterKey = 'branchId' | 'topicNodeId' | 'subtopicId' | 'conceptId';
+
+export function getNextTaxonomyFilters(current: ProblemFilters, key: TaxonomyFilterKey, value: string): ProblemFilters {
+  const next: ProblemFilters = { ...current, [key]: value };
+
+  switch (key) {
+    case 'branchId':
+      next.topicNodeId = 'all';
+      next.subtopicId = 'all';
+      next.conceptId = 'all';
+      break;
+    case 'topicNodeId':
+      next.subtopicId = 'all';
+      next.conceptId = 'all';
+      break;
+    case 'subtopicId':
+      next.conceptId = 'all';
+      break;
+    default:
+      break;
+  }
+
+  return next;
+}

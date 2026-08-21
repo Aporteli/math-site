@@ -38,6 +38,8 @@ import {
   walletTone,
   uniqueProviders,
   difficultyTone,
+  getNextTaxonomyFilters,
+  type TaxonomyFilterKey,
 } from './helpers';
 import { ImportFamilyModal } from '@/components/lms/problem-bank/import-family-modal';
 import { CreateCustomCardModal } from '@/components/lms/problem-bank/create-custom-card-modal';
@@ -307,22 +309,9 @@ export function ProblemBankWorkspace({
     return labels;
   }, [taxonomyTree, locale]);
 
-  function updateTaxonomyFilter(key: 'branchId' | 'topicNodeId' | 'subtopicId' | 'conceptId', value: string) {
-    setFilters((current) => {
-      const next = { ...current, [key]: value };
-      if (key === 'branchId') {
-        next.topicNodeId = 'all';
-        next.subtopicId = 'all';
-        next.conceptId = 'all';
-      } else if (key === 'topicNodeId') {
-        next.subtopicId = 'all';
-        next.conceptId = 'all';
-      } else if (key === 'subtopicId') {
-        next.conceptId = 'all';
-      }
-      return next;
-    });
-  }
+ function updateTaxonomyFilter(key: TaxonomyFilterKey, value: string) {
+  setFilters((current) => getNextTaxonomyFilters(current, key, value));
+}
 
   const selected = bank.find((problem) => problem.id === selectedId) ?? null;
   const selectedModelStatus = modelStatus.find((status) => status.id === genModel);
