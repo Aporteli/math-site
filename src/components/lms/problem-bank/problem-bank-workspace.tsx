@@ -1983,13 +1983,15 @@ export function ProblemBankWorkspace({
                 onChange={(value) => updateFilter('origin', value)}
               />
             </div>
+            <div className="border-t flex justify-center border-hairline-soft pt-3">
+              <button
+                type="button"
+                className="mt-12 shrink-0 w-50 flex rounded-[15px] justify-center align-center border border-hairline p-3 text-center text-sm font-medium text-navy hover:text-navy-strong hover:border-navy-strong disabled:opacity-60 transition-all"
+                onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
+                {copy.resetFilters}
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            className="mt-4 shrink-0 border-t border-hairline pt-3 text-left text-sm font-medium text-navy hover:text-navy-strong"
-            onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
-            {copy.resetFilters}
-          </button>
         </aside>
 
         <section
