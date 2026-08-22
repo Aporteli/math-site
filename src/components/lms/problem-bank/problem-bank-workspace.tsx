@@ -1871,7 +1871,7 @@ export function ProblemBankWorkspace({
             <div className="border-t flex justify-center border-hairline-soft pt-3">
               <button
                 type="button"
-                className="mt-12 shrink-0 w-50 flex rounded-[15px] justify-center align-center border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
+                className="mt-6 shrink-0 w-50 flex rounded-[15px] justify-center align-center border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
                 onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
                 {copy.resetFilters}
               </button>
@@ -2139,7 +2139,7 @@ export function ProblemBankWorkspace({
                   ) : null}
                 </div>
 
-                <div className="mt-4 flex flex-col gap-2 border-t border-navy/10 pt-4">
+                <div className="pt-8 mt-3 flex flex-col gap-6 border-t border-navy/10">
                   <button
                     type="button"
                     className={

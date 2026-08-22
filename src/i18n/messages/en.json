@@ -1800,7 +1800,7 @@
           "underFamily": "Subtitle of {parent}"
         },
         "importFamily": {
-          "title": "Build from an example",
+          "title": "Screenshot, photo or handwriting",
           "hint": "Type a problem, upload a screenshot or handwriting, or load a JSON family. We validate it, then the engine fills new numbers.",
           "close": "Close import",
           "source": "Source",
