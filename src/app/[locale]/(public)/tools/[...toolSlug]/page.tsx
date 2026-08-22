@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CatalogToolShell } from "@/components/tools/catalog-tool-shell";
 import { GraphingToolLoader } from "@/components/tools/graphing-tool-loader";
+import { EquationSolverLoader } from "@/components/tools/equation-solver-loader";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import {
@@ -51,6 +52,17 @@ export default async function ToolPage({ params }: ToolPageProps) {
       <GraphingToolLoader
         locale={locale}
         copy={dict.graphingTool}
+        title={item.title}
+        description={item.description}
+      />
+    );
+  }
+
+  if (tool.id === "equations") {
+    return (
+      <EquationSolverLoader
+        locale={locale}
+        copy={dict.equations}
         title={item.title}
         description={item.description}
       />

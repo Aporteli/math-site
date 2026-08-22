@@ -1867,7 +1867,7 @@
           "auditHint": "Fix every issue below, then import again.",
           "auditCount": "{count} issues"
         },
-          "stats": {
+        "stats": {
           "inBank": "In bank",
           "inLab": "In lab",
           "selected": "In set",
@@ -2054,6 +2054,17 @@
     "syntaxConst": "Constants and roots: sqrt(x), PI, E, abs(x), log(x)",
     "plotError": "The graph could not be drawn.",
     "loading": "Loading graph…"
+  },
+  "equations": {
+    "back": "Back to Tools",
+    "eyebrow": "Math Tool",
+    "inputTitle": "Equation Input",
+    "reset": "Reset",
+    "invalidEquation": "Invalid equation. Check the syntax.",
+    "solveButton": "Solve",
+    "syntaxTitle": "Syntax Guide",
+    "resultTitle": "Solution",
+    "emptyResult": "Enter an equation to see the solution here."
   },
   "footer": {
     "contact": {
