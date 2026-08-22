@@ -9,7 +9,7 @@ import {
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
-import { FlaskConical, Library, MessageSquare, RotateCcw, Send, Sparkles, X, ChevronDown } from 'lucide-react';
+import { FlaskConical, Library, MessageSquare, Send, Sparkles, X, ChevronDown } from 'lucide-react';
 import { AdminSlashPromptManager, AdminSlashPromptMenu } from '@/components/lms/problem-bank/admin-slash-prompts';
 import { AdminSlashPromptFillModal } from '@/components/lms/problem-bank/admin-slash-prompt-fill-modal';
 import { KatexPreview } from '@/components/math/katex-preview';
@@ -38,10 +38,7 @@ import {
   type ProblemBankCopy,
 } from '@/lib/math/problems';
 import { toKatexFriendlyTex } from '@/lib/math/problems/tex';
-import { getDictionary } from '@/i18n/get-dictionary';
 import { uniqueProviders, walletChipLabel, walletHint, walletTone } from './helpers';
-
-type PageProps = { params: Promise<{ locale: string }> };
 
 type ChatRole = 'user' | 'assistant';
 
@@ -52,8 +49,8 @@ type ChatMessage = {
 };
 
 interface TeacherAiChatPanelProps {
-  setGenModel: any;
-  selectedModelStatus: any;
+  setGenModel?: any;
+  selectedModelStatus?: any;
   aiModelIds: readonly AiModelId[];
   copy: ProblemBankCopy['chat'];
   fullCopy: ProblemBankCopy;
@@ -96,6 +93,24 @@ function chatErrorText(copy: ProblemBankCopy['chat'], error: string) {
   }
 }
 
+/**
+ * ასწორებს დაუცველ LaTeX ბლოკებს (\begin{cases}, \sqrt{}, \frac{} და ა.შ.),
+ * რომლებსაც AI ზოგჯერ $ ან $$ შეფუთვის გარეშე აბრუნებს.
+ */
+function sanitizeKatexTex(raw: string): string {
+  if (!raw) return '';
+
+  let sanitized = raw;
+
+  // 1. \begin{cases}...\end{cases}, aligned, matrix გარემოების შეფუთვა $$...$$-ში, თუ უკვე არ არის
+  sanitized = sanitized.replace(
+    /(?<!\$)\s*(\\begin\{(?:cases|aligned|matrix|bmatrix|pmatrix|array)\}[\s\S]*?\\end\{(?:cases|aligned|matrix|bmatrix|pmatrix|array)\})\s*(?!\$)/g,
+    '\n$$\n$1\n$$\n',
+  );
+
+  return toKatexFriendlyTex(sanitized);
+}
+
 export function TeacherAiChatPanel({
   copy,
   fullCopy,
@@ -109,7 +124,6 @@ export function TeacherAiChatPanel({
   enableSlashPrompts = false,
   slashPromptsUserId = '',
   onSavedProblems,
-  aiModelIds,
   selectedModelStatus,
   setGenModel,
 }: TeacherAiChatPanelProps) {
@@ -232,21 +246,7 @@ export function TeacherAiChatPanel({
     }
   }
 
-  const selectedStatus = modelStatus.find((item) => item.id === model) ?? null;
-  const remainingLabel = useMemo(() => {
-    if (!selectedStatus) return null;
-    if (!selectedStatus.configured) return copy.limitNoKey;
-    if (selectedStatus.limit > 0 && selectedStatus.remaining <= 0) {
-      return copy.limitExhausted;
-    }
-    if (selectedStatus.limit === 0) return copy.limitReady;
-    return replaceTokens(copy.limitUsed, {
-      used: selectedStatus.used,
-      limit: selectedStatus.limit,
-    });
-  }, [copy, selectedStatus]);
-
-  const previewTex = draft.trim() ? toKatexFriendlyTex(draft) : '';
+  const previewTex = draft.trim() ? sanitizeKatexTex(draft) : '';
 
   async function persistCards(problems: BankProblem[], target: 'bank' | 'lab', keys: string[]) {
     if (problems.length === 0) return;
@@ -306,7 +306,6 @@ export function TeacherAiChatPanel({
         history: messages.slice(-20).map(({ role, content }) => ({ role, content })),
       });
 
-      console.log(result, 'result');
       if (!result.ok) {
         setNotice(chatErrorText(copy, result.error));
         setMessages(messages);
@@ -476,7 +475,7 @@ export function TeacherAiChatPanel({
                     <div className="max-w-[85%] rounded-2xl bg-navy px-4 py-3 text-sm leading-relaxed text-white shadow-sm">
                       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">{copy.you}</p>
                       <KatexPreview
-                        tex={toKatexFriendlyTex(message.content)}
+                        tex={sanitizeKatexTex(message.content)}
                         className="block break-words text-white [&_.katex-display]:my-2 [&_.katex]:text-[0.95rem] [&_.katex]:text-white"
                       />
                     </div>
@@ -501,13 +500,14 @@ export function TeacherAiChatPanel({
               return (
                 <li key={`assistant-${index}`} className="flex justify-start">
                   <div className="max-w-[95%] space-y-3 sm:max-w-[85%]">
-                    {prose.trim() ? (
+                    {/* ტექსტური საუბარი გამოჩნდება მხოლოდ იმ შემთხვევაში, თუ ამოცანების ბარათები არ არის */}
+                    {bankProblems.length === 0 && (prose || message.content) ? (
                       <div className="rounded-2xl border border-hairline bg-white px-4 py-3 text-sm leading-relaxed text-ink shadow-sm">
                         <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">
                           {copy.assistant}
                         </p>
                         <KatexPreview
-                          tex={prose}
+                          tex={sanitizeKatexTex(prose || message.content)}
                           className="block break-words whitespace-pre-wrap text-ink [&_.katex-display]:my-2 [&_.katex]:text-[0.95rem]"
                         />
                       </div>
@@ -574,7 +574,7 @@ export function TeacherAiChatPanel({
                                   {fullCopy.prompt}
                                 </p>
                                 <KatexPreview
-                                  tex={problem.promptTex}
+                                  tex={sanitizeKatexTex(problem.promptTex)}
                                   className="block min-w-0 overflow-x-auto hide-scrollbar text-ink [&_.katex]:text-[0.95rem]"
                                 />
                                 {problem.solutionTex.trim() && problem.solutionTex.trim() !== '—' ? (
@@ -583,7 +583,7 @@ export function TeacherAiChatPanel({
                                       {fullCopy.solution}
                                     </p>
                                     <KatexPreview
-                                      tex={problem.solutionTex}
+                                      tex={sanitizeKatexTex(problem.solutionTex)}
                                       className="block min-w-0 overflow-x-auto hide-scrollbar whitespace-pre-wrap break-words text-ink [&_.katex-display]:my-2 [&_.katex]:text-[0.95rem]"
                                     />
                                   </div>

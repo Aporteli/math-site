@@ -34,7 +34,6 @@ export const TEACHER_NAV: DashboardLink<TeacherNavId>[] = [
   { id: "overview", href: "/teacher/overview", icon: LayoutDashboard },
   { id: "journal", href: "/teacher/journal", icon: BookOpen },
   { id: "homework", href: "/teacher/homework", icon: ClipboardCheck },
-  { id: "lab", href: "/teacher/lab", icon: FlaskConical },
   { id: "admin", href: "/teacher/admin", icon: Shield },
   { id: "reports", href: "/teacher/reports", icon: BarChart3 },
   { id: "problems", href: "/teacher/problems", icon: Library },

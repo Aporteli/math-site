@@ -115,6 +115,27 @@ import {
 import { childrenOf, taxonomyLabel, type TaxonomyNodeDto } from '@/lib/math/problems/taxonomy-shared';
 import { stashProblemForLab, takeProblemForLab } from '@/lib/math/problems/lab-transfer';
 
+const LOCAL_STORAGE_DRAFTS_KEY = 'math_lms_local_problems_drafts';
+
+function getLocalDraftProblems(): BankProblem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem(LOCAL_STORAGE_DRAFTS_KEY);
+    return data ? (JSON.parse(data) as BankProblem[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setLocalDraftProblems(problems: BankProblem[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(LOCAL_STORAGE_DRAFTS_KEY, JSON.stringify(problems));
+  } catch {
+    // LocalStorage-ის შეცდომის იგნორირება
+  }
+}
+
 interface ProblemBankWorkspaceProps {
   locale: Locale;
   title: string;
@@ -123,20 +144,16 @@ interface ProblemBankWorkspaceProps {
   initialBank: BankProblem[];
   initialLessonSetIds: string[];
   initialFamilies?: SavedProblemFamily[];
-  /** When true, load saved bank problems if the initial list is only catalog seeds. */
   hydrateSavedBank?: boolean;
   visibleToolIds?: ProblemBankToolId[];
   initialPanel?: 'generate' | 'variants' | 'families' | 'chat' | null;
   showGenerateVariants?: boolean;
   showSendToLab?: boolean;
   showCreateCard?: boolean;
-  /** Lab page: persist cards into the lab workspace set and show lab stats. */
   showSaveToLab?: boolean;
   initialLabIds?: string[];
-  /** ADMIN-only `/` prompt snippets in AI chat. */
   enableSlashPrompts?: boolean;
   slashPromptsUserId?: string;
-  /** Curriculum tree for cascading filters. */
   taxonomyNodes?: TaxonomyNodeDto[];
 }
 
@@ -202,6 +219,20 @@ export function ProblemBankWorkspace({
   const [variantCount, setVariantCount] = useState(5);
   const [casNotice, setCasNotice] = useState<string | null>(null);
   const [casOk, setCasOk] = useState<boolean | null>(null);
+
+  // LocalStorage-იდან შენახული ამოცანების ჩატვირთვა გვერდის გახსნისას
+  useEffect(() => {
+    const localProblems = getLocalDraftProblems();
+    if (localProblems.length > 0) {
+      setBank((current) => {
+        const existingIds = new Set(current.map((p) => p.id));
+        const incoming = localProblems.filter((p) => !existingIds.has(p.id));
+        return incoming.length > 0 ? [...incoming, ...current] : current;
+      });
+      setDraftIds((current) => [...new Set([...localProblems.map((p) => p.id), ...current])]);
+      setSelectedId((current) => current ?? localProblems[0]?.id ?? null);
+    }
+  }, []);
 
   useEffect(() => {
     if (initialFamilies.length > 0) return;
@@ -518,7 +549,10 @@ export function ProblemBankWorkspace({
       return null;
     }
 
-    // On the lab page, bank saves must not stay in the lab list.
+    // შენახვის შემდეგ ამოცანების ამოღება LocalStorage-იდან
+    const savedIdsSet = new Set(problems.map((p) => p.id));
+    setLocalDraftProblems(getLocalDraftProblems().filter((p) => !savedIdsSet.has(p.id)));
+
     if (showSaveToLab) {
       const originalIds = new Set(problems.map((problem) => problem.id));
       setBank((current) => current.filter((problem) => !originalIds.has(problem.id)));
@@ -557,6 +591,7 @@ export function ProblemBankWorkspace({
         setNotice(persistErrorMessage(result.error));
         return;
       }
+      setLocalDraftProblems(getLocalDraftProblems().filter((p) => p.id !== problem.id));
       setBank((current) => mergeSaved(current, result.saved, result.idMap));
       setDraftIds((current) =>
         remapIds(
@@ -581,6 +616,7 @@ export function ProblemBankWorkspace({
 
     if (isUnsavedId(originalId)) {
       setBank((current) => current.map((item) => (item.id === originalId ? problem : item)));
+      setLocalDraftProblems(getLocalDraftProblems().map((item) => (item.id === originalId ? problem : item)));
       setNotice(copy.editCard.saved);
       return true;
     }
@@ -639,6 +675,7 @@ export function ProblemBankWorkspace({
       setBank((current) => current.filter((item) => item.id !== problem.id));
       setDraftIds((current) => current.filter((id) => id !== problem.id));
       setSelectedProblemIds((current) => current.filter((id) => id !== problem.id));
+      setLocalDraftProblems(getLocalDraftProblems().filter((p) => p.id !== problem.id));
       if (selectedId === problem.id) {
         setSelectedId(null);
         setShowSolution(false);
@@ -665,7 +702,6 @@ export function ProblemBankWorkspace({
     }
   }
 
-  // დამატებულია currentBank პარამეტრი Stale State-ის თავიდან ასაცილებლად
   async function persistLessonSet(nextIds: string[], currentBank = bank) {
     const members = nextIds
       .map((id) => currentBank.find((problem) => problem.id === id))
@@ -685,7 +721,6 @@ export function ProblemBankWorkspace({
     }
     setBank((current) => mergeSaved(current, result.saved, result.idMap));
 
-    // შესწორება: შენახული ამოცანების გასუფთავება draftIds-დან
     setDraftIds((current) =>
       remapIds(
         current.filter((id) => !unsaved.some((problem) => problem.id === id)),
@@ -708,6 +743,8 @@ export function ProblemBankWorkspace({
   }
 
   async function discardProblem(id: string) {
+    setLocalDraftProblems(getLocalDraftProblems().filter((p) => p.id !== id));
+
     if (showSaveToLab && labIds.includes(id) && !isUnsavedId(id)) {
       setSaving(true);
       try {
@@ -774,6 +811,8 @@ export function ProblemBankWorkspace({
     }
 
     const idSet = new Set(ids);
+    setLocalDraftProblems(getLocalDraftProblems().filter((p) => !idSet.has(p.id)));
+
     const labPersisted = ids.filter((id) => showSaveToLab && labIds.includes(id) && !isUnsavedId(id));
     const seedIds = ids.filter((id) => isCatalogSeedId(id));
     const bankPersisted = ids.filter(
@@ -913,12 +952,16 @@ export function ProblemBankWorkspace({
     }
   }
 
+  // ახალი ამოცანების სიაში და LocalStorage-ში ჩამატება
   function applyCreated(created: BankProblem[]) {
     if (created.length === 0) return;
     setBank((current) => [...created, ...current]);
-
-    // შესწორება: ახალი ამოცანების დამატება არსებულ draftIds-ში ზედწერის ნაცვლად
     setDraftIds((current) => [...created.map((problem) => problem.id), ...current]);
+
+    // LocalStorage-ის სინქრონიზაცია
+    const existingDrafts = getLocalDraftProblems();
+    const updatedDrafts = [...created, ...existingDrafts.filter((item) => !created.some((c) => c.id === item.id))];
+    setLocalDraftProblems(updatedDrafts);
 
     setSelectedId(created[0]?.id ?? null);
     setShowSolution(false);
@@ -1120,81 +1163,77 @@ export function ProblemBankWorkspace({
         }
       />
 
-      {visibleTools.length > 0
-        ? (console.log(visibleTools, 'visibleTools'),
-          (
-            <section className="mt-6" aria-label={copy.tools.label}>
-              <p className="mb-3 text-sm font-semibold tracking-wide text-brass">{copy.tools.label}</p>
-              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-                {' '}
-                {visibleTools.map((tool) => {
-                  const Icon = tool.icon;
-                  const item = copy.tools[tool.id];
-                  const className = [
-                    'flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all',
-                    tool.status === 'ready' && (panel === tool.id || (tool.id === 'import' && importOpen))
-                      ? 'border-navy/30 bg-navy-tint shadow-sm'
-                      : 'border-hairline bg-white shadow-sm hover:border-navy/30 hover:shadow-md',
-                  ].join(' ');
+      {visibleTools.length > 0 ? (
+        <section className="mt-6" aria-label={copy.tools.label}>
+          <p className="mb-3 text-sm font-semibold tracking-wide text-brass">{copy.tools.label}</p>
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            {visibleTools.map((tool) => {
+              const Icon = tool.icon;
+              const item = copy.tools[tool.id];
+              const className = [
+                'flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all',
+                tool.status === 'ready' && (panel === tool.id || (tool.id === 'import' && importOpen))
+                  ? 'border-navy/30 bg-navy-tint shadow-sm'
+                  : 'border-hairline bg-white shadow-sm hover:border-navy/30 hover:shadow-md',
+              ].join(' ');
 
-                  const body = (
-                    <>
-                      <span className="flex items-start gap-2">
-                        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
-                          <Icon className="size-4" aria-hidden="true" />
-                        </span>
-                        <span className="min-w-0 text-sm font-semibold text-ink">{item.title}</span>
-                        {tool.status === 'soon' ? (
-                          <span className="ml-auto shrink-0 rounded-full bg-brass-tint px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brass">
-                            {copy.soon}
-                          </span>
-                        ) : null}
+              const body = (
+                <>
+                  <span className="flex items-start gap-2">
+                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
+                      <Icon className="size-4" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 text-sm font-semibold text-ink">{item.title}</span>
+                    {tool.status === 'soon' ? (
+                      <span className="ml-auto shrink-0 rounded-full bg-brass-tint px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brass">
+                        {copy.soon}
                       </span>
-                      <span className="flex-1 text-xs leading-relaxed text-muted">{item.hint}</span>
-                    </>
-                  );
+                    ) : null}
+                  </span>
+                  <span className="flex-1 text-xs leading-relaxed text-muted">{item.hint}</span>
+                </>
+              );
 
-                  return (
-                    <li key={tool.id} className="h-full">
-                      {tool.status === 'link' && tool.href ? (
-                        <Link href={localePath(locale, tool.href)} className={className}>
-                          {body}
-                        </Link>
-                      ) : (
-                        <button
-                          type="button"
-                          className={className}
-                          aria-pressed={
-                            tool.id === 'generate' ||
-                            tool.id === 'variants' ||
-                            tool.id === 'families' ||
-                            tool.id === 'chat' ||
-                            tool.id === 'createCard'
-                              ? panel === tool.id
-                              : tool.id === 'import'
-                                ? importOpen
-                                : undefined
-                          }
-                          onClick={() => onTool(tool.id)}>
-                          {body}
-                        </button>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-              {notice ? (
-                <button
-                  type="button"
-                  className="mt-3 w-full cursor-pointer rounded-xl border border-brass/20 bg-brass-tint px-4 py-3 text-left text-sm text-brass-strong transition-colors hover:border-brass/40 hover:bg-brass-tint/80"
-                  aria-label={copy.dismissNotice}
-                  onClick={() => setNotice(null)}>
-                  {notice}
-                </button>
-              ) : null}
-            </section>
-          ))
-        : null}
+              return (
+                <li key={tool.id} className="h-full">
+                  {tool.status === 'link' && tool.href ? (
+                    <Link href={localePath(locale, tool.href)} className={className}>
+                      {body}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      className={className}
+                      aria-pressed={
+                        tool.id === 'generate' ||
+                        tool.id === 'variants' ||
+                        tool.id === 'families' ||
+                        tool.id === 'chat' ||
+                        tool.id === 'createCard'
+                          ? panel === tool.id
+                          : tool.id === 'import'
+                            ? importOpen
+                            : undefined
+                      }
+                      onClick={() => onTool(tool.id)}>
+                      {body}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          {notice ? (
+            <button
+              type="button"
+              className="mt-3 w-full cursor-pointer rounded-xl border border-brass/20 bg-brass-tint px-4 py-3 text-left text-sm text-brass-strong transition-colors hover:border-brass/40 hover:bg-brass-tint/80"
+              aria-label={copy.dismissNotice}
+              onClick={() => setNotice(null)}>
+              {notice}
+            </button>
+          ) : null}
+        </section>
+      ) : null}
 
       {customCardOpen ? (
         <CreateCustomCardModal
@@ -1448,7 +1487,7 @@ export function ProblemBankWorkspace({
               ) : null}
             </div>
           </div>
-         
+
           <div className="rounded-2xl border border-brass/10 bg-brass-tint/30 p-3 sm:p-4">
             {genMode === 'families' ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -1793,7 +1832,7 @@ export function ProblemBankWorkspace({
           <h2 className="shrink-0 border-b border-hairline pb-3 text-sm font-semibold tracking-wide text-brass">
             {copy.filtersTitle}
           </h2>
-          <div className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto pe-0.5">
+          <div className="mt-4 min-h-0 flex-1 space-y-8 overflow-y-auto gap-10 pe-0.5">
             <label className="sr-only" htmlFor={searchId}>
               {copy.searchLabel}
             </label>
@@ -1806,7 +1845,7 @@ export function ProblemBankWorkspace({
               onChange={(event) => updateFilter('query', event.target.value)}
             />
 
-            <div className="space-y-2.5 border-t border-hairline-soft pt-3">
+            <div className="space-y-5 border-t border-hairline-soft pt-3">
               <FilterSelect
                 key="filter-branch"
                 label={copy.branchFilter}
@@ -1826,27 +1865,6 @@ export function ProblemBankWorkspace({
                 onChange={(value) => updateTaxonomyFilter('topicNodeId', value)}
               />
               <FilterSelect
-                key="filter-subtopic"
-                label={copy.subtopicFilter}
-                value={filters.subtopicId}
-                allLabel={copy.allSubtopics}
-                options={subtopicOptions}
-                labels={taxonomyLabels}
-                onChange={(value) => updateTaxonomyFilter('subtopicId', value)}
-              />
-              <FilterSelect
-                key="filter-concept"
-                label={copy.conceptFilter}
-                value={filters.conceptId}
-                allLabel={copy.allConcepts}
-                options={conceptOptions}
-                labels={taxonomyLabels}
-                onChange={(value) => updateTaxonomyFilter('conceptId', value)}
-              />
-            </div>
-
-            <div className="space-y-2.5 border-t border-hairline-soft pt-3">
-              <FilterSelect
                 key="filter-difficulty"
                 label={copy.generate.difficulty}
                 value={filters.difficulty}
@@ -1855,29 +1873,11 @@ export function ProblemBankWorkspace({
                 labels={copy.difficulties}
                 onChange={(value) => updateFilter('difficulty', value)}
               />
-              <FilterSelect
-                key="filter-year"
-                label={copy.generate.year}
-                value={filters.year}
-                allLabel={copy.allYears}
-                options={PROBLEM_YEARS}
-                labels={copy.years}
-                onChange={(value) => updateFilter('year', value)}
-              />
-              <FilterSelect
-                key="filter-origin"
-                label={copy.originFilter}
-                value={filters.origin}
-                allLabel={copy.allOrigins}
-                options={PROBLEM_FILTER_ORIGINS}
-                labels={copy.sources}
-                onChange={(value) => updateFilter('origin', value)}
-              />
             </div>
             <div className="border-t flex justify-center border-hairline-soft pt-3">
               <button
                 type="button"
-                className="mt-12 shrink-0 w-50 flex rounded-[15px] justify-center align-center  border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
+                className="mt-12 shrink-0 w-50 flex rounded-[15px] justify-center align-center border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
                 onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
                 {copy.resetFilters}
               </button>
@@ -1939,6 +1939,7 @@ export function ProblemBankWorkspace({
                 const active = problem.id === selectedId;
                 const inSet = lessonSetIds.includes(problem.id);
                 const checked = selectedProblemIds.includes(problem.id);
+                const isSavedInBank = !isUnsavedId(problem.id) && !isCatalogSeedId(problem.id);
 
                 return (
                   <li
@@ -2184,64 +2185,6 @@ export function ProblemBankWorkspace({
                       {saving ? copy.generate.saving : copy.generate.saveToBank}
                     </button>
                   ) : null}
-                  {showGenerateVariants && canVary(selected, templateJsonForProblem(selected, families)) ? (
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
-                      onClick={() => {
-                        setPanel('variants');
-                        setNotice(null);
-                      }}>
-                      <Shuffle className="size-4" aria-hidden="true" />
-                      {copy.variantPanel.submit}
-                    </button>
-                  ) : null}
-                  {showSendToLab ? (
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
-                      onClick={() => {
-                        stashProblemForLab(selected);
-                        router.push(localePath(locale, '/teacher/lab'));
-                      }}>
-                      <FlaskConical className="size-4" aria-hidden="true" />
-                      {copy.actions.sendToLab}
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
-                    onClick={() => {
-                      const family = copy.importFamily;
-                      const result = checkBankProblem(selected, templateJsonForProblem(selected, families));
-                      if (result.ok) {
-                        setCasOk(true);
-                        setCasNotice(
-                          replaceTokens(family.checkCasOk, {
-                            value: result.value,
-                          }),
-                        );
-                        return;
-                      }
-                      setCasOk(false);
-                      if (result.reason === 'no_formula') {
-                        setCasNotice(family.checkCasNoFormula);
-                        return;
-                      }
-                      if (result.reason === 'mismatch') {
-                        setCasNotice(
-                          replaceTokens(family.checkCasMismatch, {
-                            got: result.got ?? '',
-                            expected: result.expected ?? '',
-                          }),
-                        );
-                        return;
-                      }
-                      setCasNotice(family.checkCasFail);
-                    }}>
-                    <Calculator className="size-4" aria-hidden="true" />
-                    {copy.importFamily.checkCas}
-                  </button>
                   <button
                     type="button"
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
@@ -2300,11 +2243,6 @@ export function ProblemBankWorkspace({
               </button>
             ) : null}
             <Link
-              href={localePath(locale, '/teacher/problems')}
-              className="inline-flex items-center justify-center rounded-full bg-navy px-3 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong sm:py-1.5">
-              {copy.actions.openLab}
-            </Link>
-            <Link
               href={localePath(locale, '/teacher/homework')}
               className="inline-flex items-center justify-center rounded-full border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy sm:py-1.5">
               {copy.actions.openHomework}
@@ -2315,7 +2253,7 @@ export function ProblemBankWorkspace({
           <p className="mt-3 text-sm text-body">{copy.lessonSetEmpty}</p>
         ) : (
           <ul className="mt-4 flex flex-wrap gap-2">
-            {lessonSet.map((problem, index) => (
+            {lessonSet.map((problem) => (
               <li
                 key={problem.id}
                 className="inline-flex max-w-full items-center gap-1 rounded-2xl border border-hairline bg-paper py-1 pr-1 pl-3 text-sm text-ink">
@@ -2323,7 +2261,7 @@ export function ProblemBankWorkspace({
                   type="button"
                   className="inline-flex min-w-0 max-w-[min(100%,16rem)] items-center gap-2 overflow-hidden hover:text-navy sm:max-w-[18rem]"
                   onClick={() => setSelectedId(problem.id)}>
-                  <span className="min-w-0 overflow-x-auto">
+                  <span className="min-w-0">
                     <KatexPreview tex={problem.promptTex} className="whitespace-nowrap [&_.katex]:text-[0.9rem]" />
                   </span>
                 </button>

@@ -159,56 +159,6 @@ export function ProblemCardMenu({
       icon: inSet ? X : Plus,
       onClick: () => run(() => onToggleSet(problem)),
     },
-    ...(showSendToLab && onSendToLab
-      ? [
-          {
-            id: "lab",
-            label: copy.actions.sendToLab,
-            icon: FlaskConical,
-            onClick: () => run(() => onSendToLab(problem)),
-          },
-        ]
-      : []),
-    ...(showSaveToLab && !inLab && onSaveToLab
-      ? [
-          {
-            id: "save-lab",
-            label: menu.saveToLab,
-            icon: Save,
-            onClick: () => run(() => onSaveToLab(problem)),
-          },
-        ]
-      : []),
-    ...(showSaveToLab && onSaveToBank
-      ? [
-          {
-            id: "save-bank",
-            label: menu.saveToBank,
-            icon: Library,
-            onClick: () => run(() => onSaveToBank(problem)),
-          },
-        ]
-      : []),
-    ...(showSaveToLab && inLab && onRemoveFromLab
-      ? [
-          {
-            id: "remove-lab",
-            label: menu.removeFromLab,
-            icon: FlaskConical,
-            onClick: () => run(() => onRemoveFromLab(problem)),
-          },
-        ]
-      : []),
-    ...(showGenerateVariants && canGenerateVariants && onGenerateVariants
-      ? [
-          {
-            id: "variants",
-            label: copy.variantPanel.submit,
-            icon: Shuffle,
-            onClick: () => run(() => onGenerateVariants(problem)),
-          },
-        ]
-      : []),
     {
       id: "discard",
       label:
