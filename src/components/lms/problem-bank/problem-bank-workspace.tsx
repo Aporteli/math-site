@@ -38,6 +38,8 @@ import {
   walletTone,
   uniqueProviders,
   difficultyTone,
+  getNextTaxonomyFilters,
+  type TaxonomyFilterKey,
 } from './helpers';
 import { ImportFamilyModal } from '@/components/lms/problem-bank/import-family-modal';
 import { CreateCustomCardModal } from '@/components/lms/problem-bank/create-custom-card-modal';
@@ -168,7 +170,7 @@ export function ProblemBankWorkspace({
   const [labIds, setLabIds] = useState<string[]>(initialLabIds);
   const [draftIds, setDraftIds] = useState<string[]>([]);
   const [showSolution, setShowSolution] = useState(false);
-  const [panel, setPanel] = useState<'generate' | 'variants' | 'families' | 'chat' | null>(initialPanel);
+  const [panel, setPanel] = useState<'generate' | 'variants' | 'families' | 'chat' | 'createCard' | null>(initialPanel);
   const [importOpen, setImportOpen] = useState(false);
   const [customCardOpen, setCustomCardOpen] = useState(false);
   const [editingProblem, setEditingProblem] = useState<BankProblem | null>(null);
@@ -307,22 +309,10 @@ export function ProblemBankWorkspace({
     return labels;
   }, [taxonomyTree, locale]);
 
-  function updateTaxonomyFilter(key: 'branchId' | 'topicNodeId' | 'subtopicId' | 'conceptId', value: string) {
-    setFilters((current) => {
-      const next = { ...current, [key]: value };
-      if (key === 'branchId') {
-        next.topicNodeId = 'all';
-        next.subtopicId = 'all';
-        next.conceptId = 'all';
-      } else if (key === 'topicNodeId') {
-        next.subtopicId = 'all';
-        next.conceptId = 'all';
-      } else if (key === 'subtopicId') {
-        next.conceptId = 'all';
-      }
-      return next;
-    });
+  function updateTaxonomyFilter(key: TaxonomyFilterKey, value: string) {
+    setFilters((current) => getNextTaxonomyFilters(current, key, value));
   }
+
   const selected = bank.find((problem) => problem.id === selectedId) ?? null;
   const selectedModelStatus = modelStatus.find((status) => status.id === genModel);
   const lessonSet = lessonSetIds
@@ -1100,6 +1090,12 @@ export function ProblemBankWorkspace({
       return;
     }
 
+    if (id === 'createCard') {
+      setCustomCardOpen(true);
+      setNotice(null);
+      return;
+    }
+
     if (tool.status === 'soon') {
       setNotice(copy.tools[id].hint);
     }
@@ -1120,85 +1116,85 @@ export function ProblemBankWorkspace({
             />
             <StatRow label={copy.stats.selected} value={lessonSet.length} />
             <StatRow label={copy.stats.generated} value={generatedCount} />
-            {showCreateCard ? (
-              <button
-                type="button"
-                className="col-span-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-hairline bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm transition-colors hover:border-navy/30 hover:bg-navy-tint/40 sm:col-span-1"
-                onClick={() => setCustomCardOpen(true)}>
-                {copy.customCard.open}
-              </button>
-            ) : null}
           </div>
         }
       />
 
-      {visibleTools.length > 0 ? (
-        <section className="mt-6" aria-label={copy.tools.label}>
-          <p className="mb-3 text-sm font-semibold tracking-wide text-brass">{copy.tools.label}</p>
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
-            {visibleTools.map((tool) => {
-              const Icon = tool.icon;
-              const item = copy.tools[tool.id];
-              const className = [
-                'flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all',
-                tool.status === 'ready' && (panel === tool.id || (tool.id === 'import' && importOpen))
-                  ? 'border-navy/30 bg-navy-tint shadow-sm'
-                  : 'border-hairline bg-white shadow-sm hover:border-navy/30 hover:shadow-md',
-              ].join(' ');
+      {visibleTools.length > 0
+        ? (console.log(visibleTools, 'visibleTools'),
+          (
+            <section className="mt-6" aria-label={copy.tools.label}>
+              <p className="mb-3 text-sm font-semibold tracking-wide text-brass">{copy.tools.label}</p>
+              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                {' '}
+                {visibleTools.map((tool) => {
+                  const Icon = tool.icon;
+                  const item = copy.tools[tool.id];
+                  const className = [
+                    'flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all',
+                    tool.status === 'ready' && (panel === tool.id || (tool.id === 'import' && importOpen))
+                      ? 'border-navy/30 bg-navy-tint shadow-sm'
+                      : 'border-hairline bg-white shadow-sm hover:border-navy/30 hover:shadow-md',
+                  ].join(' ');
 
-              const body = (
-                <>
-                  <span className="flex items-start gap-2">
-                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
-                      <Icon className="size-4" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0 text-sm font-semibold text-ink">{item.title}</span>
-                    {tool.status === 'soon' ? (
-                      <span className="ml-auto shrink-0 rounded-full bg-brass-tint px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brass">
-                        {copy.soon}
+                  const body = (
+                    <>
+                      <span className="flex items-start gap-2">
+                        <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
+                          <Icon className="size-4" aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 text-sm font-semibold text-ink">{item.title}</span>
+                        {tool.status === 'soon' ? (
+                          <span className="ml-auto shrink-0 rounded-full bg-brass-tint px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brass">
+                            {copy.soon}
+                          </span>
+                        ) : null}
                       </span>
-                    ) : null}
-                  </span>
-                  <span className="flex-1 text-xs leading-relaxed text-muted">{item.hint}</span>
-                </>
-              );
+                      <span className="flex-1 text-xs leading-relaxed text-muted">{item.hint}</span>
+                    </>
+                  );
 
-              return (
-                <li key={tool.id} className="h-full">
-                  {tool.status === 'link' && tool.href ? (
-                    <Link href={localePath(locale, tool.href)} className={className}>
-                      {body}
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      className={className}
-                      aria-pressed={
-                        tool.id === 'generate' || tool.id === 'variants' || tool.id === 'families' || tool.id === 'chat'
-                          ? panel === tool.id
-                          : tool.id === 'import'
-                            ? importOpen
-                            : undefined
-                      }
-                      onClick={() => onTool(tool.id)}>
-                      {body}
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-          {notice ? (
-            <button
-              type="button"
-              className="mt-3 w-full cursor-pointer rounded-xl border border-brass/20 bg-brass-tint px-4 py-3 text-left text-sm text-brass-strong transition-colors hover:border-brass/40 hover:bg-brass-tint/80"
-              aria-label={copy.dismissNotice}
-              onClick={() => setNotice(null)}>
-              {notice}
-            </button>
-          ) : null}
-        </section>
-      ) : null}
+                  return (
+                    <li key={tool.id} className="h-full">
+                      {tool.status === 'link' && tool.href ? (
+                        <Link href={localePath(locale, tool.href)} className={className}>
+                          {body}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          className={className}
+                          aria-pressed={
+                            tool.id === 'generate' ||
+                            tool.id === 'variants' ||
+                            tool.id === 'families' ||
+                            tool.id === 'chat' ||
+                            tool.id === 'createCard'
+                              ? panel === tool.id
+                              : tool.id === 'import'
+                                ? importOpen
+                                : undefined
+                          }
+                          onClick={() => onTool(tool.id)}>
+                          {body}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+              {notice ? (
+                <button
+                  type="button"
+                  className="mt-3 w-full cursor-pointer rounded-xl border border-brass/20 bg-brass-tint px-4 py-3 text-left text-sm text-brass-strong transition-colors hover:border-brass/40 hover:bg-brass-tint/80"
+                  aria-label={copy.dismissNotice}
+                  onClick={() => setNotice(null)}>
+                  {notice}
+                </button>
+              ) : null}
+            </section>
+          ))
+        : null}
 
       {customCardOpen ? (
         <CreateCustomCardModal
@@ -1287,6 +1283,9 @@ export function ProblemBankWorkspace({
 
       {panel === 'chat' ? (
         <TeacherAiChatPanel
+          setGenModel={setGenMode}
+          selectedModelStatus={selectedModelStatus}
+          aiModelIds={AI_MODEL_IDS}
           copy={copy.chat}
           fullCopy={copy}
           model={genModel}
@@ -1317,6 +1316,9 @@ export function ProblemBankWorkspace({
           />
           <div className="relative z-10 w-full max-w-4xl">
             <TeacherAiChatPanel
+              setGenModel={setGenMode}
+              selectedModelStatus={selectedModelStatus}
+              aiModelIds={AI_MODEL_IDS}
               key={problemChatDraft}
               copy={copy.chat}
               fullCopy={copy}
@@ -1446,117 +1448,7 @@ export function ProblemBankWorkspace({
               ) : null}
             </div>
           </div>
-          {genMode === 'diverse' ? (
-            <details className="group rounded-2xl border border-hairline-soft bg-paper p-3">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
-                <span className="text-sm font-medium text-ink">{copy.generate.model}</span>
-                <ChevronDown
-                  className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180"
-                  aria-hidden="true"
-                />
-              </summary>
-              <div className="mt-3">
-                <label htmlFor={`${genId}-model`} className="sr-only">
-                  {copy.generate.model}
-                </label>
-                <SelectMenu
-                  id={`${genId}-model`}
-                  className="max-w-md"
-                  value={genModel}
-                  onChange={(value) => setGenModel(value as AiModelId)}
-                  options={AI_MODEL_IDS.map((id) => ({
-                    value: id,
-                    label: copy.generate.models[id],
-                  }))}
-                />
-                {selectedModelStatus ? (
-                  <p className="mt-2 text-xs text-body">{walletHint(copy.generate, selectedModelStatus.wallet)}</p>
-                ) : null}
-                <p className="mt-3 text-xs font-medium text-muted">{copy.generate.walletLabel}</p>
-                <ul className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
-                  {uniqueProviders(modelStatus).map((status) => {
-                    const selected = selectedModelStatus?.provider === status.provider;
-                    return (
-                      <li key={status.provider} className="min-w-0">
-                        <button
-                          type="button"
-                          className={`flex h-full w-full items-start gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors ${walletTone(status.wallet, selected)}`}
-                          onClick={() => {
-                            if (selectedModelStatus?.provider === status.provider) {
-                              return;
-                            }
-                            setGenModel(status.id);
-                          }}>
-                          <AiProviderIcon provider={status.provider} className="mt-0.5 size-4 shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block w-full truncate text-[11px] font-medium">
-                              {copy.generate.providers[status.provider]}
-                            </span>
-                            <span className="mt-0.5 block w-full truncate text-[10px] opacity-80">
-                              {walletChipLabel(copy.generate, status.wallet)}
-                            </span>
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <p className="mt-3 text-xs font-medium text-muted">{copy.generate.limitLabel}</p>
-                <ul className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4">
-                  {modelStatus.map((status) => {
-                    const selected = status.id === genModel;
-                    const tone = !status.configured
-                      ? 'border-hairline bg-white text-muted'
-                      : status.limit > 0 && status.remaining <= 0
-                        ? 'border-brass/20 bg-brass-tint/40 text-brass-strong'
-                        : selected
-                          ? 'border-navy/20 bg-navy-tint text-navy'
-                          : 'border-hairline bg-white text-body';
-                    const detail = !status.configured
-                      ? copy.generate.limitNoKey
-                      : status.limit > 0 && status.remaining <= 0
-                        ? copy.generate.limitExhausted
-                        : status.limit === 0
-                          ? copy.generate.limitReady
-                          : replaceTokens(copy.generate.limitUsed, {
-                              used: status.used,
-                              limit: status.limit,
-                            });
-
-                    return (
-                      <li key={status.id} className="min-w-0">
-                        <button
-                          type="button"
-                          className={`flex h-full w-full items-start gap-2 rounded-xl border px-2.5 py-2 text-left transition-colors ${tone}`}
-                          onClick={() => setGenModel(status.id)}>
-                          <AiProviderIcon provider={status.provider} className="mt-0.5 size-4 shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block w-full truncate text-[11px] font-medium">
-                              {copy.generate.models[status.id]}
-                            </span>
-                            <span className="mt-0.5 block w-full truncate text-[10px] opacity-80">{detail}</span>
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </details>
-          ) : null}
-          {genMode === 'diverse' ? (
-            <label className="block rounded-2xl border border-hairline-soft bg-paper p-3 text-sm font-medium text-ink">
-              {copy.generate.request}
-              <textarea
-                className={`${fieldClass} mt-1.5 min-h-[4.5rem] resize-y`}
-                value={genRequest}
-                placeholder={copy.generate.requestPlaceholder}
-                maxLength={400}
-                onChange={(event) => setGenRequest(event.target.value)}
-                onPaste={(event) => handlePlainTextPaste(event, genRequest, setGenRequest, 400)}
-              />
-            </label>
-          ) : null}
+         
           <div className="rounded-2xl border border-brass/10 bg-brass-tint/30 p-3 sm:p-4">
             {genMode === 'families' ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -1982,13 +1874,15 @@ export function ProblemBankWorkspace({
                 onChange={(value) => updateFilter('origin', value)}
               />
             </div>
+            <div className="border-t flex justify-center border-hairline-soft pt-3">
+              <button
+                type="button"
+                className="mt-12 shrink-0 w-50 flex rounded-[15px] justify-center align-center  border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
+                onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
+                {copy.resetFilters}
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            className="mt-4 shrink-0 border-t border-hairline pt-3 text-left text-sm font-medium text-navy hover:text-navy-strong"
-            onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
-            {copy.resetFilters}
-          </button>
         </aside>
 
         <section
@@ -2424,12 +2318,11 @@ export function ProblemBankWorkspace({
             {lessonSet.map((problem, index) => (
               <li
                 key={problem.id}
-                className="inline-flex max-w-full items-center gap-1 rounded-full border border-hairline bg-paper py-1 pr-1 pl-3 text-sm text-ink">
+                className="inline-flex max-w-full items-center gap-1 rounded-2xl border border-hairline bg-paper py-1 pr-1 pl-3 text-sm text-ink">
                 <button
                   type="button"
                   className="inline-flex min-w-0 max-w-[min(100%,16rem)] items-center gap-2 overflow-hidden hover:text-navy sm:max-w-[18rem]"
                   onClick={() => setSelectedId(problem.id)}>
-                  <span className="shrink-0 font-semibold text-navy">{index + 1}</span>
                   <span className="min-w-0 overflow-x-auto">
                     <KatexPreview tex={problem.promptTex} className="whitespace-nowrap [&_.katex]:text-[0.9rem]" />
                   </span>

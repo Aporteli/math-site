@@ -53,6 +53,11 @@ export const PROBLEM_BANK_TOOLS: ProblemBankTool[] = [
     status: "link",
     href: "/tools/graphing",
   },
+  {
+    id: "createCard",
+    icon: Sparkles,
+    status: "ready",
+  },
 ];
 
 export function topicLabel(

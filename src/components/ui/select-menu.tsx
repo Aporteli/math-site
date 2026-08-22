@@ -215,12 +215,12 @@ export function SelectMenu<T extends string>({
             {selected && isOption(selected) ? selected.label : ""}
           </span>
         </span>
-        <ChevronDown
+        {/* <ChevronDown
           className={`size-4 shrink-0 text-muted transition-transform ${
             open ? "rotate-180 text-navy" : ""
           }`}
           aria-hidden="true"
-        />
+        /> */}
       </button>
 
       {open ? (
