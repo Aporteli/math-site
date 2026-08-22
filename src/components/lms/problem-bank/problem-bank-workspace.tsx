@@ -1322,9 +1322,6 @@ export function ProblemBankWorkspace({
 
       {panel === 'chat' ? (
         <TeacherAiChatPanel
-          setGenModel={setGenMode}
-          selectedModelStatus={selectedModelStatus}
-          aiModelIds={AI_MODEL_IDS}
           copy={copy.chat}
           fullCopy={copy}
           model={genModel}
@@ -1355,9 +1352,6 @@ export function ProblemBankWorkspace({
           />
           <div className="relative z-10 w-full max-w-4xl">
             <TeacherAiChatPanel
-              setGenModel={setGenMode}
-              selectedModelStatus={selectedModelStatus}
-              aiModelIds={AI_MODEL_IDS}
               key={problemChatDraft}
               copy={copy.chat}
               fullCopy={copy}
