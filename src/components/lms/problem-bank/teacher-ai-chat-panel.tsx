@@ -16,7 +16,7 @@ import { KatexPreview } from '@/components/math/katex-preview';
 import { SelectMenu } from '@/components/ui/select-menu';
 import { defaultLocale, locales, type Locale } from '@/i18n/config';
 import { handlePlainTextPaste } from '@/lib/helpers/plain-text-paste';
-import { saveProblemsAction, saveToLabAction, teacherAiChatAction } from '@/lib/math/problems/actions';
+import { saveProblemsAction, saveToLabAction, generateDiverseProblemsAction } from '@/lib/math/problems/actions';
 import { AiProviderIcon } from '@/components/lms/problem-bank/ai-provider-icon';
 import {
   filterAdminChatPrompts,
@@ -48,6 +48,7 @@ type ChatRole = 'user' | 'assistant';
 type ChatMessage = {
   role: ChatRole;
   content: string;
+  problems?: BankProblem[];
 };
 
 interface TeacherAiChatPanelProps {
@@ -265,8 +266,13 @@ export function TeacherAiChatPanel({
         return next;
       });
       if (onSavedProblems) {
+        const rawLabIds = (result as Record<string, unknown>).labIds;
+        const safeLabIds = Array.isArray(rawLabIds)
+          ? rawLabIds.filter((id): id is string => typeof id === 'string')
+          : undefined;
+
         await onSavedProblems(result.saved, target, {
-          labIds: 'labIds' in result ? result.labIds : undefined,
+          labIds: safeLabIds,
           idMap: result.idMap,
         });
       }
@@ -291,19 +297,31 @@ export function TeacherAiChatPanel({
     setNotice(null);
 
     try {
-      const result = await teacherAiChatAction({
+      const result = await generateDiverseProblemsAction({
         model,
         locale: replyLocale,
-        message,
-        history: messages.slice(-20),
+        request: message,
+        count: 3,
+        check: 'plain',
+        history: messages.slice(-20).map(({ role, content }) => ({ role, content })),
       });
+
+      console.log(result, 'result');
       if (!result.ok) {
         setNotice(chatErrorText(copy, result.error));
         setMessages(messages);
         setDraft(message);
         return;
       }
-      setMessages([...nextHistory, { role: 'assistant', content: result.reply || copy.emptyReply }]);
+
+      setMessages([
+        ...nextHistory,
+        {
+          role: 'assistant',
+          content: '',
+          problems: result.problems,
+        },
+      ]);
     } catch {
       setNotice(copy.errorFailed);
       setMessages(messages);
@@ -329,6 +347,7 @@ export function TeacherAiChatPanel({
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>
+
       <details className="group rounded-2xl border border-hairline-soft bg-paper p-3">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
           <span className="text-sm font-medium text-ink">{fullCopy.generate.model}</span>
@@ -343,7 +362,7 @@ export function TeacherAiChatPanel({
           </label>
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <SelectMenu
-              className="flex-1" // ან min-w-[220px]
+              className="flex-1"
               id={`${inputId}-model`}
               value={model}
               onChange={(value) => onModelChange(value as AiModelId)}
@@ -466,26 +485,29 @@ export function TeacherAiChatPanel({
               }
 
               let prose = message.content;
-              let bankProblems: ReturnType<typeof chatCardsToBankProblems> = [];
-              try {
-                const split = splitTeacherChatReply(message.content);
-                prose = split.prose;
-                bankProblems = chatCardsToBankProblems(split.problems, index);
-              } catch {
-                prose = message.content;
-                bankProblems = [];
+              let bankProblems: BankProblem[] = message.problems ?? [];
+
+              if (!message.problems && message.content) {
+                try {
+                  const split = splitTeacherChatReply(message.content);
+                  prose = split.prose;
+                  bankProblems = chatCardsToBankProblems(split.problems, index);
+                } catch {
+                  prose = message.content;
+                  bankProblems = [];
+                }
               }
 
               return (
                 <li key={`assistant-${index}`} className="flex justify-start">
                   <div className="max-w-[95%] space-y-3 sm:max-w-[85%]">
-                    {prose || bankProblems.length === 0 ? (
+                    {prose.trim() ? (
                       <div className="rounded-2xl border border-hairline bg-white px-4 py-3 text-sm leading-relaxed text-ink shadow-sm">
                         <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">
                           {copy.assistant}
                         </p>
                         <KatexPreview
-                          tex={prose || message.content}
+                          tex={prose}
                           className="block break-words whitespace-pre-wrap text-ink [&_.katex-display]:my-2 [&_.katex]:text-[0.95rem]"
                         />
                       </div>

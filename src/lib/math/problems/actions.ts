@@ -186,88 +186,88 @@ export async function loadAiModelStatusAction(): Promise<AiModelStatus[]> {
   return listAiModelStatus();
 }
 
-export async function teacherAiChatAction(
-  raw: unknown,
-): Promise<TeacherAiChatResult> {
-  const user = await requireTeacherRecord();
-  if (!user) return { ok: false, error: "unauthorized" };
+// export async function teacherAiChatAction(
+//   raw: unknown,
+// ): Promise<TeacherAiChatResult> {
+//   const user = await requireTeacherRecord();
+//   if (!user) return { ok: false, error: "unauthorized" };
 
-  const parsed = teacherAiChatSchema.safeParse(raw);
-  if (!parsed.success) return { ok: false, error: "failed" };
+//   const parsed = teacherAiChatSchema.safeParse(raw);
+//   if (!parsed.success) return { ok: false, error: "failed" };
 
-  const input = {
-    ...parsed.data,
-    history: parsed.data.history
-      .filter((turn) => turn.content.trim().length > 0)
-      .slice(-20),
-  };
+//   const input = {
+//     ...parsed.data,
+//     history: parsed.data.history
+//       .filter((turn) => turn.content.trim().length > 0)
+//       .slice(-20),
+//   };
 
-  try {
-    await assertModelAvailable(input.model);
-  } catch (error) {
-    if (error instanceof Error && error.message === "missing_key") {
-      return { ok: false, error: "missing_key" };
-    }
-    if (error instanceof Error && error.message === "limit_exceeded") {
-      return { ok: false, error: "limit_exceeded" };
-    }
-    return { ok: false, error: "failed" };
-  }
+//   try {
+//     await assertModelAvailable(input.model);
+//   } catch (error) {
+//     if (error instanceof Error && error.message === "missing_key") {
+//       return { ok: false, error: "missing_key" };
+//     }
+//     if (error instanceof Error && error.message === "limit_exceeded") {
+//       return { ok: false, error: "limit_exceeded" };
+//     }
+//     return { ok: false, error: "failed" };
+//   }
 
-  const tryModel = async (modelId: typeof input.model) => {
-    const reply = await completeTeacherChatMessage({ ...input, modelId });
-    await recordModelUse(modelId);
-    const provider = getAiModel(modelId)?.provider;
-    if (provider) await rememberProviderWallet(provider, "ready");
-    return reply.trim();
-  };
+//   const tryModel = async (modelId: typeof input.model) => {
+//     const reply = await completeTeacherChatMessage({ ...input, modelId });
+//     await recordModelUse(modelId);
+//     const provider = getAiModel(modelId)?.provider;
+//     if (provider) await rememberProviderWallet(provider, "ready");
+//     return reply.trim();
+//   };
 
-  try {
-    return { ok: true, reply: await tryModel(input.model) };
-  } catch (error) {
-    console.error(
-      "Teacher AI chat failed",
-      error instanceof Error ? error.message : error,
-    );
-    const classified = classifyProviderError(error);
-    const provider = getAiModel(input.model)?.provider;
-    if (provider && classified === "billing") {
-      await rememberProviderWallet(provider, "needs_billing");
-    }
-    if (
-      classified !== "failed" &&
-      classified !== "bad_output" &&
-      classified !== "timeout"
-    ) {
-      return { ok: false, error: classified };
-    }
+//   try {
+//     return { ok: true, reply: await tryModel(input.model) };
+//   } catch (error) {
+//     console.error(
+//       "Teacher AI chat failed",
+//       error instanceof Error ? error.message : error,
+//     );
+//     const classified = classifyProviderError(error);
+//     const provider = getAiModel(input.model)?.provider;
+//     if (provider && classified === "billing") {
+//       await rememberProviderWallet(provider, "needs_billing");
+//     }
+//     if (
+//       classified !== "failed" &&
+//       classified !== "bad_output" &&
+//       classified !== "timeout"
+//     ) {
+//       return { ok: false, error: classified };
+//     }
 
-    const fallback = (await listAiModelStatus()).find(
-      (status) =>
-        status.id !== input.model &&
-        status.configured &&
-        (status.limit === 0 || status.remaining > 0),
-    );
-    if (!fallback) {
-      return { ok: false, error: classified };
-    }
+//     const fallback = (await listAiModelStatus()).find(
+//       (status) =>
+//         status.id !== input.model &&
+//         status.configured &&
+//         (status.limit === 0 || status.remaining > 0),
+//     );
+//     if (!fallback) {
+//       return { ok: false, error: classified };
+//     }
 
-    try {
-      return { ok: true, reply: await tryModel(fallback.id) };
-    } catch (fallbackError) {
-      console.error(
-        "Teacher AI chat fallback failed",
-        fallbackError instanceof Error ? fallbackError.message : fallbackError,
-      );
-      const fallbackClassified = classifyProviderError(fallbackError);
-      const fallbackProvider = getAiModel(fallback.id)?.provider;
-      if (fallbackProvider && fallbackClassified === "billing") {
-        await rememberProviderWallet(fallbackProvider, "needs_billing");
-      }
-      return { ok: false, error: fallbackClassified };
-    }
-  }
-}
+//     try {
+//       return { ok: true, reply: await tryModel(fallback.id) };
+//     } catch (fallbackError) {
+//       console.error(
+//         "Teacher AI chat fallback failed",
+//         fallbackError instanceof Error ? fallbackError.message : fallbackError,
+//       );
+//       const fallbackClassified = classifyProviderError(fallbackError);
+//       const fallbackProvider = getAiModel(fallback.id)?.provider;
+//       if (fallbackProvider && fallbackClassified === "billing") {
+//         await rememberProviderWallet(fallbackProvider, "needs_billing");
+//       }
+//       return { ok: false, error: fallbackClassified };
+//     }
+//   }
+// }
 
 export async function loadTeacherBankAction(): Promise<{
   problems: BankProblem[];
