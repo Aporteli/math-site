@@ -2078,5 +2078,124 @@
       "privacy": "Privacy",
       "terms": "Terms and conditions"
     }
+  },
+  "studentOverview": {
+    "hero": {
+      "eyebrow": "Student dashboard",
+      "title": "Welcome back, {studentName}",
+      "description": "Here's what's on your plate today — pick up a course, clear an assignment, or keep your streak alive."
+    },
+    "stats": {
+      "activeCourses": "Active courses",
+      "dueThisWeek": "Due this week",
+      "averageGrade": "Average grade"
+    },
+    "quickLinks": {
+      "title": "Quick links",
+      "courses": {
+        "title": "Courses",
+        "hint": "Browse your enrolled courses and materials"
+      },
+      "assignments": {
+        "title": "Assignments",
+        "hint": "Track homework and submission deadlines"
+      },
+      "practice": {
+        "title": "Practice",
+        "hint": "Sharpen your skills with guided problem sets"
+      },
+      "flashcards": {
+        "title": "Flashcards",
+        "hint": "Review key concepts with spaced repetition"
+      },
+      "grades": {
+        "title": "Grades",
+        "hint": "See scores and teacher feedback"
+      },
+      "progress": {
+        "title": "Progress",
+        "hint": "Follow your growth across every course"
+      }
+    },
+    "sections": {
+      "continueLearning": "Continue learning",
+      "upcomingAssignments": "Upcoming assignments",
+      "recentGrades": "Recent grades",
+      "recentActivity": "Recent activity",
+      "viewAll": "View all"
+    },
+    "assignmentStatus": {
+      "overdue": "Overdue",
+      "dueSoon": "Due soon",
+      "upcoming": "Upcoming",
+      "done": "Done"
+    },
+    "streak": {
+      "title": "{streakDays} day streak",
+      "subtitle": "Keep it going — study something today."
+    }
+  },
+  "studentAssignments": {
+    "hero": {
+      "eyebrow": "Assignments",
+      "title": "Your assignments",
+      "description": "Every problem your teachers send lands here — work through it, attach your solution, and submit when you're ready."
+    },
+    "stats": {
+      "open": "Open",
+      "dueSoon": "Due soon",
+      "submitted": "Submitted"
+    },
+    "filters": {
+      "title": "Filters",
+      "searchLabel": "Search assignments",
+      "searchPlaceholder": "Search title or course…",
+      "statusLabel": "Status",
+      "reset": "Reset filters",
+      "statuses": {
+        "all": "All",
+        "notStarted": "Not started",
+        "inProgress": "In progress",
+        "submitted": "Submitted",
+        "graded": "Graded"
+      }
+    },
+    "list": {
+      "countLabel_one": "{count} assignment",
+      "countLabel_other": "{count} assignments",
+      "emptyTitle": "No assignments match your filters",
+      "emptyHint": "Try clearing the search or picking a different status."
+    },
+    "assignmentStatus": {
+      "graded": "Graded",
+      "submitted": "Submitted",
+      "overdue": "Overdue",
+      "inProgress": "In progress",
+      "notStarted": "Not started"
+    },
+    "detail": {
+      "submittedCount": "{done}/{total} submitted",
+      "teacherNote": "Teacher's note:",
+      "empty": "Select an assignment to see its problems.",
+      "submitAll": "Submit all uploaded work",
+      "problem": {
+        "uploadAria": "Upload your work for this problem",
+        "dropLabel": "Drop a photo or PDF of your work, or click to browse",
+        "formats": "PNG, JPG, WEBP, or PDF",
+        "readyToSubmit": "Ready to submit",
+        "removeFile": "Remove file",
+        "submit": "Submit",
+        "submitted": "Submitted",
+        "withdraw": "Withdraw",
+        "feedback": "Feedback:"
+      },
+      "difficulties": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard",
+        "olympiad": "Olympiad"
+      }
+    },
+    "notice": "{title} submitted."
   }
 }

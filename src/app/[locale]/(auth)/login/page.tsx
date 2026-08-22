@@ -1,15 +1,13 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { LoginForm } from "@/components/auth/login-form";
-import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
+import type { Metadata } from 'next';
+import { Suspense } from 'react';
+import { notFound } from 'next/navigation';
+import { LoginForm } from '@/components/auth/login-form';
+import { isLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/get-dictionary';
 
 type LoginPageProps = { params: Promise<{ locale: string }> };
 
-export async function generateMetadata({
-  params,
-}: LoginPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: LoginPageProps): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
 
@@ -36,19 +34,11 @@ export default async function LoginPage({ params }: LoginPageProps) {
       />
       <div className="absolute inset-x-0 top-0 h-1 bg-brass-soft" aria-hidden="true" />
       <div className="relative p-6 sm:p-8">
-        <p className="text-sm font-semibold tracking-wide text-brass">
-          {copy.eyebrow}
-        </p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink">
-          {copy.title}
-        </h1>
+        <p className="text-sm font-semibold tracking-wide text-brass">{copy.eyebrow}</p>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink">{copy.title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-body">{copy.subtitle}</p>
         <div className="mt-6">
-          <Suspense
-            fallback={
-              <div className="h-48 rounded-xl bg-paper-deep" aria-hidden="true" />
-            }
-          >
+          <Suspense fallback={<div className="h-48 rounded-xl bg-paper-deep" aria-hidden="true" />}>
             <LoginForm locale={locale} copy={copy} />
           </Suspense>
         </div>

@@ -53,11 +53,6 @@ export default async function TeacherProblemsPage({ params }: PageProps) {
       taxonomyNodes = taxonomy;
       saved = [...problems, ...catalog];
       lessonSetIds = draftIds;
-      try {
-        families = await loadTeacherFamilies(user.id);
-      } catch (error) {
-        console.error('Failed to load teacher families', error);
-      }
     } catch (error) {
       console.error('Failed to load teacher problem bank', error);
     }
