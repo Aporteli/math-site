@@ -868,7 +868,28 @@
       "demoTitle": "Demo accounts",
       "demoTeacher": "Teacher: teacher@mathlab.ge",
       "demoStudent": "Student: student@mathlab.ge",
-      "demoPassword": "Password: mathlab-demo"
+      "demoPassword": "Password: mathlab-demo",
+      "signupLink": "Don't have an account? Sign up"
+    },
+    "signup": {
+      "metaTitle": "Sign up",
+      "metaDescription": "Create a new account on MathLab.",
+      "eyebrow": "New account",
+      "title": "Create an account",
+      "subtitle": "Register and start learning mathematics.",
+      "name": "Name",
+      "namePlaceholder": "Enter your name",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Enter password (min 8 characters)",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Confirm password",
+      "submit": "Sign up",
+      "submitting": "Signing up…",
+      "error": "Registration failed. Please try again.",
+      "emailExists": "An account with this email already exists.",
+      "loginLink": "Already have an account? Log in"
     }
   },
   "dashboard": {

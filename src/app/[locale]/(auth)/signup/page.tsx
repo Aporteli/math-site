@@ -2,32 +2,32 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { LoginForm } from '@/components/auth/login-form';
-import { LOGIN_PATH, SIGNUP_PATH } from '@/lib/auth/paths';
+import { SignupForm } from '@/components/auth/signup-form';
+import { LOGIN_PATH } from '@/lib/auth/paths';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { localePath } from '@/i18n/config';
 
-type LoginPageProps = { params: Promise<{ locale: string }> };
+type SignupPageProps = { params: Promise<{ locale: string }> };
 
-export async function generateMetadata({ params }: LoginPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: SignupPageProps): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
 
   const { auth } = getDictionary(locale);
 
   return {
-    title: auth.login.metaTitle,
-    description: auth.login.metaDescription,
+    title: auth.signup.metaTitle,
+    description: auth.signup.metaDescription,
   };
 }
 
-export default async function LoginPage({ params }: LoginPageProps) {
+export default async function SignupPage({ params }: SignupPageProps) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
   const { auth } = getDictionary(locale);
-  const copy = auth.login;
+  const copy = auth.signup;
 
   return (
     <section className="relative w-full max-w-md overflow-hidden rounded-3xl border border-hairline bg-white shadow-sm">
@@ -42,18 +42,12 @@ export default async function LoginPage({ params }: LoginPageProps) {
         <p className="mt-2 text-sm leading-relaxed text-body">{copy.subtitle}</p>
         <div className="mt-6">
           <Suspense fallback={<div className="h-48 rounded-xl bg-paper-deep" aria-hidden="true" />}>
-            <LoginForm locale={locale} copy={copy} />
+            <SignupForm locale={locale} copy={copy} />
           </Suspense>
         </div>
-        <div className="mt-6 rounded-xl bg-paper-deep px-4 py-3 text-sm text-body">
-          <p className="font-semibold text-ink">{copy.demoTitle}</p>
-          <p className="mt-1">{copy.demoTeacher}</p>
-          <p>{copy.demoStudent}</p>
-          <p className="mt-1 text-muted">{copy.demoPassword}</p>
-        </div>
         <div className="mt-6 text-center">
-          <Link href={localePath(locale, SIGNUP_PATH)} className="text-sm font-medium text-navy hover:text-navy-strong">
-            {copy.signupLink}
+          <Link href={localePath(locale, LOGIN_PATH)} className="text-sm font-medium text-navy hover:text-navy-strong">
+            {copy.loginLink}
           </Link>
         </div>
       </div>

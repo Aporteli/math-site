@@ -11,6 +11,7 @@ enum Role {
   ADMIN
   TEACHER
   STUDENT
+  VISITOR
 }
 
 enum YearGroup {
@@ -69,32 +70,47 @@ enum SubmissionStatus {
 
 /// Platform account. Passwords are stored as hashes, never plaintext.
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(STUDENT)
-  imageUrl     String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String
+  role          Role      @default(VISITOR)
+  imageUrl      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  coursesTaught   Course[]         @relation("CourseTeacher")
+  coursesTaught   Course[]        @relation("CourseTeacher")
   enrollments     Enrollment[]
   problems        Problem[]
   problemFamilies ProblemFamily[]
   problemSets     ProblemSet[]
   submissions     Submission[]
-  gradesGiven     Grade[]          @relation("GradedBy")
+  gradesGiven     Grade[]         @relation("GradedBy")
   attendance      Attendance[]
   lessonNotes     LessonNote[]
 
   @@map("users")
 }
 
+/// OTP Verification tokens for email signup & password reset
+model VerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([email, token])
+  @@index([email])
+  @@map("verification_tokens")
+}
+
 /// A taught class / programme. Teacher owns it; students join via Enrollment.
 model Course {
   id          String    @id @default(cuid())
   slug        String    @unique
+  inviteCode  String?   @unique
   title       String
   description String    @db.Text
   yearGroup   YearGroup
@@ -159,12 +175,12 @@ model Problem {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
-  author   User          @relation(fields: [authorId], references: [id], onDelete: Restrict)
-  items    ProblemSetItem[]
-  branch   TaxonomyNode? @relation("ProblemBranch", fields: [branchId], references: [id], onDelete: SetNull)
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  items     ProblemSetItem[]
+  branch    TaxonomyNode? @relation("ProblemBranch", fields: [branchId], references: [id], onDelete: SetNull)
   topicNode TaxonomyNode? @relation("ProblemTopic", fields: [topicNodeId], references: [id], onDelete: SetNull)
-  subtopic TaxonomyNode? @relation("ProblemSubtopic", fields: [subtopicId], references: [id], onDelete: SetNull)
-  concept  TaxonomyNode? @relation("ProblemConcept", fields: [conceptId], references: [id], onDelete: SetNull)
+  subtopic  TaxonomyNode? @relation("ProblemSubtopic", fields: [subtopicId], references: [id], onDelete: SetNull)
+  concept   TaxonomyNode? @relation("ProblemConcept", fields: [conceptId], references: [id], onDelete: SetNull)
 
   @@index([authorId, topic, difficulty])
   @@index([authorId, collection])
@@ -265,21 +281,21 @@ model ProblemSetItem {
 
 /// Course -> Assignment. Optional problemSetId links the lesson set.
 model Assignment {
-  id           String           @id @default(cuid())
-  courseId     String
-  problemSetId String?
-  title        String
-  instructions String?          @db.Text
-  status       AssignmentStatus @default(DRAFT)
-  dueAt        DateTime?
-  publishedAt  DateTime?
+  id            String           @id @default(cuid())
+  courseId      String
+  problemSetId  String?
+  title         String
+  instructions  String?          @db.Text
+  status        AssignmentStatus @default(DRAFT)
+  dueAt         DateTime?
+  publishedAt   DateTime?
   /// Object-storage URL only — never store PDF/binary in MySQL.
   attachmentUrl String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
-  course     Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  problemSet ProblemSet?  @relation(fields: [problemSetId], references: [id], onDelete: SetNull)
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  problemSet  ProblemSet?  @relation(fields: [problemSetId], references: [id], onDelete: SetNull)
   submissions Submission[]
 
   @@index([courseId, status])

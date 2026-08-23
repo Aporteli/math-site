@@ -868,7 +868,28 @@
       "demoTitle": "Демонстрационные аккаунты",
       "demoTeacher": "Учитель: teacher@mathlab.ge",
       "demoStudent": "Ученик: student@mathlab.ge",
-      "demoPassword": "Пароль: mathlab-demo"
+      "demoPassword": "Пароль: mathlab-demo",
+      "signupLink": "Нет аккаунта? Зарегистрироваться"
+    },
+    "signup": {
+      "metaTitle": "Регистрация",
+      "metaDescription": "Создайте новый аккаунт на MathLab.",
+      "eyebrow": "Новый аккаунт",
+      "title": "Создайте аккаунт",
+      "subtitle": "Зарегистрируйтесь и начните изучать математику.",
+      "name": "Имя",
+      "namePlaceholder": "Введите имя",
+      "email": "Эл. почта",
+      "emailPlaceholder": "you@example.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "Введите пароль (минимум 8 символов)",
+      "confirmPassword": "Подтвердите пароль",
+      "confirmPasswordPlaceholder": "Подтвердите пароль",
+      "submit": "Регистрация",
+      "submitting": "Регистрация…",
+      "error": "Регистрация не удалась. Попробуйте ещё раз.",
+      "emailExists": "Аккаунт с этой эл. почтой уже существует.",
+      "loginLink": "Уже есть аккаунт? Войти"
     }
   },
   "dashboard": {

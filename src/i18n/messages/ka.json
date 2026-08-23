@@ -868,7 +868,28 @@
       "demoTitle": "საცდელი ანგარიშები",
       "demoTeacher": "მასწავლებელი: teacher@mathlab.ge",
       "demoStudent": "მოსწავლე: student@mathlab.ge",
-      "demoPassword": "პაროლი: mathlab-demo"
+      "demoPassword": "პაროლი: mathlab-demo",
+      "signupLink": "არ გაქვს ანგარიში? დარეგისტრირდი"
+    },
+    "signup": {
+      "metaTitle": "რეგისტრაცია",
+      "metaDescription": "შექმენი ახალი ანგარიში MathLab-ზე.",
+      "eyebrow": "ახალი ანგარიში",
+      "title": "შექმენი ანგარიში",
+      "subtitle": "დარეგისტრირდი და დაიწყე მათემატიკის სწავლა.",
+      "name": "სახელი",
+      "namePlaceholder": "შეიყვანე სახელი",
+      "email": "ელფოსტა",
+      "emailPlaceholder": "you@example.com",
+      "password": "პაროლი",
+      "passwordPlaceholder": "შეიყვანე პაროლი (მინიმუმ 8 სიმბოლო)",
+      "confirmPassword": "გაიმეორე პაროლი",
+      "confirmPasswordPlaceholder": "გაიმეორე პაროლი",
+      "submit": "რეგისტრაცია",
+      "submitting": "რეგისტრაცია…",
+      "error": "რეგისტრაცია ვერ მოხერხდა. სცადე ხელახლა.",
+      "emailExists": "ეს ელფოსტით ანგარიში უკვე არსებობს.",
+      "loginLink": "უკვე გაქვს ანგარიში? შედი"
     }
   },
   "dashboard": {

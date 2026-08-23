@@ -1,13 +1,16 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { LOGIN_PATH } from "@/lib/auth/paths";
 import { loginSchema } from "@/lib/auth/schemas";
 import { authSecret } from "@/lib/auth/secret";
+import { prisma } from "@/lib/prisma";
 import {
   findUserByEmail,
   passwordsMatch,
   toPublicUser,
 } from "@/lib/auth/users";
+import type { UserRole } from "@/lib/auth/roles";
 
 export { authSecret };
 
@@ -16,6 +19,11 @@ export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
   pages: { signIn: LOGIN_PATH },
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    }),
+
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -27,25 +35,70 @@ export const authOptions: NextAuthOptions = {
         if (!parsed.success) return null;
 
         const user = await findUserByEmail(parsed.data.email);
-        if (!user || !passwordsMatch(parsed.data.password, user.password)) {
-          return null;
-        }
+        if (!user) return null;
+
+        const isValid = await passwordsMatch(parsed.data.password, user.password);
+        if (!isValid) return null;
 
         return toPublicUser(user);
       },
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        if (!user.email) return false;
+
+        const normalizedEmail = user.email.trim().toLowerCase();
+        let dbUser = await prisma.user.findUnique({
+          where: { email: normalizedEmail },
+        });
+
+        if (!dbUser) {
+          dbUser = await prisma.user.create({
+            data: {
+              name: user.name ?? "Google User",
+              email: normalizedEmail,
+              passwordHash: "",
+              role: "VISITOR",
+            },
+          });
+        }
+
+        user.id = dbUser.id;
+        user.role = dbUser.role;
+      }
+      return true;
+    },
+
+    async jwt({ token, user }) {
+      // პირველი შესვლისას
       if (user) {
         token.id = user.id;
         token.role = user.role;
       }
+
+      // ყოველ მოთხოვნაზე ვამოწმებთ ბაზიდან აქტუალურ როლს (როლის შეცვლის შემდეგ მომენტალურად რომ აისახოს)
+      if (token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email.trim().toLowerCase() },
+          select: { id: true, role: true },
+        });
+
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        }
+      }
+
       return token;
     },
-    session({ session, token }) {
-      session.user.id = token.id;
-      session.user.role = token.role;
+
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.role = (token.role as UserRole) ?? "VISITOR";
+      }
       return session;
     },
   },

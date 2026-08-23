@@ -18,6 +18,8 @@ import {
 import { PageHero } from '@/components/ui/page-hero';
 import { localePath, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
+import { requireRole } from '@/lib/auth/session';
+import { prisma } from '@/lib/prisma';
 
 type HeroStat = {
   id: string;
@@ -68,12 +70,6 @@ interface PageProps {
   params: Promise<{ locale: Locale }> | { locale: Locale };
 }
 
-const DEFAULT_HERO_STATS: HeroStat[] = [
-  { id: 'courses', label: 'Active courses', value: '5' },
-  { id: 'due', label: 'Due this week', value: '3' },
-  { id: 'avg', label: 'Average grade', value: '91' },
-];
-
 const DEFAULT_QUICK_LINKS: QuickLink[] = [
   {
     id: 'courses',
@@ -117,56 +113,6 @@ const DEFAULT_QUICK_LINKS: QuickLink[] = [
     href: '/student/progress',
     icon: TrendingUp,
   },
-];
-
-const DEFAULT_COURSES: CourseProgressItem[] = [
-  { id: 'algebra-2', title: 'Algebra II', teacher: 'Ms. Beridze', percent: 68 },
-  { id: 'geometry', title: 'Geometry Foundations', teacher: 'Mr. Kapanadze', percent: 42 },
-  { id: 'combinatorics', title: 'Combinatorics Lab', teacher: 'Ms. Lomidze', percent: 85 },
-];
-
-const DEFAULT_ASSIGNMENTS: Assignment[] = [
-  {
-    id: 'a1',
-    title: 'Vectors Practice Set',
-    course: 'Algebra II',
-    due: 'Was due yesterday',
-    status: 'overdue',
-  },
-  {
-    id: 'a2',
-    title: 'Quadratic Equations Worksheet',
-    course: 'Algebra II',
-    due: 'Due tomorrow',
-    status: 'dueSoon',
-  },
-  {
-    id: 'a3',
-    title: 'Chapter 4 Problem Set',
-    course: 'Geometry Foundations',
-    due: 'Due in 3 days',
-    status: 'upcoming',
-  },
-  {
-    id: 'a4',
-    title: 'Probability Quiz Review',
-    course: 'Combinatorics Lab',
-    due: 'Due in 5 days',
-    status: 'upcoming',
-  },
-];
-
-const DEFAULT_GRADES: GradeItem[] = [
-  { id: 'g1', subject: 'Algebra II', score: 96, date: 'Oct 2' },
-  { id: 'g2', subject: 'Geometry Foundations', score: 88, date: 'Sep 28' },
-  { id: 'g3', subject: 'Combinatorics Lab', score: 74, date: 'Sep 21' },
-];
-
-const DEFAULT_ACTIVITY: ActivityEntry[] = [
-  { id: 'e1', icon: CheckCircle2, text: 'Submitted Chapter 3 Problem Set', time: '2h ago' },
-  { id: 'e2', icon: Sparkles, text: 'Started Combinatorics Lab', time: 'Yesterday' },
-  { id: 'e3', icon: Layers, text: 'Reviewed 24 flashcards', time: 'Yesterday' },
-  { id: 'e4', icon: GraduationCap, text: 'Scored 96 on Algebra II quiz', time: '3 days ago' },
 ];
 
 const ASSIGNMENT_STATUS: Record<AssignmentStatus, { label: string; icon: LucideIcon; className: string }> = {
@@ -223,17 +169,57 @@ function SectionHeading({
 export default async function StudentOverviewPage({ params }: PageProps) {
   const resolvedParams = await params;
   const locale = resolvedParams.locale;
+  const session = await requireRole(locale, ['STUDENT']);
   const dict = getDictionary(locale);
   const copy = dict.studentOverview;
 
-  const studentName = 'Student';
-  const streakDays = 6;
-  const heroStats = DEFAULT_HERO_STATS;
+  // 1. სტუდენტის რეალური სახელი სესიიდან
+  const studentName = session.user.name || session.user.email?.split('@')[0] || 'Student';
+
+  // 2. მხოლოდ ამ სტუდენტის აქტიური კურსების წამოღება ბაზიდან
+  const enrollments = await prisma.enrollment.findMany({
+    where: {
+      userId: session.user.id,
+      status: 'ACTIVE',
+    },
+    include: {
+      course: {
+        include: {
+          teacher: {
+            select: { name: true },
+          },
+        },
+      },
+    },
+  });
+
+  const courses: CourseProgressItem[] = enrollments.map((e) => ({
+    id: e.course.id,
+    title: e.course.title,
+    teacher: e.course.teacher?.name || 'Instructor',
+    percent: 0, // საწყისი პროგრესი
+  }));
+
+  const activeCoursesCount = courses.length.toString();
+  const streakDays = 1;
+
+  const heroStats: HeroStat[] = [
+    { id: 'courses', label: 'Active courses', value: activeCoursesCount },
+    { id: 'due', label: 'Due this week', value: '0' },
+    { id: 'avg', label: 'Average grade', value: '—' },
+  ];
+
   const quickLinks = DEFAULT_QUICK_LINKS;
-  const courses = DEFAULT_COURSES;
-  const assignments = DEFAULT_ASSIGNMENTS;
-  const grades = DEFAULT_GRADES;
-  const activity = DEFAULT_ACTIVITY;
+  const assignments: Assignment[] = [];
+  const grades: GradeItem[] = [];
+  const activity: ActivityEntry[] = [
+    {
+      id: 'e1',
+      icon: CheckCircle2,
+      text: 'თქვენ წარმატებით შეუერთდით კლასს',
+      time: 'ახლახანს',
+    },
+  ];
 
   const path = (href: string) => localePath(locale, href);
 
@@ -338,7 +324,11 @@ export default async function StudentOverviewPage({ params }: PageProps) {
                 ))}
               </ul>
             </section>
-          ) : null}
+          ) : (
+            <section className="rounded-2xl border border-hairline bg-white p-6 text-center shadow-sm">
+              <p className="text-sm font-medium text-muted">თქვენ ჯერ არ ხართ გაწევრიანებული კურსებში.</p>
+            </section>
+          )}
 
           {assignments.length > 0 ? (
             <section className="rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5">

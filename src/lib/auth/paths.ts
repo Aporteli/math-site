@@ -1,39 +1,46 @@
-import {
-  isLocale,
-  localePath,
-  type Locale,
-} from "@/i18n/config";
-import type { UserRole } from "@/lib/auth/roles";
+import { isLocale, localePath, type Locale } from '@/i18n/config';
+import type { UserRole } from '@/lib/auth/roles';
 
-export const LOGIN_PATH = "/login";
-export const TEACHER_HOME = "/teacher/overview";
-export const STUDENT_HOME = "/student/overview";
+export const LOGIN_PATH = '/login';
+export const SIGNUP_PATH = '/signup';
+export const TEACHER_HOME = '/teacher/overview';
+export const STUDENT_HOME = '/student/overview';
+export const VISITOR_HOME = '/';
 
 export function dashboardHomeForRole(role: UserRole) {
-  return role === "STUDENT" ? STUDENT_HOME : TEACHER_HOME;
+  switch (role) {
+    case 'ADMIN':
+    case 'TEACHER':
+      return TEACHER_HOME;
+    case 'STUDENT':
+      return STUDENT_HOME;
+    case 'VISITOR':
+    default:
+      return VISITOR_HOME;
+  }
 }
 
 export function splitLocalePath(pathname: string): {
   locale: Locale | null;
   path: string;
 } {
-  const segments = pathname.split("/").filter(Boolean);
+  const segments = pathname.split('/').filter(Boolean);
 
   if (segments.length === 0) {
-    return { locale: null, path: "/" };
+    return { locale: null, path: '/' };
   }
 
   if (isLocale(segments[0])) {
     const rest = segments.slice(1);
     return {
       locale: segments[0],
-      path: rest.length === 0 ? "/" : `/${rest.join("/")}`,
+      path: rest.length === 0 ? '/' : `/${rest.join('/')}`,
     };
   }
 
   return {
     locale: null,
-    path: pathname.startsWith("/") ? pathname : `/${pathname}`,
+    path: pathname.startsWith('/') ? pathname : `/${pathname}`,
   };
 }
 
@@ -42,16 +49,17 @@ export function isLoginPath(path: string) {
 }
 
 export function isTeacherPath(path: string) {
-  return path === "/teacher" || path.startsWith("/teacher/");
+  return path === '/teacher' || path.startsWith('/teacher/');
 }
 
 export function isStudentPath(path: string) {
-  return path === "/student" || path.startsWith("/student/");
+  return path === '/student' || path.startsWith('/student/');
 }
 
 export function canAccessPath(path: string, role: UserRole) {
-  if (isTeacherPath(path)) return role === "TEACHER" || role === "ADMIN";
-  if (isStudentPath(path)) return role === "STUDENT";
+  if (isTeacherPath(path)) return role === 'TEACHER' || role === 'ADMIN';
+  if (isStudentPath(path)) return role === 'STUDENT';
+  // ვიზიტორს და ნებისმიერ სხვა როლს აქვს წვდომა ყველა დანარჩენ საჯარო გვერდზე
   return true;
 }
 
@@ -62,7 +70,7 @@ export function canAccessPath(path: string, role: UserRole) {
 export function resolvePostLoginHref(
   role: UserRole,
   locale: Locale,
-  callbackUrl?: string | null,
+  callbackUrl?: string | null
 ) {
   const home = localePath(locale, dashboardHomeForRole(role));
   const pathname = extractPathname(callbackUrl);
@@ -79,7 +87,7 @@ function extractPathname(value?: string | null) {
   if (!value) return null;
 
   try {
-    if (value.startsWith("http://") || value.startsWith("https://")) {
+    if (value.startsWith('http://') || value.startsWith('https://')) {
       const url = new URL(value);
       return url.pathname;
     }
@@ -87,6 +95,6 @@ function extractPathname(value?: string | null) {
     return null;
   }
 
-  if (!value.startsWith("/") || value.startsWith("//")) return null;
-  return value.split("?")[0] ?? null;
+  if (!value.startsWith('/') || value.startsWith('//')) return null;
+  return value.split('?')[0] ?? null;
 }
