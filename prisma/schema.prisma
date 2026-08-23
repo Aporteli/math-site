@@ -37,7 +37,6 @@ enum ProblemSource {
   custom
 }
 
-/// Where a persisted problem lives. Lab and bank are separate collections.
 enum ProblemCollection {
   bank
   lab
@@ -62,6 +61,13 @@ enum AssignmentStatus {
   CLOSED
 }
 
+enum AssignmentType {
+  FLASHCARD
+  PROBLEM
+  HOMEWORK
+  QUIZ
+}
+
 enum SubmissionStatus {
   DRAFT
   SUBMITTED
@@ -80,15 +86,17 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  coursesTaught   Course[]        @relation("CourseTeacher")
-  enrollments     Enrollment[]
-  problems        Problem[]
-  problemFamilies ProblemFamily[]
-  problemSets     ProblemSet[]
-  submissions     Submission[]
-  gradesGiven     Grade[]         @relation("GradedBy")
-  attendance      Attendance[]
-  lessonNotes     LessonNote[]
+  coursesTaught      Course[]        @relation("CourseTeacher")
+  enrollments        Enrollment[]
+  problems           Problem[]
+  problemFamilies    ProblemFamily[]
+  problemSets        ProblemSet[]
+  submissions        Submission[]
+  targetedAssignments Assignment[]   @relation("TargetedStudent")
+  comments           Comment[]
+  gradesGiven        Grade[]         @relation("GradedBy")
+  attendance         Attendance[]
+  lessonNotes        LessonNote[]
 
   @@map("users")
 }
@@ -147,7 +155,6 @@ model Enrollment {
 }
 
 /// One item in a teacher's problem bank.
-/// Persist templateId + seed + formula/variables — not PDFs or binary files.
 model Problem {
   id             String            @id @default(cuid())
   authorId       String
@@ -157,7 +164,6 @@ model Problem {
   yearGroup      YearGroup?
   source         ProblemSource
   collection     ProblemCollection @default(bank)
-  /** Lab problem id this bank card was cloned from (dedupe lab → bank). */
   originId       String?
   instructionId  String
   promptTex      String            @db.Text
@@ -175,12 +181,12 @@ model Problem {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
-  author    User          @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  author    User             @relation(fields: [authorId], references: [id], onDelete: Restrict)
   items     ProblemSetItem[]
-  branch    TaxonomyNode? @relation("ProblemBranch", fields: [branchId], references: [id], onDelete: SetNull)
-  topicNode TaxonomyNode? @relation("ProblemTopic", fields: [topicNodeId], references: [id], onDelete: SetNull)
-  subtopic  TaxonomyNode? @relation("ProblemSubtopic", fields: [subtopicId], references: [id], onDelete: SetNull)
-  concept   TaxonomyNode? @relation("ProblemConcept", fields: [conceptId], references: [id], onDelete: SetNull)
+  branch    TaxonomyNode?    @relation("ProblemBranch", fields: [branchId], references: [id], onDelete: SetNull)
+  topicNode TaxonomyNode?    @relation("ProblemTopic", fields: [topicNodeId], references: [id], onDelete: SetNull)
+  subtopic  TaxonomyNode?    @relation("ProblemSubtopic", fields: [subtopicId], references: [id], onDelete: SetNull)
+  concept   TaxonomyNode?    @relation("ProblemConcept", fields: [conceptId], references: [id], onDelete: SetNull)
 
   @@index([authorId, topic, difficulty])
   @@index([authorId, collection])
@@ -221,7 +227,6 @@ model TaxonomyNode {
 }
 
 /// Teacher-authored JSON family: fixed stem, resampled integers.
-/// Distinct from Problem rows, which store frozen instances.
 model ProblemFamily {
   id            String   @id @default(cuid())
   authorId      String
@@ -279,27 +284,32 @@ model ProblemSetItem {
   @@map("problem_set_items")
 }
 
-/// Course -> Assignment. Optional problemSetId links the lesson set.
+/// Course -> Assignment. მხარს უჭერს ბარათებს, ამოცანებს, პირად დავალებებს და ინსტრუქციას.
 model Assignment {
   id            String           @id @default(cuid())
   courseId      String
   problemSetId  String?
+  targetUserId  String?          // null = მთელ კლასს, string = კონკრეტულ მოსწავლეს
+  type          AssignmentType   @default(PROBLEM)
   title         String
   instructions  String?          @db.Text
+  customPayload Json?            // ბარათის ან ინდივიდუალური ამოცანის მონაცემები
   status        AssignmentStatus @default(DRAFT)
   dueAt         DateTime?
   publishedAt   DateTime?
-  /// Object-storage URL only — never store PDF/binary in MySQL.
   attachmentUrl String?
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
   course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   problemSet  ProblemSet?  @relation(fields: [problemSetId], references: [id], onDelete: SetNull)
+  targetUser  User?        @relation("TargetedStudent", fields: [targetUserId], references: [id], onDelete: SetNull)
   submissions Submission[]
+  comments    Comment[]
 
   @@index([courseId, status])
   @@index([problemSetId])
+  @@index([targetUserId])
   @@map("assignments")
 }
 
@@ -309,9 +319,7 @@ model Submission {
   assignmentId  String
   studentId     String
   status        SubmissionStatus @default(DRAFT)
-  /// Per-problem answers as JSON, not uploaded files.
   answers       Json?
-  /// Object-storage URL for optional attachments.
   attachmentUrl String?
   submittedAt   DateTime?
   createdAt     DateTime         @default(now())
@@ -324,6 +332,23 @@ model Submission {
   @@unique([assignmentId, studentId])
   @@index([studentId])
   @@map("submissions")
+}
+
+/// დავალების კომენტარები / ინსტრუქციების ჩატი მასწავლებელსა და მოსწავლეს შორის.
+model Comment {
+  id           String     @id @default(cuid())
+  assignmentId String
+  authorId     String
+  body         String     @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId])
+  @@index([authorId])
+  @@map("comments")
 }
 
 /// Submission -> Grade.
