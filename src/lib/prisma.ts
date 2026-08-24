@@ -1,5 +1,5 @@
-import mariadb from "mariadb";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { connect } from "@tidbcloud/serverless";
+import { PrismaTiDBCloud } from "@tidbcloud/prisma-adapter";
 import { PrismaClient } from "@/generated/prisma/client";
 
 const PRISMA_GENERATION = "taxonomy-nodes-v1";
@@ -10,19 +10,15 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const rawUrl = process.env.DATABASE_URL;
-  if (!rawUrl) {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
     throw new Error("DATABASE_URL is not set");
   }
 
-  // mariadb პაკეტისთვის mysql:// იცვლება mariadb://-ით
-  const url = rawUrl.startsWith("mysql://")
-    ? rawUrl.replace(/^mysql:\/\//, "mariadb://")
-    : rawUrl;
-
-  const pool = mariadb.createPool(url);
+  // TiDB-ის HTTP კლიენტი (არ იყენებს TCP-ს და არ იჭედება Vercel-ზე)
+  const connection = connect({ url });
   // @ts-ignore
-  const adapter = new PrismaMariaDb(pool);
+  const adapter = new PrismaTiDBCloud(connection);
 
   return new PrismaClient({ adapter });
 }
