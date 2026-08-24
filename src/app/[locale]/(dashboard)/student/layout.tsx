@@ -3,6 +3,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { isLocale, localePath } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { requireRole } from "@/lib/auth/session";
+import { isLocalDashboardPreview } from "@/lib/auth/paths";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export default async function StudentLayout({
   if (!isLocale(locale)) notFound();
 
   // 1. როლის დაცვა: უშვებს მხოლოდ ავტორიზებულ STUDENT-ს (VISITOR ავტომატურად გადამისამართდება მთავარზე)
-  const session = await requireRole(locale, ["STUDENT"]);
+  const session = await requireRole(locale, ["STUDENT", "ADMIN"]);
 
   // 2. კლასის/სამუშაო სივრცის დაცვა: ვამოწმებთ, აქვს თუ არა სტუდენტს აქტიური კლასი
   const enrollment = await prisma.enrollment.findFirst({
@@ -32,7 +33,7 @@ export default async function StudentLayout({
   });
 
   // თუ სტუდენტი ჯერ არცერთ კლასში არ არის გაწევრიანებული, გადაგვყავს კოდის შეყვანის / მთავარ გვერდზე
-  if (!enrollment) {
+  if (!enrollment && !isLocalDashboardPreview() && session.user.role !== "ADMIN") {
     redirect(localePath(locale, "/?joinModal=true"));
   }
 

@@ -545,6 +545,16 @@ export const TOOL_SECTIONS: ToolSection[] = [
       },
     ],
   },
+  {
+    id: "animations",
+    tools: [
+      {
+        id: "animations",
+        icon: Zap,
+        badgeColor: "brass",
+        href: "/tools/animations",
+      },
+]}
 ];
 
 export const badgeToneClass: Record<

@@ -66,7 +66,7 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
   }
 
   function handleGoogleSignIn() {
-    const callbackUrl = searchParams.get("callbackUrl") || `/${locale}/student`;
+    const callbackUrl = searchParams.get("callbackUrl") || `/${locale}/login`;
     signIn("google", { callbackUrl });
   }
 

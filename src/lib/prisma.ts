@@ -1,6 +1,5 @@
-import { connect } from "@tidbcloud/serverless";
-import { PrismaTiDBCloud } from "@tidbcloud/prisma-adapter";
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
 const PRISMA_GENERATION = "taxonomy-nodes-v1";
 
@@ -9,24 +8,21 @@ const globalForPrisma = globalThis as unknown as {
   prismaGeneration: string | undefined;
 };
 
-function createPrismaClient() {
+function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL;
   if (!url) {
     throw new Error("DATABASE_URL is not set");
   }
 
-  // TiDB-ის HTTP კლიენტი (არ იყენებს TCP-ს და არ იჭედება Vercel-ზე)
-  const connection = connect({ url });
-  // @ts-ignore
-  const adapter = new PrismaTiDBCloud(connection);
+  // ლოკალური კავშირი SSL-ის გარეშე
+  const adapter = new PrismaMariaDb(url);
 
   return new PrismaClient({ adapter });
 }
 
 function hasCurrentDelegates(client: PrismaClient | undefined) {
   if (!client) return false;
-  const family = (client as { problemFamily?: { findMany?: unknown } })
-    .problemFamily;
+  const family = (client as { problemFamily?: { findMany?: unknown } }).problemFamily;
   if (typeof family?.findMany !== "function") return false;
   const dmmf = (
     client as {

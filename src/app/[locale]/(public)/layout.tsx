@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { getSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/prisma";
 
 export default async function PublicLayout({
   children,
@@ -19,7 +20,15 @@ export default async function PublicLayout({
 
   const dict = getDictionary(locale);
   const session = await getSession();
-  const user = session?.user ? { role: session.user.role } : null;
+  const databaseUser = session?.user?.email
+    ? await prisma.user.findUnique({
+        where: { email: session.user.email.trim().toLowerCase() },
+        select: { role: true },
+      })
+    : null;
+  const user = session?.user
+    ? { role: databaseUser?.role ?? session.user.role }
+    : null;
 
   // სამუშაო სივრცის მენიუ (Dock) გამოუჩნდეს მხოლოდ სტუდენტს, მასწავლებელს ან ადმინს
   const hasWorkspaceAccess =

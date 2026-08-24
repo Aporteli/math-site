@@ -8,3 +8,15 @@ export function isUserRole(value: unknown): value is UserRole {
     USER_ROLES.includes(value as UserRole)
   );
 }
+
+/** Comma-separated owner emails configured only in the deployment environment. */
+export function isOwnerEmail(email: string | null | undefined) {
+  if (!email) return false;
+
+  const owners = (process.env.OWNER_EMAILS ?? "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+
+  return owners.includes(email.trim().toLowerCase());
+}

@@ -7,6 +7,14 @@ export const TEACHER_HOME = '/teacher/overview';
 export const STUDENT_HOME = '/student/overview';
 export const VISITOR_HOME = '/';
 
+/**
+ * Lets the site owner preview both protected workspaces during local
+ * development. It is never enabled in a production build.
+ */
+export function isLocalDashboardPreview() {
+  return process.env.NODE_ENV === 'development';
+}
+
 export function dashboardHomeForRole(role: UserRole) {
   switch (role) {
     case 'ADMIN':
@@ -57,8 +65,11 @@ export function isStudentPath(path: string) {
 }
 
 export function canAccessPath(path: string, role: UserRole) {
+  if (isLocalDashboardPreview() && (isTeacherPath(path) || isStudentPath(path))) {
+    return true;
+  }
   if (isTeacherPath(path)) return role === 'TEACHER' || role === 'ADMIN';
-  if (isStudentPath(path)) return role === 'STUDENT';
+  if (isStudentPath(path)) return role === 'STUDENT' || role === 'ADMIN';
   // ვიზიტორს და ნებისმიერ სხვა როლს აქვს წვდომა ყველა დანარჩენ საჯარო გვერდზე
   return true;
 }

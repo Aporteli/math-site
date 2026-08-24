@@ -10,7 +10,7 @@ import {
   passwordsMatch,
   toPublicUser,
 } from "@/lib/auth/users";
-import type { UserRole } from "@/lib/auth/roles";
+import { isOwnerEmail, type UserRole } from "@/lib/auth/roles";
 
 export { authSecret };
 
@@ -65,6 +65,13 @@ export const authOptions: NextAuthOptions = {
           });
         }
 
+        if (isOwnerEmail(normalizedEmail) && dbUser.role !== "ADMIN") {
+          dbUser = await prisma.user.update({
+            where: { id: dbUser.id },
+            data: { role: "ADMIN" },
+          });
+        }
+
         user.id = dbUser.id;
         user.role = dbUser.role;
       }
@@ -86,8 +93,18 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (dbUser) {
+          const role =
+            isOwnerEmail(token.email) && dbUser.role !== "ADMIN"
+              ? (
+                  await prisma.user.update({
+                    where: { id: dbUser.id },
+                    data: { role: "ADMIN" },
+                    select: { role: true },
+                  })
+                ).role
+              : dbUser.role;
           token.id = dbUser.id;
-          token.role = dbUser.role;
+          token.role = role;
         }
       }
 

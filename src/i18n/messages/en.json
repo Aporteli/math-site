@@ -189,6 +189,11 @@
         "title": "Gamification and challenges",
         "subtitle": "Speed arithmetic, fractals, topological puzzles, and interactive math challenges built to engage and test intuition.",
         "filter": "Games"
+      },
+      "animations": {
+        "title": "Animations",
+        "subtitle": "Mathematical animations, visualisations, and interactive experiments that reveal the beauty and movement of mathematics.",
+        "filter": "Animations"
       }
     },
     "items": {
@@ -541,6 +546,11 @@
         "title": "Vectors and analytic geometry",
         "description": "Dot and cross products, and equations of a plane and a line in 2D and 3D coordinates.",
         "badge": "Vectors"
+      },
+      "animations": {
+        "title": "Mathematical animations",
+        "description": "Visualise mathematical ideas through dynamic graphs and interactive experiments.",
+        "badge": "Animations"
       }
     }
   },
