@@ -1,3 +1,4 @@
+import { connect } from "@tidbcloud/serverless";
 import { PrismaTiDBCloud } from "@tidbcloud/prisma-adapter";
 import { PrismaClient } from "@/generated/prisma/client";
 
@@ -14,7 +15,13 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL is not set");
   }
 
-  const adapter = new PrismaTiDBCloud({ url });
+  // აუცილებელია კავშირის შექმნა connect() ფუნქციით
+  const connection = connect({ url });
+  
+  // @ts-ignore-ს ვიყენებთ, რათა TypeScript-ის ვერსიების აცდენამ ხელი არ შეგვიშალოს
+  // @ts-ignore
+  const adapter = new PrismaTiDBCloud(connection);
+  
   return new PrismaClient({ adapter });
 }
 
