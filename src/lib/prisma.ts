@@ -10,23 +10,28 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const url = process.env.DATABASE_URL;
-  if (!url) {
+  const rawUrl = process.env.DATABASE_URL;
+  if (!rawUrl) {
     throw new Error("DATABASE_URL is not set");
   }
+
+  // mariadb პაკეტისთვის mysql:// იცვლება mariadb://-ით
+  const url = rawUrl.startsWith("mysql://")
+    ? rawUrl.replace(/^mysql:\/\//, "mariadb://")
+    : rawUrl;
 
   const pool = mariadb.createPool(url);
   // @ts-ignore
   const adapter = new PrismaMariaDb(pool);
-  
+
   return new PrismaClient({ adapter });
 }
+
 function hasCurrentDelegates(client: PrismaClient | undefined) {
   if (!client) return false;
   const family = (client as { problemFamily?: { findMany?: unknown } })
     .problemFamily;
   if (typeof family?.findMany !== "function") return false;
-  // Detect stale clients that predate Problem.collection / originId.
   const dmmf = (
     client as {
       _runtimeDataModel?: { models?: { Problem?: { fields?: { name: string }[] } } };
