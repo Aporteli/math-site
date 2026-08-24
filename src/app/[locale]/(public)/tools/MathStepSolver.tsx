@@ -1248,7 +1248,8 @@ export function MathStepSolver() {
                     >
                       <Plus className="size-3.5" aria-hidden="true" /> ელემენტის დამატება
                     </button>
-                  </div>
+                  </div>  
+                  
                   <div
                     ref={playgroundRef}
                     className="relative min-h-64 overflow-hidden rounded-xl border border-hairline bg-white shadow-xs touch-none"
