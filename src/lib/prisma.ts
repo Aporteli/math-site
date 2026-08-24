@@ -1,7 +1,6 @@
 import { PrismaTiDBCloud } from "@tidbcloud/prisma-adapter";
 import { PrismaClient } from "@/generated/prisma/client";
 
-/** Bump when `schema.prisma` changes so `next dev` does not keep a stale client. */
 const PRISMA_GENERATION = "taxonomy-nodes-v1";
 
 const globalForPrisma = globalThis as unknown as {
@@ -24,7 +23,6 @@ function hasCurrentDelegates(client: PrismaClient | undefined) {
   const family = (client as { problemFamily?: { findMany?: unknown } })
     .problemFamily;
   if (typeof family?.findMany !== "function") return false;
-  // Detect stale clients that predate Problem.collection / originId.
   const dmmf = (
     client as {
       _runtimeDataModel?: { models?: { Problem?: { fields?: { name: string }[] } } };
