@@ -1,4 +1,4 @@
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { PrismaTiDBCloud } from "@tidbcloud/prisma-adapter";
 import { PrismaClient } from "@/generated/prisma/client";
 
 /** Bump when `schema.prisma` changes so `next dev` does not keep a stale client. */
@@ -15,7 +15,7 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL is not set");
   }
 
-  const adapter = new PrismaMariaDb(url);
+  const adapter = new PrismaTiDBCloud({ url });
   return new PrismaClient({ adapter });
 }
 
