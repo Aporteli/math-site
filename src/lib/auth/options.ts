@@ -1,31 +1,32 @@
-import type { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
-import { LOGIN_PATH } from "@/lib/auth/paths";
-import { loginSchema } from "@/lib/auth/schemas";
-import { authSecret } from "@/lib/auth/secret";
-import { prisma } from "@/lib/prisma";
-import { findUserByEmail, passwordsMatch, toPublicUser } from "@/lib/auth/users";
-import { isOwnerEmail, type UserRole } from "@/lib/auth/roles";
+import type { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
+import { LOGIN_PATH } from '@/lib/auth/paths';
+import { loginSchema } from '@/lib/auth/schemas';
+import { authSecret } from '@/lib/auth/secret';
+import { prisma } from '@/lib/prisma';
+import { findUserByEmail, passwordsMatch, toPublicUser } from '@/lib/auth/users';
+import { isOwnerEmail, type UserRole } from '@/lib/auth/roles';
 
 export { authSecret };
 
 export const authOptions: NextAuthOptions = {
   secret: authSecret,
-  session: { strategy: "jwt" },
+  session: { strategy: 'jwt' },
   pages: { signIn: LOGIN_PATH },
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-      checks: ["none"],
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+      // მხოლოდ ეს ერთი ხაზია საჭირო! თიშავს State ქუქის მოთხოვნას და ტოვებს მხოლოდ PKCE-ს
+      checks: ['pkce'],
     }),
 
     CredentialsProvider({
-      name: "credentials",
+      name: 'credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         const parsed = loginSchema.safeParse(credentials);
@@ -43,7 +44,7 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google") {
+      if (account?.provider === 'google') {
         if (!user.email) return false;
 
         const normalizedEmail = user.email.trim().toLowerCase();
@@ -54,21 +55,21 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!dbUser) {
-            const initialRole: UserRole = isOwnerEmail(normalizedEmail) ? "ADMIN" : "VISITOR";
+            const initialRole: UserRole = isOwnerEmail(normalizedEmail) ? 'ADMIN' : 'VISITOR';
 
             dbUser = await prisma.user.create({
               data: {
-                name: user.name ?? "Google User",
+                name: user.name ?? 'Google User',
                 email: normalizedEmail,
-                passwordHash: "",
+                passwordHash: '',
                 role: initialRole,
                 imageUrl: user.image ?? null,
               },
             });
-          } else if (isOwnerEmail(normalizedEmail) && dbUser.role !== "ADMIN") {
+          } else if (isOwnerEmail(normalizedEmail) && dbUser.role !== 'ADMIN') {
             dbUser = await prisma.user.update({
               where: { id: dbUser.id },
-              data: { role: "ADMIN" },
+              data: { role: 'ADMIN' },
             });
           }
 
@@ -76,7 +77,7 @@ export const authOptions: NextAuthOptions = {
           (user as { role?: UserRole }).role = dbUser.role as UserRole;
           return true;
         } catch (error) {
-          console.error("CRITICAL_GOOGLE_SIGNIN_ERROR:", error);
+          console.error('CRITICAL_GOOGLE_SIGNIN_ERROR:', error);
           return false;
         }
       }
@@ -86,10 +87,10 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.role = ((user as { role?: UserRole }).role ?? "VISITOR") as UserRole;
+        token.role = ((user as { role?: UserRole }).role ?? 'VISITOR') as UserRole;
       }
 
-      if (trigger === "update" && session?.role) {
+      if (trigger === 'update' && session?.role) {
         token.role = session.role as UserRole;
       }
 
@@ -99,7 +100,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = (token.role as UserRole) ?? "VISITOR";
+        session.user.role = (token.role as UserRole) ?? 'VISITOR';
       }
       return session;
     },
