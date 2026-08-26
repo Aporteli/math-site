@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { PrismaTiDBCloud } from "@tidbcloud/prisma-adapter";
 
 const PRISMA_GENERATION = "taxonomy-nodes-v1";
 
@@ -14,8 +14,7 @@ function createPrismaClient(): PrismaClient {
     throw new Error("DATABASE_URL is not set");
   }
 
-  const adapter = new PrismaMariaDb(url);
-
+  const adapter = new PrismaTiDBCloud(url);
   return new PrismaClient({ adapter });
 }
 
