@@ -36,11 +36,19 @@ export function TeacherHomeworkWorkspace() {
     };
   }, []);
 
-  // კურსების (კლასების) უნიკალური სიის ფორმირება
+  // კურსების (კლასების) უნიკალური სიის ფორმირება (გასწორებული ლოგიკა)
   const courses = useMemo(() => {
     const courseMap = new Map<string, string>();
     data.forEach((g) => {
-      g.submissions.forEach((sub) => {
+      // 1. ვეძებთ პირდაპირ მოსწავლის ობიექტში (ახალი დამატებული მოსწავლეებისთვის 0 დავალებით)
+      if (g.student && Array.isArray((g.student as any).courses)) {
+        (g.student as any).courses.forEach((c: any) => {
+          if (c.title) courseMap.set(c.title, c.title);
+        });
+      }
+      
+      // 2. ვეძებთ გამოგზავნილი დავალებებიდან (დაზღვევისთვის)
+      g.submissions?.forEach((sub) => {
         if (sub.assignment?.courseTitle) {
           courseMap.set(sub.assignment.courseTitle, sub.assignment.courseTitle);
         }
@@ -58,22 +66,37 @@ export function TeacherHomeworkWorkspace() {
   // მოსწავლეები, რომლებიც ეკუთვნიან არჩეულ კლასს (ან ყველანი)
   const studentsInActiveCourse = useMemo(() => {
     if (activeCourseId === 'all') return data;
-    return data.filter((g) => g.submissions.some((s) => s.assignment?.courseTitle === activeCourseId));
+    return data.filter((g) => {
+      // ეკუთვნის თუ არა მოსწავლე ამ კლასს
+      const inStudentCourses = Array.isArray((g.student as any).courses) && 
+        (g.student as any).courses.some((c: any) => c.title === activeCourseId);
+        
+      const inSubmissions = g.submissions?.some(
+        (s) => s.assignment?.courseTitle === activeCourseId
+      );
+      
+      return inStudentCourses || inSubmissions;
+    });
   }, [data, activeCourseId]);
 
   const activeGroup = data.find((g) => g.student.id === selectedStudentId);
 
   // დამხმარე ფუნქცია: აქვს თუ არა მოსწავლეს შესამოწმებელი დავალება
   const hasPendingSubmissions = (studentGroup: StudentHomeworkGroup) => {
-    return studentGroup.submissions.some(
+    return studentGroup.submissions?.some(
       (s) => (s.status === 'SUBMITTED' || Boolean(s.attachmentUrl)) && !s.grade
-    );
+    ) || false;
   };
 
   // დამხმარე ფუნქცია: აქვს თუ არა მთლიან კლასს შესამოწმებელი დავალება
   const courseHasPendingSubmissions = (courseTitle: string) => {
     return data
-      .filter((g) => g.submissions.some((s) => s.assignment?.courseTitle === courseTitle))
+      .filter((g) => {
+         const inStudentCourses = Array.isArray((g.student as any).courses) && 
+            (g.student as any).courses.some((c: any) => c.title === courseTitle);
+         const inSubmissions = g.submissions?.some((s) => s.assignment?.courseTitle === courseTitle);
+         return inStudentCourses || inSubmissions;
+      })
       .some((g) => hasPendingSubmissions(g));
   };
 
@@ -112,8 +135,14 @@ export function TeacherHomeworkWorkspace() {
     setSelectedStudentId(null);
   };
 
+  // მოსწავლეების რაოდენობის დათვლა კლასში
   const getStudentCountInCourse = (courseTitle: string) => {
-    return data.filter((g) => g.submissions.some((s) => s.assignment?.courseTitle === courseTitle)).length;
+    return data.filter((g) => {
+      const inStudentCourses = Array.isArray((g.student as any).courses) && 
+        (g.student as any).courses.some((c: any) => c.title === courseTitle);
+      const inSubmissions = g.submissions?.some((s) => s.assignment?.courseTitle === courseTitle);
+      return inStudentCourses || inSubmissions;
+    }).length;
   };
 
   const toggleDate = (dateStr: string) => {
@@ -175,9 +204,9 @@ export function TeacherHomeworkWorkspace() {
                     <div className="min-w-0 flex items-center gap-2">
                       <p className="truncate text-sm font-bold">ყველა მოსწავლე</p>
                       {/* ინდიკატორი მთლიანი სიისთვის */}
-                      {/* {data.some((g) => hasPendingSubmissions(g)) && (
+                      {data.some((g) => hasPendingSubmissions(g)) && (
                         <span className="size-2 rounded-full bg-amber-500 shrink-0" title="ახალი შესამოწმებელი დავალება" />
-                      )} */}
+                      )}
                     </div>
                   </div>
                   <span
@@ -285,7 +314,7 @@ export function TeacherHomeworkWorkspace() {
               </div>
               {activeGroup && (
                 <span className="rounded-full bg-navy-tint px-3 py-1 text-xs font-bold text-navy">
-                  სულ: {activeGroup.submissions.length}
+                  სულ: {activeGroup.submissions?.length || 0}
                 </span>
               )}
             </div>
@@ -299,7 +328,7 @@ export function TeacherHomeworkWorkspace() {
                     აირჩიეთ მოსწავლე ზედა ტაბებიდან, რათა შეამოწმოთ გამოგზავნილი დავალებები.
                   </p>
                 </div>
-              ) : activeGroup.submissions.length === 0 ? (
+              ) : !activeGroup.submissions || activeGroup.submissions.length === 0 ? (
                 <div className="py-20 flex flex-col items-center justify-center text-center text-muted">
                   <BookOpen className="size-10 opacity-30 mb-2" />
                   <p className="text-sm font-bold text-ink">დავალებები არ არის</p>

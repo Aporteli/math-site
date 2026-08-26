@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Users,
   Search,
@@ -16,11 +16,14 @@ import {
   Check,
   GraduationCap,
   ChevronDown,
+  UploadCloud,
+  Video,
 } from "lucide-react";
 import { deleteTargetedAssignmentAction } from "@/lib/actions/teacher-students";
 import { sendProblemToStudentAction } from "@/lib/actions/students";
 import { TeacherViewProblemModal } from "@/components/lms/teacher/TeacherViewProblemModal";
 import { KatexPreview } from "@/components/math/katex-preview";
+import { ClassroomRoomModal } from "@/components/lms/classroom/ClassroomRoomModal";
 
 interface StudentAssignment {
   id: string;
@@ -30,6 +33,7 @@ interface StudentAssignment {
   status: string;
   createdAt: string;
   promptTex?: string;
+  attachmentUrl?: string | null;
   comments: {
     id: string;
     body: string;
@@ -62,6 +66,15 @@ interface TeacherStudentsWorkspaceProps {
   availableSetProblems: SetProblem[];
 }
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+}
+
 export function TeacherStudentsWorkspace({
   initialStudents = [],
   courses = [],
@@ -69,16 +82,9 @@ export function TeacherStudentsWorkspace({
 }: TeacherStudentsWorkspaceProps) {
   const [students, setStudents] = useState<StudentItem[]>(initialStudents);
   
-  // კლასების State (მარცხენა სვეტისთვის)
   const [activeCourseId, setActiveCourseId] = useState<string | "all">("all");
-  
-  // მოსწავლეების State (მარჯვენა ტაბებისთვის)
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  
-  // ძებნა კლასებისთვის მარცხენა სვეტში
   const [classSearchQuery, setClassSearchQuery] = useState("");
-  
-  // თარიღების ჩასაკეცი (Collapsible) State
   const [collapsedDates, setCollapsedDates] = useState<Record<string, boolean>>({});
   
   const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null);
@@ -97,7 +103,18 @@ export function TeacherStudentsWorkspace({
   const [assigning, setAssigning] = useState(false);
   const [problemSearchQuery, setProblemSearchQuery] = useState("");
 
-  const isAnyModalOpen = Boolean(deletingAssignmentId || activeAssignmentModal || isAssignModalOpen);
+  // სურათის მიმაგრების სტეიტები
+  const [assignImage, setAssignImage] = useState<string | null>(null);
+  const [assignImageName, setAssignImageName] = useState<string | null>(null);
+  const assignFileRef = useRef<HTMLInputElement>(null);
+
+  // ვიდეო ზარის სტეიტი
+  const [activeVideoCallCourse, setActiveVideoCallCourse] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+
+  const isAnyModalOpen = Boolean(deletingAssignmentId || activeAssignmentModal || isAssignModalOpen || activeVideoCallCourse);
 
   useEffect(() => {
     if (isAnyModalOpen) {
@@ -109,19 +126,28 @@ export function TeacherStudentsWorkspace({
     }
   }, [isAnyModalOpen]);
 
-  // გაფილტვრა კლასების სიისთვის
   const filteredCourses = courses.filter((c) =>
     c.title.toLowerCase().includes(classSearchQuery.toLowerCase())
   );
 
-  // მოსწავლეები, რომლებიც ეკუთვნიან არჩეულ კლასს (ან ყველანი, თუ "all" არის არჩეული)
   const studentsInActiveCourse = students.filter((s) =>
     activeCourseId === "all" ? true : s.courses.some((c) => c.id === activeCourseId)
   );
 
+  // ავტომატურად პირველი მოსწავლის არჩევა კურსის შეცვლისას
+  useEffect(() => {
+    if (studentsInActiveCourse.length > 0) {
+      if (!selectedStudentId || !studentsInActiveCourse.some(s => s.id === selectedStudentId)) {
+        setSelectedStudentId(studentsInActiveCourse[0].id);
+      }
+    } else {
+      setSelectedStudentId(null);
+    }
+  }, [activeCourseId, studentsInActiveCourse, selectedStudentId]);
+
   const activeStudent = students.find((s) => s.id === selectedStudentId);
+  const selectedCourseObj = courses.find((c) => c.id === activeCourseId);
   
-  // დავალებების თარიღების მიხედვით დაჯგუფება
   const groupedAssignments = useMemo(() => {
     if (!activeStudent || !activeStudent.assignments) return [];
     
@@ -129,7 +155,6 @@ export function TeacherStudentsWorkspace({
 
     activeStudent.assignments.forEach((assignment) => {
       const dateObj = new Date(assignment.createdAt);
-      // თარიღის ფორმატირება, მაგ: "18 აგვისტო, 2026"
       const dateStr = dateObj.toLocaleDateString("ka-GE", { 
         day: 'numeric', 
         month: 'long', 
@@ -142,7 +167,6 @@ export function TeacherStudentsWorkspace({
       groupsMap.get(dateStr)!.items.push(assignment);
     });
 
-    // ვალაგებთ კლებადობით (უახლესიდან უძველესისკენ)
     return Array.from(groupsMap.entries())
       .sort((a, b) => b[1].dateObj.getTime() - a[1].dateObj.getTime())
       .map(([dateStr, data]) => ({
@@ -158,10 +182,8 @@ export function TeacherStudentsWorkspace({
       p.setTitle.toLowerCase().includes(problemSearchQuery.toLowerCase())
   );
 
-  // კლასის შეცვლისას მოსწავლის განულება
   const handleCourseChange = (courseId: string) => {
     setActiveCourseId(courseId);
-    setSelectedStudentId(null);
   };
 
   const toggleDate = (dateStr: string) => {
@@ -203,6 +225,7 @@ export function TeacherStudentsWorkspace({
       const res = await sendProblemToStudentAction({
         studentId: activeStudent.id,
         instructions: assignComment.trim() || undefined,
+        attachmentUrl: assignImage,
         problem: {
           id: problem.id,
           topic: problem.title,
@@ -221,6 +244,7 @@ export function TeacherStudentsWorkspace({
           status: "PUBLISHED",
           createdAt: new Date().toISOString(),
           promptTex: problem.promptTex,
+          attachmentUrl: assignImage,
           comments: assignComment.trim() ? [{
             id: "cmt-" + Date.now(),
             body: assignComment.trim(),
@@ -238,6 +262,8 @@ export function TeacherStudentsWorkspace({
         );
         setIsAssignModalOpen(false);
         setAssignComment("");
+        setAssignImage(null);
+        setAssignImageName(null);
         setProblemSearchQuery("");
       } else {
         alert("გაგზავნა ვერ მოხერხდა: " + (res.error || "უცნობი შეცდომა"));
@@ -254,11 +280,24 @@ export function TeacherStudentsWorkspace({
     return students.filter(s => s.courses.some(c => c.id === courseId)).length;
   };
 
+  const handleStartClassCall = () => {
+    if (activeCourseId !== "all") {
+      const currentCourse = courses.find((c) => c.id === activeCourseId);
+      if (currentCourse) {
+        setActiveVideoCallCourse(currentCourse);
+      }
+    } else if (courses.length > 0) {
+      setActiveVideoCallCourse(courses[0]);
+    } else {
+      alert("ვიდეო გაკვეთილის დასაწყებად საჭიროა მინიმუმ ერთი აქტიური კლასი.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[38rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
         
-        {/* სვეტი 1: კლასების (კურსების) სია მარცხნივ */}
+        {/* სვეტი 1: კლასების სია */}
         <aside className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2 border-b border-hairline pb-3">
             <GraduationCap className="size-4 text-navy" />
@@ -280,7 +319,6 @@ export function TeacherStudentsWorkspace({
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-1.5 pe-0.5">
-            {/* ყველა მოსწავლის ფილტრი */}
             <button
               type="button"
               onClick={() => handleCourseChange("all")}
@@ -307,7 +345,6 @@ export function TeacherStudentsWorkspace({
               </span>
             </button>
 
-            {/* კონკრეტული კლასები */}
             {filteredCourses.map((course) => {
               const active = course.id === activeCourseId;
               const count = getStudentCountInCourse(course.id);
@@ -342,17 +379,12 @@ export function TeacherStudentsWorkspace({
                 </button>
               );
             })}
-            
-            {filteredCourses.length === 0 && (
-              <p className="py-8 text-center text-xs text-muted">კლასი არ მოიძებნა</p>
-            )}
           </div>
         </aside>
 
         {/* სვეტი 2: მოსწავლეების ტაბები და გაგზავნილი დავალებები */}
         <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white shadow-sm overflow-hidden">
           
-          {/* მოსწავლეების ტაბები ბრაუზერის სტილში */}
           <div className="bg-paper/30 border-b border-hairline pt-2 px-2 overflow-x-auto flex custom-scrollbar">
             {studentsInActiveCourse.length === 0 ? (
               <p className="py-3 px-4 text-xs font-bold text-muted">ამ კლასში მოსწავლეები არ არიან</p>
@@ -382,7 +414,7 @@ export function TeacherStudentsWorkspace({
           </div>
 
           <div className="flex-1 flex flex-col min-h-0 p-5">
-            <div className="flex items-center justify-between border-b border-hairline pb-4">
+            <div className="flex items-center justify-between border-b border-hairline pb-4 gap-4 flex-wrap">
               <div>
                 <h3 className="text-base font-bold text-ink">
                   {activeStudent ? activeStudent.name : "აირჩიეთ მოსწავლე ტაბიდან"}
@@ -390,16 +422,28 @@ export function TeacherStudentsWorkspace({
                 <p className="text-xs text-muted mt-0.5">გაგზავნილი ინდივიდუალური ბარათები და დავალებები</p>
               </div>
               
-              {activeStudent && (
+              <div className="flex items-center gap-2">
+                {/* ვიდეო გაკვეთილის დაწყების ღილაკი */}
                 <button
                   type="button"
-                  onClick={() => setIsAssignModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-sm font-bold text-white hover:bg-navy-strong transition-all shadow-sm active:scale-95"
+                  onClick={handleStartClassCall}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 transition-all shadow-sm active:scale-95"
                 >
-                  <Plus className="size-4" />
-                  <span>ბარათის მიმაგრება</span>
+                  <Video className="size-4" />
+                  <span>ვიდეო გაკვეთილი {selectedCourseObj ? `(${selectedCourseObj.title})` : ""}</span>
                 </button>
-              )}
+
+                {activeStudent && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAssignModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-sm font-bold text-white hover:bg-navy-strong transition-all shadow-sm active:scale-95"
+                  >
+                    <Plus className="size-4" />
+                    <span>ბარათის მიმაგრება</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto pt-5 pe-1">
@@ -422,7 +466,6 @@ export function TeacherStudentsWorkspace({
 
                     return (
                       <div key={dateStr} className="space-y-4">
-                        {/* ჩასაკეცი სათაური (თარიღი) */}
                         <div 
                           className="flex items-center gap-3 cursor-pointer group select-none"
                           onClick={() => toggleDate(dateStr)}
@@ -438,7 +481,6 @@ export function TeacherStudentsWorkspace({
                           <div className="h-px flex-1 bg-hairline-soft"></div>
                         </div>
 
-                        {/* ბარათების გრიდი */}
                         {!isCollapsed && (
                           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                             {items.map((assignment) => (
@@ -509,6 +551,15 @@ export function TeacherStudentsWorkspace({
           </div>
         </section>
       </div>
+
+      {/* ვიდეო ზარის და დაფის მოდალი */}
+      {activeVideoCallCourse && (
+        <ClassroomRoomModal
+          courseId={activeVideoCallCourse.id}
+          courseTitle={activeVideoCallCourse.title}
+          onClose={() => setActiveVideoCallCourse(null)}
+        />
+      )}
 
       {/* ბარათის მიმაგრების მოდალი */}
       {isAssignModalOpen && activeStudent && (
@@ -636,8 +687,8 @@ export function TeacherStudentsWorkspace({
                     </div>
                   )}
 
-                  <div className="rounded-2xl bg-amber-50/40 p-5 border border-amber-200/60 shadow-inner">
-                    <label className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800">
+                  <div className="rounded-2xl bg-amber-50/40 p-5 border border-amber-200/60 shadow-inner space-y-3">
+                    <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800">
                       <MessageSquare className="size-4" />
                       მასწავლებლის შენიშვნა / ინსტრუქცია (არასავალდებულო)
                     </label>
@@ -648,6 +699,52 @@ export function TeacherStudentsWorkspace({
                       className="w-full resize-none rounded-xl border border-amber-200 bg-white p-4 text-sm text-ink outline-none transition-shadow placeholder:text-amber-900/30 focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10"
                       rows={3}
                     />
+                  </div>
+
+                  <div className="rounded-2xl bg-paper p-5 border border-hairline space-y-3">
+                    <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted">
+                      <UploadCloud className="size-4 text-navy" />
+                      სურათის მიმაგრება ბარათზე (არასავალდებულო)
+                    </label>
+                    
+                    <input
+                      ref={assignFileRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="sr-only"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const base64 = await fileToBase64(file);
+                          setAssignImage(base64);
+                          setAssignImageName(file.name);
+                        }
+                      }}
+                    />
+
+                    {assignImage ? (
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-white p-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={assignImage} alt="Attachment" className="size-12 rounded-lg object-cover border" />
+                        <span className="text-xs font-bold text-ink truncate flex-1">{assignImageName}</span>
+                        <button
+                          type="button"
+                          onClick={() => { setAssignImage(null); setAssignImageName(null); }}
+                          className="text-rose-600 hover:text-rose-700 p-1"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => assignFileRef.current?.click()}
+                        className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-hairline bg-white py-4 text-xs font-bold text-navy hover:bg-navy-tint/30 transition-colors"
+                      >
+                        <UploadCloud className="size-4" />
+                        <span>აირჩიეთ ფოტო კომპიუტერიდან</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -685,7 +782,6 @@ export function TeacherStudentsWorkspace({
         </div>
       )}
 
-      {/* მხოლოდ ამოცანის პირობის საჩვენებელი მოდალი */}
       {activeAssignmentModal && (
         <TeacherViewProblemModal
           assignment={{
@@ -698,7 +794,6 @@ export function TeacherStudentsWorkspace({
         />
       )}
 
-      {/* წაშლის დადასტურების მოდალი */}
       {deletingAssignmentId && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-150"

@@ -93,16 +93,18 @@ export async function getTeacherClassesAction(): Promise<ClassData[]> {
 }
 
 /**
- * 3. ამოცანის ინდივიდუალურად გაგზავნა კონკრეტულ მოსწავლესთან (საჭიროა TeacherStudentsWorkspace-სთვის)
+ * 3. ამოცანის ინდივიდუალურად გაგზავნა კონკრეტულ მოსწავლესთან
  */
 export async function sendProblemToStudentAction({
   studentId,
   instructions,
   problem,
+  attachmentUrl,
 }: {
   studentId: string;
   instructions?: string;
   problem: ProblemPayloadInput;
+  attachmentUrl?: string | null;
 }) {
   try {
     const enrollment = await prisma.enrollment.findFirst({
@@ -133,6 +135,7 @@ export async function sendProblemToStudentAction({
         publishedAt: new Date(),
         title: problem.topic ? `ამოცანა: ${problem.topic}` : "ინდივიდუალური ამოცანა",
         instructions: instructions?.trim() || "გთხოვთ ამოხსნათ მოცემული ამოცანა.",
+        attachmentUrl: attachmentUrl || null, // მასწავლებლის მიმაგრებული ფოტო
         customPayload: {
           problemId: problem.id,
           promptTex: problem.promptTex,
@@ -159,27 +162,30 @@ export async function sendProblemToStudentAction({
 }
 
 /**
- * 4. ამოცანის გაგზავნა მთლიან კლასთან (საჭიროა ProblemCardMenu-სთვის)
+ * 4. ამოცანის გაგზავნა მთლიან კლასთან
  */
 export async function sendProblemToClassAction({
   courseId,
   instructions,
   problem,
+  attachmentUrl,
 }: {
   courseId: string;
   instructions?: string;
   problem: ProblemPayloadInput;
+  attachmentUrl?: string | null;
 }) {
   try {
     const assignment = await prisma.assignment.create({
       data: {
         courseId: courseId,
-        targetUserId: null, // null ნიშნავს მთელ კლასს
+        targetUserId: null,
         type: AssignmentType.PROBLEM,
         status: AssignmentStatus.PUBLISHED,
         publishedAt: new Date(),
         title: problem.topic ? `ამოცანა: ${problem.topic}` : "საკლასო ამოცანა",
         instructions: instructions?.trim() || "გთხოვთ ამოხსნათ მოცემული ამოცანა.",
+        attachmentUrl: attachmentUrl || null,
         customPayload: {
           problemId: problem.id,
           promptTex: problem.promptTex,
@@ -279,6 +285,7 @@ export async function getStudentAssignmentsAction() {
             fileName: submission?.attachmentUrl || undefined,
             grade: submission?.grade ? Number(submission.grade.score) : undefined,
             feedback: submission?.grade?.comment || undefined,
+            teacherAttachmentUrl: a.attachmentUrl || null, // მასწავლებლის მიმაგრებული ფოტო მოსწავლისთვის
           },
         ],
       };

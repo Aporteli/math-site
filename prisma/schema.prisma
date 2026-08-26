@@ -90,7 +90,7 @@ model User {
   problemFamilies     ProblemFamily[]
   problemSets         ProblemSet[]
   submissions         Submission[]
-  targetedAssignments Assignment[]   @relation("TargetedStudent")
+  targetedAssignments Assignment[]    @relation("TargetedStudent")
   comments            Comment[]
   gradesGiven         Grade[]         @relation("GradedBy")
   attendance          Attendance[]
@@ -287,7 +287,7 @@ model Assignment {
   status        AssignmentStatus @default(DRAFT)
   dueAt         DateTime?
   publishedAt   DateTime?
-  attachmentUrl String?
+  attachmentUrl String?          @db.LongText
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 

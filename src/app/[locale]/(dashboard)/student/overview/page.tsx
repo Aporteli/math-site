@@ -20,6 +20,7 @@ import { localePath, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { requireRole } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
+import { StudentCourseVideoCallButton } from '@/components/lms/student/StudentCourseVideoCallButton';
 
 type HeroStat = {
   id: string;
@@ -197,7 +198,7 @@ export default async function StudentOverviewPage({ params }: PageProps) {
     id: e.course.id,
     title: e.course.title,
     teacher: e.course.teacher?.name || 'Instructor',
-    percent: 0, // საწყისი პროგრესი
+    percent: 0,
   }));
 
   const activeCoursesCount = courses.length.toString();
@@ -306,14 +307,23 @@ export default async function StudentOverviewPage({ params }: PageProps) {
                 {courses.map((course) => (
                   <li
                     key={course.id}
-                    className="rounded-xl border border-hairline-soft bg-white px-4 py-3 transition-colors hover:border-hairline hover:bg-paper-deep/60">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
+                    className="rounded-xl border border-hairline-soft bg-white px-4 py-3.5 transition-colors hover:border-hairline hover:bg-paper-deep/60">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-ink">{course.title}</p>
+                        <p className="truncate text-sm font-bold text-ink">{course.title}</p>
                         <p className="text-xs text-muted">{course.teacher}</p>
                       </div>
-                      <span className="shrink-0 text-sm font-semibold text-navy">{course.percent}%</span>
+                      
+                      {/* ვიდეო გაკვეთილის ღილაკი მოსწავლისთვის */}
+                      <div className="flex items-center gap-3 shrink-0">
+                        <StudentCourseVideoCallButton
+                          courseId={course.id}
+                          courseTitle={course.title}
+                        />
+                        <span className="text-xs font-bold text-navy">{course.percent}%</span>
+                      </div>
                     </div>
+
                     <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-navy-tint">
                       <div
                         className="h-full rounded-full bg-navy transition-all"
