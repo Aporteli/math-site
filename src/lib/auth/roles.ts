@@ -20,3 +20,6 @@ export function isOwnerEmail(email: string | null | undefined) {
 
   return owners.includes(email.trim().toLowerCase());
 }
+
+
+
