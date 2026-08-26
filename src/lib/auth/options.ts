@@ -10,15 +10,40 @@ import { isOwnerEmail, type UserRole } from '@/lib/auth/roles';
 
 export { authSecret };
 
+const useSecureCookies = process.env.NEXTAUTH_URL?.startsWith('https://') ?? false;
+const cookiePrefix = useSecureCookies ? '__Secure-' : '';
+
 export const authOptions: NextAuthOptions = {
   secret: authSecret,
   debug: process.env.NODE_ENV === 'development',
+  useSecureCookies,
+  cookies: {
+    state: {
+      name: `${cookiePrefix}next-auth.state`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: useSecureCookies,
+      },
+    },
+    pkceCodeVerifier: {
+      name: `${cookiePrefix}next-auth.pkce.code_verifier`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: useSecureCookies,
+      },
+    },
+  },
   session: { strategy: 'jwt' },
   pages: { signIn: LOGIN_PATH },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+      checks: ['pkce', 'state'],
     }),
 
     CredentialsProvider({
@@ -73,7 +98,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           user.id = dbUser.id;
-          (user as { role?: string }).role = dbUser.role;
+          (user as { role?: UserRole }).role = dbUser.role as UserRole;
           return true;
         } catch (error) {
           console.error('CRITICAL_GOOGLE_SIGNIN_ERROR:', error);
@@ -89,7 +114,6 @@ export const authOptions: NextAuthOptions = {
         token.role = ((user as { role?: UserRole }).role ?? 'VISITOR') as UserRole;
       }
 
-      // სესიის განახლების (update) მხარდაჭერა
       if (trigger === 'update' && session?.role) {
         token.role = session.role as UserRole;
       }
