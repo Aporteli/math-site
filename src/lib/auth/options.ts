@@ -87,20 +87,19 @@ export const authOptions: NextAuthOptions = {
         token.role = ((user as { role?: UserRole }).role ?? 'VISITOR') as UserRole;
       }
 
-      // თუ პირველი შესვლაა და როლი ჯერ არ აქვს ტოკენში, ბაზიდან ამოვიღოთ
-      if (!token.role && token.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email.trim().toLowerCase() },
-          select: { id: true, role: true },
-        });
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.role = dbUser.role as UserRole;
+      // როცა კოდის შეყვანის შემდეგ update() გამოიძახება:
+      if (trigger === 'update') {
+        if (session?.role) {
+          token.role = session.role as UserRole;
+        } else if (token.email) {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email.trim().toLowerCase() },
+            select: { id: true, role: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role as UserRole;
+          }
         }
-      }
-
-      if (trigger === 'update' && session?.role) {
-        token.role = session.role as UserRole;
       }
 
       return token;
