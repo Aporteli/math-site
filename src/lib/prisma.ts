@@ -15,6 +15,7 @@ function createPrismaClient(): PrismaClient {
   }
 
   const adapter = new PrismaMariaDb(url);
+
   return new PrismaClient({ adapter });
 }
 
