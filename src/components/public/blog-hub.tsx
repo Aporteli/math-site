@@ -345,7 +345,7 @@ export function BlogHub({ locale, author, copy }: BlogHubProps) {
                   <p className="mt-4 text-sm text-muted">
                     {author}
                     <span aria-hidden="true"> · </span>
-                    <time dateTime={featured.publishedAt}>
+                    <time dateTime={featured.publishedAt} suppressHydrationWarning>
                       {formatPostDate(featured.publishedAt, locale)}
                     </time>
                   </p>
