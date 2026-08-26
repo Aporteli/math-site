@@ -46,6 +46,7 @@ export function NavLinks({
             <li key={link.id}>
               <Link
                 href={href}
+                prefetch={false}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={[
@@ -72,6 +73,7 @@ export function NavLinks({
                       <li key={itemId}>
                         <Link
                           href={itemHref}
+                          prefetch={false}
                           onClick={onNavigate}
                           className={[
                             "block rounded-lg px-3 py-2 text-sm transition-colors duration-200",
@@ -153,6 +155,7 @@ function DesktopNavItem({
     >
       <Link
         href={href}
+        prefetch={false}
         onClick={close}
         aria-current={active ? "page" : undefined}
         aria-expanded={menuItems ? open : undefined}
@@ -188,6 +191,7 @@ function DesktopNavItem({
                 <li key={itemId}>
                   <Link
                     href={itemHref}
+                    prefetch={false}
                     onClick={close}
                     className={[
                       "block rounded-xl px-3 py-2 text-sm transition-colors duration-200",
