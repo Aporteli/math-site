@@ -57,7 +57,7 @@ export const authOptions: NextAuthOptions = {
         try {
           // ბაზაში ძებნა ან შექმნა ერთ ოპერაციაში (upsert)
           const isOwner = isOwnerEmail(normalizedEmail);
-          
+
           const dbUser = await prisma.user.upsert({
             where: { email: normalizedEmail },
             update: isOwner ? { role: 'ADMIN' } : {},
@@ -115,7 +115,10 @@ export const authOptions: NextAuthOptions = {
     },
 
     async redirect({ url, baseUrl }) {
-      // თუ რედირექტი შიდა გვერდზეა, პირდაპირ გადაუშვას
+      // თუ ლოგინის/რეგისტრაციის გვერდზეა, პირდაპირ მთავარზე გაუშვას
+      if (url.includes('/login') || url.includes('/signup')) {
+        return `${baseUrl}/ka`;
+      }
       if (url.startsWith('/')) return `${baseUrl}${url}`;
       if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
