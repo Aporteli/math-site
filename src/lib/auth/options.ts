@@ -20,11 +20,11 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
       authorization: {
         params: {
-          prompt: "select_account",
-          access_type: "offline",
-          response_type: "code"
-        }
-      }
+          prompt: 'select_account',
+          access_type: 'offline',
+          response_type: 'code',
+        },
+      },
     }),
 
     CredentialsProvider({
@@ -55,28 +55,20 @@ export const authOptions: NextAuthOptions = {
         const normalizedEmail = user.email.trim().toLowerCase();
 
         try {
-          let dbUser = await prisma.user.findUnique({
+          // ბაზაში ძებნა ან შექმნა ერთ ოპერაციაში (upsert)
+          const isOwner = isOwnerEmail(normalizedEmail);
+          
+          const dbUser = await prisma.user.upsert({
             where: { email: normalizedEmail },
+            update: isOwner ? { role: 'ADMIN' } : {},
+            create: {
+              name: user.name ?? 'Google User',
+              email: normalizedEmail,
+              passwordHash: '',
+              role: isOwner ? 'ADMIN' : 'VISITOR',
+              imageUrl: user.image ?? null,
+            },
           });
-
-          if (!dbUser) {
-            const initialRole: UserRole = isOwnerEmail(normalizedEmail) ? 'ADMIN' : 'VISITOR';
-
-            dbUser = await prisma.user.create({
-              data: {
-                name: user.name ?? 'Google User',
-                email: normalizedEmail,
-                passwordHash: '',
-                role: initialRole,
-                imageUrl: user.image ?? null,
-              },
-            });
-          } else if (isOwnerEmail(normalizedEmail) && dbUser.role !== 'ADMIN') {
-            dbUser = await prisma.user.update({
-              where: { id: dbUser.id },
-              data: { role: 'ADMIN' },
-            });
-          }
 
           user.id = dbUser.id;
           (user as { role?: UserRole }).role = dbUser.role as UserRole;
@@ -95,6 +87,18 @@ export const authOptions: NextAuthOptions = {
         token.role = ((user as { role?: UserRole }).role ?? 'VISITOR') as UserRole;
       }
 
+      // თუ პირველი შესვლაა და როლი ჯერ არ აქვს ტოკენში, ბაზიდან ამოვიღოთ
+      if (!token.role && token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email.trim().toLowerCase() },
+          select: { id: true, role: true },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role as UserRole;
+        }
+      }
+
       if (trigger === 'update' && session?.role) {
         token.role = session.role as UserRole;
       }
@@ -108,6 +112,13 @@ export const authOptions: NextAuthOptions = {
         session.user.role = (token.role as UserRole) ?? 'VISITOR';
       }
       return session;
+    },
+
+    async redirect({ url, baseUrl }) {
+      // თუ რედირექტი შიდა გვერდზეა, პირდაპირ გადაუშვას
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     },
   },
 };
