@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { isLocale, localePath } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
-import { requireRole } from "@/lib/auth/session";
+import { getSession } from "@/lib/auth/session";
 import { isLocalDashboardPreview } from "@/lib/auth/paths";
 import { prisma } from "@/lib/prisma";
 
@@ -18,22 +18,38 @@ export default async function StudentLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  // 1. როლის დაცვა: უშვებს მხოლოდ ავტორიზებულ STUDENT-ს (VISITOR ავტომატურად გადამისამართდება მთავარზე)
-  const session = await requireRole(locale, ["STUDENT", "ADMIN"]);
+  // 1. უსაფრთხოდ ვიღებთ სესიას კრაშის გარეშე
+  const session = await getSession();
 
-  // 2. კლასის/სამუშაო სივრცის დაცვა: ვამოწმებთ, აქვს თუ არა სტუდენტს აქტიური კლასი
-  const enrollment = await prisma.enrollment.findFirst({
-    where: {
-      userId: session.user.id,
-      status: "ACTIVE",
-    },
-    include: {
-      course: true,
-    },
-  });
+  // თუ არაა დალოგინებული ან არ არის STUDENT / ADMIN, პირდაპირ ვუშვებთ მთავარზე
+  if (!session || (session.user.role !== "STUDENT" && session.user.role !== "ADMIN")) {
+    if (!isLocalDashboardPreview()) {
+      redirect(localePath(locale, "/"));
+    }
+  }
 
-  // თუ სტუდენტი ჯერ არცერთ კლასში არ არის გაწევრიანებული, გადაგვყავს კოდის შეყვანის / მთავარ გვერდზე
-  if (!enrollment && !isLocalDashboardPreview() && session.user.role !== "ADMIN") {
+  const userId = session?.user?.id;
+
+  // 2. ვამოწმებთ კლასს უსაფრთხოდ (მხოლოდ თუ userId არსებობს)
+  let enrollment = null;
+  if (userId) {
+    try {
+      enrollment = await prisma.enrollment.findFirst({
+        where: {
+          userId: userId,
+          status: "ACTIVE",
+        },
+        include: {
+          course: true,
+        },
+      });
+    } catch (e) {
+      console.error("ENROLLMENT_FETCH_ERROR:", e);
+    }
+  }
+
+  // თუ სტუდენტი ჯერ არცერთ კლასში არ არის გაწევრიანებული, გადაგვყავს მთავარზე კოდის შესაყვანად
+  if (!enrollment && !isLocalDashboardPreview() && session?.user?.role !== "ADMIN") {
     redirect(localePath(locale, "/?joinModal=true"));
   }
 
@@ -45,7 +61,7 @@ export default async function StudentLayout({
       locale={locale}
       dict={dict}
       roleLabel={student.role}
-      userName={session.user.name ?? session.user.email ?? student.role}
+      userName={session?.user?.name ?? session?.user?.email ?? student.role}
       role="student"
       labels={student.nav}
     >
