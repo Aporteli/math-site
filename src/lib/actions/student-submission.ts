@@ -25,26 +25,35 @@ export async function submitStudentHomeworkAction({
       return { success: false, error: "დავალება ვერ მოიძებნა" };
     }
 
-    const submission = await prisma.submission.upsert({
+    // შევამოწმოთ არსებობს თუ არა უკვე Submission ამ სტუდენტისთვის
+    const existingSubmission = await prisma.submission.findFirst({
       where: {
-        assignmentId_studentId: {
-          assignmentId,
-          studentId: session.user.id,
-        },
-      },
-      update: {
-        attachmentUrl,
-        status: SubmissionStatus.SUBMITTED,
-        submittedAt: new Date(),
-      },
-      create: {
         assignmentId,
         studentId: session.user.id,
-        attachmentUrl,
-        status: SubmissionStatus.SUBMITTED,
-        submittedAt: new Date(),
       },
     });
+
+    let submission;
+    if (existingSubmission) {
+      submission = await prisma.submission.update({
+        where: { id: existingSubmission.id },
+        data: {
+          attachmentUrl,
+          status: SubmissionStatus.SUBMITTED,
+          submittedAt: new Date(),
+        },
+      });
+    } else {
+      submission = await prisma.submission.create({
+        data: {
+          assignmentId,
+          studentId: session.user.id,
+          attachmentUrl,
+          status: SubmissionStatus.SUBMITTED,
+          submittedAt: new Date(),
+        },
+      });
+    }
 
     return { success: true, submissionId: submission.id };
   } catch (error) {

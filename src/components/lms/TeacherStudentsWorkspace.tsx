@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Users,
   Search,
@@ -14,6 +14,8 @@ import {
   Send,
   X,
   Check,
+  GraduationCap,
+  ChevronDown,
 } from "lucide-react";
 import { deleteTargetedAssignmentAction } from "@/lib/actions/teacher-students";
 import { sendProblemToStudentAction } from "@/lib/actions/students";
@@ -66,10 +68,18 @@ export function TeacherStudentsWorkspace({
   availableSetProblems = [],
 }: TeacherStudentsWorkspaceProps) {
   const [students, setStudents] = useState<StudentItem[]>(initialStudents);
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
-    initialStudents?.[0]?.id || null
-  );
-  const [searchQuery, setSearchQuery] = useState("");
+  
+  // კლასების State (მარცხენა სვეტისთვის)
+  const [activeCourseId, setActiveCourseId] = useState<string | "all">("all");
+  
+  // მოსწავლეების State (მარჯვენა ტაბებისთვის)
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  
+  // ძებნა კლასებისთვის მარცხენა სვეტში
+  const [classSearchQuery, setClassSearchQuery] = useState("");
+  
+  // თარიღების ჩასაკეცი (Collapsible) State
+  const [collapsedDates, setCollapsedDates] = useState<Record<string, boolean>>({});
   
   const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -99,19 +109,67 @@ export function TeacherStudentsWorkspace({
     }
   }, [isAnyModalOpen]);
 
-  const filteredStudents = students.filter(
-    (s) =>
-      s?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (s?.email && s.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  // გაფილტვრა კლასების სიისთვის
+  const filteredCourses = courses.filter((c) =>
+    c.title.toLowerCase().includes(classSearchQuery.toLowerCase())
+  );
+
+  // მოსწავლეები, რომლებიც ეკუთვნიან არჩეულ კლასს (ან ყველანი, თუ "all" არის არჩეული)
+  const studentsInActiveCourse = students.filter((s) =>
+    activeCourseId === "all" ? true : s.courses.some((c) => c.id === activeCourseId)
   );
 
   const activeStudent = students.find((s) => s.id === selectedStudentId);
+  
+  // დავალებების თარიღების მიხედვით დაჯგუფება
+  const groupedAssignments = useMemo(() => {
+    if (!activeStudent || !activeStudent.assignments) return [];
+    
+    const groupsMap = new Map<string, { dateObj: Date; items: StudentAssignment[] }>();
+
+    activeStudent.assignments.forEach((assignment) => {
+      const dateObj = new Date(assignment.createdAt);
+      // თარიღის ფორმატირება, მაგ: "18 აგვისტო, 2026"
+      const dateStr = dateObj.toLocaleDateString("ka-GE", { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+
+      if (!groupsMap.has(dateStr)) {
+        groupsMap.set(dateStr, { dateObj, items: [] });
+      }
+      groupsMap.get(dateStr)!.items.push(assignment);
+    });
+
+    // ვალაგებთ კლებადობით (უახლესიდან უძველესისკენ)
+    return Array.from(groupsMap.entries())
+      .sort((a, b) => b[1].dateObj.getTime() - a[1].dateObj.getTime())
+      .map(([dateStr, data]) => ({
+        dateStr,
+        items: data.items
+      }));
+  }, [activeStudent]);
+
   const selectedProblem = availableSetProblems.find((p) => p.id === selectedProblemId);
   const filteredSetProblems = availableSetProblems.filter(
     (p) =>
       p.title.toLowerCase().includes(problemSearchQuery.toLowerCase()) ||
       p.setTitle.toLowerCase().includes(problemSearchQuery.toLowerCase())
   );
+
+  // კლასის შეცვლისას მოსწავლის განულება
+  const handleCourseChange = (courseId: string) => {
+    setActiveCourseId(courseId);
+    setSelectedStudentId(null);
+  };
+
+  const toggleDate = (dateStr: string) => {
+    setCollapsedDates(prev => ({
+      ...prev,
+      [dateStr]: !prev[dateStr]
+    }));
+  };
 
   async function handleConfirmDelete() {
     if (!deletingAssignmentId) return;
@@ -192,17 +250,21 @@ export function TeacherStudentsWorkspace({
     }
   }
 
+  const getStudentCountInCourse = (courseId: string) => {
+    return students.filter(s => s.courses.some(c => c.id === courseId)).length;
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[38rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
         
-        {/* სვეტი 1: სტუდენტების სია */}
+        {/* სვეტი 1: კლასების (კურსების) სია მარცხნივ */}
         <aside className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2 border-b border-hairline pb-3">
-            <Users className="size-4 text-navy" />
-            <h3 className="text-sm font-bold text-ink">მოსწავლეები</h3>
+            <GraduationCap className="size-4 text-navy" />
+            <h3 className="text-sm font-bold text-ink">კლასები</h3>
             <span className="ml-auto rounded-full bg-paper-deep px-2 py-0.5 text-[10px] font-bold text-muted">
-              {students.length}
+              {courses.length}
             </span>
           </div>
 
@@ -210,170 +272,248 @@ export function TeacherStudentsWorkspace({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted" />
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="მოძებნეთ მოსწავლე..."
+              value={classSearchQuery}
+              onChange={(e) => setClassSearchQuery(e.target.value)}
+              placeholder="მოძებნეთ კლასი..."
               className="w-full rounded-xl border border-hairline bg-paper py-2 pl-9 pr-3 text-xs font-medium text-ink outline-none focus:border-navy"
             />
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-1.5 pe-0.5">
-            {filteredStudents.length === 0 ? (
-              <p className="py-8 text-center text-xs text-muted">მოსწავლე არ მოიძებნა</p>
+            {/* ყველა მოსწავლის ფილტრი */}
+            <button
+              type="button"
+              onClick={() => handleCourseChange("all")}
+              className={`flex w-full items-center justify-between gap-2.5 rounded-2xl p-3 text-left transition-all ${
+                activeCourseId === "all"
+                  ? "bg-navy text-white shadow-sm ring-1 ring-navy"
+                  : "bg-paper/40 hover:bg-paper-deep text-ink"
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                  activeCourseId === "all" ? "bg-white text-navy" : "bg-navy text-white"
+                }`}>
+                  <Users className="size-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold">ყველა მოსწავლე</p>
+                </div>
+              </div>
+              <span className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold ${
+                activeCourseId === "all" ? "bg-white/20 text-white" : "bg-white border border-hairline text-muted"
+              }`}>
+                {students.length}
+              </span>
+            </button>
+
+            {/* კონკრეტული კლასები */}
+            {filteredCourses.map((course) => {
+              const active = course.id === activeCourseId;
+              const count = getStudentCountInCourse(course.id);
+              
+              return (
+                <button
+                  key={course.id}
+                  type="button"
+                  onClick={() => handleCourseChange(course.id)}
+                  className={`flex w-full items-center justify-between gap-2.5 rounded-2xl p-3 text-left transition-all ${
+                    active
+                      ? "bg-navy text-white shadow-sm ring-1 ring-navy"
+                      : "bg-paper/40 hover:bg-paper-deep text-ink"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      active ? "bg-white text-navy" : "bg-navy text-white"
+                    }`}>
+                      {course.title.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold">{course.title}</p>
+                    </div>
+                  </div>
+
+                  <span className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold ${
+                    active ? "bg-white/20 text-white" : "bg-white border border-hairline text-muted"
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+            
+            {filteredCourses.length === 0 && (
+              <p className="py-8 text-center text-xs text-muted">კლასი არ მოიძებნა</p>
+            )}
+          </div>
+        </aside>
+
+        {/* სვეტი 2: მოსწავლეების ტაბები და გაგზავნილი დავალებები */}
+        <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white shadow-sm overflow-hidden">
+          
+          {/* მოსწავლეების ტაბები ბრაუზერის სტილში */}
+          <div className="bg-paper/30 border-b border-hairline pt-2 px-2 overflow-x-auto flex custom-scrollbar">
+            {studentsInActiveCourse.length === 0 ? (
+              <p className="py-3 px-4 text-xs font-bold text-muted">ამ კლასში მოსწავლეები არ არიან</p>
             ) : (
-              filteredStudents.map((s) => {
-                const active = s.id === selectedStudentId;
+              studentsInActiveCourse.map((student) => {
+                const isSelected = selectedStudentId === student.id;
                 return (
                   <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setSelectedStudentId(s.id)}
-                    className={`flex w-full items-center justify-between gap-2.5 rounded-2xl p-3 text-left transition-all ${
-                      active
-                        ? "bg-navy text-white shadow-sm ring-1 ring-navy"
-                        : "bg-paper/40 hover:bg-paper-deep text-ink"
+                    key={student.id}
+                    onClick={() => setSelectedStudentId(student.id)}
+                    className={`flex items-center gap-2 whitespace-nowrap px-4 py-3 rounded-t-xl border-b-2 text-sm transition-all ${
+                      isSelected
+                        ? "border-navy bg-white text-navy font-bold shadow-[0_-2px_10px_rgba(0,0,0,0.02)]"
+                        : "border-transparent text-muted hover:text-ink hover:bg-paper/50 font-medium"
                     }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div
-                        className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                          active ? "bg-white text-navy" : "bg-navy text-white"
-                        }`}
-                      >
-                        {s.name?.charAt(0) || "?"}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-bold">{s.name}</p>
-                        {s.email && (
-                          <p className={`truncate text-[10px] ${active ? "text-white/70" : "text-muted"}`}>
-                            {s.email}
-                          </p>
-                        )}
-                      </div>
+                    <div className={`flex size-5 items-center justify-center rounded-full text-[9px] font-bold ${
+                      isSelected ? "bg-navy text-white" : "bg-paper-deep text-muted"
+                    }`}>
+                      {student.name.charAt(0)}
                     </div>
-
-                    <span
-                      className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold ${
-                        active ? "bg-white/20 text-white" : "bg-white border border-hairline text-muted"
-                      }`}
-                    >
-                      {s.assignments?.length || 0}
-                    </span>
+                    {student.name}
                   </button>
                 );
               })
             )}
           </div>
-        </aside>
 
-        {/* სვეტი 2: გაგზავნილი დავალებები / ბარათები */}
-        <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between border-b border-hairline pb-4">
-            <div>
-              <h3 className="text-base font-bold text-ink">
-                {activeStudent ? activeStudent.name : "მოსწავლე არ არის არჩეული"}
-              </h3>
-              <p className="text-xs text-muted">გაგზავნილი ინდივიდუალური ბარათები და დავალებები</p>
+          <div className="flex-1 flex flex-col min-h-0 p-5">
+            <div className="flex items-center justify-between border-b border-hairline pb-4">
+              <div>
+                <h3 className="text-base font-bold text-ink">
+                  {activeStudent ? activeStudent.name : "აირჩიეთ მოსწავლე ტაბიდან"}
+                </h3>
+                <p className="text-xs text-muted mt-0.5">გაგზავნილი ინდივიდუალური ბარათები და დავალებები</p>
+              </div>
+              
+              {activeStudent && (
+                <button
+                  type="button"
+                  onClick={() => setIsAssignModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-sm font-bold text-white hover:bg-navy-strong transition-all shadow-sm active:scale-95"
+                >
+                  <Plus className="size-4" />
+                  <span>ბარათის მიმაგრება</span>
+                </button>
+              )}
             </div>
-            
-            {activeStudent && (
-              <button
-                type="button"
-                onClick={() => setIsAssignModalOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-sm font-bold text-white hover:bg-navy-strong transition-all shadow-sm active:scale-95"
-              >
-                <Plus className="size-4" />
-                <span>ბარათის მიმაგრება</span>
-              </button>
-            )}
-          </div>
 
-          <div className="flex-1 overflow-y-auto pt-5 pe-1">
-            {!activeStudent ? (
-              <div className="py-20 flex flex-col items-center justify-center text-center text-muted">
-                <BookOpen className="size-10 opacity-30 mb-2" />
-                <p className="text-sm font-bold text-ink">მოსწავლე არ არის არჩეული</p>
-              </div>
-            ) : !activeStudent.assignments || activeStudent.assignments.length === 0 ? (
-              <div className="py-20 flex flex-col items-center justify-center text-center text-muted">
-                <BookOpen className="size-10 opacity-30 mb-2" />
-                <p className="text-sm font-bold text-ink">ბარათები არ არის გაგზავნილი</p>
-                <p className="text-xs max-w-xs mt-1">ამ მოსწავლეს ჯერ არ აქვს მინიჭებული ინდივიდუალური დავალება.</p>
-              </div>
-            ) : (
-              /* აქ შეიცვალა დიზაინი: დავალებები 2 სვეტად (Grid) */
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                {activeStudent.assignments.map((assignment) => (
-                  <div
-                    key={assignment.id}
-                    onClick={() => {
-                      setActiveAssignmentModal({
-                        assignment,
-                        studentName: activeStudent.name,
-                      });
-                    }}
-                    className="flex flex-col justify-between gap-4 rounded-2xl border border-hairline bg-white p-4 transition-all hover:border-navy/40 hover:shadow-md cursor-pointer group"
-                  >
-                    <div className="flex flex-col gap-2 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="rounded-lg bg-navy-tint px-2.5 py-0.5 text-[10px] font-bold text-navy border border-navy/10">
-                          {assignment.type}
-                        </span>
-                        <span className="flex items-center gap-1 text-[11px] font-medium text-muted">
-                          <Calendar className="size-3" />
-                          {assignment.createdAt ? new Date(assignment.createdAt).toLocaleDateString("en-CA") : ""}
-                        </span>
-                        {assignment.comments && assignment.comments.length > 0 && (
-                          <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
-                            <MessageSquare className="size-3" />
-                            {assignment.comments.length}
-                          </span>
+            <div className="flex-1 overflow-y-auto pt-5 pe-1">
+              {!activeStudent ? (
+                <div className="py-20 flex flex-col items-center justify-center text-center text-muted">
+                  <Users className="size-10 opacity-30 mb-2" />
+                  <p className="text-sm font-bold text-ink">მოსწავლე არ არის არჩეული</p>
+                  <p className="text-xs max-w-xs mt-1">აირჩიეთ მოსწავლე ზედა ტაბებიდან, რათა ნახოთ ან გაუგზავნოთ დავალებები.</p>
+                </div>
+              ) : !activeStudent.assignments || activeStudent.assignments.length === 0 ? (
+                <div className="py-20 flex flex-col items-center justify-center text-center text-muted">
+                  <BookOpen className="size-10 opacity-30 mb-2" />
+                  <p className="text-sm font-bold text-ink">ბარათები არ არის გაგზავნილი</p>
+                  <p className="text-xs max-w-xs mt-1">ამ მოსწავლეს ჯერ არ აქვს მინიჭებული ინდივიდუალური დავალება.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {groupedAssignments.map(({ dateStr, items }) => {
+                    const isCollapsed = collapsedDates[dateStr];
+
+                    return (
+                      <div key={dateStr} className="space-y-4">
+                        {/* ჩასაკეცი სათაური (თარიღი) */}
+                        <div 
+                          className="flex items-center gap-3 cursor-pointer group select-none"
+                          onClick={() => toggleDate(dateStr)}
+                        >
+                          <div className="flex items-center gap-2 rounded-xl bg-paper px-3 py-1.5 border border-hairline-soft transition-colors group-hover:bg-paper-deep">
+                            <Calendar className="size-3.5 text-muted" />
+                            <span className="text-xs font-bold text-ink">{dateStr}</span>
+                            <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-muted border border-hairline-soft">
+                              {items.length}
+                            </span>
+                            <ChevronDown className={`size-3.5 text-muted transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`} />
+                          </div>
+                          <div className="h-px flex-1 bg-hairline-soft"></div>
+                        </div>
+
+                        {/* ბარათების გრიდი */}
+                        {!isCollapsed && (
+                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                            {items.map((assignment) => (
+                              <div
+                                key={assignment.id}
+                                onClick={() => {
+                                  setActiveAssignmentModal({
+                                    assignment,
+                                    studentName: activeStudent.name,
+                                  });
+                                }}
+                                className="flex flex-col justify-between gap-4 rounded-2xl border border-hairline bg-white p-4 transition-all hover:border-navy/40 hover:shadow-md cursor-pointer group"
+                              >
+                                <div className="flex flex-col gap-2 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="rounded-lg bg-navy-tint px-2.5 py-0.5 text-[10px] font-bold text-navy border border-navy/10">
+                                      {assignment.type}
+                                    </span>
+                                    {assignment.comments && assignment.comments.length > 0 && (
+                                      <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                                        <MessageSquare className="size-3" />
+                                        {assignment.comments.length}
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  <h4 className="text-sm font-bold text-ink group-hover:text-navy transition-colors line-clamp-2 leading-snug">
+                                    {assignment.title}
+                                  </h4>
+                                  
+                                  {assignment.instructions && (
+                                    <div className="mt-1 rounded-lg bg-amber-50/50 p-2.5 border border-amber-100/50">
+                                       <p className="text-xs text-amber-900/70 line-clamp-2">
+                                         <span className="font-bold text-amber-800/80 mr-1">შენიშვნა:</span>
+                                         {assignment.instructions}
+                                       </p>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center justify-between mt-2 pt-3 border-t border-hairline-soft">
+                                  <span className="text-xs font-bold text-navy group-hover:underline flex items-center gap-1">
+                                    სრულად ნახვა <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                                  </span>
+
+                                  <button
+                                    type="button"
+                                    title="დავალების წაშლა"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDeletingAssignmentId(assignment.id);
+                                    }}
+                                    className="flex size-8 items-center justify-center rounded-lg border border-hairline bg-white text-muted hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 transition-colors shadow-xs"
+                                  >
+                                    <Trash2 className="size-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
-                      
-                      <h4 className="text-sm font-bold text-ink group-hover:text-navy transition-colors line-clamp-2 leading-snug">
-                        {assignment.title}
-                      </h4>
-                      
-                      {assignment.instructions && (
-                        <div className="mt-1 rounded-lg bg-amber-50/50 p-2.5 border border-amber-100/50">
-                           <p className="text-xs text-amber-900/70 line-clamp-2">
-                             <span className="font-bold text-amber-800/80 mr-1">შენიშვნა:</span>
-                             {assignment.instructions}
-                           </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between mt-2 pt-3 border-t border-hairline-soft">
-                      <span className="text-xs font-bold text-navy group-hover:underline flex items-center gap-1">
-                        სრულად ნახვა <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-                      </span>
-
-                      <button
-                        type="button"
-                        title="დავალების წაშლა"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeletingAssignmentId(assignment.id);
-                        }}
-                        className="flex size-8 items-center justify-center rounded-lg border border-hairline bg-white text-muted hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 transition-colors shadow-xs"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </section>
       </div>
 
-      {/* ბარათის მიმაგრების მოდალი (გაუმჯობესებული დიზაინით) */}
+      {/* ბარათის მიმაგრების მოდალი */}
       {isAssignModalOpen && activeStudent && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => !assigning && setIsAssignModalOpen(false)}
         >
           <div 
@@ -411,7 +551,6 @@ export function TeacherStudentsWorkspace({
               </div>
             ) : (
               <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
-                {/* მარცხენა სვეტი: ბარათების კომპაქტური სია */}
                 <div className="flex min-h-0 shrink-0 flex-col border-b border-hairline bg-paper/40 lg:w-[300px] lg:border-b-0 lg:border-r">
                   <div className="flex items-center justify-between border-b border-hairline/70 px-5 py-4">
                     <div className="flex items-center gap-2">
@@ -479,7 +618,6 @@ export function TeacherStudentsWorkspace({
                   </div>
                 </div>
 
-                {/* მარჯვენა სვეტი: არჩეული ბარათის დეტალები და შენიშვნა */}
                 <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5">
                   {selectedProblem && (
                     <div className="space-y-3">
@@ -498,7 +636,6 @@ export function TeacherStudentsWorkspace({
                     </div>
                   )}
 
-                  {/* კომენტარის ველი ე.წ. "Sticky Note" ვიზუალით */}
                   <div className="rounded-2xl bg-amber-50/40 p-5 border border-amber-200/60 shadow-inner">
                     <label className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800">
                       <MessageSquare className="size-4" />
@@ -516,7 +653,6 @@ export function TeacherStudentsWorkspace({
               </div>
             )}
 
-            {/* Footer */}
             <div className="border-t border-hairline bg-white px-6 py-5 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 shadow-[0_-4px_20px_-15px_rgba(0,0,0,0.1)]">
               <button
                 type="button"

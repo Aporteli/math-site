@@ -36,6 +36,7 @@
     "nerdamer": "^1.1.13",
     "next": "16.3.1",
     "next-auth": "^4.24.15",
+    "pdfjs-dist": "^6.2.108",
     "perfect-freehand": "^1.2.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",

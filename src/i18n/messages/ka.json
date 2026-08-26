@@ -2208,7 +2208,7 @@
       "submitted": "ჩაბარებული",
       "overdue": "ვადაგასული",
       "inProgress": "პროცესშია",
-      "notStarted": "დაუწყებელი"
+      "notStarted": "შესასრულებელი"
     },
     "detail": {
       "submittedCount": "ჩაბარებულია {done}/{total}",

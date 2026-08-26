@@ -10,6 +10,12 @@ export interface StudentData {
   grade?: string;
 }
 
+export interface ClassData {
+  id: string;
+  name: string;
+  studentCount: number;
+}
+
 export interface ProblemPayloadInput {
   id?: string;
   topic?: string;
@@ -20,7 +26,7 @@ export interface ProblemPayloadInput {
 }
 
 /**
- * 1. მოსწავლეების სიის წამოღება ბაზიდან მასწავლებლისთვის
+ * 1. მოსწავლეების სიის წამოღება
  */
 export async function getStudentsAction(): Promise<StudentData[]> {
   try {
@@ -49,15 +55,53 @@ export async function getStudentsAction(): Promise<StudentData[]> {
 }
 
 /**
- * 2. ამოცანის ინდივიდუალურად გაგზავნა კონკრეტულ მოსწავლესთან
+ * 2. მასწავლებლის კლასების (კურსების) სიის წამოღება
+ */
+export async function getTeacherClassesAction(): Promise<ClassData[]> {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) return [];
+
+    const courses = await prisma.course.findMany({
+      where: {
+        teacherId: session.user.id,
+      },
+      include: {
+        _count: {
+          select: {
+            enrollments: {
+              where: {
+                user: { role: "STUDENT" },
+                status: "ACTIVE",
+              },
+            },
+          },
+        },
+      },
+      orderBy: { title: "asc" },
+    });
+
+    return courses.map((c) => ({
+      id: c.id,
+      name: c.title,
+      studentCount: c._count.enrollments,
+    }));
+  } catch (error) {
+    console.error("Failed to fetch classes:", error);
+    return [];
+  }
+}
+
+/**
+ * 3. ამოცანის ინდივიდუალურად გაგზავნა კონკრეტულ მოსწავლესთან (საჭიროა TeacherStudentsWorkspace-სთვის)
  */
 export async function sendProblemToStudentAction({
   studentId,
-  instructions, // დამატებულია ინსტრუქციის/კომენტარის მიღება
+  instructions,
   problem,
 }: {
   studentId: string;
-  instructions?: string; // არასავალდებულო პარამეტრი
+  instructions?: string;
   problem: ProblemPayloadInput;
 }) {
   try {
@@ -88,8 +132,7 @@ export async function sendProblemToStudentAction({
         status: AssignmentStatus.PUBLISHED,
         publishedAt: new Date(),
         title: problem.topic ? `ამოცანა: ${problem.topic}` : "ინდივიდუალური ამოცანა",
-        // აქ ვიყენებთ მასწავლებლის მოწოდებულ კომენტარს, თუ არადა დეფოლტ ტექსტს
-        instructions: instructions || "გთხოვთ ამოხსნათ მოცემული ამოცანა.",
+        instructions: instructions?.trim() || "გთხოვთ ამოხსნათ მოცემული ამოცანა.",
         customPayload: {
           problemId: problem.id,
           promptTex: problem.promptTex,
@@ -116,18 +159,83 @@ export async function sendProblemToStudentAction({
 }
 
 /**
- * 3. მოსწავლისთვის მისი კუთვნილი დავალებების წამოღება ბაზიდან
+ * 4. ამოცანის გაგზავნა მთლიან კლასთან (საჭიროა ProblemCardMenu-სთვის)
+ */
+export async function sendProblemToClassAction({
+  courseId,
+  instructions,
+  problem,
+}: {
+  courseId: string;
+  instructions?: string;
+  problem: ProblemPayloadInput;
+}) {
+  try {
+    const assignment = await prisma.assignment.create({
+      data: {
+        courseId: courseId,
+        targetUserId: null, // null ნიშნავს მთელ კლასს
+        type: AssignmentType.PROBLEM,
+        status: AssignmentStatus.PUBLISHED,
+        publishedAt: new Date(),
+        title: problem.topic ? `ამოცანა: ${problem.topic}` : "საკლასო ამოცანა",
+        instructions: instructions?.trim() || "გთხოვთ ამოხსნათ მოცემული ამოცანა.",
+        customPayload: {
+          problemId: problem.id,
+          promptTex: problem.promptTex,
+          topic: problem.topic,
+          difficulty: problem.difficulty,
+          templateId: problem.templateId,
+        },
+      },
+    });
+
+    const enrollments = await prisma.enrollment.findMany({
+      where: {
+        courseId: courseId,
+        status: "ACTIVE",
+        user: { role: "STUDENT" },
+      },
+      select: { userId: true },
+    });
+
+    if (enrollments.length > 0) {
+      await prisma.submission.createMany({
+        data: enrollments.map((e) => ({
+          assignmentId: assignment.id,
+          studentId: e.userId,
+          status: "DRAFT",
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    return { success: true, assignmentId: assignment.id };
+  } catch (error) {
+    console.error("Failed to send problem to class:", error);
+    return { success: false, error: "კლასისთვის ამოცანის გაგზავნა ვერ მოხერხდა" };
+  }
+}
+
+/**
+ * 5. მოსწავლისთვის მისი კუთვნილი დავალებების წამოღება
  */
 export async function getStudentAssignmentsAction() {
   try {
     const session = await getSession();
     if (!session?.user?.id) return [];
 
+    const enrollments = await prisma.enrollment.findMany({
+      where: { userId: session.user.id, status: "ACTIVE" },
+      select: { courseId: true },
+    });
+    const enrolledCourseIds = enrollments.map((e) => e.courseId);
+
     const rawAssignments = await prisma.assignment.findMany({
       where: {
         OR: [
           { targetUserId: session.user.id },
-          { targetUserId: null },
+          { targetUserId: null, courseId: { in: enrolledCourseIds } },
         ],
       },
       include: {
@@ -160,6 +268,7 @@ export async function getStudentAssignmentsAction() {
         dueLabel: a.dueAt ? new Date(a.dueAt).toLocaleDateString("ka-GE") : "ვადა შეუზღუდავია",
         overdue: a.dueAt ? new Date(a.dueAt) < new Date() : false,
         note: a.instructions || undefined,
+        instructions: a.instructions || undefined,
         problems: [
           {
             id: a.id,

@@ -1,19 +1,21 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth/session";
+import { requireRole } from "@/lib/auth/session";
 
 export interface StudentHomeworkGroup {
   student: {
     id: string;
     name: string;
-    email?: string;
+    email: string | null;
+    imageUrl?: string | null;
   };
   submissions: {
     id: string;
     status: string;
-    submittedAt: string;
     attachmentUrl?: string | null;
+    submittedAt?: Date | null;
+    createdAt: Date;
     grade?: {
       score: number;
       comment?: string | null;
@@ -31,60 +33,83 @@ export interface StudentHomeworkGroup {
 
 export async function getTeacherHomeworkSubmissionsAction(): Promise<StudentHomeworkGroup[]> {
   try {
-    const session = await getSession();
-    if (!session?.user?.id) return [];
+    const session = await requireRole("ka", ["TEACHER", "ADMIN"]);
 
-    const students = await prisma.user.findMany({
-      where: { role: "STUDENT" },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        submissions: {
-          include: {
-            grade: true,
-            assignment: {
-              include: {
-                course: { select: { title: true } },
-              },
-            },
+    // მასწავლებლის კურსებზე არსებული ყველა ჩაბარება
+    const submissions = await prisma.submission.findMany({
+      where: {
+        assignment: {
+          course: {
+            teacherId: session.user.id,
           },
-          orderBy: { createdAt: "desc" },
         },
       },
-      orderBy: { name: "asc" },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            imageUrl: true,
+          },
+        },
+        grade: true,
+        assignment: {
+          include: {
+            course: {
+              select: { title: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
     });
 
-    return students.map((s) => ({
-      student: {
-        id: s.id,
-        name: s.name || "სახელის გარეშე",
-        email: s.email || undefined,
-      },
-      submissions: s.submissions.map((sub) => {
-        const payload = (sub.assignment.customPayload as Record<string, unknown>) || {};
-        return {
-          id: sub.id,
-          status: sub.status,
-          submittedAt: sub.createdAt.toISOString(),
-          attachmentUrl: sub.attachmentUrl,
-          grade: sub.grade
-            ? {
-                score: Number(sub.grade.score),
-                comment: sub.grade.comment,
-              }
-            : null,
-          assignment: {
-            id: sub.assignment.id,
-            title: sub.assignment.title,
-            promptTex: String(payload.promptTex || payload.text || sub.assignment.instructions || ""),
-            topic: typeof payload.topic === "string" ? payload.topic : undefined,
-            difficulty: typeof payload.difficulty === "string" ? payload.difficulty : undefined,
-            courseTitle: sub.assignment.course?.title || "ზოგადი კურსი",
+    // დავაჯგუფოთ სტუდენტების მიხედვით
+    const studentMap = new Map<string, StudentHomeworkGroup>();
+
+    for (const sub of submissions) {
+      const studentId = sub.student.id;
+      const payload = (sub.assignment.customPayload as Record<string, any>) || {};
+
+      const formattedSub = {
+        id: sub.id,
+        status: sub.status,
+        attachmentUrl: sub.attachmentUrl,
+        submittedAt: sub.submittedAt,
+        createdAt: sub.createdAt,
+        grade: sub.grade
+          ? {
+              score: Number(sub.grade.score),
+              comment: sub.grade.comment,
+            }
+          : null,
+        assignment: {
+          id: sub.assignment.id,
+          title: sub.assignment.title,
+          promptTex: payload.promptTex || payload.text || sub.assignment.instructions || "",
+          topic: payload.topic || "მათემატიკა",
+          difficulty: payload.difficulty || "medium",
+          courseTitle: sub.assignment.course?.title || "ზოგადი კურსი",
+        },
+      };
+
+      if (!studentMap.has(studentId)) {
+        studentMap.set(studentId, {
+          student: {
+            id: sub.student.id,
+            name: sub.student.name || "სახელის გარეშე",
+            email: sub.student.email,
+            imageUrl: sub.student.imageUrl,
           },
-        };
-      }),
-    }));
+          submissions: [formattedSub],
+        });
+      } else {
+        studentMap.get(studentId)!.submissions.push(formattedSub);
+      }
+    }
+
+    return Array.from(studentMap.values());
   } catch (error) {
     console.error("Failed to load teacher homework submissions:", error);
     return [];
@@ -101,23 +126,29 @@ export async function gradeSubmissionAction({
   comment?: string;
 }) {
   try {
-    const session = await getSession();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+    const session = await requireRole("ka", ["TEACHER", "ADMIN"]);
 
     await prisma.grade.upsert({
       where: { submissionId },
       update: {
         score,
-        comment: comment || null,
+        comment,
         graderId: session.user.id,
+        gradedAt: new Date(),
       },
       create: {
         submissionId,
-        graderId: session.user.id,
         score,
-        maxScore: 100,
-        comment: comment || null,
+        maxScore: 10,
+        comment,
+        graderId: session.user.id,
+        gradedAt: new Date(),
       },
+    });
+
+    await prisma.submission.update({
+      where: { id: submissionId },
+      data: { status: "RETURNED" },
     });
 
     return { success: true };

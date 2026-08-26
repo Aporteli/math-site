@@ -41,13 +41,25 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
               name: true,
               email: true,
               imageUrl: true,
-              targetedAssignments: {
-                include: {
-                  comments: {
-                    include: {
-                      author: { select: { name: true, role: true } },
+              // ვცვლით targetedAssignments-ს submissions-ით, რომ ორივე ტიპის დავალება წამოიღოს
+              submissions: {
+                where: {
+                  assignment: {
+                    course: {
+                      teacherId: session.user.id,
                     },
-                    orderBy: { createdAt: "asc" },
+                  },
+                },
+                include: {
+                  assignment: {
+                    include: {
+                      comments: {
+                        include: {
+                          author: { select: { name: true, role: true } },
+                        },
+                        orderBy: { createdAt: "asc" },
+                      },
+                    },
                   },
                 },
                 orderBy: { createdAt: "desc" },
@@ -104,7 +116,9 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
           email: student.email,
           imageUrl: student.imageUrl,
           courses: [{ id: course.id, title: course.title }],
-          assignments: student.targetedAssignments.map((a: any) => {
+          // ვაგროვებთ მონაცემებს submissions.assignment-იდან
+          assignments: student.submissions.map((sub: any) => {
+            const a = sub.assignment;
             const payload = (a.customPayload as Record<string, unknown>) || {};
             return {
               id: a.id,
