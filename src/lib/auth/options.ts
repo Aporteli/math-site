@@ -61,7 +61,7 @@ export const authOptions: NextAuthOptions = {
           const isOwner = isOwnerEmail(normalizedEmail);
           const targetRole: UserRole = isOwner ? 'ADMIN' : 'VISITOR';
 
-          // ვეძებთ ან ვქმნით მომხმარებელს უსაფრთხოდ
+          // მომხმარებლის ძებნა ან შექმნა
           let dbUser = await prisma.user.findUnique({
             where: { email: normalizedEmail },
           });
@@ -95,12 +95,13 @@ export const authOptions: NextAuthOptions = {
     },
 
     async jwt({ token, user, trigger, session }) {
+      // 1. საწყისი ავტორიზაციისას ID-ისა და როლის მინიჭება
       if (user) {
         token.id = user.id;
         token.role = ((user as { role?: UserRole }).role ?? 'VISITOR') as UserRole;
       }
 
-      // თუ ტოკენში როლი არ არის ან ახლდება
+      // 2. როლის განახლება ბაზიდან ყოველ ჯერზე, თუ ის აკლია ან ხდება განახლება
       if ((!token.role || trigger === 'update') && token.email) {
         try {
           const dbUser = await prisma.user.findUnique({
@@ -132,7 +133,7 @@ export const authOptions: NextAuthOptions = {
     },
 
     async redirect({ url, baseUrl }) {
-      // ავტორიზაციის შემდეგ ყოველთვის გაუშვას მთავარ გვერდზე
+      // ახალი ავტორიზაციის შემდეგ ყველა გადადის მთავარ გვერდზე (/ka)
       if (url.includes('/login') || url.includes('/signup') || url === baseUrl) {
         return `${baseUrl}/ka`;
       }
