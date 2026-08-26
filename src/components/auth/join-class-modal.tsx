@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { joinClassWithCodeAction } from "@/app/[locale]/(dashboard)/visitor/actions";
 
 export function JoinClassModal({ locale }: { locale: string }) {
   const router = useRouter();
+  const { update } = useSession();
 
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -28,9 +30,11 @@ export function JoinClassModal({ locale }: { locale: string }) {
         return;
       }
 
-      // წარმატებისას გვერდის განახლება და გადასვლა
-      router.replace(`/${locale}/student/overview`);
-      router.refresh();
+      // 1. ვაახლებთ JWT ტოკენს STUDENT როლით
+      await update({ role: "STUDENT" });
+
+      // 2. გადავდივართ სტუდენტის პანელზე სუფთა გვერდის ჩატვირთვით
+      window.location.href = `/${locale}/student/overview`;
     } catch (err) {
       setError("კავშირის შეცდომა");
       setPending(false);
