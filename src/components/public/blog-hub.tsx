@@ -110,7 +110,7 @@ function ArticleCard({
 
   return (
     <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm transition-all hover:border-navy/30 hover:shadow-md">
-      <Link href={href} tabIndex={-1} className="block">
+      <Link href={href} prefetch={false} tabIndex={-1} className="block">
         <BlogCover
           src={post.coverImage}
           alt={coverAlt}
@@ -130,7 +130,7 @@ function ArticleCard({
           </span>
         </div>
         <h3 className="mt-4 break-words text-lg font-semibold leading-snug text-ink">
-          <Link href={href} className="transition-colors hover:text-navy">
+          <Link href={href} prefetch={false} className="transition-colors hover:text-navy">
             {content.title}
           </Link>
         </h3>
@@ -149,6 +149,7 @@ function ArticleCard({
         </ul>
         <Link
           href={href}
+          prefetch={false}
           className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-navy"
         >
           {copy.readMore}
@@ -304,6 +305,7 @@ export function BlogHub({ locale, author, copy }: BlogHubProps) {
               <div className="grid lg:grid-cols-5">
                 <Link
                   href={localePath(locale, postPath(featured.slug))}
+                  prefetch={false}
                   tabIndex={-1}
                   className="block h-full lg:col-span-2"
                 >
@@ -349,6 +351,7 @@ export function BlogHub({ locale, author, copy }: BlogHubProps) {
                   </p>
                   <Link
                     href={localePath(locale, postPath(featured.slug))}
+                    prefetch={false}
                     className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong"
                   >
                     {copy.readMore}
