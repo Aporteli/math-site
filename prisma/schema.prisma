@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
 }
 
 enum Role {
@@ -287,7 +287,7 @@ model Assignment {
   status        AssignmentStatus @default(DRAFT)
   dueAt         DateTime?
   publishedAt   DateTime?
-  attachmentUrl String?          @db.LongText
+  attachmentUrl String?          @db.Text
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 
@@ -309,7 +309,7 @@ model Submission {
   studentId     String
   status        SubmissionStatus @default(DRAFT)
   answers       Json?
-  attachmentUrl String?          @db.LongText
+  attachmentUrl String?          @db.Text
   submittedAt   DateTime?
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt

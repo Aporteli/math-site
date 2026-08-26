@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaTiDBCloud } from "@tidbcloud/prisma-adapter";
-import { connect } from "@tidbcloud/serverless";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
 const PRISMA_GENERATION = "taxonomy-nodes-v1";
 
@@ -15,9 +15,8 @@ function createPrismaClient(): PrismaClient {
     throw new Error("DATABASE_URL is not set");
   }
 
-  // TiDB Serverless კავშირი
-  const connection = connect({ url });
-  const adapter = new PrismaTiDBCloud(connection as any);
+  const pool = new Pool({ connectionString: url });
+  const adapter = new PrismaPg(pool);
 
   return new PrismaClient({ adapter });
 }
