@@ -5,6 +5,7 @@ import type { Locale } from "@/i18n/config";
 import { PageHero } from "@/components/ui/page-hero";
 import { Users } from "lucide-react";
 import { TeacherStudentsWorkspace } from "@/components/lms/TeacherStudentsWorkspace";
+import { useLockBodyScroll } from "@/components/lms/use-lock-body-scroll";
 
 type PageProps = {
   params: Promise<{ locale: Locale }>;
@@ -59,28 +60,21 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
     orderBy: { createdAt: "desc" },
   });
 
-  // 2. მასწავლებლის ყველა შექმნილი ბარათი და სეტები
-  const [problemSets, directProblems] = await Promise.all([
-    prisma.problemSet.findMany({
-      where: { authorId: session.user.id },
-      include: {
-        items: {
-          include: {
-            problem: true,
-          },
-          orderBy: { position: "asc" },
+  // 2. მასწავლებლის მიერ შექმნილი მხოლოდ სეტები (ბანკის ამოცანების გარეშე)
+  const problemSets = await prisma.problemSet.findMany({
+    where: { authorId: session.user.id },
+    include: {
+      items: {
+        include: {
+          problem: true,
         },
+        orderBy: { position: "asc" },
       },
-      orderBy: { updatedAt: "desc" },
-    }),
-    prisma.problem.findMany({
-      where: { authorId: session.user.id },
-      orderBy: { createdAt: "desc" },
-      take: 30,
-    }),
-  ]);
+    },
+    orderBy: { updatedAt: "desc" },
+  });
 
-  // Set-ის ბარათების ფორმატირება
+  // სეტებში არსებული ამოცანების სიის ფორმირება
   const setProblemsList = problemSets.flatMap((set) =>
     set.items.map((item) => ({
       id: item.problem.id,
@@ -92,18 +86,8 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
     }))
   );
 
-  // პირდაპირ ბანკის ბარათების ფორმატირება (setId-ს მითითებით)
-  const directProblemsList = directProblems.map((p) => ({
-    id: p.id,
-    setId: "bank",
-    setTitle: "ბანკი",
-    title: p.topic || p.kind || "სავარჯიშო",
-    promptTex: p.promptTex || p.formula || "",
-    solutionTex: p.solutionTex || "",
-  }));
-
-  // დუბლიკატების გარეშე
-  const availableSetProblems = [...setProblemsList, ...directProblemsList].filter(
+  // დუბლიკატების ამოღება (თუ ერთი ამოცანა რამდენიმე სეტშია)
+  const availableSetProblems = setProblemsList.filter(
     (item, index, self) => index === self.findIndex((t) => t.id === item.id)
   );
 
@@ -120,20 +104,24 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
           email: student.email,
           imageUrl: student.imageUrl,
           courses: [{ id: course.id, title: course.title }],
-          assignments: student.targetedAssignments.map((a: any) => ({
-            id: a.id,
-            title: a.title,
-            type: a.type,
-            instructions: a.instructions,
-            status: a.status,
-            createdAt: a.createdAt.toISOString(),
-            comments: a.comments.map((c: any) => ({
-              id: c.id,
-              body: c.body,
-              createdAt: c.createdAt.toISOString(),
-              author: c.author,
-            })),
-          })),
+          assignments: student.targetedAssignments.map((a: any) => {
+            const payload = (a.customPayload as Record<string, unknown>) || {};
+            return {
+              id: a.id,
+              title: a.title,
+              type: a.type,
+              instructions: a.instructions,
+              status: a.status,
+              createdAt: a.createdAt.toISOString(),
+              promptTex: String(payload.promptTex || payload.text || a.instructions || ""),
+              comments: a.comments.map((c: any) => ({
+                id: c.id,
+                body: c.body,
+                createdAt: c.createdAt.toISOString(),
+                author: c.author,
+              })),
+            };
+          }),
         });
       } else {
         studentsMap.get(student.id)?.courses.push({

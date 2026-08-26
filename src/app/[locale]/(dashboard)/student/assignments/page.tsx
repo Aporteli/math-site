@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -10,16 +10,15 @@ import {
   ClipboardList,
   Clock,
   GraduationCap,
-  Paperclip,
-  RotateCcw,
   Search,
-  UploadCloud,
-  X,
+  Loader2,
 } from 'lucide-react';
-import { KatexPreview } from '@/components/math/katex-preview';
 import { PageHero } from '@/components/ui/page-hero';
 import { localePath, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
+import { getStudentAssignmentsAction } from '@/lib/actions/students';
+import { submitStudentHomeworkAction } from '@/lib/actions/student-submission';
+import { ProblemDetailModal } from "@/components/lms/ProblemDetailModal";
 
 type Difficulty = 'easy' | 'medium' | 'hard' | 'olympiad';
 type ProblemStatus = 'notStarted' | 'uploaded' | 'submitted' | 'graded';
@@ -43,6 +42,7 @@ type Assignment = {
   dueLabel: string;
   overdue?: boolean;
   note?: string;
+  instructions?: string; // დაემატა ინსტრუქციის ველი
   problems: AssignmentProblem[];
 };
 
@@ -52,81 +52,6 @@ interface StudentAssignmentsProps {
   locale: Locale;
   assignments?: Assignment[];
 }
-
-const DEFAULT_ASSIGNMENTS: Assignment[] = [
-  {
-    id: 'quadratics',
-    title: 'Quadratic Equations Practice',
-    course: 'Algebra II',
-    dueLabel: 'Due tomorrow',
-    note: 'Show full working for each step — a bare answer will not receive full credit.',
-    problems: [
-      {
-        id: 'q1',
-        topic: 'Quadratic Equations',
-        difficulty: 'easy',
-        promptTex: 'Solve for $x$: $x^2 - 5x + 6 = 0$.',
-        status: 'graded',
-        fileName: 'quad-1-work.jpg',
-        grade: 96,
-        feedback: 'Clean factoring, well laid out. Nice work.',
-      },
-      {
-        id: 'q2',
-        topic: 'Quadratic Equations',
-        difficulty: 'medium',
-        promptTex: 'Solve for $x$ using the quadratic formula: $2x^2 - 5x + 2 = 0$.',
-        status: 'submitted',
-        fileName: 'quad-2-work.jpg',
-      },
-      {
-        id: 'q3',
-        topic: 'Quadratic Equations',
-        difficulty: 'medium',
-        promptTex: 'Find the discriminant of $3x^2 + 4x - 2 = 0$ and describe the nature of its roots.',
-        status: 'uploaded',
-        fileName: 'quad-3-scan.png',
-      },
-      {
-        id: 'q4',
-        topic: 'Quadratic Equations',
-        difficulty: 'hard',
-        promptTex: 'A ball is thrown upward: $h(t) = -5t^2 + 20t + 1$. Find when it reaches maximum height.',
-        status: 'notStarted',
-      },
-    ],
-  },
-  {
-    id: 'circle-theorems',
-    title: 'Circle Theorems Worksheet',
-    course: 'Geometry Foundations',
-    dueLabel: 'Due in 3 days',
-    problems: [
-      {
-        id: 'c1',
-        topic: 'Circle Theorems',
-        difficulty: 'easy',
-        promptTex: 'Prove that the angle at the centre of a circle is twice the angle at the circumference.',
-        status: 'notStarted',
-      },
-      {
-        id: 'c2',
-        topic: 'Circle Theorems',
-        difficulty: 'medium',
-        promptTex: 'Find $\\angle ABC$ if $\\angle AOC = 118^\\circ$ and $O$ is the centre of the circle.',
-        status: 'notStarted',
-      },
-      {
-        id: 'c3',
-        topic: 'Circle Theorems',
-        difficulty: 'hard',
-        promptTex:
-          'Two chords $AB$ and $CD$ intersect at $P$ inside the circle. Show that $AP \\cdot PB = CP \\cdot PD$.',
-        status: 'notStarted',
-      },
-    ],
-  },
-];
 
 const DIFFICULTY_TONE: Record<Difficulty, string> = {
   easy: 'bg-navy-tint text-navy',
@@ -145,7 +70,7 @@ function progressOf(assignment: Assignment) {
 }
 
 function assignmentStatusMeta(assignment: Assignment): {
-  id: 'graded' | 'submitted' | 'overdue' | 'inProgress' | 'notStarted';
+  id: 'graded' | 'submitted' | 'overdue' | 'notStarted';
   className: string;
   icon: LucideIcon;
 } {
@@ -161,9 +86,7 @@ function assignmentStatusMeta(assignment: Assignment): {
   if (assignment.overdue) {
     return { id: 'overdue', icon: Clock, className: 'border-brass/25 bg-brass-tint text-brass-strong' };
   }
-  if (done > 0) {
-    return { id: 'inProgress', icon: CalendarClock, className: 'border-hairline bg-paper-deep text-muted' };
-  }
+  
   return { id: 'notStarted', icon: Circle, className: 'border-hairline bg-white text-muted' };
 }
 
@@ -177,195 +100,50 @@ function matchesFilter(assignment: Assignment, status: FilterStatus) {
   return done > 0 && done < total;
 }
 
-const FILTERS: FilterStatus[] = ['all', 'notStarted', 'inProgress', 'submitted', 'graded'];
+const FILTERS: FilterStatus[] = ['all', 'notStarted', 'submitted', 'graded'];
 
-function gradeTone(score: number) {
-  return score >= 85 ? 'bg-navy-tint text-navy' : 'bg-brass-tint text-brass-strong';
-}
-
-function ProblemCard({
-  problem,
-  inputId,
-  copy,
-  onFile,
-  onRemoveFile,
-  onMarkSubmitted,
-  onWithdraw,
-}: {
-  problem: AssignmentProblem;
-  inputId: string;
-  copy: any;
-  onFile: (file: File) => void;
-  onRemoveFile: () => void;
-  onMarkSubmitted: () => void;
-  onWithdraw: () => void;
-}) {
-  const [dragActive, setDragActive] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const isImage = problem.previewUrl && problem.fileName ? /\.(png|jpe?g|webp)$/i.test(problem.fileName) : false;
-
-  return (
-    <li className="rounded-2xl border border-hairline-soft bg-white p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${DIFFICULTY_TONE[problem.difficulty]}`}>
-          {copy.detail.difficulties[problem.difficulty]}
-        </span>
-        <span className="text-xs font-medium text-muted">{problem.topic}</span>
-        {problem.status === 'graded' && typeof problem.grade === 'number' ? (
-          <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-semibold ${gradeTone(problem.grade)}`}>
-            {problem.grade}/100
-          </span>
-        ) : null}
-      </div>
-
-      <div className="mt-3 min-w-0 overflow-x-auto rounded-xl bg-paper-deep px-4 py-4">
-        <KatexPreview tex={problem.promptTex} className="block min-w-0 text-ink [&_.katex]:text-[0.95rem]" />
-      </div>
-
-      <div className="mt-3">
-        {problem.status === 'notStarted' ? (
-          <div className="relative">
-            <label htmlFor={inputId} className="sr-only">
-              {copy.detail.problem.uploadAria}
-            </label>
-            <input
-              id={inputId}
-              ref={inputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,application/pdf"
-              className="sr-only"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) onFile(file);
-                event.target.value = '';
-              }}
-            />
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => inputRef.current?.click()}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') inputRef.current?.click();
-              }}
-              onDragEnter={(event) => {
-                event.preventDefault();
-                setDragActive(true);
-              }}
-              onDragOver={(event) => {
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'copy';
-                setDragActive(true);
-              }}
-              onDragLeave={(event) => {
-                if (event.currentTarget.contains(event.relatedTarget as Node)) return;
-                setDragActive(false);
-              }}
-              onDrop={(event) => {
-                event.preventDefault();
-                setDragActive(false);
-                const file = event.dataTransfer.files?.[0];
-                if (file) onFile(file);
-              }}
-              className={[
-                'flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors',
-                dragActive ? 'border-navy bg-navy-tint/60' : 'border-hairline bg-paper hover:border-navy/40',
-              ].join(' ')}>
-              <span className="flex size-10 items-center justify-center rounded-2xl bg-navy-tint text-navy">
-                <UploadCloud className="size-5" aria-hidden="true" />
-              </span>
-              <p className="text-sm font-medium text-ink">{copy.detail.problem.dropLabel}</p>
-              <p className="text-xs text-muted">{copy.detail.problem.formats}</p>
-            </div>
-          </div>
-        ) : null}
-
-        {problem.status === 'uploaded' ? (
-          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-hairline bg-paper px-3 py-2.5">
-            {isImage && problem.previewUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={problem.previewUrl}
-                alt=""
-                className="size-10 shrink-0 rounded-lg border border-hairline object-cover"
-              />
-            ) : (
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
-                <Paperclip className="size-4" aria-hidden="true" />
-              </span>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-ink">{problem.fileName}</p>
-              <p className="text-xs text-muted">{copy.detail.problem.readyToSubmit}</p>
-            </div>
-            <button
-              type="button"
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-navy"
-              aria-label={copy.detail.problem.removeFile}
-              onClick={onRemoveFile}>
-              <X className="size-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong"
-              onClick={onMarkSubmitted}>
-              <CheckCircle2 className="size-3.5" aria-hidden="true" />
-              {copy.detail.problem.submit}
-            </button>
-          </div>
-        ) : null}
-
-        {problem.status === 'submitted' ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-navy/15 bg-navy-tint/60 px-3 py-2.5">
-            <div className="flex min-w-0 items-center gap-2">
-              <CheckCircle2 className="size-4 shrink-0 text-navy" aria-hidden="true" />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-navy">{copy.detail.problem.submitted}</p>
-                {problem.fileName ? <p className="truncate text-xs text-navy/70">{problem.fileName}</p> : null}
-              </div>
-            </div>
-            <button
-              type="button"
-              className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-navy hover:text-navy-strong"
-              onClick={onWithdraw}>
-              <RotateCcw className="size-3.5" aria-hidden="true" />
-              {copy.detail.problem.withdraw}
-            </button>
-          </div>
-        ) : null}
-
-        {problem.status === 'graded' ? (
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-hairline bg-paper px-3 py-2.5">
-              <GraduationCap className="size-4 shrink-0 text-navy" aria-hidden="true" />
-              <p className="min-w-0 truncate text-sm text-ink">{problem.fileName}</p>
-            </div>
-            {problem.feedback ? (
-              <p className="rounded-xl border border-hairline bg-white px-3 py-2.5 text-sm leading-relaxed text-body">
-                <span className="font-semibold text-brass-strong">{copy.detail.problem.feedback} </span>
-                {problem.feedback}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-    </li>
-  );
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
 }
 
 export default function StudentAssignments({
   locale,
-  assignments: initialAssignments = DEFAULT_ASSIGNMENTS,
+  assignments: initialPropsAssignments,
 }: StudentAssignmentsProps) {
   const baseId = useId();
-  const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments);
-  const [selectedId, setSelectedId] = useState<string | null>(initialAssignments[0]?.id ?? null);
+  const [assignments, setAssignments] = useState<Assignment[]>(initialPropsAssignments || []);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [notice, setNotice] = useState<string | null>(null);
+  const [loading, setLoading] = useState(!initialPropsAssignments);
+
+  const [activeProblemModal, setActiveProblemModal] = useState<{
+    assignmentId: string;
+    problem: AssignmentProblem;
+  } | null>(null);
 
   const dict = getDictionary(locale);
   const copy = dict.studentAssignments;
+
+  async function loadData() {
+    setLoading(true);
+    const data = await getStudentAssignmentsAction();
+    setAssignments(data);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    if (initialPropsAssignments) {
+      setAssignments(initialPropsAssignments);
+      return;
+    }
+    void loadData();
+  }, [initialPropsAssignments]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -375,8 +153,6 @@ export default function StudentAssignments({
       return matchesQuery && matchesFilter(assignment, statusFilter);
     });
   }, [assignments, query, statusFilter]);
-
-  const selected = assignments.find((assignment) => assignment.id === selectedId) ?? null;
 
   const openCount = assignments.filter((a) => progressOf(a).done < a.problems.length).length;
   const dueSoonCount = assignments.filter((a) => a.overdue || a.dueLabel.toLowerCase().includes('tomorrow')).length;
@@ -402,47 +178,70 @@ export default function StudentAssignments({
     );
   }
 
-  function handleFile(assignmentId: string, problemId: string, file: File) {
-    const isImage = /^image\//.test(file.type);
-    const previewUrl = isImage ? URL.createObjectURL(file) : undefined;
-    updateProblem(assignmentId, problemId, (problem) => ({
-      ...problem,
-      status: 'uploaded',
-      fileName: file.name,
-      previewUrl,
-    }));
+  async function handleFile(assignmentId: string, problemId: string, file: File) {
+    try {
+      const base64 = await fileToBase64(file);
+      updateProblem(assignmentId, problemId, (problem) => ({
+        ...problem,
+        status: 'uploaded',
+        fileName: file.name,
+        previewUrl: base64,
+      }));
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   function handleRemoveFile(assignmentId: string, problemId: string) {
     updateProblem(assignmentId, problemId, (problem) => {
-      if (problem.previewUrl) URL.revokeObjectURL(problem.previewUrl);
       return { ...problem, status: 'notStarted', fileName: undefined, previewUrl: undefined };
     });
   }
 
-  function handleMarkSubmitted(assignmentId: string, problemId: string) {
-    updateProblem(assignmentId, problemId, (problem) => ({ ...problem, status: 'submitted' }));
+  async function handleMarkSubmitted(assignmentId: string, problemId: string) {
+    const assignment = assignments.find((a) => a.id === assignmentId);
+    const problem = assignment?.problems.find((p) => p.id === problemId);
+    if (!problem?.previewUrl) return;
+
+    const res = await submitStudentHomeworkAction({
+      assignmentId,
+      attachmentUrl: problem.previewUrl,
+    });
+
+    if (res.success) {
+      updateProblem(assignmentId, problemId, (p) => ({ ...p, status: 'submitted' }));
+      setNotice("დავალება წარმატებით გაიგზავნა მასწავლებელთან!");
+      setTimeout(() => setNotice(null), 3500);
+    }
   }
 
   function handleWithdraw(assignmentId: string, problemId: string) {
     updateProblem(assignmentId, problemId, (problem) => ({ ...problem, status: 'uploaded' }));
   }
 
-  function handleSubmitAssignment(assignment: Assignment) {
+  async function handleSubmitAssignment(assignment: Assignment) {
+    for (const problem of assignment.problems) {
+      if (problem.status === 'uploaded' && problem.previewUrl) {
+        await submitStudentHomeworkAction({
+          assignmentId: assignment.id,
+          attachmentUrl: problem.previewUrl,
+        });
+      }
+    }
     setAssignments((prev) =>
       prev.map((item) =>
         item.id !== assignment.id
           ? item
           : {
               ...item,
-              problems: item.problems.map((problem) =>
-                problem.status === 'uploaded' ? { ...problem, status: 'submitted' } : problem,
+              problems: item.problems.map((p) =>
+                p.status === 'uploaded' ? { ...p, status: 'submitted' } : p,
               ),
             },
       ),
     );
-    setNotice(copy.notice.replace('{title}', assignment.title));
-    window.setTimeout(() => setNotice(null), 3000);
+    setNotice("ყველა დავალება გაიგზავნა მასწავლებელთან!");
+    setTimeout(() => setNotice(null), 3500);
   }
 
   return (
@@ -470,9 +269,10 @@ export default function StudentAssignments({
         }
       />
 
-      <div className="mt-6 grid gap-5 xl:h-[calc(100vh-8.5rem)] xl:min-h-[36rem] xl:grid-cols-[16.5rem_minmax(0,1fr)_23rem] xl:items-stretch">
-        {/* სვეტი 1: Filters */}
-        <aside className="relative z-20 order-1 flex min-h-0 flex-col rounded-2xl border border-hairline bg-paper p-4 shadow-sm sm:p-5">
+      <div className="mt-6 grid gap-5 xl:h-[calc(100vh-8.5rem)] xl:min-h-144 xl:grid-cols-[16.5rem_minmax(0,1fr)] xl:items-stretch">
+        
+        {/* მარცხენა სვეტი: ფილტრები */}
+        <aside className="relative z-20 flex min-h-0 flex-col rounded-2xl border border-hairline bg-paper p-4 shadow-sm sm:p-5">
           <h2 className="shrink-0 border-b border-hairline pb-3 text-sm font-semibold tracking-wide text-brass">
             {copy.filters.title}
           </h2>
@@ -533,141 +333,186 @@ export default function StudentAssignments({
           </div>
         </aside>
 
-        {/* სვეტი 2: Assignment list */}
+        {/* მარჯვენა სვეტი: დავალებების სია */}
         <section
-          className="order-3 flex min-h-0 min-w-0 flex-col rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5 xl:order-2"
+          className="flex min-h-0 min-w-0 flex-col rounded-2xl border border-hairline bg-white/50 p-4 shadow-sm sm:p-5"
           aria-label="Assignments">
+          
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-hairline pb-3">
-            <p className="text-sm text-muted" aria-live="polite">
+            <p className="text-sm font-medium text-muted" aria-live="polite">
               {visible.length === 1
                 ? copy.list.countLabel_one.replace('{count}', '1')
                 : copy.list.countLabel_other.replace('{count}', visible.length.toString())}
             </p>
+            {notice && (
+              <span className="rounded-lg bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
+                {notice}
+              </span>
+            )}
           </div>
 
-          {visible.length === 0 ? (
-            <div className="mt-10 flex flex-1 items-center justify-center text-center">
-              <div>
-                <p className="font-semibold text-ink">{copy.list.emptyTitle}</p>
-                <p className="mt-2 text-sm text-body">{copy.list.emptyHint}</p>
-              </div>
+          {loading ? (
+            <div className="py-20 flex flex-col items-center justify-center gap-3 text-sm font-medium text-muted">
+              <Loader2 className="size-8 animate-spin text-navy" />
+              <span>იტვირთება ამოცანები...</span>
+            </div>
+          ) : visible.length === 0 ? (
+            <div className="mt-10 flex flex-1 flex-col items-center justify-center text-center">
+              <ClipboardList className="size-12 text-muted/30 mb-3" />
+              <p className="text-lg font-bold text-ink">{copy.list.emptyTitle}</p>
+              <p className="mt-1 text-sm text-body max-w-sm">{copy.list.emptyHint}</p>
             </div>
           ) : (
-            <ul className="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto pe-0.5 pb-2">
-              {visible.map((assignment) => {
-                const active = assignment.id === selectedId;
-                const { done, total } = progressOf(assignment);
-                const meta = assignmentStatusMeta(assignment);
-                const StatusIcon = meta.icon;
+            <div className="mt-4 flex-1 overflow-y-auto pe-1 pb-4">
+              <ul className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                {visible.map((assignment) => {
+                  const { done, total } = progressOf(assignment);
+                  const meta = assignmentStatusMeta(assignment);
+                  const StatusIcon = meta.icon;
+                  // ვამოწმებთ ორივე ველს (მასწავლებლის გაგზავნილი ინსტრუქცია/კომენტარი)
+                  const teacherNote = assignment.instructions || assignment.note;
 
-                return (
-                  <li key={assignment.id}>
-                    <button
-                      type="button"
-                      aria-current={active ? 'true' : undefined}
-                      onClick={() => setSelectedId(assignment.id)}
-                      className={[
-                        'flex w-full flex-col gap-2.5 rounded-xl border px-3.5 py-3 text-left transition-colors',
-                        active
-                          ? 'border-navy/20 bg-navy-tint/70'
-                          : 'border-hairline-soft bg-white hover:border-hairline hover:bg-paper-deep/80',
-                      ].join(' ')}>
-                      <span className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${meta.className}`}>
-                          <StatusIcon className="size-3" aria-hidden="true" />
-                          {copy.assignmentStatus[meta.id]}
-                        </span>
-                        <span className="text-xs text-muted">{total > 0 ? `${done}/${total}` : ''}</span>
-                      </span>
-                      <span className="min-w-0 text-sm font-semibold text-ink">{assignment.title}</span>
-                      <span className="text-xs text-muted">
-                        {assignment.course}
-                        <span aria-hidden="true"> · </span>
-                        {assignment.dueLabel}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+                  return (
+                    <li key={assignment.id} className="flex flex-col rounded-2xl border border-hairline bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+                      
+                      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-hairline-soft pb-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${meta.className}`}>
+                              <StatusIcon className="size-3" aria-hidden="true" />
+                              {copy.assignmentStatus[meta.id]}
+                            </span>
+                            <span className="text-xs font-bold text-muted">{total > 0 ? `${done}/${total} შესრულებული` : ''}</span>
+                          </div>
+                          <h3 className="text-lg font-bold text-ink truncate">{assignment.title}</h3>
+                          <p className="mt-1 text-xs font-medium text-muted">
+                            <Link href={localePath(locale, '/student/courses')} className="text-navy hover:text-navy-strong">
+                              {assignment.course}
+                            </Link>
+                            <span className="mx-1.5 opacity-50">•</span>
+                            {assignment.dueLabel}
+                          </p>
+                        </div>
+                      </div>
 
-        {/* სვეტი 3: Selected assignment detail */}
-        <section
-          className="order-2 flex min-h-0 min-w-0 flex-col rounded-2xl border border-navy/10 bg-navy-tint/25 p-4 shadow-sm sm:p-5 xl:order-3"
-          aria-label="Assignment detail">
-          {selected ? (
-            <>
-              <div className="shrink-0 border-b border-navy/10 pb-3">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold tracking-wide text-brass">{selected.title}</p>
-                    <p className="mt-1 text-xs text-muted">
-                      <Link
-                        href={localePath(locale, '/student/courses')}
-                        className="font-medium text-navy hover:text-navy-strong">
-                        {selected.course}
-                      </Link>
-                      <span aria-hidden="true"> · </span>
-                      {selected.dueLabel}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-xs font-semibold text-navy">
-                    {copy.detail.submittedCount
-                      .replace('{done}', progressOf(selected).done.toString())
-                      .replace('{total}', selected.problems.length.toString())}
-                  </span>
-                </div>
-              </div>
+                      {/* მასწავლებლის დამატებული კომენტარი / ინსტრუქცია */}
+                      {teacherNote && (
+                        <div className="mt-4 rounded-xl bg-amber-50/50 px-4 py-3 border border-amber-100">
+                          <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider mb-1 block">
+                            {copy.detail?.teacherNote || "მასწავლებლის კომენტარი"}
+                          </span>
+                          <p className="text-sm font-medium text-amber-900/80 leading-relaxed whitespace-pre-wrap">{teacherNote}</p>
+                        </div>
+                      )}
 
-              <div className="mt-4 flex min-h-0 flex-col gap-3 overflow-y-auto pe-1 pb-4">
-                {notice ? (
-                  <p className="shrink-0 rounded-xl border border-brass/20 bg-brass-tint px-3 py-2.5 text-sm font-medium text-brass-strong">
-                    {notice}
-                  </p>
-                ) : null}
+                      <div className="mt-4 space-y-2 flex-1">
+                        {assignment.problems.map((problem) => {
+                          const isDone = problem.status === 'submitted' || problem.status === 'graded';
+                          return (
+                            <button
+                              key={problem.id}
+                              type="button"
+                              onClick={() => setActiveProblemModal({ assignmentId: assignment.id, problem })}
+                              className="group flex w-full items-center justify-between gap-3 rounded-xl border border-hairline-soft bg-paper/50 p-3 text-left transition-all hover:border-navy/30 hover:bg-white hover:shadow-sm"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${DIFFICULTY_TONE[problem.difficulty]}`}>
+                                  {copy.detail.difficulties[problem.difficulty] || problem.difficulty}
+                                </span>
+                                <span className="text-sm font-bold text-ink truncate block group-hover:text-navy transition-colors">
+                                  {problem.topic}
+                                </span>
+                              </div>
+                              
+                              <span className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${
+                                isDone ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-white border border-hairline text-muted group-hover:border-navy/30 group-hover:text-navy"
+                              }`}>
+                                {isDone ? <CheckCircle2 className="size-3.5" /> : <Circle className="size-3.5" />}
+                                {isDone ? "ჩაბარებულია" : "გახსნა"}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
 
-                {selected.note ? (
-                  <p className="shrink-0 rounded-xl border border-navy/10 bg-white px-4 py-3 text-sm leading-relaxed text-body">
-                    <span className="font-semibold text-ink">{copy.detail.teacherNote} </span>
-                    {selected.note}
-                  </p>
-                ) : null}
-
-                <ul className="space-y-3">
-                  {selected.problems.map((problem) => (
-                    <ProblemCard
-                      key={problem.id}
-                      problem={problem}
-                      copy={copy}
-                      inputId={`${baseId}-${selected.id}-${problem.id}`}
-                      onFile={(file) => handleFile(selected.id, problem.id, file)}
-                      onRemoveFile={() => handleRemoveFile(selected.id, problem.id)}
-                      onMarkSubmitted={() => handleMarkSubmitted(selected.id, problem.id)}
-                      onWithdraw={() => handleWithdraw(selected.id, problem.id)}
-                    />
-                  ))}
-                </ul>
-              </div>
-
-              <div className="mt-auto shrink-0 border-t border-navy/10 pt-4">
-                <button
-                  type="button"
-                  disabled={!selected.problems.some((p) => p.status === 'uploaded')}
-                  onClick={() => handleSubmitAssignment(selected)}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong disabled:cursor-not-allowed disabled:opacity-40">
-                  <CheckCircle2 className="size-4" aria-hidden="true" />
-                  {copy.detail.submitAll}
-                </button>
-              </div>
-            </>
-          ) : (
-            <p className="flex flex-1 items-center text-sm leading-relaxed text-body">{copy.detail.empty}</p>
+                      <div className="mt-5 pt-4 border-t border-hairline-soft flex justify-end">
+                         <button
+                            type="button"
+                            disabled={!assignment.problems.some((p) => p.status === 'uploaded')}
+                            onClick={() => void handleSubmitAssignment(assignment)}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-5 py-2 text-sm font-bold text-white hover:bg-navy-strong disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+                          >
+                            <CheckCircle2 className="size-4" aria-hidden="true" />
+                            {copy.detail.submitAll}
+                          </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           )}
         </section>
       </div>
+
+      {/* ამოცანის დეტალური მოდალი სრული კავშირით */}
+      {activeProblemModal && (
+        <ProblemDetailModal
+          problem={activeProblemModal.problem}
+          assignmentTitle={assignments.find(a => a.id === activeProblemModal.assignmentId)?.title || "დავალება"}
+          onClose={() => setActiveProblemModal(null)}
+          onFile={async (file) => {
+            const base64 = await fileToBase64(file);
+            updateProblem(activeProblemModal.assignmentId, activeProblemModal.problem.id, (problem) => ({
+              ...problem,
+              status: 'uploaded',
+              fileName: file.name,
+              previewUrl: base64,
+            }));
+            setActiveProblemModal((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    problem: {
+                      ...prev.problem,
+                      status: 'uploaded',
+                      fileName: file.name,
+                      previewUrl: base64,
+                    },
+                  }
+                : null
+            );
+          }}
+          onRemoveFile={() => {
+            handleRemoveFile(activeProblemModal.assignmentId, activeProblemModal.problem.id);
+            setActiveProblemModal((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    problem: {
+                      ...prev.problem,
+                      status: 'notStarted',
+                      fileName: undefined,
+                      previewUrl: undefined,
+                    },
+                  }
+                : null
+            );
+          }}
+          onMarkSubmitted={async () => {
+            await handleMarkSubmitted(activeProblemModal.assignmentId, activeProblemModal.problem.id);
+            setActiveProblemModal((prev) =>
+              prev ? { ...prev, problem: { ...prev.problem, status: 'submitted' } } : null
+            );
+          }}
+          onWithdraw={() => {
+            handleWithdraw(activeProblemModal.assignmentId, activeProblemModal.problem.id);
+            setActiveProblemModal((prev) =>
+              prev ? { ...prev, problem: { ...prev.problem, status: 'uploaded' } } : null
+            );
+          }}
+        />
+      )}
     </div>
   );
 }

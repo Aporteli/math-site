@@ -13,3 +13,4 @@ export function generateMetadata({ params }: PageProps): Promise<Metadata> {
 export default function TeacherJournalPage({ params }: PageProps) {
   return <TeacherWorkspacePage id="journal" params={params} />;
 }
+ 

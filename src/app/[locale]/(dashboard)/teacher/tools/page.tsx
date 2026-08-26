@@ -1,15 +1,30 @@
 import type { Metadata } from "next";
-import {
-  TeacherWorkspacePage,
-  teacherPageMetadata,
-} from "@/components/lms/dashboard-page";
+import { notFound } from "next/navigation";
+import { ToolsHub } from "@/components/math/teacher-tools-hub";
+import { isLocale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/get-dictionary";
 
-type PageProps = { params: Promise<{ locale: string }> };
+type ToolsPageProps = { params: Promise<{ locale: string }> };
 
-export function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return teacherPageMetadata("tools", params);
+export async function generateMetadata({
+  params,
+}: ToolsPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) return {};
+
+  const { toolsPage } = getDictionary(locale);
+
+  return {
+    title: toolsPage.meta.title,
+    description: toolsPage.meta.description,
+  };
 }
 
-export default function TeacherToolsPage({ params }: PageProps) {
-  return <TeacherWorkspacePage id="tools" params={params} />;
+export default async function ToolsPage({ params }: ToolsPageProps) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+
+  const dict = getDictionary(locale);
+
+  return <ToolsHub locale={locale} copy={dict.toolsPage} />;
 }

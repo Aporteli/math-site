@@ -1,15 +1,28 @@
 import type { Metadata } from "next";
-import {
-  TeacherWorkspacePage,
-  teacherPageMetadata,
-} from "@/components/lms/dashboard-page";
+import { PageHero } from "@/components/ui/page-hero";
+import { ClipboardCheck } from "lucide-react";
+import { TeacherHomeworkWorkspace } from "@/components/lms/teacher/TeacherHomeworkWorkspace";
 
 type PageProps = { params: Promise<{ locale: string }> };
 
-export function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return teacherPageMetadata("homework", params);
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "საშინაო დავალებების შემოწმება | MathLab",
+    description: "სტუდენტების მიერ გამოგზავნილი ამოცანების შემოწმება და შეფასება",
+  };
 }
 
-export default function TeacherHomeworkPage({ params }: PageProps) {
-  return <TeacherWorkspacePage id="homework" params={params} />;
+export default async function TeacherHomeworkPage({ params }: PageProps) {
+  return (
+    <div className="mx-auto w-full max-w-7xl space-y-6">
+      <PageHero
+        icon={ClipboardCheck}
+        eyebrow="სასწავლო მართვა"
+        title="საშინაო დავალებების შემოწმება"
+        description="შეამოწმეთ სტუდენტების მიერ გამოგზავნილი ამოცანები, დაფაზე ნაწერი ამოხსნები, ატვირთული ფაილები და დაუწერეთ შეფასება."
+      />
+
+      <TeacherHomeworkWorkspace />
+    </div>
+  );
 }

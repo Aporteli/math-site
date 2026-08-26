@@ -22,7 +22,7 @@ import {
   Minimize
 } from "lucide-react";
 
-type Phase = 1 | 2; // <-- ფაზები შემცირდა 2-მდე
+type Phase = 1 | 2;
 type TokenType = "number" | "variable" | "operator" | "parenthesis";
 
 interface EquationToken {
@@ -65,10 +65,10 @@ interface StepData {
 }
 
 const PRESET_EQUATIONS = [
+  { label: "x² - 5x + 6 = 0", eq: "x^2 - 5x + 6 = 0" },
   { label: "(m-1)x² - 2(m+1)x + m - 2 = 0", eq: "(m-1)x^2 - 2(m+1)x + m - 2 = 0" },
   { label: "(a+b)² = a² + 2ab + b²", eq: "(a+b)^2" },
-  { label: "3x - 7 = 14", eq: "3x - 7 = 14" },
-  { label: "x² - 5x + 6 = 0", eq: "x^2 - 5x + 6 = 0" }
+  { label: "3x - 7 = 14", eq: "3x - 7 = 14" }
 ];
 
 const PHASE_LABELS: Record<Phase, string> = {
@@ -79,7 +79,8 @@ const PHASE_LABELS: Record<Phase, string> = {
 function buildEquationSteps(rawEq: string): StepData[] {
   const clean = rawEq.replace(/\s+/g, "").replace(/\*/g, "");
 
-  if (clean.includes("x^2") && (clean.includes("m") || clean.includes("a") || clean.includes("k"))) {
+  // 1. პარამეტრული კვადრატული განტოლება
+  if (clean.includes("x^2") && (clean.includes("m") || clean.includes("k"))) {
     return [
       {
         id: 1,
@@ -176,6 +177,88 @@ function buildEquationSteps(rawEq: string): StepData[] {
     ];
   }
 
+  // 2. სტანდარტული კვადრატული განტოლება (მაგ: x^2 - 5x + 6 = 0, 2x^2 + 3x - 5 = 0)
+  const quadRegex = /^([+-]?\d*)x\^?2([+-]\d*)x([+-]\d+)=0$/i;
+  const qMatch = clean.match(quadRegex);
+  if (qMatch) {
+    const parseCoeff = (val: string) => {
+      if (val === "" || val === "+") return 1;
+      if (val === "-") return -1;
+      return parseInt(val, 10);
+    };
+
+    const a = parseCoeff(qMatch[1]);
+    const b = parseCoeff(qMatch[2]);
+    const c = parseInt(qMatch[3], 10);
+
+    const D = b * b - 4 * a * c;
+    const sqrtD = D >= 0 ? Math.sqrt(D) : NaN;
+    const x1 = D >= 0 ? (-b + sqrtD) / (2 * a) : NaN;
+    const x2 = D >= 0 ? (-b - sqrtD) / (2 * a) : NaN;
+
+    const formatNum = (n: number) => (Number.isInteger(n) ? `${n}` : n.toFixed(2));
+
+    return [
+      {
+        id: 1,
+        title: "კოეფიციენტების განსაზღვრა",
+        ruleTitle: "ზოგადი სახე: ax² + bx + c = 0",
+        compactFormula: `a = ${a}, b = ${b}, c = ${c}`,
+        explanation: "განვსაზღვროთ კვადრატული განტოლების კოეფიციენტები a, b და c.",
+        phase1Text: "მონიშნულია განტოლების წევრები.",
+        phase2Text: `a = ${a}, b = ${b}, c = ${c}`,
+        tokensPhase1: [
+          { id: "q1-a", text: `${a === 1 ? "" : a === -1 ? "-" : a}x²`, type: "variable", isTarget: true },
+          { id: "q1-b", text: `${b >= 0 ? "+" : ""}${b}x`, type: "variable", isTarget: true },
+          { id: "q1-c", text: `${c >= 0 ? "+" : ""}${c}`, type: "number", isTarget: true },
+          { id: "q1-eq", text: "= 0", type: "operator" }
+        ],
+        tokensPhase2: [
+          { id: "q1-ra", text: `a = ${a},`, type: "variable", isTarget: true },
+          { id: "q1-rb", text: `b = ${b},`, type: "variable", isTarget: true },
+          { id: "q1-rc", text: `c = ${c}`, type: "variable", isTarget: true }
+        ]
+      },
+      {
+        id: 2,
+        title: "დისკრიმინანტის გამოთვლა",
+        ruleTitle: "ფორმულა: D = b² - 4ac",
+        compactFormula: `D = (${b})² - 4·(${a})·(${c}) = ${D}`,
+        explanation: "ჩავსვათ კოეფიციენტები დისკრიმინანტის ფორმულაში.",
+        phase1Text: `D = (${b})² - 4 · (${a}) · (${c})`,
+        phase2Text: `D = ${D}`,
+        tokensPhase1: [
+          { id: "q2-d", text: "D =", type: "operator" },
+          { id: "q2-b2", text: `(${b})²`, type: "number", isTarget: true },
+          { id: "q2-min", text: "-", type: "operator" },
+          { id: "q2-4ac", text: `4·(${a})·(${c})`, type: "number", isTarget: true }
+        ],
+        tokensPhase2: [
+          { id: "q2-res", text: `D = ${D}`, type: "number", isTarget: true }
+        ]
+      },
+      {
+        id: 3,
+        title: "ფესვების გამოთვლა",
+        ruleTitle: "x = (-b ± √D) / 2a",
+        compactFormula: D >= 0 ? `x₁ = ${formatNum(x1)}, x₂ = ${formatNum(x2)}` : "ნამდვილი ფესვები არ აქვს",
+        explanation: D >= 0 ? "ვიპოვოთ განტოლების ამონახსნები ფორმულის მეშვეობით." : "ვინაიდან D < 0, განტოლებას ნამდვილი ამონახსნი არ გააჩნია.",
+        phase1Text: `x = (-(${b}) ± √${D >= 0 ? D : "D"}) / (2 · ${a})`,
+        phase2Text: D >= 0 ? `x₁ = ${formatNum(x1)}, x₂ = ${formatNum(x2)}` : "ამონახსნი არ არსებობს",
+        tokensPhase1: [
+          { id: "q3-x", text: `x = (-(${b}) ± √${D >= 0 ? D : "D"}) / ${2 * a}`, type: "variable", isTarget: true }
+        ],
+        tokensPhase2: D >= 0 ? [
+          { id: "q3-x1", text: `x₁ = ${formatNum(x1)},`, type: "variable", isTarget: true },
+          { id: "q3-x2", text: `x₂ = ${formatNum(x2)}`, type: "variable", isTarget: true }
+        ] : [
+          { id: "q3-no-root", text: "∅ (ფესვები არ აქვს)", type: "variable", isTarget: true }
+        ]
+      }
+    ];
+  }
+
+  // 3. შემოკლებული გამრავლება (a+b)^2
   if (clean.includes("a+b") && (clean.includes("^2") || clean.includes("2"))) {
     return [
       {
@@ -300,6 +383,7 @@ function buildEquationSteps(rawEq: string): StepData[] {
     ];
   }
 
+  // 4. ხაზოვანი განტოლების პარსერი (Fallback / ax + b = c)
   const regex = /^([+]?\d*)x([+-]\d+)=([+-]?\d+)$/i;
   const match = clean.match(regex);
   const aStr = match ? match[1] : "3";
@@ -400,19 +484,15 @@ function buildEquationSteps(rawEq: string): StepData[] {
   ];
 }
 
-// ==========================================
-// UI კომპონენტი (Fully Interactive Playground)
-// ==========================================
 export function MathStepSolver() {
-  const [inputEquation, setInputEquation] = useState("(m-1)x^2 - 2(m+1)x + m - 2 = 0");
-  const [steps, setSteps] = useState<StepData[]>(() => buildEquationSteps("(m-1)x^2 - 2(m+1)x + m - 2 = 0"));
+  const [inputEquation, setInputEquation] = useState("x^2 - 5x + 6 = 0");
+  const [steps, setSteps] = useState<StepData[]>(() => buildEquationSteps("x^2 - 5x + 6 = 0"));
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [phase, setPhase] = useState<Phase>(1);
   const [trajectoryIdx, setTrajectoryIdx] = useState<number>(-1);
   const [isFlying, setIsFlying] = useState(false);
 
-  // **ხელით მართვის / ინტერაქტიული რეჟიმი**
-  const [isManualPlayground, setIsManualPlayground] = useState(true);
+  const [isManualPlayground, setIsManualPlayground] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [customTokenText, setCustomTokenText] = useState("");
@@ -466,7 +546,7 @@ export function MathStepSolver() {
 
   const overallProgress = useMemo(() => {
     const stepsDone = currentStepIdx;
-    const phaseFraction = (phase - 1) / 2; // შეიცვალა 4-დან 2-ზე
+    const phaseFraction = (phase - 1) / 2;
     return Math.min(100, Math.round(((stepsDone + phaseFraction) / steps.length) * 100));
   }, [currentStepIdx, phase, steps.length]);
 
@@ -1078,7 +1158,7 @@ export function MathStepSolver() {
                             };
                           }
                           if (phase === 1) return { color: "#ea580c", scale: 1.12, y: 0, opacity: 1 };
-                          return { color: "#059669", scale: 1.05, y: 0, opacity: 1 }; // მწვანე ფერი მე-2 ფაზისთვის
+                          return { color: "#059669", scale: 1.05, y: 0, opacity: 1 };
                         };
 
                         return (
@@ -1116,9 +1196,7 @@ export function MathStepSolver() {
                 </div>
               </>
             ) : (
-              /* ==========================================
-                 PLAYGROUND / ხელით მართვის რეჟიმი (FULLSCREEN MODAL)
-                 ========================================== */
+              /* Playground რეჟიმი */
               <>
                 {isFullscreen && (
                   <div

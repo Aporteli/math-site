@@ -3,15 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/session";
 import type { Locale } from "@/i18n/config";
 import { PageHero } from "@/components/ui/page-hero";
-import { BrainCircuit } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { StudentFlashcardsWorkspace } from "@/components/lms/StudentFlashcardsWorkspace";
 
 type PageProps = { params: Promise<{ locale: Locale }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return {
-    title: "ჩემი დავალებები | MathLab",
-    description: "მასწავლებლის მიერ გამოგზავნილი სასწავლო ბარათები და ამოცანები",
+    title: "სასწავლო ბარათები | MathLab",
+    description: "მასწავლებლის მიერ გამოგზავნილი პერსონალური სასწავლო ბარათები",
   };
 }
 
@@ -19,26 +19,27 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
   const { locale } = await params;
   const session = await requireRole(locale, ["STUDENT"]);
 
-  // 1. ვპოულობთ კურსებს, რომელშიც მოსწავლეა ჩარიცხული
+  // 1. ვპოულობთ კურსებს, რომლებშიც მოსწავლეა ჩარიცხული
   const enrollments = await prisma.enrollment.findMany({
     where: {
       userId: session.user.id,
       status: "ACTIVE",
     },
-    include: {
-      course: { select: { title: true } }
-    }
+    select: { courseId: true },
   });
 
   const enrolledCourseIds = enrollments.map((e) => e.courseId);
 
-  // 2. ვიღებთ დავალებებს, რომლებიც პირადად ამ სტუდენტს ან მთელ კურსს გამოეგზავნა
+  // 2. ვიღებთ მხოლოდ FLASHCARD ტიპის დავალებებს
   const rawAssignments = await prisma.assignment.findMany({
     where: {
-      courseId: { in: enrolledCourseIds },
+      type: "FLASHCARD", // მხოლოდ ფლეშ ბარათები
       OR: [
         { targetUserId: session.user.id },
-        { targetUserId: null },
+        {
+          targetUserId: null,
+          courseId: { in: enrolledCourseIds },
+        },
       ],
     },
     include: {
@@ -58,9 +59,9 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
     title: a.title,
     type: a.type,
     instructions: a.instructions,
-    customPayload: a.customPayload || {},
+    customPayload: (a.customPayload as Record<string, unknown>) || {},
     createdAt: a.createdAt.toISOString(),
-    course: { title: a.course.title },
+    course: { title: a.course?.title || "ზოგადი კურსი" },
     comments: a.comments.map((c) => ({
       id: c.id,
       body: c.body,
@@ -69,51 +70,23 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
     })),
   }));
 
-  // სტატისტიკის დათვლა UI-სთვის
-  const flashcardsCount = assignments.filter(a => a.type === "FLASHCARD").length;
-  const problemsCount = assignments.filter(a => a.type === "PROBLEM").length;
-
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 lg:space-y-8 relative">
-      {/* მსუბუქი დეკორატიული ფონი (Glow) პრემიუმ იერსახისთვის */}
       <div className="absolute top-0 right-0 -z-10 h-[400px] w-[600px] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-navy-tint/40 via-transparent to-transparent opacity-50 blur-3xl pointer-events-none" />
 
       <PageHero
-        icon={BrainCircuit}
+        icon={Sparkles}
         eyebrow="ჩემი სასწავლო სივრცე"
-        title="ბარათები და ამოცანები"
-        description="აქ ინახება მასწავლებლის მიერ გამოგზავნილი პერსონალური დავალებები. გაეცანით პირობებს და თუ რამე გაუგებარია, იქვე დასვით კითხვები."
+        title="სასწავლო ბარათები"
+        description="აქ ინახება მასწავლებლის მიერ გამოგზავნილი ფლეშ ბარათები. გაეცანით მასალას და კითხვების შემთხვევაში გამოიყენეთ ჩატი."
         aside={
-          <div className="grid grid-cols-2 gap-3">
-            {/* მთავარი ბარათი - იკავებს ორივე სვეტს (col-span-2) */}
-            <div className="col-span-2 rounded-2xl border border-hairline bg-white/80 px-5 py-4 shadow-sm backdrop-blur-md transition-colors hover:border-navy/30">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-muted">
-                სულ დავალება
-              </p>
-              <p className="mt-1.5 text-3xl font-black text-ink">
-                {assignments.length}
-              </p>
-            </div>
-            
-            {/* ქვე-ბარათი 1 */}
-            <div className="rounded-2xl border border-hairline bg-white/80 px-4 py-3 shadow-sm backdrop-blur-md transition-colors hover:border-navy/30">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted">
-                ბარათები
-              </p>
-              <p className="mt-1 text-xl font-black text-navy">
-                {flashcardsCount}
-              </p>
-            </div>
-            
-            {/* ქვე-ბარათი 2 */}
-            <div className="rounded-2xl border border-hairline bg-white/80 px-4 py-3 shadow-sm backdrop-blur-md transition-colors hover:border-navy/30">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted">
-                ამოცანები
-              </p>
-              <p className="mt-1 text-xl font-black text-amber-600">
-                {problemsCount}
-              </p>
-            </div>
+          <div className="rounded-2xl border border-hairline bg-white/80 px-6 py-4 shadow-sm backdrop-blur-md transition-colors hover:border-navy/30 min-w-[160px]">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted">
+              სულ ბარათი
+            </p>
+            <p className="mt-1.5 text-3xl font-black text-navy">
+              {assignments.length}
+            </p>
           </div>
         }
       />
