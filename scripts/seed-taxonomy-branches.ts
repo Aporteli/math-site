@@ -2,8 +2,9 @@
  * One-shot: ensure default curriculum branches + Algebra topics.
  * Usage: npx tsx -r dotenv/config scripts/seed-taxonomy-branches.ts
  */
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { PrismaClient } from "../src/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import { PrismaClient } from "@prisma/client";
 
 const BRANCH_SEED = [
   {
@@ -141,7 +142,9 @@ async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
 
-  const prisma = new PrismaClient({ adapter: new PrismaMariaDb(url) });
+  const pool = new Pool({ connectionString: url });
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter });
 
   try {
     const existing = await prisma.taxonomyNode.findMany({
