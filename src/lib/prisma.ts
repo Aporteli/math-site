@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
 const PRISMA_GENERATION = "taxonomy-nodes-v1";
 
@@ -8,9 +9,13 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient(): PrismaClient {
-  return new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
-  });
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL is not set");
+  }
+
+  const adapter = new PrismaMariaDb(url);
+  return new PrismaClient({ adapter });
 }
 
 function hasCurrentDelegates(client: PrismaClient | undefined) {
