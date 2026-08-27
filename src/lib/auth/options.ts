@@ -94,21 +94,33 @@ export const authOptions: NextAuthOptions = {
     },
 
     async jwt({ token, user, trigger, session }) {
+      // 1. პირველი შესვლისას ვინახავთ ID-ს, მეილსა და საწყის როლს
       if (user) {
         token.id = user.id;
+        token.email = user.email;
         token.role = ((user as { role?: UserRole }).role ?? 'VISITOR') as UserRole;
       }
 
-      // ყოველთვის კითხულობს უახლეს როლს ბაზიდან, რათა სტატუსის ცვლილება მყისიერად აისახოს
-      if (token.email) {
+      // 2. ID-ით ან მეილით ყოველ ჯერზე ვამოწმებთ ბაზაში უახლეს როლს
+      const userLookupId = (token.id as string) || undefined;
+      const userLookupEmail = token.email ? token.email.trim().toLowerCase() : undefined;
+
+      if (userLookupId || userLookupEmail) {
         try {
-          const dbUser = await prisma.user.findUnique({
-            where: { email: token.email.trim().toLowerCase() },
-            select: { id: true, role: true },
+          const dbUser = await prisma.user.findFirst({
+            where: {
+              OR: [
+                ...(userLookupId ? [{ id: userLookupId }] : []),
+                ...(userLookupEmail ? [{ email: userLookupEmail }] : []),
+              ],
+            },
+            select: { id: true, role: true, email: true },
           });
+
           if (dbUser) {
             token.id = dbUser.id;
             token.role = dbUser.role as UserRole;
+            token.email = dbUser.email;
           }
         } catch (e) {
           console.error('JWT_FETCH_USER_ERROR:', e);
@@ -125,6 +137,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = (token.id as string) ?? '';
+        session.user.email = (token.email as string) ?? session.user.email ?? '';
         session.user.role = (token.role as UserRole) ?? 'VISITOR';
       }
       return session;
