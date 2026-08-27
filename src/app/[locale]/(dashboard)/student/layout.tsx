@@ -4,6 +4,7 @@ import { isLocale, localePath } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { getSession } from "@/lib/auth/session";
 import { isLocalDashboardPreview } from "@/lib/auth/paths";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +19,21 @@ export default async function StudentLayout({
   if (!isLocale(locale)) notFound();
 
   const session = await getSession();
+  if (!session?.user?.id) {
+    if (!isLocalDashboardPreview()) redirect(localePath(locale, "/login"));
+    return null;
+  }
 
-  // VISITOR ან არაავტორიზებული მომხმარებელი აქ ვერ შევა — გადადის მთავარზე
-  if (!session || (session.user.role !== "STUDENT" && session.user.role !== "ADMIN")) {
+  // ვიღებთ მომხმარებლის რეალურ, უახლეს როლს პირდაპირ ბაზიდან (და არა ძველი JWT ქუქიდან)
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, name: true, email: true, role: true },
+  });
+
+  const currentRole = dbUser?.role ?? session.user.role;
+
+  // თუ ბაზაშიც არ არის STUDENT ან ADMIN, მხოლოდ მაშინ გადავიდეს მთავარზე
+  if (currentRole !== "STUDENT" && currentRole !== "ADMIN") {
     if (!isLocalDashboardPreview()) {
       redirect(localePath(locale, "/"));
     }
@@ -34,7 +47,7 @@ export default async function StudentLayout({
       locale={locale}
       dict={dict}
       roleLabel={student.role}
-      userName={session?.user?.name ?? session?.user?.email ?? student.role}
+      userName={dbUser?.name ?? session.user.name ?? student.role}
       role="student"
       labels={student.nav}
     >
