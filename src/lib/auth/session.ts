@@ -17,31 +17,39 @@ export function getSession() {
 export async function requireRole(locale: Locale, roles: UserRole[]) {
   const session = await getSession();
 
-  if (!session?.user?.email) {
+  const email = session?.user?.email?.trim().toLowerCase();
+  if (!session?.user || !email) {
     redirect(localePath(locale, LOGIN_PATH));
   }
 
+  // Always resolve the authoritative role from the database. The encrypted JWT
+  // cookie can be stale (e.g. right after a VISITOR joins a class), and the proxy
+  // reads that stale value before any server guard runs. Server-side checks must
+  // therefore never rely on session.user.role alone.
   let currentRole = session.user.role;
 
-  // თუ სესიის ძველი როლი არ ემთხვევა, ვამოწმებთ რეალურ, უახლეს როლს ბაზაში
-  if (!roles.includes(currentRole)) {
-    try {
-      const dbUser = await prisma.user.findUnique({
-        where: { email: session.user.email.trim().toLowerCase() },
-        select: { id: true, role: true, name: true },
-      });
+  try {
+    const dbUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(session.user.id ? [{ id: session.user.id }] : []),
+          { email },
+        ],
+      },
+      select: { id: true, role: true, name: true },
+    });
 
-      if (dbUser) {
-        currentRole = dbUser.role as UserRole;
-        session.user.role = currentRole;
-        session.user.id = dbUser.id;
-      }
-    } catch (error) {
-      console.error("REQUIRE_ROLE_DB_FETCH_ERROR:", error);
+    if (dbUser) {
+      currentRole = dbUser.role as UserRole;
+      session.user.role = currentRole;
+      session.user.id = dbUser.id;
+      if (dbUser.name) session.user.name = dbUser.name;
     }
+  } catch (error) {
+    console.error("REQUIRE_ROLE_DB_FETCH_ERROR:", error);
   }
 
-  // თუ ბაზაშიც არ აღმოჩნდა საჭირო როლი, მხოლოდ მაშინ გადავიდეს მთავარზე
+  // Only redirect when the database role is also not allowed.
   if (!isLocalDashboardPreview() && !roles.includes(currentRole)) {
     redirect(localePath(locale, dashboardHomeForRole(currentRole)));
   }

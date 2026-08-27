@@ -69,7 +69,10 @@ export async function joinClassWithCodeAction(inviteCode: string) {
       });
     }
 
-    // ასუფთავებს მთლიანი საიტის ქეშს, რათა როლის ცვლილება მყისიერად აისახოს
+    // Clears the Next.js data cache so server components re-render with the new
+    // role. Note: this does NOT refresh the NextAuth JWT cookie — the client must
+    // call getSession() (next-auth/react) after this action to re-encode the
+    // cookie with the fresh role before navigating to a protected route.
     revalidatePath("/", "layout");
 
     return { success: true };

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { getSession } from "next-auth/react";
 import { joinClassWithCodeAction } from "@/app/[locale]/(dashboard)/visitor/actions";
 
 export function JoinClassModal({ locale }: { locale: string }) {
@@ -28,7 +29,12 @@ export function JoinClassModal({ locale }: { locale: string }) {
         return;
       }
 
-      // ბრაუზერის სრული გადატვირთვა, რათა ახალი როლი ბაზიდან პირდაპირ წაიკითხოს
+      // Refresh the encrypted NextAuth cookie before navigating. getSession() hits
+      // /api/auth/session, which re-runs the jwt callback (fetching the latest role
+      // from the DB) and re-encodes + sets the cookie in the browser. This is what
+      // makes the proxy/middleware see STUDENT instead of the stale VISITOR role.
+      await getSession();
+
       window.location.href = `/${locale}/student/overview`;
     } catch (err) {
       setError("კავშირის შეცდომა");

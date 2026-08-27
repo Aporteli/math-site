@@ -6,7 +6,7 @@ import { loginSchema } from '@/lib/auth/schemas';
 import { authSecret } from '@/lib/auth/secret';
 import { prisma } from '@/lib/prisma';
 import { findUserByEmail, passwordsMatch, toPublicUser } from '@/lib/auth/users';
-import { isOwnerEmail, type UserRole } from '@/lib/auth/roles';
+import { isOwnerEmail, isUserRole, type UserRole } from '@/lib/auth/roles';
 
 export { authSecret };
 
@@ -119,7 +119,7 @@ export const authOptions: NextAuthOptions = {
 
           if (dbUser) {
             token.id = dbUser.id;
-            token.role = dbUser.role as UserRole;
+            if (isUserRole(dbUser.role)) token.role = dbUser.role;
             token.email = dbUser.email;
           }
         } catch (e) {
