@@ -19,16 +19,18 @@ export async function joinClassWithCodeAction(inviteCode: string) {
       return { success: false, error: "გთხოვთ შეიყვანოთ კოდი" };
     }
 
-    // 1. ვპოულობთ მომხმარებელს მეილით
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // 1. მომხმარებლის მოძიება ბაზაში
     const user = await prisma.user.findUnique({
-      where: { email: email.trim().toLowerCase() },
+      where: { email: normalizedEmail },
     });
 
     if (!user) {
       return { success: false, error: "მომხმარებელი ვერ მოიძებნა" };
     }
 
-    // 2. ვეძებთ კურსს ამ კოდით
+    // 2. კურსის მოძიება კოდით
     const course = await prisma.course.findFirst({
       where: {
         inviteCode: code,
@@ -39,7 +41,7 @@ export async function joinClassWithCodeAction(inviteCode: string) {
       return { success: false, error: "კლასის კოდი არასწორია" };
     }
 
-    // 3. ვამოწმებთ Enrollment-ს
+    // 3. Enrollment-ის შემოწმება და შექმნა
     const existingEnrollment = await prisma.enrollment.findUnique({
       where: {
         userId_courseId: {
@@ -59,13 +61,17 @@ export async function joinClassWithCodeAction(inviteCode: string) {
       });
     }
 
-    // 4. ვუცვლით როლს STUDENT-ზე
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { role: "STUDENT" },
-    });
+    // 4. როლის განახლება STUDENT-ად (თუ არ არის ADMIN)
+    if (user.role !== "ADMIN") {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { role: "STUDENT" },
+      });
+    }
 
+    // ასუფთავებს მთლიანი საიტის ქეშს, რათა როლის ცვლილება მყისიერად აისახოს
     revalidatePath("/", "layout");
+
     return { success: true };
   } catch (error) {
     console.error("შეცდომა კლასში გაწევრიანებისას:", error);
