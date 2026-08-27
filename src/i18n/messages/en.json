@@ -1492,7 +1492,7 @@
         "chat": {
           "title": "Teacher AI chat",
           "hint": "Ephemeral teacher-only chat. Messages stay on this page until refresh.",
-          "launcher": "Ask AI",
+          "launcher": "AI",
           "open": "Open AI chat",
           "close": "Close AI chat",
           "model": "Model",

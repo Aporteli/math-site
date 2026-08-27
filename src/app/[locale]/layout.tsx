@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import "../globals.css";
 import { SiteAiChatWidget } from "@/components/lms/problem-bank/site-ai-chat-widget";
-import { GuestTestCallButton } from "@/components/lms/classroom/GuestTestCallButton";
 import { isLocale, locales } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { getSession } from "@/lib/auth/session";
@@ -62,8 +61,6 @@ export default async function LocaleLayout({
             slashPromptsUserId={slash.storageKey}
           />
         ) : null}
-        {/* სატესტო ღილაკი ვიზიტორებისთვის */}
-        <GuestTestCallButton />
       </body>
     </html>
   );
