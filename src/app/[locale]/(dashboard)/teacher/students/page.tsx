@@ -5,7 +5,6 @@ import type { Locale } from "@/i18n/config";
 import { PageHero } from "@/components/ui/page-hero";
 import { Users } from "lucide-react";
 import { TeacherStudentsWorkspace } from "@/components/lms/TeacherStudentsWorkspace";
-import { useLockBodyScroll } from "@/components/lms/use-lock-body-scroll";
 
 type PageProps = {
   params: Promise<{ locale: Locale }>;
@@ -22,7 +21,6 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
   const { locale } = await params;
   const session = await requireRole(locale, ["TEACHER", "ADMIN"]);
 
-  // 1. მასწავლებლის კურსები და მოსწავლეები
   const teacherCourses = await prisma.course.findMany({
     where: {
       teacherId: session.user.id,
@@ -41,7 +39,6 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
               name: true,
               email: true,
               imageUrl: true,
-              // ვცვლით targetedAssignments-ს submissions-ით, რომ ორივე ტიპის დავალება წამოიღოს
               submissions: {
                 where: {
                   assignment: {
@@ -72,7 +69,6 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
     orderBy: { createdAt: "desc" },
   });
 
-  // 2. მასწავლებლის მიერ შექმნილი მხოლოდ სეტები (ბანკის ამოცანების გარეშე)
   const problemSets = await prisma.problemSet.findMany({
     where: { authorId: session.user.id },
     include: {
@@ -86,7 +82,6 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
     orderBy: { updatedAt: "desc" },
   });
 
-  // სეტებში არსებული ამოცანების სიის ფორმირება
   const setProblemsList = problemSets.flatMap((set) =>
     set.items.map((item) => ({
       id: item.problem.id,
@@ -98,12 +93,10 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
     }))
   );
 
-  // დუბლიკატების ამოღება (თუ ერთი ამოცანა რამდენიმე სეტშია)
   const availableSetProblems = setProblemsList.filter(
     (item, index, self) => index === self.findIndex((t) => t.id === item.id)
   );
 
-  // 3. მოსწავლეების გაერთიანება
   const studentsMap = new Map<string, any>();
 
   teacherCourses.forEach((course) => {
@@ -116,18 +109,19 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
           email: student.email,
           imageUrl: student.imageUrl,
           courses: [{ id: course.id, title: course.title }],
-          // ვაგროვებთ მონაცემებს submissions.assignment-იდან
           assignments: student.submissions.map((sub: any) => {
             const a = sub.assignment;
             const payload = (a.customPayload as Record<string, unknown>) || {};
             return {
               id: a.id,
+              submissionId: sub.id, // ვამატებთ submission ID-ს სტატუსის შესაცვლელად
               title: a.title,
               type: a.type,
               instructions: a.instructions,
-              status: a.status,
+              status: sub.status || a.status, // მოსწავლის მიერ დაყენებული სტატუსი
               createdAt: a.createdAt.toISOString(),
               promptTex: String(payload.promptTex || payload.text || a.instructions || ""),
+              attachmentUrl: sub.attachmentUrl || a.attachmentUrl || null, // სურათების ლინკი ან JSON მასივი
               comments: a.comments.map((c: any) => ({
                 id: c.id,
                 body: c.body,

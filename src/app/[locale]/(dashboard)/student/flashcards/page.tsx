@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/session";
 import type { Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/get-dictionary";
 import { PageHero } from "@/components/ui/page-hero";
 import { Sparkles } from "lucide-react";
 import { StudentFlashcardsWorkspace } from "@/components/lms/StudentFlashcardsWorkspace";
@@ -10,14 +11,15 @@ type PageProps = { params: Promise<{ locale: Locale }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return {
-    title: "სასწავლო ბარათები | MathLab",
-    description: "მასწავლებლის მიერ გამოგზავნილი პერსონალური სასწავლო ბარათები",
+    title: "ფორმულები | MathLab",
+    description: "მასწავლებლის მიერ გამოგზავნილი ფორმულები",
   };
 }
 
 export default async function StudentFlashcardsPage({ params }: PageProps) {
   const { locale } = await params;
   const session = await requireRole(locale, ["STUDENT"]);
+  const dict = getDictionary(locale);
 
   // 1. ვპოულობთ კურსებს, რომლებშიც მოსწავლეა ჩარიცხული
   const enrollments = await prisma.enrollment.findMany({
@@ -77,12 +79,12 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
       <PageHero
         icon={Sparkles}
         eyebrow="ჩემი სასწავლო სივრცე"
-        title="სასწავლო ბარათები"
-        description="აქ ინახება მასწავლებლის მიერ გამოგზავნილი ფლეშ ბარათები. გაეცანით მასალას და კითხვების შემთხვევაში გამოიყენეთ ჩატი."
+        title="ფორმულები"
+        description="აქ ინახება მასწავლებლის მიერ გამოგზავნილი ფორმულები."
         aside={
           <div className="rounded-2xl border border-hairline bg-white/80 px-6 py-4 shadow-sm backdrop-blur-md transition-colors hover:border-navy/30 min-w-[160px]">
             <p className="text-[11px] font-bold uppercase tracking-wider text-muted">
-              სულ ბარათი
+              სულ ფორმულა
             </p>
             <p className="mt-1.5 text-3xl font-black text-navy">
               {assignments.length}
@@ -94,7 +96,8 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
       <div className="pt-2">
         <StudentFlashcardsWorkspace
           initialAssignments={assignments}
-          studentName={session.user.name || "მოსწავლე"}
+          studentName={session.user.name || dict.dashboard.student.role}
+          copy={dict.dashboard.student.flashcards}
         />
       </div>
     </div>

@@ -3,13 +3,17 @@
 import { useEffect, useState } from "react";
 import {
   LiveKitRoom,
-  VideoConference,
   RoomAudioRenderer,
+  ControlBar,
+  GridLayout,
+  ParticipantTile,
+  Chat,
+  useTracks,
   useConnectionState,
 } from "@livekit/components-react";
-import { ConnectionState } from "livekit-client";
+import { ConnectionState, Track } from "livekit-client";
 import "@livekit/components-styles";
-import { X, Layout, PenTool, Loader2 } from "lucide-react";
+import { X, Layout, PenTool, Loader2, MessageSquare } from "lucide-react";
 import { ClassWhiteboard } from "./ClassWhiteboard";
 
 interface ClassroomRoomModalProps {
@@ -18,7 +22,6 @@ interface ClassroomRoomModalProps {
   onClose: () => void;
 }
 
-// კავშირის სტატუსის კომპონენტი ზედა პანელისთვის
 function ConnectionStatusBadge() {
   const state = useConnectionState();
 
@@ -48,13 +51,32 @@ function ConnectionStatusBadge() {
   );
 }
 
+function MyVideoGrid() {
+  const tracks = useTracks(
+    [
+      { source: Track.Source.Camera, withPlaceholder: true },
+      { source: Track.Source.ScreenShare, withPlaceholder: false },
+    ],
+    { onlySubscribed: false }
+  );
+
+  return (
+    <div className="relative flex-1 min-h-0 w-full overflow-hidden p-1.5">
+      <GridLayout tracks={tracks} className="h-full w-full">
+        <ParticipantTile />
+      </GridLayout>
+    </div>
+  );
+}
+
 export function ClassroomRoomModal({ courseId, courseTitle, onClose }: ClassroomRoomModalProps) {
   const [token, setToken] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [activeTab, setActiveTab] = useState<"split" | "board">("split");
   const [isBoardFullscreen, setIsBoardFullscreen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -114,24 +136,23 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950 p-2 sm:p-4 select-none">
+    <div className="fixed inset-0 z-50 flex h-screen w-screen flex-col overflow-hidden bg-slate-950 p-2 sm:p-3 select-none">
       <LiveKitRoom
         video={true}
         audio={true}
         token={token}
         serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
         data-lk-theme="default"
-        className="h-full w-full flex flex-col min-h-0"
+        className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden"
         onDisconnected={onClose}
       >
-        {/* ზედა მართვის ზოლი (Header) */}
-        <header className="relative z-40 flex h-12 shrink-0 items-center justify-between px-3 text-white bg-slate-900/100 rounded-xl border border-white/10 mb-2 gap-2">
+        {/* Header */}
+        <header className="relative z-40 flex h-12 shrink-0 items-center justify-between px-3 text-white bg-slate-900 rounded-xl border border-white/10 mb-2 gap-2">
           <div className="flex items-center gap-3 min-w-0">
             <h2 className="text-sm sm:text-base font-bold truncate">{courseTitle} — გაკვეთილი</h2>
             <ConnectionStatusBadge />
           </div>
 
-          {/* რეჟიმების გადამრთველი ღილაკები */}
           <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
             <button
               type="button"
@@ -165,18 +186,58 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
           </button>
         </header>
 
-        {/* LiveKit სამუშაო სივრცე */}
-        <main className="flex-1 min-h-0 relative rounded-2xl overflow-hidden bg-slate-900 border border-white/10">
-          <div className="flex-1 h-full min-h-0 flex flex-col lg:flex-row gap-3 p-2 sm:p-3">
-            {/* ვიდეო ბადე */}
-            <div className={`h-full min-h-0 transition-all ${
-              activeTab === "board" ? "hidden" : "w-full lg:w-[340px] xl:w-[400px] shrink-0"
-            }`}>
-              <VideoConference />
+        {/* LiveKit Workspace */}
+        <main className="relative flex flex-1 min-h-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
+          <div className="flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row gap-2.5 p-2">
+            
+            {/* მარცხენა სვეტი: ვიდეო / ჩატი და მართვის პანელი */}
+            <div
+              className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-slate-950/80 border border-white/5 transition-all ${
+                activeTab === "board"
+                  ? "hidden"
+                  : "w-full lg:w-[340px] xl:w-[400px] shrink-0"
+              }`}
+            >
+              {/* ვიდეო ან ჩატი */}
+              {isChatOpen ? (
+                <div className="relative flex-1 min-h-0 w-full overflow-hidden p-2 [&_.lk-chat]:h-full [&_.lk-chat]:w-full [&_.lk-chat-messages]:overflow-y-auto">
+                  <Chat />
+                </div>
+              ) : (
+                <MyVideoGrid />
+              )}
+
+              {/* ქვედა მართვის ზოლი: კამერა, მიკროფონი, ეკრანის გაზიარება და ჩატი */}
+              <div className="shrink-0 flex items-center justify-center gap-2 p-2 bg-slate-900/90 border-t border-white/10">
+                <ControlBar
+                  variation="minimal"
+                  controls={{
+                    microphone: true,
+                    camera: true,
+                    screenShare: true,
+                    chat: false,
+                    leave: false,
+                  }}
+                />
+
+                {/* ჩატის გადამრთველი ღილაკი */}
+                <button
+                  type="button"
+                  onClick={() => setIsChatOpen((prev) => !prev)}
+                  title="ჩატი"
+                  className={`flex size-9 items-center justify-center rounded-xl border transition-all ${
+                    isChatOpen
+                      ? "border-emerald-500 bg-emerald-500 text-white shadow-xs"
+                      : "border-white/10 bg-white/5 text-white/80 hover:bg-white/15 hover:text-white"
+                  }`}
+                >
+                  <MessageSquare className="size-4" />
+                </button>
+              </div>
             </div>
 
-            {/* ინტერაქტიული დაფა */}
-            <div className="flex-1 h-full min-h-0 min-w-0">
+            {/* დაფის ზონა */}
+            <div className="relative flex flex-1 h-full min-h-0 min-w-0 overflow-hidden rounded-xl">
               <ClassWhiteboard
                 isFullscreen={isBoardFullscreen}
                 onToggleFullscreen={() => setIsBoardFullscreen(!isBoardFullscreen)}

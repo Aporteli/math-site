@@ -39,13 +39,7 @@ export function SiteLogo({
           >
             {brand.name}
           </span>
-          <span
-            className={`truncate text-xs font-medium ${
-              isLight ? "text-paper/70" : "text-muted"
-            }`}
-          >
-            {brand.person}
-          </span>
+         
         </span>
       )}
     </Link>

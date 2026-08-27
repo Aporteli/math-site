@@ -135,7 +135,7 @@ export async function sendProblemToStudentAction({
         publishedAt: new Date(),
         title: problem.topic ? `ამოცანა: ${problem.topic}` : "ინდივიდუალური ამოცანა",
         instructions: instructions?.trim() || "გთხოვთ ამოხსნათ მოცემული ამოცანა.",
-        attachmentUrl: attachmentUrl || null, // მასწავლებლის მიმაგრებული ფოტო
+        attachmentUrl: attachmentUrl || null,
         customPayload: {
           problemId: problem.id,
           promptTex: problem.promptTex,
@@ -224,7 +224,7 @@ export async function sendProblemToClassAction({
 }
 
 /**
- * 5. მოსწავლისთვის მისი კუთვნილი დავალებების წამოღება
+ * 5. მოსწავლისთვის მისი კუთვნილი დავალებების წამოღება (createdAt-ის დაბრუნებით)
  */
 export async function getStudentAssignmentsAction() {
   try {
@@ -261,7 +261,7 @@ export async function getStudentAssignmentsAction() {
       let problemStatus: "notStarted" | "uploaded" | "submitted" | "graded" = "notStarted";
       if (submission?.grade) {
         problemStatus = "graded";
-      } else if (submission?.status === "SUBMITTED") {
+      } else if (submission?.status === "SUBMITTED" || submission?.status === "RETURNED") {
         problemStatus = "submitted";
       } else if (submission?.attachmentUrl) {
         problemStatus = "uploaded";
@@ -271,7 +271,9 @@ export async function getStudentAssignmentsAction() {
         id: a.id,
         title: a.title,
         course: a.course?.title || "ზოგადი კურსი",
-        dueLabel: a.dueAt ? new Date(a.dueAt).toLocaleDateString("ka-GE") : "ვადა შეუზღუდავია",
+        createdAt: a.createdAt ? a.createdAt.toISOString() : undefined,
+        publishedAt: a.publishedAt ? a.publishedAt.toISOString() : undefined,
+        dueLabel: a.dueAt ? a.dueAt.toISOString() : undefined,
         overdue: a.dueAt ? new Date(a.dueAt) < new Date() : false,
         note: a.instructions || undefined,
         instructions: a.instructions || undefined,
@@ -283,15 +285,46 @@ export async function getStudentAssignmentsAction() {
             promptTex: payload.promptTex || payload.text || a.instructions || "",
             status: problemStatus,
             fileName: submission?.attachmentUrl || undefined,
+            previewUrl: submission?.attachmentUrl || undefined,
             grade: submission?.grade ? Number(submission.grade.score) : undefined,
             feedback: submission?.grade?.comment || undefined,
-            teacherAttachmentUrl: a.attachmentUrl || null, // მასწავლებლის მიმაგრებული ფოტო მოსწავლისთვის
+            teacherAttachmentUrl: a.attachmentUrl || null,
           },
         ],
       };
     });
   } catch (error) {
     console.error("Failed to load student assignments:", error);
+    return [];
+  }
+}
+
+export interface StudentCourse {
+  id: string;
+  title: string;
+}
+
+/**
+ * 6. მოსწავლის ჩარიცხული კურსების წამოღება (ვიდეო გაკვეთილზე შესვლისთვის)
+ */
+export async function getStudentCoursesAction(): Promise<StudentCourse[]> {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) return [];
+
+    const enrollments = await prisma.enrollment.findMany({
+      where: { userId: session.user.id, status: "ACTIVE" },
+      select: {
+        course: { select: { id: true, title: true } },
+      },
+    });
+
+    return enrollments
+      .map((e) => e.course)
+      .filter((course): course is StudentCourse => course !== null)
+      .sort((a, b) => a.title.localeCompare(b.title));
+  } catch (error) {
+    console.error("Failed to load student courses:", error);
     return [];
   }
 }

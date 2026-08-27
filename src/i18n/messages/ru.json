@@ -1973,13 +1973,8 @@
     "student": {
       "role": "Ученик",
       "nav": {
-        "overview": "Обзор",
-        "courses": "Мои курсы",
-        "practice": "Ежедневная практика",
-        "assignments": "Активные задания",
-        "flashcards": "Карточки",
-        "progress": "Прогресс",
-        "grades": "Оценки"
+        "assignments": " Задания",
+        "flashcards": " Формулы"
       },
       "pages": {
         "overview": {
@@ -2010,6 +2005,19 @@
           "title": "Оценки",
           "subtitle": "Баллы, обратная связь и история заданий."
         }
+      },
+      "flashcards": {
+        "activeFormulas": "Активные формулы",
+        "totalCount": "Всего: {count}",
+        "emptyTitle": "Формулы не найдены",
+        "emptyHint": "Учитель ещё не отправил вам учебные формулы.",
+        "cardBadge": "Флэш-карточка",
+        "teacherNote": "Указание учителя",
+        "discussion": "Обсуждение",
+        "noQuestions": "Вопросов пока нет",
+        "noQuestionsHint": "Если материал карточки непонятен, задайте вопрос здесь.",
+        "teacher": "Учитель",
+        "messagePlaceholder": "Напишите сообщение..."
       }
     }
   },

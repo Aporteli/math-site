@@ -1973,13 +1973,10 @@
     "student": {
       "role": "Student",
       "nav": {
-        "overview": "Overview",
-        "courses": "My courses",
-        "practice": "Daily practice",
-        "assignments": "Active assignments",
-        "flashcards": "Flashcards",
-        "progress": "Progress",
-        "grades": "Grades"
+      
+        "assignments": "Assignments",
+        "flashcards": "Formulas"
+        
       },
       "pages": {
         "overview": {
@@ -2010,6 +2007,19 @@
           "title": "Grades",
           "subtitle": "Scores, feedback and assignment history."
         }
+      },
+      "flashcards": {
+        "activeFormulas": "Active formulas",
+        "totalCount": "Total: {count}",
+        "emptyTitle": "No formulas found",
+        "emptyHint": "Your teacher hasn't sent you any study formulas yet.",
+        "cardBadge": "Flashcard",
+        "teacherNote": "Teacher's note",
+        "discussion": "Discussion",
+        "noQuestions": "No questions yet",
+        "noQuestionsHint": "If the card material is unclear, ask a question here.",
+        "teacher": "Teacher",
+        "messagePlaceholder": "Write a message..."
       }
     }
   },

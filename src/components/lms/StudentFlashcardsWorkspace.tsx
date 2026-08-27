@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { addCommentAction } from "@/app/[locale]/(dashboard)/teacher/actions";
 import { KatexPreview } from "@/components/math/katex-preview";
+import type { Dictionary } from "@/i18n/types";
 
 interface AssignmentItem {
   id: string;
@@ -48,12 +49,16 @@ function formatTime(isoString: string) {
   return `${hours}:${minutes}`;
 }
 
+type FlashcardsCopy = Dictionary["dashboard"]["student"]["flashcards"];
+
 export function StudentFlashcardsWorkspace({
   initialAssignments,
   studentName,
+  copy,
 }: {
   initialAssignments: AssignmentItem[];
   studentName: string;
+  copy: FlashcardsCopy;
 }) {
   const [assignments, setAssignments] = useState<AssignmentItem[]>(initialAssignments);
   const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>({});
@@ -98,11 +103,11 @@ export function StudentFlashcardsWorkspace({
       <div className="flex items-center justify-between rounded-2xl border border-hairline bg-white p-3 px-5 shadow-sm">
         <span className="text-xs font-bold text-ink flex items-center gap-2">
           <Sparkles className="size-4 text-navy" />
-          აქტიური ბარათები
+          {copy.activeFormulas}
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-paper-deep px-3 py-1 text-xs font-bold text-muted">
           <Layers className="size-3.5" />
-          სულ: {assignments.length}
+          {copy.totalCount.replace("{count}", String(assignments.length))}
         </span>
       </div>
 
@@ -111,9 +116,9 @@ export function StudentFlashcardsWorkspace({
           <div className="flex size-16 items-center justify-center rounded-full bg-paper-deep text-muted/50 mb-4">
             <Sparkles className="size-8" />
           </div>
-          <h3 className="text-lg font-bold text-ink">ბარათები არ მოიძებნა</h3>
+          <h3 className="text-lg font-bold text-ink">{copy.emptyTitle}</h3>
           <p className="mt-1 max-w-sm text-sm text-muted">
-            მასწავლებელს თქვენთვის სასწავლო ბარათები ჯერ არ გამოუგზავნია.
+            {copy.emptyHint}
           </p>
         </div>
       ) : (
@@ -131,7 +136,7 @@ export function StudentFlashcardsWorkspace({
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-lg bg-navy-tint px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-navy">
-                        ფლეშ ბარათი
+                        {copy.cardBadge}
                       </span>
                       <span className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-paper px-2.5 py-1 text-[11px] font-semibold text-muted">
                         <BookOpen className="size-3" />
@@ -159,7 +164,7 @@ export function StudentFlashcardsWorkspace({
                     <div className="mt-auto rounded-2xl border border-amber-200/50 bg-amber-50/50 p-4">
                       <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-700">
                         <Info className="size-4" /> 
-                        მასწავლებლის მითითება
+                        {copy.teacherNote}
                       </p>
                       <p className="mt-2 text-sm font-medium text-amber-900/80 leading-relaxed">
                         {item.instructions}
@@ -172,7 +177,7 @@ export function StudentFlashcardsWorkspace({
                 <div className="flex flex-col border-t border-hairline lg:border-l lg:border-t-0 bg-paper/30 lg:w-[40%] xl:w-[35%]">
                   <div className="flex items-center gap-2 border-b border-hairline-soft bg-white/50 px-5 py-4">
                     <MessageCircle className="size-4 text-navy" />
-                    <h4 className="text-sm font-bold text-ink">დისკუსია</h4>
+                    <h4 className="text-sm font-bold text-ink">{copy.discussion}</h4>
                     <span className="ml-auto rounded-full bg-paper-deep px-2 py-0.5 text-[10px] font-bold text-muted">
                       {item.comments.length}
                     </span>
@@ -182,9 +187,9 @@ export function StudentFlashcardsWorkspace({
                     {item.comments.length === 0 ? (
                       <div className="flex h-full flex-col items-center justify-center text-center opacity-60">
                         <Sparkles className="size-8 text-muted mb-2" />
-                        <p className="text-xs font-semibold text-ink">კითხვები არ არის</p>
+                        <p className="text-xs font-semibold text-ink">{copy.noQuestions}</p>
                         <p className="text-[11px] text-muted max-w-[200px] mt-1">
-                          თუ ბარათის მასალა გაუგებარია, დასვით კითხვა აქ.
+                          {copy.noQuestionsHint}
                         </p>
                       </div>
                     ) : (
@@ -199,7 +204,7 @@ export function StudentFlashcardsWorkspace({
                           >
                             <div className="flex items-center gap-1.5 mb-1 px-1">
                               <span className="text-[10px] font-bold text-muted">
-                                {isTeacher ? "მასწავლებელი" : studentName}
+                                {isTeacher ? copy.teacher : studentName}
                               </span>
                               <span className="text-[9px] text-muted/60">
                                 {formatTime(c.createdAt)}
@@ -236,7 +241,7 @@ export function StudentFlashcardsWorkspace({
                             handleSendComment(item.id);
                           }
                         }}
-                        placeholder="დაწერეთ შეტყობინება..."
+                        placeholder={copy.messagePlaceholder}
                         className="max-h-[100px] min-h-[44px] flex-1 resize-none rounded-2xl border border-hairline bg-paper px-4 py-3 text-[13px] outline-none transition-colors focus:border-navy focus:bg-white"
                       />
                       <button

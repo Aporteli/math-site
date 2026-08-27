@@ -16,7 +16,6 @@ import {
 import { convertPdfToImages } from "@/lib/pdf-helpers";
 import { KatexPreview } from "@/components/math/katex-preview";
 
-// 1. სქროლის ჩამკეტი ჰუკი
 export function useLockBodyScroll(lock: boolean = true) {
   useEffect(() => {
     if (!lock) return;
@@ -58,17 +57,13 @@ export function BatchUploadModal({
   onClose,
   onApplyAssignments,
 }: BatchUploadModalProps) {
-  // ვრთავთ ფონის სქროლის ჩამკეტს
   useLockBodyScroll(true);
 
   const [loading, setLoading] = useState(false);
   const [uploadedItems, setUploadedItems] = useState<UploadedFileItem[]>([]);
-
   const [matches, setMatches] = useState<Record<string, string>>({});
-
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [hoveredItems, setHoveredItems] = useState<Record<string, string | null>>({});
-
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -177,7 +172,6 @@ export function BatchUploadModal({
           e.stopPropagation();
         }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-hairline bg-gradient-to-b from-paper/60 to-white px-6 py-5">
           <div className="flex min-w-0 items-center gap-3.5">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-navy/10 bg-navy-tint text-navy">
@@ -185,10 +179,10 @@ export function BatchUploadModal({
             </div>
             <div className="min-w-0">
               <h3 className="text-lg font-bold text-ink leading-tight">
-                ამოხსნების ერთდროული ატვირთვა
+                ინდივიდუალური მიბმა
               </h3>
               <p className="text-xs text-muted mt-0.5">
-                ატვირთეთ 1 ცალი PDF ან მრავალი ფოტო ერთად — სისტემა ავტომატურად გაანაწილებს ბილეთებზე.
+                ატვირთეთ ფაილები და გაანაწილეთ სათითაოდ ბილეთებზე
               </p>
             </div>
           </div>
@@ -201,12 +195,10 @@ export function BatchUploadModal({
           </button>
         </div>
 
-        {/* Content Body */}
         <div
           className="flex-1 overflow-y-auto p-6 pb-32 space-y-6"
           onClick={() => setOpenDropdown(null)}
         >
-          {/* Upload Zone */}
           <input
             ref={fileInputRef}
             type="file"
@@ -262,24 +254,23 @@ export function BatchUploadModal({
                 </span>
                 <div>
                   <p className="text-sm font-bold text-ink">
-                    დააჭირეთ, ან გადმოათრიეთ ფაილები აქ (PDF ან რამდენიმე სურათი)
+                    დააჭირეთ, ან გადმოათრიეთ ფაილები აქ
                   </p>
                   <p className="text-xs text-muted mt-1">
                     ატვირთულია:{" "}
-                    <span className="font-bold text-navy">{uploadedItems.length} გვერდი/ფოტო</span>
+                    <span className="font-bold text-navy">{uploadedItems.length} ფაილი</span>
                   </p>
                 </div>
               </>
             )}
           </div>
 
-          {/* Quick Match List */}
           {uploadedItems.length > 0 && (
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted">
-                    ბილეთებისა და ფოტოების შესაბამისობა
+                    შესაბამისობა
                   </h4>
                   <span className="text-xs font-bold text-navy">
                     {matchedCount}/{problems.length}
@@ -296,11 +287,9 @@ export function BatchUploadModal({
               <div className="space-y-3">
                 {problems.map((problem, idx) => {
                   const assignedItemId = matches[problem.id];
-
                   const currentPreviewId = hoveredItems[problem.id] || assignedItemId;
                   const currentPreviewItem = uploadedItems.find((u) => u.id === currentPreviewId);
                   const assignedItem = uploadedItems.find((u) => u.id === assignedItemId);
-
                   const isDropdownOpen = openDropdown === problem.id;
 
                   return (
@@ -314,7 +303,6 @@ export function BatchUploadModal({
                           : "border-hairline bg-white shadow-sm"
                       }`}
                     >
-                      {/* 1. ამოცანის ინფორმაცია */}
                       <div className="min-w-0 flex-1">
                         <div className="mb-2.5 flex items-center gap-2">
                           <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">
@@ -341,7 +329,6 @@ export function BatchUploadModal({
                         )}
                       </div>
 
-                      {/* 2. მიბმის კონტროლი */}
                       <div className="w-full shrink-0 sm:w-56">
                         <label className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted">
                           <ArrowRightLeft className="size-3" />
@@ -416,10 +403,8 @@ export function BatchUploadModal({
                         </div>
                       </div>
 
-                      {/* 3. Thumbnail Preview */}
                       {currentPreviewItem ? (
                         <div className="group relative shrink-0 self-center transition-all duration-200 sm:self-center">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={currentPreviewItem.url}
                             alt="Preview"
@@ -429,14 +414,11 @@ export function BatchUploadModal({
                             }}
                             className="h-24 w-28 rounded-xl border border-hairline bg-white object-cover shadow-sm transition-transform cursor-zoom-in group-hover:scale-105"
                           />
-
-                          {/* Hover ლუპა */}
                           <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-slate-900/0 transition-all group-hover:bg-slate-900/20">
                             <span className="flex items-center gap-1.5 rounded-lg border border-white/50 bg-white/95 px-2.5 py-1 text-[10px] font-bold text-ink opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100">
                               <ZoomIn className="size-3" /> გადიდება
                             </span>
                           </div>
-
                           {assignedItemId === currentPreviewItem.id && (
                             <button
                               type="button"
@@ -463,7 +445,6 @@ export function BatchUploadModal({
           )}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between gap-4 border-t border-hairline bg-paper/40 px-6 py-4">
           <button
             type="button"
@@ -473,21 +454,6 @@ export function BatchUploadModal({
             გაუქმება
           </button>
 
-          {uploadedItems.length > 0 &&
-            (matchedCount < problems.length ? (
-              <p className="hidden text-xs text-muted sm:block">
-                დარჩენილია{" "}
-                <span className="font-bold text-amber-600">
-                  {problems.length - matchedCount}
-                </span>{" "}
-                მიუბმელი ბარათი
-              </p>
-            ) : (
-              <p className="hidden items-center gap-1.5 text-xs font-bold text-emerald-600 sm:flex">
-                <CheckCircle2 className="size-3.5" /> ყველა ბარათი მიბმულია
-              </p>
-            ))}
-
           <button
             type="button"
             disabled={matchedCount === 0 || loading}
@@ -495,12 +461,11 @@ export function BatchUploadModal({
             className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-navy px-6 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-navy-strong disabled:opacity-40 active:scale-95"
           >
             <CheckCircle2 className="size-4" />
-            <span>ყველას მიბმა და მომზადება ({matchedCount})</span>
+            <span>მიბმა ({matchedCount})</span>
           </button>
         </div>
       </div>
 
-      {/* Fullscreen Image Preview */}
       {fullscreenImage && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 p-4 backdrop-blur-md cursor-zoom-out animate-in fade-in duration-200"
@@ -514,10 +479,9 @@ export function BatchUploadModal({
             >
               <X className="size-6" />
             </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={fullscreenImage}
-              alt="გადიდებული გვერდი"
+              alt="გადიდებული"
               className="max-h-[95vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />

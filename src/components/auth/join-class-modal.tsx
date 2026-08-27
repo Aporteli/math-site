@@ -35,7 +35,7 @@ export function JoinClassModal({ locale }: { locale: string }) {
       // makes the proxy/middleware see STUDENT instead of the stale VISITOR role.
       await getSession();
 
-      window.location.href = `/${locale}/student/overview`;
+      window.location.href = `/${locale}/student/assignments`;
     } catch (err) {
       setError("კავშირის შეცდომა");
       setPending(false);

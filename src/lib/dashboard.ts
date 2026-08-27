@@ -42,8 +42,6 @@ export const TEACHER_NAV: DashboardLink<TeacherNavId>[] = [
 ];
 
 export const STUDENT_NAV: DashboardLink<StudentNavId>[] = [
-  { id: "overview", href: "/student/overview", icon: LayoutDashboard },
-  { id: "practice", href: "/student/practice", icon: Target },
   { id: "assignments", href: "/student/assignments", icon: ClipboardList },
   { id: "flashcards", href: "/student/flashcards", icon: Layers },
 ];
