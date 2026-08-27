@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowUpRight, LayoutDashboard, UserPlus } from "lucide-react";
 import { localePath, type Locale } from "@/i18n/config";
@@ -21,6 +23,9 @@ export function WorkspaceDock({
   hint,
   variant = "floating",
 }: WorkspaceDockProps) {
+  // 1. გამოიტანს როლს ბრაუზერის კონსოლში კომპონენტის ჩატვირთვისთანავე
+  console.log("⚡ [WorkspaceDock Rendered] Current Role:", role);
+
   const isVisitor = role === "VISITOR";
   const href = isVisitor 
     ? localePath(locale, "/?joinModal=true") 
@@ -30,10 +35,21 @@ export function WorkspaceDock({
   const displayLabel = isVisitor ? "შეუერთდი კლასს" : label;
   const displayHint = isVisitor ? "შეიყვანეთ კლასის კოდი" : hint;
 
+  // 2. დაკლიკების ფუნქცია კონსოლში გამოსატანად
+  const handleDockClick = () => {
+    console.log("🖱️ [WorkspaceDock Clicked]:", {
+      role: role,
+      isVisitor: isVisitor,
+      targetHref: href,
+      time: new Date().toLocaleTimeString(),
+    });
+  };
+
   if (variant === "bar") {
     return (
       <Link
         href={href}
+        onClick={handleDockClick}
         aria-label={displayHint}
         className="inline-flex min-w-0 items-center gap-2 rounded-full bg-navy px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy-strong"
       >
@@ -51,6 +67,7 @@ export function WorkspaceDock({
     <aside className="pointer-events-none fixed left-4 bottom-5 z-40 hidden min-[500px]:block sm:left-6 sm:bottom-6">
       <Link
         href={href}
+        onClick={handleDockClick}
         className="pointer-events-auto flex max-w-xs items-center gap-3 rounded-2xl border border-hairline bg-white p-3 shadow-md transition-all hover:border-navy/30 hover:shadow-lg"
       >
         <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-navy text-white">
