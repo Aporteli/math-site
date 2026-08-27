@@ -18,6 +18,10 @@ type PageProps = { params: Promise<{ locale: string }> };
 
 export const dynamic = 'force-dynamic';
 
+// Keep AI Server Actions (generateDiverseProblemsAction / teacherAiChatAction)
+// within the Vercel function duration ceiling instead of the default 10s.
+export const maxDuration = 300;
+
 export function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return teacherPageMetadata('problems', params);
 }

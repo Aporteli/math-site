@@ -8,6 +8,14 @@ import { getDictionary } from "@/i18n/get-dictionary";
 import { getSession } from "@/lib/auth/session";
 import { canUseAdminSlashPrompts } from "@/lib/math/problems/slash-prompts-access";
 
+// Vercel serverless functions default to a ~10s duration limit, but the AI
+// chat / problem-generation Server Actions can legitimately run up to ~75s
+// (and up to ~150s when a fallback model is tried after a timeout). Raise the
+// ceiling so the platform doesn't kill the request before our own
+// AbortSignal.timeout() limits fire and return a clean error.
+// NOTE: Vercel Hobby caps this at 10s — use a Pro plan (Fluid Compute) to honor 300s.
+export const maxDuration = 300;
+
 type LocaleParams = { params: Promise<{ locale: string }> };
 
 export function generateStaticParams() {
