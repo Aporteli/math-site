@@ -11,16 +11,14 @@ import {
   GraduationCap,
   LayoutDashboard,
   Layers,
-  Sparkles,
-  Target,
-  TrendingUp,
 } from 'lucide-react';
 import { PageHero } from '@/components/ui/page-hero';
 import { localePath, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
-import { requireRole } from '@/lib/auth/session';
+import { getSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { StudentCourseVideoCallButton } from '@/components/lms/student/StudentCourseVideoCallButton';
+import { redirect } from 'next/navigation';
 
 type HeroStat = {
   id: string;
@@ -71,27 +69,14 @@ interface PageProps {
   params: Promise<{ locale: Locale }> | { locale: Locale };
 }
 
+// დატოვებულია მხოლოდ არსებული გვერდების ლინკები (404-ების გარეშე)
 const DEFAULT_QUICK_LINKS: QuickLink[] = [
-  {
-    id: 'courses',
-    title: 'Courses',
-    hint: 'Browse your enrolled courses and materials',
-    href: '/student/courses',
-    icon: BookOpen,
-  },
   {
     id: 'assignments',
     title: 'Assignments',
     hint: 'Track homework and submission deadlines',
     href: '/student/assignments',
     icon: ClipboardList,
-  },
-  {
-    id: 'practice',
-    title: 'Practice',
-    hint: 'Sharpen your skills with guided problem sets',
-    href: '/student/practice',
-    icon: Target,
   },
   {
     id: 'flashcards',
@@ -106,13 +91,6 @@ const DEFAULT_QUICK_LINKS: QuickLink[] = [
     hint: 'See scores and teacher feedback',
     href: '/student/grades',
     icon: GraduationCap,
-  },
-  {
-    id: 'progress',
-    title: 'Progress',
-    hint: 'Follow your growth across every course',
-    href: '/student/progress',
-    icon: TrendingUp,
   },
 ];
 
@@ -170,14 +148,22 @@ function SectionHeading({
 export default async function StudentOverviewPage({ params }: PageProps) {
   const resolvedParams = await params;
   const locale = resolvedParams.locale;
-  const session = await requireRole(locale, ['STUDENT']);
-  const dict = getDictionary(locale);
-  const copy = dict.studentOverview;
 
-  // 1. სტუდენტის რეალური სახელი სესიიდან
-  const studentName = session.user.name || session.user.email?.split('@')[0] || 'Student';
+  // 1. უსაფრთხოდ ვიღებთ სესიას
+  const session = await getSession();
+  if (!session?.user?.id) {
+    redirect(localePath(locale, '/login'));
+  }
 
-  // 2. მხოლოდ ამ სტუდენტის აქტიური კურსების წამოღება ბაზიდან
+  // 2. ვკითხულობთ ბაზიდან უახლეს მონაცემებს (ხელახალი შესვლა რომ არ დასჭირდეს)
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, name: true, email: true, role: true },
+  });
+
+  const studentName = dbUser?.name || session.user.name || session.user.email?.split('@')[0] || 'Student';
+
+  // 3. მხოლოდ ამ სტუდენტის აქტიური კურსების წამოღება
   const enrollments = await prisma.enrollment.findMany({
     where: {
       userId: session.user.id,
@@ -200,6 +186,9 @@ export default async function StudentOverviewPage({ params }: PageProps) {
     teacher: e.course.teacher?.name || 'Instructor',
     percent: 0,
   }));
+
+  const dict = getDictionary(locale);
+  const copy = dict.studentOverview;
 
   const activeCoursesCount = courses.length.toString();
   const streakDays = 1;
@@ -265,7 +254,7 @@ export default async function StudentOverviewPage({ params }: PageProps) {
           <p className="mb-3 text-sm font-semibold tracking-wide text-brass">
             {copy?.quickLinks?.title || 'Quick links'}
           </p>
-          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {quickLinks.map((link) => {
               const Icon = link.icon;
               const linkData = copy?.quickLinks?.[link.id as keyof Omit<typeof copy.quickLinks, 'title'>];
@@ -301,7 +290,7 @@ export default async function StudentOverviewPage({ params }: PageProps) {
               <SectionHeading
                 label={copy?.sections?.continueLearning || 'Continue learning'}
                 viewAllText={copy?.sections?.viewAll || 'View all'}
-                viewAllHref={path('/student/courses')}
+                viewAllHref={path('/student/assignments')}
               />
               <ul className="space-y-3">
                 {courses.map((course) => (
