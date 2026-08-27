@@ -12,6 +12,12 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio"
   },
+  "allowScripts": {
+    "@prisma/engines": true,
+    "prisma": true,
+    "msgpackr-extract": true,
+    "unrs-resolver": true
+  },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
     "@livekit/components-react": "^2.9.24",
