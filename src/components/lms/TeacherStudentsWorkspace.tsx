@@ -80,6 +80,8 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+const STORAGE_KEY = "mathlab_teacher_viewed_groups_v1";
+
 export function TeacherStudentsWorkspace({
   initialStudents = [],
   courses = [],
@@ -89,7 +91,27 @@ export function TeacherStudentsWorkspace({
   const [activeCourseId, setActiveCourseId] = useState<string | "all">("all");
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [classSearchQuery, setClassSearchQuery] = useState("");
-  const [collapsedDates, setCollapsedDates] = useState<Record<string, boolean>>({});
+
+  // ნაგულისხმევად ყველა თარიღი არის ჩაკეცილი
+  const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
+
+  // localStorage-იდან წაკითხული ნანახი თარიღების სია
+  const [viewedDateKeys, setViewedDateKeys] = useState<Set<string>>(new Set());
+
+  // საწყისი ჩატვირთვა localStorage-იდან
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setViewedDateKeys(new Set(parsed));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to read viewed dates from localStorage", e);
+    }
+  }, []);
 
   const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -151,6 +173,24 @@ export function TeacherStudentsWorkspace({
   const activeStudent = students.find((s) => s.id === selectedStudentId);
   const selectedCourseObj = courses.find((c) => c.id === activeCourseId);
 
+  // შემოწმება: აქვს თუ არა სტუდენტს წაუკითხავი (ჩაუშლელი) გამოგზავნილი ჯგუფი
+  const studentHasUnreadSubmission = (student: StudentItem) => {
+    return student.assignments.some((a) => {
+      const isSubmitted =
+        (a.status === "SUBMITTED" || a.status === "RETURNED" || Boolean(a.attachmentUrl)) &&
+        a.status !== "GRADED";
+      if (!isSubmitted) return false;
+
+      const dateStr = new Date(a.createdAt).toLocaleDateString("ka-GE", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+      const key = `${student.id}_${dateStr}`;
+      return !viewedDateKeys.has(key);
+    });
+  };
+
   const groupedAssignments = useMemo(() => {
     if (!activeStudent || !activeStudent.assignments) return [];
 
@@ -189,11 +229,30 @@ export function TeacherStudentsWorkspace({
     setActiveCourseId(courseId);
   };
 
+  const handleStudentSelect = (studentId: string) => {
+    setSelectedStudentId(studentId);
+  };
+
+  // თარიღის ჩამოშლისას აღინიშნება, რომ ეს ჯგუფი უკვე ნანახია და შეინახება localStorage-ში
   const toggleDate = (dateStr: string) => {
-    setCollapsedDates((prev) => ({
+    const willExpand = !expandedDates[dateStr];
+    setExpandedDates((prev) => ({
       ...prev,
-      [dateStr]: !prev[dateStr],
+      [dateStr]: willExpand,
     }));
+
+    if (willExpand && activeStudent) {
+      const key = `${activeStudent.id}_${dateStr}`;
+      setViewedDateKeys((prev) => {
+        const next = new Set([...prev, key]);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next)));
+        } catch (e) {
+          console.error("Failed to save viewed dates to localStorage", e);
+        }
+        return next;
+      });
+    }
   };
 
   async function handleConfirmDelete() {
@@ -318,7 +377,7 @@ export function TeacherStudentsWorkspace({
     <div className="space-y-6">
       <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[38rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
         
-        {/* სვეტი 1: კლასების სია */}
+        {/* სვეტი 1: კლასები */}
         <aside className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2 border-b border-hairline pb-3">
             <GraduationCap className="size-4 text-navy" />
@@ -340,41 +399,53 @@ export function TeacherStudentsWorkspace({
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-1.5 pe-0.5">
-            <button
-              type="button"
-              onClick={() => handleCourseChange("all")}
-              className={`flex w-full items-center justify-between gap-2.5 rounded-2xl p-3 text-left transition-all ${
-                activeCourseId === "all"
-                  ? "bg-navy text-white shadow-sm ring-1 ring-navy"
-                  : "bg-paper/40 hover:bg-paper-deep text-ink"
-              }`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div
-                  className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                    activeCourseId === "all" ? "bg-white text-navy" : "bg-navy text-white"
+            {/* ყველა მოსწავლე */}
+            {(() => {
+              const allHasUnread = students.some((s) => studentHasUnreadSubmission(s));
+              return (
+                <button
+                  type="button"
+                  onClick={() => handleCourseChange("all")}
+                  className={`flex w-full items-center justify-between gap-2.5 rounded-2xl p-3 text-left transition-all ${
+                    activeCourseId === "all"
+                      ? "bg-navy text-white shadow-sm ring-1 ring-navy"
+                      : "bg-paper/40 hover:bg-paper-deep text-ink"
                   }`}
                 >
-                  <Users className="size-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold">ყველა მოსწავლე</p>
-                </div>
-              </div>
-              <span
-                className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold ${
-                  activeCourseId === "all"
-                    ? "bg-white/20 text-white"
-                    : "bg-white border border-hairline text-muted"
-                }`}
-              >
-                {students.length}
-              </span>
-            </button>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className={`relative flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                        activeCourseId === "all" ? "bg-white text-navy" : "bg-navy text-white"
+                      }`}
+                    >
+                      <Users className="size-3.5" />
+                      {allHasUnread && (
+                        <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-amber-400 ring-2 ring-white animate-pulse" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold">ყველა მოსწავლე</p>
+                    </div>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold ${
+                      activeCourseId === "all"
+                        ? "bg-white/20 text-white"
+                        : "bg-white border border-hairline text-muted"
+                    }`}
+                  >
+                    {students.length}
+                  </span>
+                </button>
+              );
+            })()}
 
             {filteredCourses.map((course) => {
               const active = course.id === activeCourseId;
-              const count = students.filter((s) => s.courses.some((c) => c.id === course.id)).length;
+              const courseStudents = students.filter((s) =>
+                s.courses.some((c) => c.id === course.id)
+              );
+              const courseHasUnread = courseStudents.some((s) => studentHasUnreadSubmission(s));
 
               return (
                 <button
@@ -389,11 +460,14 @@ export function TeacherStudentsWorkspace({
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div
-                      className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      className={`relative flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                         active ? "bg-white text-navy" : "bg-navy text-white"
                       }`}
                     >
                       {course.title.charAt(0)}
+                      {courseHasUnread && (
+                        <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-amber-400 ring-2 ring-white animate-pulse" />
+                      )}
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold">{course.title}</p>
@@ -407,7 +481,7 @@ export function TeacherStudentsWorkspace({
                         : "bg-white border border-hairline text-muted"
                     }`}
                   >
-                    {count}
+                    {courseStudents.length}
                   </span>
                 </button>
               );
@@ -415,32 +489,40 @@ export function TeacherStudentsWorkspace({
           </div>
         </aside>
 
-        {/* სვეტი 2: მოსწავლეები და დავალებები */}
+        {/* სვეტი 2: მოსწავლეების ტაბები და დავალებები */}
         <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white shadow-sm overflow-hidden">
+          {/* ზედა ტაბების ზოლი */}
           <div className="bg-paper/30 border-b border-hairline pt-2 px-2 overflow-x-auto flex custom-scrollbar">
             {studentsInActiveCourse.length === 0 ? (
               <p className="py-3 px-4 text-xs font-bold text-muted">ამ კლასში მოსწავლეები არ არიან</p>
             ) : (
               studentsInActiveCourse.map((student) => {
                 const isSelected = selectedStudentId === student.id;
+                const showYellowDot = studentHasUnreadSubmission(student);
+
                 return (
                   <button
                     key={student.id}
-                    onClick={() => setSelectedStudentId(student.id)}
-                    className={`flex items-center gap-2 whitespace-nowrap px-4 py-3 rounded-t-xl border-b-2 text-sm transition-all ${
+                    onClick={() => handleStudentSelect(student.id)}
+                    className={`relative flex items-center gap-2 whitespace-nowrap px-4 py-3 rounded-t-xl border-b-2 text-sm transition-all ${
                       isSelected
                         ? "border-navy bg-white text-navy font-bold shadow-[0_-2px_10px_rgba(0,0,0,0.02)]"
                         : "border-transparent text-muted hover:text-ink hover:bg-paper/50 font-medium"
                     }`}
                   >
                     <div
-                      className={`flex size-5 items-center justify-center rounded-full text-[9px] font-bold ${
+                      className={`relative flex size-5 items-center justify-center rounded-full text-[9px] font-bold ${
                         isSelected ? "bg-navy text-white" : "bg-paper-deep text-muted"
                       }`}
                     >
                       {student.name.charAt(0)}
                     </div>
-                    {student.name}
+                    <span>{student.name}</span>
+
+                    {/* ყვითელი ბურთულა მოსწავლის სახელთან */}
+                    {showYellowDot && (
+                      <span className="size-2 rounded-full bg-amber-400 ring-2 ring-amber-100 animate-pulse shrink-0" />
+                    )}
                   </button>
                 );
               })
@@ -497,7 +579,16 @@ export function TeacherStudentsWorkspace({
               ) : (
                 <div className="space-y-6">
                   {groupedAssignments.map(({ dateStr, items }) => {
-                    const isCollapsed = collapsedDates[dateStr];
+                    const isExpanded = Boolean(expandedDates[dateStr]);
+                    const groupKey = `${activeStudent.id}_${dateStr}`;
+                    const isGroupUnread =
+                      items.some(
+                        (a) =>
+                          (a.status === "SUBMITTED" ||
+                            a.status === "RETURNED" ||
+                            Boolean(a.attachmentUrl)) &&
+                          a.status !== "GRADED"
+                      ) && !viewedDateKeys.has(groupKey);
 
                     return (
                       <div key={dateStr} className="space-y-4">
@@ -511,16 +602,21 @@ export function TeacherStudentsWorkspace({
                             <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-muted border border-hairline-soft">
                               {items.length}
                             </span>
+                            {/* ყვითელი ბურთულა თვითონ თარიღის ჰედერზეც */}
+                            {isGroupUnread && (
+                              <span className="size-2 rounded-full bg-amber-400 ring-2 ring-amber-100 animate-pulse shrink-0" />
+                            )}
                             <ChevronDown
                               className={`size-3.5 text-muted transition-transform duration-200 ${
-                                isCollapsed ? "rotate-180" : ""
+                                isExpanded ? "rotate-0" : "-rotate-90"
                               }`}
                             />
                           </div>
                           <div className="h-px flex-1 bg-hairline-soft"></div>
                         </div>
 
-                        {!isCollapsed && (
+                        {/* მხოლოდ მაშინ ჩანს, როცა გაშლილია */}
+                        {isExpanded && (
                           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                             {items.map((assignment) => {
                               const isGraded = assignment.status === "GRADED" || assignment.status === "RETURNED";
@@ -610,7 +706,7 @@ export function TeacherStudentsWorkspace({
         </section>
       </div>
 
-      {/* 1. ვიდეო ზარის მოდალი */}
+      {/* 1. ვიდეო გაკვეთილის მოდალი */}
       {activeVideoCallCourse && (
         <ClassroomRoomModal
           courseId={activeVideoCallCourse.id}
@@ -849,7 +945,7 @@ export function TeacherStudentsWorkspace({
         </div>
       )}
 
-      {/* 3. ბარათის დეტალების და პასუხების მოდალი */}
+      {/* 3. ბარათის დეტალების მოდალი */}
       {activeAssignmentModal && (
         <TeacherViewProblemModal
           assignment={activeAssignmentModal.assignment}

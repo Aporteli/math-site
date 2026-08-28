@@ -91,6 +91,8 @@ const DIFFICULTY_CONFIG: Record<
 const fieldClass =
   'w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-muted focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/10 transition-all';
 
+const STUDENT_VIEWED_STORAGE_KEY = 'mathlab_student_viewed_assignment_groups_v1';
+
 function progressOf(assignment: Assignment) {
   const total = assignment.problems.length;
   const done = assignment.problems.filter(
@@ -211,6 +213,23 @@ export default function StudentAssignments({
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(!initialPropsAssignments);
 
+  // localStorage-დან ჩატვირთული ნანახი თარიღების სია
+  const [viewedDateKeys, setViewedDateKeys] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STUDENT_VIEWED_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setViewedDateKeys(new Set(parsed));
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load student viewed groups from localStorage', e);
+    }
+  }, []);
+
   const [dateGroupAttachments, setDateGroupAttachments] = useState<
     Record<string, { id: string; fileName: string; url: string }[]>
   >({});
@@ -223,6 +242,7 @@ export default function StudentAssignments({
     problem: AssignmentProblem;
   } | null>(null);
 
+  // საწყისად ჩაკეცილია ყველა თარიღი
   const [collapsedDates, setCollapsedDates] = useState<Record<string, boolean>>({});
   const [courses, setCourses] = useState<StudentCourse[]>([]);
 
@@ -279,16 +299,42 @@ export default function StudentAssignments({
     return Array.from(groupsMap.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
   }, [visible]);
 
+  // ჩამოშლისას თარიღი აღინიშნება როგორც ნანახი და ინახება localStorage-ში
   const toggleDate = (dateKey: string) => {
-    setCollapsedDates((prev) => ({ ...prev, [dateKey]: !prev[dateKey] }));
+    const isCurrentlyCollapsed = collapsedDates[dateKey] ?? true;
+    const willOpen = isCurrentlyCollapsed;
+
+    setCollapsedDates((prev) => ({ ...prev, [dateKey]: !willOpen }));
+
+    if (willOpen) {
+      setViewedDateKeys((prev) => {
+        const next = new Set([...prev, dateKey]);
+        try {
+          localStorage.setItem(STUDENT_VIEWED_STORAGE_KEY, JSON.stringify(Array.from(next)));
+        } catch (e) {
+          console.error('Failed to save student viewed groups', e);
+        }
+        return next;
+      });
+    }
   };
 
-  // მხოლოდ მიმდინარე დღის (დღევანდელი) დავალებები
+  // ამოწმებს, აქვს თუ არა სტუდენტს ახალი (ჩაუშლელი და შეუსრულებელი) დავალებები
+  const hasUnreadOpenAssignments = useMemo(() => {
+    return assignments.some((a) => {
+      const { done, total } = progressOf(a);
+      const isOpen = done < total;
+      if (!isOpen) return false;
+
+      const { key } = parseAndFormatDate(a);
+      return !viewedDateKeys.has(key);
+    });
+  }, [assignments, viewedDateKeys]);
+
   const todayAssignments = useMemo(() => {
     return assignments.filter((a) => parseAndFormatDate(a).isToday);
   }, [assignments]);
 
-  // 1. დღევანდელი ღია / შესასრულებელი
   const openCount = useMemo(() => {
     return todayAssignments.filter((a) => {
       const { done, total } = progressOf(a);
@@ -296,7 +342,6 @@ export default function StudentAssignments({
     }).length;
   }, [todayAssignments]);
 
-  // 2. დღევანდელი გაგზავნილი (მოსწავლემ გააგზავნა, მასწავლებლის შემოწმებას ელოდება)
   const submittedCount = useMemo(() => {
     return todayAssignments.filter((a) => {
       const { done, total, graded } = progressOf(a);
@@ -304,7 +349,6 @@ export default function StudentAssignments({
     }).length;
   }, [todayAssignments]);
 
-  // 3. დღევანდელი ჩაბარებული (მასწავლებელმა ჩაიბარა და შეაფასა)
   const gradedCount = useMemo(() => {
     return todayAssignments.filter((a) => {
       const { total, graded } = progressOf(a);
@@ -518,6 +562,9 @@ export default function StudentAssignments({
             <div className="space-y-1 pt-1">
               {FILTERS.map((filter) => {
                 const isActive = statusFilter === filter.id;
+                const showBadgeOnFilter =
+                  (filter.id === 'all' || filter.id === 'notStarted') && hasUnreadOpenAssignments;
+
                 return (
                   <button
                     key={filter.id}
@@ -529,7 +576,12 @@ export default function StudentAssignments({
                         : 'text-ink/80 hover:bg-paper hover:text-ink'
                     }`}
                   >
-                    <span>{filter.label}</span>
+                    <div className="flex items-center gap-2">
+                      <span>{filter.label}</span>
+                      {showBadgeOnFilter && (
+                        <span className="size-2 rounded-full bg-amber-400 ring-2 ring-white animate-pulse" />
+                      )}
+                    </div>
                   </button>
                 );
               })}
@@ -572,7 +624,7 @@ export default function StudentAssignments({
           ) : (
             <div className="space-y-6">
               {groupedAssignments.map(({ dateKey, dateStr, items }) => {
-                const isCollapsed = collapsedDates[dateKey];
+                const isCollapsed = collapsedDates[dateKey] ?? true;
                 const currentGroupFiles = dateGroupAttachments[dateKey] || [];
                 const isUploading = uploadingDateKey === dateKey;
                 const isSubmitting = submittingDateKey === dateKey;
@@ -581,6 +633,13 @@ export default function StudentAssignments({
                   items.every((a) =>
                     a.problems.every((p) => p.status === 'submitted' || p.status === 'graded')
                   );
+
+                // ახალი დავალების ინდიკატორი კონკრეტულ თარიღზე
+                const isGroupUnread =
+                  items.some((a) => {
+                    const { done, total } = progressOf(a);
+                    return done < total;
+                  }) && !viewedDateKeys.has(dateKey);
 
                 return (
                   <div
@@ -599,6 +658,10 @@ export default function StudentAssignments({
                         <span className="rounded-md bg-white px-2.5 py-0.5 text-[11px] font-bold text-slate-700 border border-slate-300 shadow-2xs">
                           {items.length} დავალება
                         </span>
+                        {/* ყვითელი ბურთულა მოსწავლისთვის */}
+                        {isGroupUnread && (
+                          <span className="size-2 rounded-full bg-amber-400 ring-2 ring-amber-100 animate-pulse shrink-0" />
+                        )}
                       </div>
 
                       <ChevronDown
@@ -797,7 +860,6 @@ export default function StudentAssignments({
         </main>
       </div>
 
-      {/* ინდივიდუალური მოდალი */}
       {activeProblemModal && (
         <ProblemDetailModal
           problem={activeProblemModal.problem}
