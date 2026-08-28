@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { SubmissionStatus } from "@prisma/client";
 
+/**
+ * 1. მოსწავლის დავალების/პასუხის გაგზავნა
+ */
 export async function submitStudentHomeworkAction({
   assignmentId,
   attachmentUrl,
@@ -59,5 +62,43 @@ export async function submitStudentHomeworkAction({
   } catch (error) {
     console.error("Failed to submit student homework:", error);
     return { success: false, error: "დავალების გაგზავნა ვერ მოხერხდა" };
+  }
+}
+
+/**
+ * 2. მოსწავლის მიერ გაგზავნილი პასუხების გაუქმება, წაშლა და დარესეტება
+ */
+export async function withdrawStudentHomeworkAction({
+  assignmentIds,
+}: {
+  assignmentIds: string[];
+}) {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      return { success: false, error: "ავტორიზაცია ვერ მოხერხდა" };
+    }
+
+    if (!assignmentIds || assignmentIds.length === 0) {
+      return { success: false, error: "დავალებები არ არის მითითებული" };
+    }
+
+    // ვპოულობთ და ვასუფთავებთ მოსწავლის submission-ებს მოცემული დავალებებისთვის
+    await prisma.submission.updateMany({
+      where: {
+        studentId: session.user.id,
+        assignmentId: { in: assignmentIds },
+      },
+      data: {
+        attachmentUrl: null,
+        status: SubmissionStatus.DRAFT,
+        submittedAt: null,
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to withdraw student homework:", error);
+    return { success: false, error: "პასუხების წაშლა ვერ მოხერხდა" };
   }
 }

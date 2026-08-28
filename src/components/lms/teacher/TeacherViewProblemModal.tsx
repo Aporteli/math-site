@@ -1,228 +1,231 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { X, BookOpen, MessageSquare, Send, CheckCircle2, ZoomIn, FileText } from "lucide-react";
-import { KatexPreview } from "@/components/math/katex-preview";
+import { useState } from 'react';
+import { X, ImageIcon, BookOpen, ZoomIn } from 'lucide-react';
+import { KatexPreview } from '@/components/math/katex-preview';
 
-interface TeacherViewProblemModalProps {
-  assignment: {
-    id: string;
-    submissionId?: string;
-    title: string;
-    promptTex?: string;
-    type: string;
-    instructions?: string | null;
-    status: string;
-    attachmentUrl?: string | null;
-  };
-  studentName: string;
-  onClose: () => void;
-  onSubmitComment?: (comment: string) => void;
-  onMarkAsGraded?: (assignment: any) => void;
+const DEFAULT_JUNK_TEXT = '';
+
+function isImageString(str?: string | null): boolean {
+  if (!str || typeof str !== 'string') return false;
+  const trimmed = str.trim();
+  return (
+    trimmed.startsWith('data:image/') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('/') ||
+    trimmed.endsWith('.png') ||
+    trimmed.endsWith('.jpg') ||
+    trimmed.endsWith('.jpeg') ||
+    trimmed.endsWith('.webp')
+  );
+}
+
+// JSON მასივის ან ერთეული სურათის უსაფრთხო გაპარსვა
+function parseImageUrls(raw?: string | null): string[] {
+  if (!raw || typeof raw !== 'string') return [];
+  const trimmed = raw.trim();
+
+  // თუ JSON მასივია ["data:image...", ...]
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((item): item is string => typeof item === 'string' && item.length > 0);
+      }
+    } catch {
+      // იგნორირება
+    }
+  }
+
+  // თუ ჩვეულებრივი ერთი სურათია
+  if (isImageString(trimmed)) {
+    return [trimmed];
+  }
+
+  return [];
 }
 
 export function TeacherViewProblemModal({
   assignment,
   studentName,
   onClose,
-  onSubmitComment,
-  onMarkAsGraded,
-}: TeacherViewProblemModalProps) {
-  const promptText = assignment.promptTex || assignment.instructions || "პირობა არ მოიძებნა";
-  const [comment, setComment] = useState("");
-  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+}: {
+  assignment: any;
+  studentName: string;
+  onClose: () => void;
+}) {
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
-  const handleSendComment = () => {
-    if (comment.trim() && onSubmitComment) {
-      onSubmitComment(comment);
-      setComment("");
-    }
-  };
+  // ვფილტრავთ ბაზაში ჩარჩენილ არასასურველ ტექსტებს[cite: 5, 8]
+  const rawPrompt =
+    assignment.promptTex === DEFAULT_JUNK_TEXT || assignment.promptTex === 'პირობა არ მოიძებნა'
+      ? ''
+      : assignment.promptTex;
 
-  // ამოვიღოთ სურათები (შეიძლება იყოს JSON მასივი ჯგუფური ატვირთვისას, ან ერთი URL)
-  let attachments: string[] = [];
-  if (assignment.attachmentUrl) {
-    try {
-      const parsed = JSON.parse(assignment.attachmentUrl);
-      if (Array.isArray(parsed)) {
-        attachments = parsed;
-      } else {
-        attachments = [assignment.attachmentUrl];
-      }
-    } catch {
-      // თუ JSON.parse ვერ მოხერხდა, ჩავთვალოთ რომ უბრალო URL-ია
-      attachments = [assignment.attachmentUrl];
-    }
-  }
+  const rawInstructions =
+    assignment.instructions === DEFAULT_JUNK_TEXT ? '' : assignment.instructions;
 
-  const isGraded = assignment.status === "GRADED";
+  // 1. მასწავლებლის მიერ გაგზავნილი სურათის ამოღება
+  const payload = assignment.customPayload || {};
+  const problemImageRaw =
+    (isImageString(assignment.problemImageUrl) ? assignment.problemImageUrl : null) ||
+    (isImageString(assignment.attachmentUrl) ? assignment.attachmentUrl : null) ||
+    (isImageString(payload.imageUrl) ? payload.imageUrl : null) ||
+    (isImageString(payload.attachmentUrl) ? payload.attachmentUrl : null) ||
+    (isImageString(payload.promptTex) ? payload.promptTex : null) ||
+    (isImageString(rawPrompt) ? rawPrompt : null);
+
+  const problemImages = parseImageUrls(problemImageRaw);
+
+  // 2. მოსწავლის მიერ გამოგზავნილი პასუხის სურათების სწორი გაპარსვა
+  const studentImages = parseImageUrls(assignment.studentAttachmentUrl);
+
+  // ტექსტური პირობის შემოწმება[cite: 5, 8]
+  const hasTextPrompt = Boolean(rawPrompt && !isImageString(rawPrompt) && rawPrompt.trim() !== '');
 
   return (
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs animate-in fade-in duration-200"
-        onClick={onClose}
-      >
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-150"
+        onClick={onClose}>
         <div
-          className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-hairline px-6 py-4 bg-paper/30">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-navy-tint text-navy">
-                <BookOpen className="size-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-ink">
-                  {studentName} — {assignment.title}
-                </h3>
-                <p className="text-xs text-muted">გაგზავნილი ბარათი / ამოცანა</p>
-              </div>
+          className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-150"
+          onClick={(e) => e.stopPropagation()}>
+          
+          {/* ჰედერი[cite: 5, 8] */}
+          <div className="flex items-center justify-between border-b border-hairline bg-paper/30 px-6 py-4">
+            <div>
+              <h3 className="text-base font-bold text-ink">
+                {studentName}
+              </h3>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 items-center justify-center rounded-lg text-muted hover:bg-rose-50 hover:text-rose-600 transition-colors"
-            >
-              <X className="size-5" />
+              className="flex size-8 items-center justify-center rounded-xl border border-hairline bg-white text-muted hover:bg-paper hover:text-ink transition-colors">
+              <X className="size-4" />
             </button>
           </div>
 
-          {/* Content Body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* შიგთავსი[cite: 5, 8] */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
             
-            {/* ამოცანის პირობა */}
-            <div>
-              <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted">
-                ამოცანის პირობა
-              </h4>
-              <div className="rounded-2xl border border-hairline-soft bg-paper/60 p-6 overflow-x-auto shadow-inner">
-                <KatexPreview
-                  tex={promptText}
-                  displayMode
-                  className="text-ink text-sm sm:text-base leading-relaxed"
-                />
+            {/* ამოცანის პირობის ბლოკი[cite: 5, 8] */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted">ამოცანის პირობა</label>
+              
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+                {/* 1. ტექსტური პირობა / KaTeX[cite: 5, 8] */}
+                {hasTextPrompt && (
+                  <div className="rounded-xl border border-hairline bg-white p-4 overflow-x-auto shadow-2xs">
+                    <KatexPreview tex={rawPrompt} className="text-sm text-ink leading-relaxed" />
+                  </div>
+                )}
+
+                {/* 2. მასწავლებლის მიმაგრებული სურათები[cite: 5, 8] */}
+                {problemImages.length > 0 && (
+                  <div className="space-y-2">
+                    {hasTextPrompt && (
+                      <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                        <ImageIcon className="size-3 text-navy" /> მიმაგრებული დაფა / სურათი
+                      </span>
+                    )}
+                    {problemImages.map((imgUrl, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => setExpandedImage(imgUrl)}
+                        className="group relative flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-2 shadow-2xs cursor-zoom-in hover:border-navy/40 transition-all">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imgUrl}
+                          alt="ამოცანის სურათი"
+                          className="max-h-80 w-auto max-w-full rounded-lg object-contain transition-transform group-hover:scale-[1.01]"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-900/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-slate-900/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-xs">
+                            <ZoomIn className="size-3.5" /> გადიდება
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 3. მასწავლებლის შენიშვნა[cite: 5, 8] */}
+                {rawInstructions && rawInstructions.trim() !== '' && (
+                  <div className="rounded-xl bg-amber-50/80 p-3 border border-amber-200/70">
+                    <p className="text-xs text-amber-900">
+                      <span className="font-bold text-amber-800 mr-1">შენიშვნა:</span>
+                      {rawInstructions}
+                    </p>
+                  </div>
+                )}
+
+                {/* თუ არაფერია მითითებული[cite: 5, 8] */}
+                {!hasTextPrompt && problemImages.length === 0 && (!rawInstructions || rawInstructions.trim() === '') && (
+                  <div className="py-4 text-center">
+                    <p className="text-xs text-muted">პირობა არ არის მითითებული</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* მოსწავლის გამოგზავნილი პასუხები (სურათები) */}
-            <div className="pt-4 border-t border-hairline-soft">
-              <h4 className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted">
-                <FileText className="size-3.5" />
-                მოსწავლის პასუხები
-              </h4>
-              
-              {attachments.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {attachments.map((url, idx) => (
-                    <div 
-                      key={idx} 
-                      className="group relative cursor-zoom-in aspect-[3/4] rounded-xl border border-hairline overflow-hidden bg-paper"
-                      onClick={() => setFullscreenImage(url)}
-                    >
+            {/* მოსწავლის პასუხები */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted">მოსწავლის პასუხები</label>
+
+              {studentImages.length > 0 ? (
+                <div className="space-y-3">
+                  {studentImages.map((imgUrl, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => setExpandedImage(imgUrl)}
+                      className="group relative flex flex-col items-center justify-center rounded-2xl border border-blue-200 bg-blue-50/30 p-3 cursor-zoom-in hover:border-blue-400 transition-all">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img 
-                        src={url} 
-                        alt={`პასუხი ${idx + 1}`} 
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                      <img
+                        src={imgUrl}
+                        alt={`მოსწავლის ნამუშევარი ${idx + 1}`}
+                        className="max-h-80 w-auto max-w-full rounded-xl object-contain bg-white border border-slate-200 transition-transform group-hover:scale-[1.01]"
                       />
-                      <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors flex items-center justify-center">
-                        <span className="opacity-0 group-hover:opacity-100 flex items-center gap-1 bg-white/90 px-2 py-1 rounded-lg text-xs font-bold text-ink shadow-sm backdrop-blur-sm transition-opacity">
-                          <ZoomIn className="size-3" /> ნახვა
+                      <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-900/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-slate-900/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-xs">
+                          <ZoomIn className="size-3.5" /> გადიდება {studentImages.length > 1 ? `#${idx + 1}` : ''}
                         </span>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-dashed border-hairline bg-paper/50 py-10 text-center text-muted">
-                  <FileText className="size-8 mx-auto opacity-30 mb-2" />
-                  <p className="text-sm font-bold text-ink">პასუხი არ არის მიმაგრებული</p>
-                  <p className="text-xs mt-1">მოსწავლეს ჯერ არ აუტვირთავს სურათი/ფაილი.</p>
+                <div className="rounded-2xl border border-dashed border-hairline bg-paper/20 p-8 text-center">
+                  <BookOpen className="size-8 text-muted/40 mx-auto mb-2" />
+                  <p className="text-xs font-bold text-ink">პასუხი არ არის მიმაგრებული</p>
+                  <p className="text-[11px] text-muted mt-0.5">მოსწავლეს ჯერ არ აუტვირთავს სურათი/ფაილი.</p>
                 </div>
               )}
             </div>
-
-            {/* კომენტარის ველი */}
-            <div className="pt-4 border-t border-hairline-soft">
-              <h4 className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted">
-                <MessageSquare className="size-3.5" />
-                კომენტარის დამატება
-              </h4>
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="მიწერეთ კომენტარი ან დამატებითი ინსტრუქცია მოსწავლეს..."
-                className="w-full resize-none rounded-xl border border-hairline bg-paper p-4 text-sm text-ink outline-none transition-colors focus:border-navy focus:bg-white focus:ring-1 focus:ring-navy"
-                rows={3}
-              />
-            </div>
-          </div>
-
-          {/* Footer - აქ არის ჩაბარებულად მონიშვნის ღილაკი */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline bg-paper/40 px-6 py-4">
-            
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-xl border border-hairline bg-white px-5 py-2.5 text-sm font-bold text-ink shadow-xs transition-colors hover:bg-paper"
-              >
-                დახურვა
-              </button>
-
-              {/* ჩაბარებულად მონიშვნის ღილაკი */}
-              {onMarkAsGraded && !isGraded && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onMarkAsGraded(assignment);
-                    onClose();
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-600 bg-emerald-50 px-5 py-2.5 text-sm font-bold text-emerald-700 shadow-xs transition-colors hover:bg-emerald-600 hover:text-white"
-                >
-                  <CheckCircle2 className="size-4" />
-                  <span>ჩაბარებულად მონიშვნა</span>
-                </button>
-              )}
-            </div>
-            
-            <button
-              type="button"
-              onClick={handleSendComment}
-              disabled={!comment.trim()}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-6 py-2.5 text-sm font-bold text-white shadow-xs transition-colors hover:bg-navy-strong disabled:opacity-50"
-            >
-              <Send className="size-4" />
-              <span>გაგზავნა</span>
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Fullscreen Image Preview */}
-      {fullscreenImage && (
+      {/* სურათის სრულეკრანიანი გადიდების მოდალი (Lightbox) */}
+      {expandedImage && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 p-4 backdrop-blur-md cursor-zoom-out animate-in fade-in duration-200"
-          onClick={() => setFullscreenImage(null)}
-        >
-          <div className="relative flex h-full w-full items-center justify-center">
-            <button
-              type="button"
-              className="absolute top-4 right-4 flex size-12 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-rose-500"
-              onClick={() => setFullscreenImage(null)}
-            >
-              <X className="size-6" />
-            </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={fullscreenImage}
-              alt="გადიდებული გვერდი"
-              className="max-h-[95vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-150 cursor-zoom-out"
+          onClick={() => setExpandedImage(null)}>
+          <button
+            type="button"
+            onClick={() => setExpandedImage(null)}
+            className="absolute right-5 top-5 flex size-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-colors hover:bg-white/25">
+            <X className="size-6" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={expandedImage}
+            alt="გადიდებული სურათი"
+            className="max-h-[92vh] max-w-[94vw] rounded-2xl object-contain shadow-2xl animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </>

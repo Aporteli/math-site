@@ -114,14 +114,17 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
             const payload = (a.customPayload as Record<string, unknown>) || {};
             return {
               id: a.id,
-              submissionId: sub.id, // ვამატებთ submission ID-ს სტატუსის შესაცვლელად
+              submissionId: sub.id,
               title: a.title,
               type: a.type,
               instructions: a.instructions,
-              status: sub.status || a.status, // მოსწავლის მიერ დაყენებული სტატუსი
+              status: sub.status || a.status,
               createdAt: a.createdAt.toISOString(),
               promptTex: String(payload.promptTex || payload.text || a.instructions || ""),
-              attachmentUrl: sub.attachmentUrl || a.attachmentUrl || null, // სურათების ლინკი ან JSON მასივი
+              // მასწავლებლის მიერ გაგზავნილი სურათი ან დაფის კადრი
+              problemImageUrl: a.attachmentUrl || (typeof payload.imageUrl === "string" ? payload.imageUrl : null),
+              // მოსწავლის მიერ ატვირთული პასუხი
+              studentAttachmentUrl: sub.attachmentUrl || null,
               comments: a.comments.map((c: any) => ({
                 id: c.id,
                 body: c.body,

@@ -134,7 +134,7 @@ export async function sendProblemToStudentAction({
         status: AssignmentStatus.PUBLISHED,
         publishedAt: new Date(),
         title: problem.topic ? `ამოცანა: ${problem.topic}` : "ინდივიდუალური ამოცანა",
-        instructions: instructions?.trim() || "გთხოვთ ამოხსნათ მოცემული ამოცანა.",
+        instructions: instructions?.trim() || "",
         attachmentUrl: attachmentUrl || null,
         customPayload: {
           problemId: problem.id,
@@ -142,6 +142,7 @@ export async function sendProblemToStudentAction({
           topic: problem.topic,
           difficulty: problem.difficulty,
           templateId: problem.templateId,
+          imageUrl: attachmentUrl || null,
         },
       },
     });
@@ -184,7 +185,7 @@ export async function sendProblemToClassAction({
         status: AssignmentStatus.PUBLISHED,
         publishedAt: new Date(),
         title: problem.topic ? `ამოცანა: ${problem.topic}` : "საკლასო ამოცანა",
-        instructions: instructions?.trim() || "გთხოვთ ამოხსნათ მოცემული ამოცანა.",
+        instructions: instructions?.trim() || "",
         attachmentUrl: attachmentUrl || null,
         customPayload: {
           problemId: problem.id,
@@ -192,6 +193,7 @@ export async function sendProblemToClassAction({
           topic: problem.topic,
           difficulty: problem.difficulty,
           templateId: problem.templateId,
+          imageUrl: attachmentUrl || null,
         },
       },
     });
@@ -224,7 +226,7 @@ export async function sendProblemToClassAction({
 }
 
 /**
- * 5. მოსწავლისთვის მისი კუთვნილი დავალებების წამოღება (createdAt-ის დაბრუნებით)
+ * 5. მოსწავლისთვის მისი კუთვნილი დავალებების წამოღება
  */
 export async function getStudentAssignmentsAction() {
   try {
@@ -267,6 +269,15 @@ export async function getStudentAssignmentsAction() {
         problemStatus = "uploaded";
       }
 
+      // მასწავლებლის მიერ გაგზავნილი სურათის (დაფის / ფოტოს) ამოღება
+      const teacherImage =
+        a.attachmentUrl ||
+        payload.imageUrl ||
+        payload.attachmentUrl ||
+        payload.image ||
+        (typeof payload.promptTex === "string" && payload.promptTex.startsWith("data:image/") ? payload.promptTex : null) ||
+        null;
+
       return {
         id: a.id,
         title: a.title,
@@ -277,18 +288,20 @@ export async function getStudentAssignmentsAction() {
         overdue: a.dueAt ? new Date(a.dueAt) < new Date() : false,
         note: a.instructions || undefined,
         instructions: a.instructions || undefined,
+        attachmentUrl: teacherImage, // გადავცემთ პირდაპირ დავალებაზე
+        customPayload: payload,
         problems: [
           {
             id: a.id,
-            topic: payload.topic || "მათემატიკა",
+            topic: payload.topic || a.title || "მათემატიკა",
             difficulty: (payload.difficulty || "medium") as "easy" | "medium" | "hard" | "olympiad",
             promptTex: payload.promptTex || payload.text || a.instructions || "",
             status: problemStatus,
             fileName: submission?.attachmentUrl || undefined,
-            previewUrl: submission?.attachmentUrl || undefined,
+            previewUrl: submission?.attachmentUrl || undefined, // მოსწავლის პასუხი
+            teacherAttachmentUrl: teacherImage, // მასწავლებლის სურათი
             grade: submission?.grade ? Number(submission.grade.score) : undefined,
             feedback: submission?.grade?.comment || undefined,
-            teacherAttachmentUrl: a.attachmentUrl || null,
           },
         ],
       };
@@ -305,7 +318,7 @@ export interface StudentCourse {
 }
 
 /**
- * 6. მოსწავლის ჩარიცხული კურსების წამოღება (ვიდეო გაკვეთილზე შესვლისთვის)
+ * 6. მოსწავლის ჩარიცხული კურსების წამოღება
  */
 export async function getStudentCoursesAction(): Promise<StudentCourse[]> {
   try {
