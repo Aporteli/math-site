@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic"; // 👈 დამატებულია dynamic
 import {
   LiveKitRoom,
   RoomAudioRenderer,
@@ -16,7 +17,19 @@ import type { Room } from "livekit-client";
 import { ConnectionState, Track } from "livekit-client";
 import "@livekit/components-styles";
 import { X, Layout, PenTool, Loader2, MessageSquare } from "lucide-react";
-import { ClassWhiteboard } from "./ClassWhiteboard";
+
+// 👈 Whiteboard-ის დინამიური იმპორტი სერვერული რენდერის (SSR) გარეშე
+const ClassWhiteboard = dynamic(
+  () => import("./ClassWhiteboard").then((mod) => mod.ClassWhiteboard),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full w-full items-center justify-center bg-white rounded-xl">
+        <Loader2 className="size-8 animate-spin text-slate-300" />
+      </div>
+    ),
+  }
+);
 
 interface ClassroomRoomModalProps {
   courseId: string;
@@ -71,7 +84,6 @@ function MyVideoGrid() {
   );
 }
 
-// დამხმარე კომპონენტი Room ინსტანსის ასაღებად
 function RoomInstanceBridge({ onRoom }: { onRoom: (room: Room) => void }) {
   const room = useRoomContext();
   useEffect(() => {
@@ -151,7 +163,6 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
 
   return (
     <div className="fixed inset-0 z-50 flex h-screen w-screen flex-col overflow-hidden bg-slate-950 p-2 sm:p-3">
-      {/* Header */}
       <header className="relative z-40 flex h-12 shrink-0 items-center justify-between px-3 text-white bg-slate-900 rounded-xl border border-white/10 mb-2 gap-2">
         <div className="flex items-center gap-3 min-w-0">
           <h2 className="text-sm sm:text-base font-bold truncate">{courseTitle} — გაკვეთილი</h2>
@@ -190,11 +201,9 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
         </button>
       </header>
 
-      {/* Main Container */}
       <main className="relative flex flex-1 min-h-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
         <div className="flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row gap-2.5 p-2">
           
-          {/* მარცხენა სვეტი: LiveKit-ის ფარგლებში იზოლირებული */}
           <div
             className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-slate-950/80 border border-white/5 transition-all ${
               activeTab === "board" ? "hidden" : "w-full lg:w-[340px] xl:w-[400px] shrink-0"
@@ -249,7 +258,7 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
             </LiveKitRoom>
           </div>
 
-          {/* მარჯვენა სვეტი: დაფა (LiveKit-ის სტილებისგან სრულად დამოუკიდებელი) */}
+          {/* მარჯვენა სვეტი: Tldraw (ჩაიტვირთება მხოლოდ კლიენტზე, SSR-ის გარეშე) */}
           <div className="relative flex flex-1 h-full min-h-0 min-w-0 overflow-hidden rounded-xl bg-white">
             <ClassWhiteboard
               room={activeRoom}
