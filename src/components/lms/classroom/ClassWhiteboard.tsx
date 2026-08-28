@@ -362,6 +362,7 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
             },
           }}
         />
+        
       </div>
     </div>
   );
