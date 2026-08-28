@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import dynamic from "next/dynamic"; // 👈 დამატებულია dynamic
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   LiveKitRoom,
   RoomAudioRenderer,
@@ -12,29 +12,27 @@ import {
   useTracks,
   useConnectionState,
   useRoomContext,
-} from "@livekit/components-react";
-import type { Room } from "livekit-client";
-import { ConnectionState, Track } from "livekit-client";
-import "@livekit/components-styles";
-import { X, Layout, PenTool, Loader2, MessageSquare } from "lucide-react";
+} from '@livekit/components-react';
+import type { Room } from 'livekit-client';
+import { ConnectionState, Track } from 'livekit-client';
+import '@livekit/components-styles';
+import { X, Layout, PenTool, Loader2, MessageSquare, Sparkles } from 'lucide-react';
+import { ClassroomAiModal } from './ClassroomAiModal';
 
-// 👈 Whiteboard-ის დინამიური იმპორტი სერვერული რენდერის (SSR) გარეშე
-const ClassWhiteboard = dynamic(
-  () => import("./ClassWhiteboard").then((mod) => mod.ClassWhiteboard),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-white rounded-xl">
-        <Loader2 className="size-8 animate-spin text-slate-300" />
-      </div>
-    ),
-  }
-);
+const ClassWhiteboard = dynamic(() => import('./ClassWhiteboard').then((mod) => mod.ClassWhiteboard), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-white rounded-xl">
+      <Loader2 className="size-8 animate-spin text-slate-300" />
+    </div>
+  ),
+});
 
 interface ClassroomRoomModalProps {
   courseId: string;
   courseTitle: string;
   onClose: () => void;
+  isTeacher?: boolean;
 }
 
 function ConnectionStatusBadge() {
@@ -72,7 +70,7 @@ function MyVideoGrid() {
       { source: Track.Source.Camera, withPlaceholder: true },
       { source: Track.Source.ScreenShare, withPlaceholder: false },
     ],
-    { onlySubscribed: false }
+    { onlySubscribed: false },
   );
 
   return (
@@ -94,15 +92,23 @@ function RoomInstanceBridge({ onRoom }: { onRoom: (room: Room) => void }) {
   return null;
 }
 
-export function ClassroomRoomModal({ courseId, courseTitle, onClose }: ClassroomRoomModalProps) {
-  const [token, setToken] = useState<string>("");
+export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher = false }: ClassroomRoomModalProps) {
+  const [token, setToken] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<"split" | "board">("split");
+  const [activeTab, setActiveTab] = useState<'split' | 'board'>('split');
   const [isBoardFullscreen, setIsBoardFullscreen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [activeRoom, setActiveRoom] = useState<Room | null>(null);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('hide-ai-widget'));
+    return () => {
+      window.dispatchEvent(new CustomEvent('show-ai-widget'));
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -112,7 +118,7 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
         const res = await fetch(`/api/livekit?courseId=${encodeURIComponent(courseId)}`);
         if (!res.ok) {
           const errText = await res.text();
-          throw new Error(errText || "ოთახში შესვლა ვერ მოხერხდა");
+          throw new Error(errText || 'ოთახში შესვლა ვერ მოხერხდა');
         }
         const data = await res.json();
         if (isMounted) {
@@ -121,7 +127,7 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
         }
       } catch (err: any) {
         if (isMounted) {
-          setError(err.message || "დაფიქსირდა შეცდომა");
+          setError(err.message || 'დაფიქსირდა შეცდომა');
           setLoading(false);
         }
       }
@@ -148,12 +154,11 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm">
         <div className="flex flex-col items-center gap-4 rounded-3xl bg-white p-8 max-w-sm text-center shadow-2xl">
-          <p className="text-sm font-bold text-rose-600">{error || "წვდომა უარყოფილია"}</p>
+          <p className="text-sm font-bold text-rose-600">{error || 'წვდომა უარყოფილია'}</p>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-navy px-5 py-2 text-xs font-bold text-white hover:bg-navy-strong transition-colors"
-          >
+            className="rounded-xl bg-navy px-5 py-2 text-xs font-bold text-white hover:bg-navy-strong transition-colors">
             დახურვა
           </button>
         </div>
@@ -163,6 +168,15 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
 
   return (
     <div className="fixed inset-0 z-50 flex h-screen w-screen flex-col overflow-hidden bg-slate-950 p-2 sm:p-3">
+      
+      {/* AI მოდალი იხსნება მხოლოდ მასწავლებლისთვის */}
+      {isTeacher ? (
+        <ClassroomAiModal
+          isOpen={isAiModalOpen}
+          onClose={() => setIsAiModalOpen(false)}
+        />
+      ) : null}
+
       <header className="relative z-40 flex h-12 shrink-0 items-center justify-between px-3 text-white bg-slate-900 rounded-xl border border-white/10 mb-2 gap-2">
         <div className="flex items-center gap-3 min-w-0">
           <h2 className="text-sm sm:text-base font-bold truncate">{courseTitle} — გაკვეთილი</h2>
@@ -171,44 +185,54 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
         <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
           <button
             type="button"
-            onClick={() => setActiveTab("split")}
+            onClick={() => setActiveTab('split')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-              activeTab === "split" ? "bg-white text-slate-900 shadow-sm" : "text-white/70 hover:text-white"
-            }`}
-          >
+              activeTab === 'split' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'
+            }`}>
             <Layout className="size-3.5" />
             <span className="hidden sm:inline">ვიდეო + დაფა</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setActiveTab("board")}
+            onClick={() => setActiveTab('board')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-              activeTab === "board" ? "bg-white text-slate-900 shadow-sm" : "text-white/70 hover:text-white"
-            }`}
-          >
+              activeTab === 'board' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'
+            }`}>
             <PenTool className="size-3.5" />
             <span className="hidden sm:inline">მხოლოდ დაფა</span>
           </button>
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 hover:bg-rose-600 text-white transition-colors"
-        >
-          <X className="size-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* ღილაკი გამოჩნდება მხოლოდ მასწავლებელთან */}
+          {isTeacher ? (
+            <button
+              type="button"
+              onClick={() => setIsAiModalOpen(true)}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-colors shadow-xs"
+            >
+              <Sparkles className="size-3.5 text-indigo-200" />
+              <span className="hidden sm:inline">AI ასისტენტი</span>
+            </button>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={onClose}
+            title="გაკვეთილის დახურვა"
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 hover:bg-rose-600 text-white transition-colors">
+            <X className="size-4" />
+          </button>
+        </div>
       </header>
 
       <main className="relative flex flex-1 min-h-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
         <div className="flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row gap-2.5 p-2">
-          
           <div
             className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-slate-950/80 border border-white/5 transition-all ${
-              activeTab === "board" ? "hidden" : "w-full lg:w-[340px] xl:w-[400px] shrink-0"
-            }`}
-          >
+              activeTab === 'board' ? 'hidden' : 'w-full lg:w-[340px] xl:w-[400px] shrink-0'
+            }`}>
             <LiveKitRoom
               video={true}
               audio={true}
@@ -216,9 +240,12 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
               serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
               data-lk-theme="default"
               className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden"
-              onDisconnected={onClose}
-            >
+              onDisconnected={onClose}>
               <RoomInstanceBridge onRoom={setActiveRoom} />
+
+              <div className="absolute top-2 left-2 z-10">
+                <ConnectionStatusBadge />
+              </div>
 
               {isChatOpen ? (
                 <div className="relative flex-1 min-h-0 w-full overflow-hidden p-2 [&_.lk-chat]:h-full [&_.lk-chat]:w-full [&_.lk-chat-messages]:overflow-y-auto">
@@ -246,10 +273,9 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
                   title="ჩატი"
                   className={`flex size-9 items-center justify-center rounded-xl border transition-all ${
                     isChatOpen
-                      ? "border-emerald-500 bg-emerald-500 text-white shadow-xs"
-                      : "border-white/10 bg-white/5 text-white/80 hover:bg-white/15 hover:text-white"
-                  }`}
-                >
+                      ? 'border-emerald-500 bg-emerald-500 text-white shadow-xs'
+                      : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/15 hover:text-white'
+                  }`}>
                   <MessageSquare className="size-4" />
                 </button>
               </div>
@@ -258,7 +284,6 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
             </LiveKitRoom>
           </div>
 
-          {/* მარჯვენა სვეტი: Tldraw (ჩაიტვირთება მხოლოდ კლიენტზე, SSR-ის გარეშე) */}
           <div className="relative flex flex-1 h-full min-h-0 min-w-0 overflow-hidden rounded-xl bg-white">
             <ClassWhiteboard
               room={activeRoom}
@@ -266,6 +291,7 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
               courseTitle={courseTitle}
               isFullscreen={isBoardFullscreen}
               onToggleFullscreen={() => setIsBoardFullscreen(!isBoardFullscreen)}
+              isTeacher={isTeacher}
             />
           </div>
         </div>

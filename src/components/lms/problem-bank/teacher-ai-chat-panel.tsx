@@ -6,11 +6,14 @@ import {
   useMemo,
   useRef,
   useState,
+  type ChangeEvent,
+  type ClipboardEvent as ReactClipboardEvent,
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import {
   FlaskConical,
+  ImagePlus,
   Library,
   MessageSquare,
   RotateCcw,
@@ -27,6 +30,7 @@ import { KatexPreview } from "@/components/math/katex-preview";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { defaultLocale, locales, type Locale } from "@/i18n/config";
 import { handlePlainTextPaste } from "@/lib/helpers/plain-text-paste";
+import { fileToChatImage, type ChatImageDraft } from "@/lib/helpers/image-input";
 import {
   saveProblemsAction,
   saveToLabAction,
@@ -58,6 +62,7 @@ type ChatRole = "user" | "assistant";
 type ChatMessage = {
   role: ChatRole;
   content: string;
+  images?: string[];
 };
 
 interface TeacherAiChatPanelProps {
@@ -97,6 +102,8 @@ function chatErrorText(copy: ProblemBankCopy["chat"], error: string) {
       return copy.errorUnauthorized;
     case "bad_output":
       return copy.errorBadOutput;
+    case "image_unsupported":
+      return copy.errorImageUnsupported;
     default:
       return copy.errorFailed;
   }
@@ -118,10 +125,12 @@ export function TeacherAiChatPanel({
 }: TeacherAiChatPanelProps) {
   const inputId = useId();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState(initialDraft);
   const [replyLocale, setReplyLocale] = useState<Locale>(defaultLocale);
   const [busy, setBusy] = useState(false);
+  const [images, setImages] = useState<ChatImageDraft[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [savedKeys, setSavedKeys] = useState<Record<string, "bank" | "lab">>({});
@@ -291,7 +300,7 @@ export function TeacherAiChatPanel({
       });
       if (onSavedProblems) {
         await onSavedProblems(result.saved, target, {
-          labIds: "labIds" in result ? result.labIds : undefined,
+          labIds: "labIds" in result ? (result.labIds as string[]) : undefined,
           idMap: result.idMap,
         });
       }
@@ -303,15 +312,57 @@ export function TeacherAiChatPanel({
     }
   }
 
+  function removeImage(id: string) {
+    setImages((current) => current.filter((image) => image.id !== id));
+  }
+
+  async function addImages(files: File[]) {
+    const drafts: ChatImageDraft[] = [];
+    for (const file of files.slice(0, 4)) {
+      const prepared = await fileToChatImage(file);
+      if (prepared) drafts.push(prepared);
+    }
+    if (drafts.length === 0) return;
+    setImages((current) => [...current, ...drafts].slice(0, 4));
+  }
+
+  function onFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    if (files.length > 0) void addImages(files);
+    event.target.value = "";
+  }
+
+  function onComposerPaste(event: ReactClipboardEvent<HTMLTextAreaElement>) {
+    const files = Array.from(event.clipboardData.items)
+      .filter((item) => item.kind === "file" && item.type.startsWith("image/"))
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => file !== null);
+
+    if (files.length > 0) {
+      event.preventDefault();
+      event.stopPropagation();
+      void addImages(files);
+      return;
+    }
+
+    handlePlainTextPaste(event, draft, setDraft, 10000, "katex");
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const message = draft.trim();
-    if (!message || busy) return;
+    if ((!message && images.length === 0) || busy) return;
 
-    const nextUser: ChatMessage = { role: "user", content: message };
+    const sentImages = images.map(({ mimeType, data }) => ({ mimeType, data }));
+    const nextUser: ChatMessage = {
+      role: "user",
+      content: message,
+      images: images.map((image) => image.previewUrl),
+    };
     const nextHistory = [...messages, nextUser].slice(-20);
     setMessages(nextHistory);
     setDraft("");
+    setImages([]);
     setBusy(true);
     setNotice(null);
 
@@ -320,12 +371,16 @@ export function TeacherAiChatPanel({
         model,
         locale: replyLocale,
         message,
-        history: messages.slice(-20),
+        history: messages
+          .slice(-20)
+          .map(({ role, content }) => ({ role, content })),
+        images: sentImages,
       });
       if (!result.ok) {
         setNotice(chatErrorText(copy, result.error));
         setMessages(messages);
         setDraft(message);
+        setImages(images);
         return;
       }
       setMessages([
@@ -336,6 +391,7 @@ export function TeacherAiChatPanel({
       setNotice(copy.errorFailed);
       setMessages(messages);
       setDraft(message);
+      setImages(images);
     } finally {
       setBusy(false);
     }
@@ -429,10 +485,26 @@ export function TeacherAiChatPanel({
                       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">
                         {copy.you}
                       </p>
-                      <KatexPreview
-                        tex={toKatexFriendlyTex(message.content)}
-                        className="block break-words text-white [&_.katex-display]:my-2 [&_.katex]:text-[0.95rem] [&_.katex]:text-white"
-                      />
+                      {message.content ? (
+                        <KatexPreview
+                          tex={toKatexFriendlyTex(message.content)}
+                          className="block break-words text-white [&_.katex-display]:my-2 [&_.katex]:text-[0.95rem] [&_.katex]:text-white"
+                        />
+                      ) : null}
+                      {message.images?.length ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {message.images.map((src, imageIndex) => (
+                            <div key={`${index}-${imageIndex}`}>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={src}
+                                alt=""
+                                className="size-20 rounded-lg border border-white/20 object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   </li>
                 );
@@ -625,6 +697,24 @@ export function TeacherAiChatPanel({
           <label className="sr-only" htmlFor={inputId}>
             {copy.inputLabel}
           </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            className="hidden"
+            onChange={onFileChange}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label={copy.addImage}
+            title={copy.addImage}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint"
+          >
+            <ImagePlus className="size-3.5" aria-hidden="true" />
+            {copy.addImage}
+          </button>
           {slashEnabled ? (
             <button
               type="button"
@@ -645,6 +735,30 @@ export function TeacherAiChatPanel({
             onClose={() => setManageSlashOpen(false)}
           />
         ) : null}
+        {images.length > 0 ? (
+          <ul className="flex flex-wrap gap-2">
+            {images.map((image) => (
+              <li key={image.id} className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={image.previewUrl}
+                  alt=""
+                  className="size-20 rounded-xl border border-hairline object-cover shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(image.id)}
+                  aria-label={copy.removeImage}
+                  title={copy.removeImage}
+                  className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-ink text-white shadow hover:bg-rose-600"
+                >
+                  <X className="size-3" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <p className="text-xs text-muted">{copy.imageHint}</p>
         <div className="relative">
           {slashEnabled && slashMenuOpen ? (
             <AdminSlashPromptMenu
@@ -684,9 +798,7 @@ export function TeacherAiChatPanel({
               }
             }}
             onKeyDown={onDraftKeyDown}
-            onPaste={(event) =>
-              handlePlainTextPaste(event, draft, setDraft, 10000, "katex")
-            }
+            onPaste={onComposerPaste}
           />
         </div>
         {previewTex ? (
@@ -703,7 +815,7 @@ export function TeacherAiChatPanel({
         <div className="flex flex-wrap items-center justify-end gap-3">
           <button
             type="submit"
-            disabled={busy || !draft.trim()}
+            disabled={busy || (!draft.trim() && images.length === 0)}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60"
           >
             <Send className="size-4" aria-hidden="true" />

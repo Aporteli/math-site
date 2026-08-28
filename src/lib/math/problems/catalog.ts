@@ -30,10 +30,6 @@ export interface ProblemBankTool {
   href?: string;
 }
 
-/**
- * Teacher tools that plug into the problem-bank workspace.
- * Add an entry here (and matching i18n keys) when a new tool is ready.
- */
 export const PROBLEM_BANK_TOOLS: ProblemBankTool[] = [
   { id: "generate", icon: Sparkles, status: "ready" },
   { id: "chat", icon: MessageSquare, status: "ready" },
@@ -164,16 +160,18 @@ export function filterProblems(
   });
 }
 
-export function replaceCount(template: string, count: number) {
+export function replaceCount(template?: string, count: number = 0) {
+  if (!template) return String(count);
   return template.replace("{count}", String(count));
 }
 
 export function replaceTokens(
-  template: string,
-  tokens: Record<string, string | number>,
+  template?: string,
+  tokens: Record<string, string | number> = {},
 ) {
+  const safeTemplate = template ?? "";
   return Object.entries(tokens).reduce(
     (text, [key, value]) => text.replaceAll(`{${key}}`, String(value)),
-    template,
+    safeTemplate,
   );
 }

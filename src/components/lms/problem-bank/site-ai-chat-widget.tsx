@@ -18,6 +18,7 @@ export function SiteAiChatWidget({
   const [open, setOpen] = useState(false);
   const [model, setModel] = useState<AiModelId>(DEFAULT_AI_MODEL);
   const [modelStatus, setModelStatus] = useState<AiModelStatus[] | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,7 +30,27 @@ export function SiteAiChatWidget({
     };
   }, []);
 
-  if (!modelStatus || modelStatus.length === 0) return null;
+  // მოდალის ჩართვა/გამორთვის ივენთების მოსმენა
+  useEffect(() => {
+    const handleHide = () => {
+      setIsModalOpen(true);
+      setOpen(false);
+    };
+    const handleShow = () => {
+      setIsModalOpen(false);
+    };
+
+    window.addEventListener('hide-ai-widget', handleHide);
+    window.addEventListener('show-ai-widget', handleShow);
+
+    return () => {
+      window.removeEventListener('hide-ai-widget', handleHide);
+      window.removeEventListener('show-ai-widget', handleShow);
+    };
+  }, []);
+
+  // თუ მოდალი გახსნილია ან მოდელები არ არის, არ დარენდერდეს
+  if (isModalOpen || !modelStatus || modelStatus.length === 0) return null;
 
   return (
     <>
@@ -38,12 +59,13 @@ export function SiteAiChatWidget({
         aria-label={copy.chat.open}
         title={copy.chat.open}
         onClick={() => setOpen(true)}
-        className="fixed right-5 bottom-5 z-40 flex h-12 w-12 px-3 items-center justify-center gap-2 rounded-full bg-navy text-sm font-semibold text-white shadow-lg transition-colors hover:bg-navy-strong focus:outline-none focus:ring-2 focus:ring-navy/25 focus:ring-offset-2 focus:ring-offset-paper">
+        className="fixed right-5 bottom-5 z-[1000000] flex h-12 w-12 px-3 items-center justify-center gap-2 rounded-full bg-navy text-sm font-semibold text-white shadow-lg transition-colors hover:bg-navy-strong focus:outline-none focus:ring-2 focus:ring-navy/25 focus:ring-offset-2 focus:ring-offset-paper">
+        <MessageSquare className="size-5" />
         <span className="text-center hidden sm:inline">{copy.chat.launcher}</span>
       </button>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-end bg-ink/35 p-3 sm:items-center sm:justify-center sm:p-6">
+        <div className="fixed inset-0 z-[1000001] flex items-end justify-end bg-ink/35 p-3 sm:items-center sm:justify-center sm:p-6">
           <button
             type="button"
             aria-label={copy.chat.close}

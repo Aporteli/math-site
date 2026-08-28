@@ -755,6 +755,7 @@ export function TeacherStudentsWorkspace({
           courseId={activeVideoCallCourse.id}
           courseTitle={activeVideoCallCourse.title}
           onClose={() => setActiveVideoCallCourse(null)}
+          isTeacher={true}
         />
       )}
 

@@ -70,22 +70,8 @@ const SECTION_ICONS: Record<AdminSectionId, LucideIcon> = {
 };
 
 const SECTION_ORDER: AdminSectionId[] = [
-  "overview",
   "taxonomy",
   "courses",
-  "users",
-  "roles",
-  "ai",
-  "prompts",
-  "content",
-  "storage",
-  "lms",
-  "analytics",
-  "i18n",
-  "locales",
-  "billing",
-  "featureFlags",
-  "system",
 ];
 
 function ComingSoonCard({
@@ -269,21 +255,21 @@ function CoursesManager() {
           className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-sm font-bold text-white transition-all hover:bg-navy-strong active:scale-95"
         >
           <Plus className="size-4" />
-          კურსის დამატება
+          ჯგუფის დამატება
         </button>
       </div>
 
       {courses.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-hairline py-16 text-center text-muted">
           <BookOpen className="mx-auto size-8 opacity-40 mb-3" />
-          <p className="text-sm font-bold">კურსები ჯერ არ არის დამატებული</p>
+          <p className="text-sm font-bold">ჯგუფები ჯერ არ არის დამატებული</p>
         </div>
       ) : (
         <div className="rounded-2xl border border-hairline overflow-hidden">
           <table className="w-full text-left text-sm">
             <thead className="bg-paper/50 text-xs uppercase tracking-wider text-muted border-b border-hairline">
               <tr>
-                <th className="px-4 py-3 font-bold">კურსის სახელი</th>
+                <th className="px-4 py-3 font-bold">ჯგუფის სახელი</th>
                 <th className="px-4 py-3 font-bold">მოსაწვევი კოდი</th>
                 <th className="px-4 py-3 font-bold">მასწავლებელი</th>
                 <th className="px-4 py-3 font-bold">მოსწავლეები</th>
@@ -343,7 +329,7 @@ function CoursesManager() {
                   <UserCheck className="size-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-ink">მოსწავლეების მიბმა კურსებზე</h3>
+                  <h3 className="text-lg font-bold text-ink">მოსწავლეების მიბმა ჯგუფებზე</h3>
                   <p className="text-xs text-muted">მიაბით ან გადაიყვანეთ მოსწავლე სასურველ კლასში ხელით</p>
                 </div>
               </div>
@@ -400,7 +386,7 @@ function CoursesManager() {
                               className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-paper px-3 py-1.5 text-xs font-bold text-navy hover:bg-paper-deep transition-colors"
                             >
                               <PenLine className="size-3.5" />
-                              კურსების შეცვლა
+                              ჯგუფების შეცვლა
                             </button>
                           )}
                         </div>
@@ -410,7 +396,7 @@ function CoursesManager() {
                           {isEditingThis ? (
                             <div className="space-y-3">
                               <p className="text-xs font-bold text-ink uppercase tracking-wider">
-                                მონიშნეთ კურსები, რომელშიც უნდა იყოს ეს მოსწავლე:
+                                მონიშნეთ ჯგუფი, რომელშიც უნდა იყოს ეს მოსწავლე:
                               </p>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 {courses.map((course) => {
@@ -469,10 +455,10 @@ function CoursesManager() {
                             </div>
                           ) : (
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="text-xs text-muted font-medium mr-1">კურსები:</span>
+                              <span className="text-xs text-muted font-medium mr-1">ჯგუფები:</span>
                               {st.enrollments.length === 0 ? (
                                 <span className="text-xs text-rose-500 font-bold bg-rose-50 px-2 py-0.5 rounded-md">
-                                  არცერთ კურსზე არ არის
+                                  არცერთ ჯგუფზე არ არის
                                 </span>
                               ) : (
                                 st.enrollments.map((e: any) => (
@@ -515,7 +501,7 @@ function CoursesManager() {
           <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
             <div className="flex justify-between items-center mb-5 border-b border-hairline pb-3">
               <h3 className="text-lg font-bold text-ink">
-                {formData.id ? "კურსის რედაქტირება" : "ახალი კურსი"}
+                {formData.id ? "ჯგუფის რედაქტირება" : "ახალი ჯგუფო"}
               </h3>
               <button onClick={closeCourseModal} className="text-muted hover:text-ink transition-colors">
                 <X className="size-5" />
@@ -525,7 +511,7 @@ function CoursesManager() {
             <div className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-muted">
-                  კურსის სახელი
+                  ჯგუფის სახელი
                 </label>
                 <input
                   type="text"
@@ -594,8 +580,8 @@ function CoursesManager() {
             <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
               <AlertTriangle className="size-6" />
             </div>
-            <h3 className="text-lg font-bold text-ink mb-1">კურსის წაშლა</h3>
-            <p className="text-sm text-muted mb-6">ნამდვილად გსურთ კურსის წაშლა? მოქმედება შეუქცევადია.</p>
+            <h3 className="text-lg font-bold text-ink mb-1">ჯგუფის წაშლა</h3>
+            <p className="text-sm text-muted mb-6">ნამდვილად გსურთ ჯგუფის წაშლა? მოქმედება შეუქცევადია.</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setDeletingId(null)}
@@ -635,7 +621,7 @@ export function AdminPanel({
 
   const getActiveSectionInfo = (id: AdminSectionId) => {
     if (id === "courses") {
-      return { title: "კურსები", description: "მართეთ კლასები, დაამატეთ ახალი, მიამაგრეთ მასწავლებელი ან მართეთ მოსწავლეები" };
+      return { title: "ჯგუფები", description: "მართეთ კლასები, დაამატეთ ახალი, მიამაგრეთ მასწავლებელი ან მართეთ მოსწავლეები" };
     }
     return copy.sections[id as keyof AdminCopy["sections"]];
   };

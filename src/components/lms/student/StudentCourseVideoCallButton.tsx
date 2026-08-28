@@ -131,6 +131,7 @@ export function StudentCourseVideoCallButton({
               courseId={courseId}
               courseTitle={courseTitle}
               onClose={handleClose}
+              isTeacher={false}
             />
           </div>,
           document.body

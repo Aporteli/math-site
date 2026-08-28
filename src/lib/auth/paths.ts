@@ -3,7 +3,7 @@ import type { UserRole } from '@/lib/auth/roles';
 
 export const LOGIN_PATH = '/login';
 export const SIGNUP_PATH = '/signup';
-export const TEACHER_HOME = '/teacher/overview';
+export const TEACHER_HOME = '/teacher/journal';
 export const STUDENT_HOME = '/student/assignments';
 export const VISITOR_HOME = '/';
 
@@ -78,11 +78,7 @@ export function canAccessPath(path: string, role: UserRole) {
  * After a successful sign-in, send the user to `callbackUrl` when it belongs
  * to their role; otherwise fall back to the role home.
  */
-export function resolvePostLoginHref(
-  role: UserRole,
-  locale: Locale,
-  callbackUrl?: string | null
-) {
+export function resolvePostLoginHref(role: UserRole, locale: Locale, callbackUrl?: string | null) {
   const home = localePath(locale, dashboardHomeForRole(role));
   const pathname = extractPathname(callbackUrl);
 
