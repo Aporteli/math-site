@@ -262,6 +262,8 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
           <div className="relative flex flex-1 h-full min-h-0 min-w-0 overflow-hidden rounded-xl bg-white">
             <ClassWhiteboard
               room={activeRoom}
+              courseId={courseId}
+              courseTitle={courseTitle}
               isFullscreen={isBoardFullscreen}
               onToggleFullscreen={() => setIsBoardFullscreen(!isBoardFullscreen)}
             />

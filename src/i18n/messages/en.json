@@ -1975,7 +1975,8 @@
       "nav": {
       
         "assignments": "Assignments",
-        "flashcards": "Formulas"
+        "flashcards": "Formulas",
+        "whiteboards": "Whiteboards"
         
       },
       "pages": {
@@ -1999,6 +2000,10 @@
           "title": "Flashcards",
           "subtitle": "Review formulas and theorems with spaced repetition."
         },
+        "whiteboards": {
+          "title": "Received whiteboards",
+          "subtitle": "Whiteboards your teacher sent that you can keep working on."
+        },
         "progress": {
           "title": "Progress",
           "subtitle": "What you already do well and where you need more practice."
@@ -2020,6 +2025,24 @@
         "noQuestionsHint": "If the card material is unclear, ask a question here.",
         "teacher": "Teacher",
         "messagePlaceholder": "Write a message..."
+      },
+      "whiteboards": {
+        "total": "Total boards",
+        "emptyTitle": "No whiteboards yet",
+        "emptyHint": "Your teacher hasn't sent you any whiteboards yet.",
+        "course": "Course",
+        "teacher": "Teacher",
+        "courseFallback": "General course",
+        "teacherFallback": "Teacher",
+        "statusAssigned": "New",
+        "statusInProgress": "In progress",
+        "statusCompleted": "Completed",
+        "back": "Back to whiteboards",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "errorFailed": "Could not save",
+        "editorHint": "Keep working and press save."
       }
     }
   },

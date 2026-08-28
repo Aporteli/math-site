@@ -73,6 +73,12 @@ enum SubmissionStatus {
   RETURNED
 }
 
+enum WhiteboardAssignmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String
@@ -84,17 +90,19 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  coursesTaught       Course[]        @relation("CourseTeacher")
-  enrollments         Enrollment[]
-  problems            Problem[]
-  problemFamilies     ProblemFamily[]
-  problemSets         ProblemSet[]
-  submissions         Submission[]
-  targetedAssignments Assignment[]    @relation("TargetedStudent")
-  comments            Comment[]
-  gradesGiven         Grade[]         @relation("GradedBy")
-  attendance          Attendance[]
-  lessonNotes         LessonNote[]
+  coursesTaught        Course[]               @relation("CourseTeacher")
+  enrollments          Enrollment[]
+  problems             Problem[]
+  problemFamilies      ProblemFamily[]
+  problemSets          ProblemSet[]
+  submissions          Submission[]
+  targetedAssignments  Assignment[]           @relation("TargetedStudent")
+  comments             Comment[]
+  gradesGiven          Grade[]                @relation("GradedBy")
+  attendance           Attendance[]
+  lessonNotes          LessonNote[]
+  whiteboardsAsStudent WhiteboardAssignment[] @relation("WhiteboardStudent")
+  whiteboardsAsTeacher WhiteboardAssignment[] @relation("WhiteboardTeacher")
 
   @@map("users")
 }
@@ -124,11 +132,12 @@ model Course {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  enrollments Enrollment[]
-  assignments Assignment[]
-  problemSets ProblemSet[]
-  attendance  Attendance[]
-  lessonNotes LessonNote[]
+  enrollments           Enrollment[]
+  assignments           Assignment[]
+  problemSets           ProblemSet[]
+  attendance            Attendance[]
+  lessonNotes           LessonNote[]
+  whiteboardAssignments WhiteboardAssignment[]
 
   @@index([teacherId])
   @@map("courses")
@@ -324,12 +333,12 @@ model Submission {
 }
 
 model Comment {
-  id           String     @id @default(cuid())
+  id           String   @id @default(cuid())
   assignmentId String
   authorId     String
-  body         String     @db.Text
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  body         String   @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -385,4 +394,25 @@ model LessonNote {
 
   @@index([courseId, date])
   @@map("lesson_notes")
+}
+
+model WhiteboardAssignment {
+  id        String                     @id @default(cuid())
+  courseId  String
+  studentId String
+  teacherId String
+  title     String
+  content   Json
+  status    WhiteboardAssignmentStatus @default(ASSIGNED)
+  createdAt DateTime                   @default(now())
+  updatedAt DateTime                   @updatedAt
+
+  course  Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student User   @relation("WhiteboardStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  teacher User   @relation("WhiteboardTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([courseId])
+  @@map("whiteboard_assignments")
 }

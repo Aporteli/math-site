@@ -22,6 +22,8 @@ const Excalidraw = dynamic(
 
 interface ClassWhiteboardProps {
   room: Room | null;
+  courseId: string;
+  courseTitle: string;
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
 }
@@ -39,7 +41,7 @@ async function decompressData(bytes: Uint8Array): Promise<string> {
   return await response.text();
 }
 
-export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: ClassWhiteboardProps) {
+export function ClassWhiteboard({ room, courseId, courseTitle, isFullscreen, onToggleFullscreen }: ClassWhiteboardProps) {
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
 
   const [pages, setPages] = useState<any[][]>([[]]);
@@ -49,6 +51,9 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [students, setStudents] = useState<RemoteParticipant[]>([]);
   const [assignedStatus, setAssignedStatus] = useState<string | null>(null);
+  const [assignTitle, setAssignTitle] = useState<string>("");
+  const [assignPending, setAssignPending] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
 
   const pagesRef = useRef<any[][]>([[]]);
   const currentPageIndexRef = useRef<number>(0);
@@ -88,6 +93,27 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
     };
   }, [room]);
 
+  // ქოლის ყველა მონაწილისთვის მიმდინარე გვერდის გადაცემა
+  const publishScene = async (pageIndex: number, pagesLength: number, elements: any[]) => {
+    if (!room || room.state !== ConnectionState.Connected || isPublishingRef.current) return;
+
+    isPublishingRef.current = true;
+    try {
+      const message = JSON.stringify({
+        type: "EXCALIDRAW_SYNC",
+        pageIndex,
+        pagesLength,
+        elements,
+      });
+      const compressed = await compressData(message);
+      await room.localParticipant?.publishData(compressed as any, { reliable: true });
+    } catch (err) {
+      console.error("Failed to publish whiteboard scene:", err);
+    } finally {
+      isPublishingRef.current = false;
+    }
+  };
+
   // მიმდინარე გვერდის რედაქტირება
   const handleEditorChange = (elements: readonly any[]) => {
     if (!room || room.state !== ConnectionState.Connected || !getSceneVersionRef.current || isSyncingRef.current) return;
@@ -102,6 +128,14 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
 
       pagesRef.current = newPages;
       setPages(newPages);
+
+      // სხვა მონაწილეებისთვის რეალურ დროში გადაცემა (მოკლე დებაუნსით)
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      const pageIndex = currentPageIndexRef.current;
+      const pagesLength = newPages.length;
+      syncTimeoutRef.current = setTimeout(() => {
+        void publishScene(pageIndex, pagesLength, cleanElements);
+      }, 120);
     }
   };
 
@@ -122,6 +156,9 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
     setCurrentPageIndex(newIndex);
 
     excalidrawAPI.updateScene({ elements: [] });
+
+    void publishScene(newIndex, newPages.length, []);
+
     setTimeout(() => {
       isSyncingRef.current = false;
     }, 100);
@@ -144,6 +181,8 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
     const targetElements = updatedPages[newIndex] || [];
     excalidrawAPI.updateScene({ elements: targetElements });
 
+    void publishScene(newIndex, updatedPages.length, targetElements);
+
     setTimeout(() => {
       isSyncingRef.current = false;
     }, 100);
@@ -153,20 +192,39 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
   const handleAssignPageToStudent = async (student: RemoteParticipant) => {
     if (!room || !excalidrawAPI || room.state !== ConnectionState.Connected) return;
 
+    setAssignPending(true);
+    setAssignError(null);
+
     // მიმდინარე გვერდის მონაცემების აღება
     const currentElements = excalidrawAPI.getSceneElements().filter((el: any) => !el.isDeleted);
     const activePage = pagesRef.current[currentPageIndexRef.current] || currentElements;
-
-    const message = JSON.stringify({
-      type: "EXCALIDRAW_ASSIGNED_PAGE",
-      elements: activePage,
-      pageLabel: `დავალება (გვერდი ${currentPageIndexRef.current + 1})`,
-    });
+    const title = assignTitle.trim() || `${courseTitle || "დაფა"} — გვერდი ${currentPageIndexRef.current + 1}`;
 
     try {
-      const compressedPayload = await compressData(message);
+      // 1) ბაზაში შენახვა — მოსწავლის პირად დაფაზე გამოჩენა
+      const res = await fetch("/api/lms/assign-board", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseId,
+          studentId: student.identity,
+          title,
+          content: { elements: activePage },
+        }),
+      });
 
-      // გაგზავნა მხოლოდ ამ კონკრეტულ მოსწავლესთან
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || !result.success) {
+        throw new Error((result as { error?: string }).error || "assign failed");
+      }
+
+      // 2) ლაივ-გაგზავნა ქოლში მყოფ მოსწავლესთან (მაშინვე ხედავს)
+      const message = JSON.stringify({
+        type: "EXCALIDRAW_ASSIGNED_PAGE",
+        elements: activePage,
+        pageLabel: title,
+      });
+      const compressedPayload = await compressData(message);
       await room.localParticipant?.publishData(compressedPayload as any, {
         reliable: true,
         destinationIdentities: [student.identity],
@@ -179,6 +237,9 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
       }, 1500);
     } catch (err) {
       console.error("Failed to assign page to student:", err);
+      setAssignError("გაგზავნა ვერ მოხერხდა");
+    } finally {
+      setAssignPending(false);
     }
   };
 
@@ -196,6 +257,27 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
         }
 
         const data = JSON.parse(str);
+
+        // რეალურ დროში სინქრონიზაცია (ხატვა + გვერდების გადართვა/დამატება)
+        if (data.type === "EXCALIDRAW_SYNC" && Number.isInteger(data.pageIndex) && Array.isArray(data.elements)) {
+          isSyncingRef.current = true;
+
+          const pagesLength = Math.max(pagesRef.current.length, Number(data.pagesLength) || 0);
+          const newPages = [...pagesRef.current];
+          while (newPages.length < pagesLength) newPages.push([]);
+          newPages[data.pageIndex] = data.elements;
+
+          pagesRef.current = newPages;
+          currentPageIndexRef.current = data.pageIndex;
+          setPages(newPages);
+          setCurrentPageIndex(data.pageIndex);
+
+          excalidrawAPI.updateScene({ elements: data.elements });
+
+          setTimeout(() => {
+            isSyncingRef.current = false;
+          }, 100);
+        }
 
         // როდესაც მასწავლებელმა გამოუგზავნა კონკრეტული დაფა
         if (data.type === "EXCALIDRAW_ASSIGNED_PAGE" && Array.isArray(data.elements)) {
@@ -253,7 +335,7 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
 
       {/* მოსწავლის არჩევის მოდალი / Popup */}
       {isAssignModalOpen && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[110] w-72 rounded-2xl bg-white p-3.5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[110] w-80 rounded-2xl bg-white p-3.5 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
             <span className="text-xs font-bold text-slate-800">
               გვერდი {currentPageIndex + 1}-ის გაგზავნა
@@ -267,10 +349,21 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
             </button>
           </div>
 
+          <input
+            value={assignTitle}
+            onChange={(e) => setAssignTitle(e.target.value)}
+            placeholder={`${courseTitle || "დაფა"} — გვერდი ${currentPageIndex + 1}`}
+            className="mb-2 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-indigo-400"
+          />
+
           {assignedStatus ? (
             <div className="flex items-center justify-center gap-2 py-3 text-xs font-medium text-emerald-600">
               <UserCheck className="size-4" />
               <span>{assignedStatus}</span>
+            </div>
+          ) : assignError ? (
+            <div className="flex items-center justify-center gap-2 py-2 text-xs font-medium text-rose-600 text-center">
+              <span>{assignError}</span>
             </div>
           ) : students.length === 0 ? (
             <p className="text-center text-xs text-slate-500 py-3">
@@ -283,7 +376,8 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
                   key={student.identity}
                   type="button"
                   onClick={() => handleAssignPageToStudent(student)}
-                  className="flex items-center justify-between p-2 rounded-xl text-left text-xs bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                  disabled={assignPending}
+                  className="flex items-center justify-between p-2 rounded-xl text-left text-xs bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-50 transition-colors"
                 >
                   <span className="font-medium truncate max-w-[170px]">
                     {student.name || student.identity}
