@@ -80,31 +80,41 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
 
   return (
     <div
-      className={`relative w-full h-full bg-white overflow-hidden ${
+      className={`relative w-full h-full bg-white overflow-hidden isolate ${
         isFullscreen
           ? "fixed inset-0 z-[9999] h-screen w-screen"
           : "rounded-2xl border border-white/10 shadow-sm"
       }`}
     >
       {/* ზედა მართვის ღილაკი */}
-      <div className="absolute top-3 right-3 z-50 flex items-center gap-2 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-slate-200 shadow-md">
+      <div className="absolute top-3 right-3 z-[100] flex items-center gap-2 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-slate-200 shadow-md">
         <button
           type="button"
           onClick={onToggleFullscreen}
           title={isFullscreen ? "დაპატარავება" : "მთელ ეკრანზე გაშლა"}
-          className="flex size-8 items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors"
+          className="flex size-8 items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors pointer-events-auto"
         >
           {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
         </button>
       </div>
 
-      {/* მკაცრად ფიქსირებული კონტეინერი Tldraw-სთვის */}
-      <div className="absolute inset-0 h-full w-full">
+      {/* მკაცრად ფიქსირებული კონტეინერი CSS Override-ებით, რაც მენიუს გაქრობას კრძალავს */}
+      <div className="absolute inset-0 h-full w-full [&_.tlui-layout]:!opacity-100 [&_.tlui-layout]:!visible [&_.tlui-layout]:!pointer-events-auto [&_.tlui-toolbar]:!opacity-100 [&_.tlui-toolbar]:!visible [&_.tlui-toolbar]:!pointer-events-auto [&_.tlui-style-panel]:!opacity-100 [&_.tlui-style-panel]:!visible [&_.tlui-style-panel]:!pointer-events-auto [&_.tlui-menu__zone]:!opacity-100 [&_.tlui-menu__zone]:!visible">
         <Tldraw
           store={store}
+          hideUi={false}
           autoFocus={false}
           onMount={(mountedEditor) => {
             setEditor(mountedEditor);
+            // გამოვრთოთ Focus/Zen Mode-ის ავტომატური გააქტიურება
+            try {
+              mountedEditor.updateInstanceState({
+                isFocusMode: false,
+                isDebugMode: false,
+              });
+            } catch (e) {
+              console.error(e);
+            }
           }}
         />
       </div>
