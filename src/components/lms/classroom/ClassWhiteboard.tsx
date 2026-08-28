@@ -80,38 +80,31 @@ export function ClassWhiteboard({ room, isFullscreen, onToggleFullscreen }: Clas
 
   return (
     <div
-      data-lk-theme="none"
-      className={`relative flex flex-col bg-white overflow-hidden ${
+      className={`relative w-full h-full bg-white overflow-hidden ${
         isFullscreen
           ? "fixed inset-0 z-[9999] h-screen w-screen"
-          : "h-full w-full rounded-2xl border border-hairline shadow-sm"
+          : "rounded-2xl border border-white/10 shadow-sm"
       }`}
     >
-      <div className="absolute top-3 right-3 z-30 flex items-center gap-2 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-hairline shadow-md pointer-events-auto">
+      {/* ზედა მართვის ღილაკი */}
+      <div className="absolute top-3 right-3 z-50 flex items-center gap-2 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-slate-200 shadow-md">
         <button
           type="button"
           onClick={onToggleFullscreen}
           title={isFullscreen ? "დაპატარავება" : "მთელ ეკრანზე გაშლა"}
-          className="flex size-8 items-center justify-center rounded-lg bg-paper hover:bg-paper-deep text-ink transition-colors"
+          className="flex size-8 items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors"
         >
           {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
         </button>
       </div>
 
-      <div className="relative flex-1 w-full h-full min-h-0 min-w-0">
+      {/* მკაცრად ფიქსირებული კონტეინერი Tldraw-სთვის */}
+      <div className="absolute inset-0 h-full w-full">
         <Tldraw
           store={store}
           autoFocus={false}
           onMount={(mountedEditor) => {
             setEditor(mountedEditor);
-            try {
-              mountedEditor.updateInstanceState({
-                isFocusMode: false,
-                isDebugMode: false,
-              });
-            } catch (e) {
-              console.error(e);
-            }
           }}
         />
       </div>
