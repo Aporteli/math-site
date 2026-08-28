@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Tldraw, Editor, createTLStore, defaultShapeUtils } from "@tldraw/tldraw";
-import "@tldraw/tldraw/tldraw.css";
+// ამოღებულია: import "@tldraw/tldraw/tldraw.css";
 import type { Room } from "livekit-client";
 import { ConnectionState, RoomEvent } from "livekit-client";
 import { Maximize2, Minimize2 } from "lucide-react";
