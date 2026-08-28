@@ -10,7 +10,9 @@ import {
   Chat,
   useTracks,
   useConnectionState,
+  useRoomContext,
 } from "@livekit/components-react";
+import type { Room } from "livekit-client";
 import { ConnectionState, Track } from "livekit-client";
 import "@livekit/components-styles";
 import { X, Layout, PenTool, Loader2, MessageSquare } from "lucide-react";
@@ -69,6 +71,17 @@ function MyVideoGrid() {
   );
 }
 
+// დამხმარე კომპონენტი Room ინსტანსის ასაღებად
+function RoomInstanceBridge({ onRoom }: { onRoom: (room: Room) => void }) {
+  const room = useRoomContext();
+  useEffect(() => {
+    if (room) {
+      onRoom(room);
+    }
+  }, [room, onRoom]);
+  return null;
+}
+
 export function ClassroomRoomModal({ courseId, courseTitle, onClose }: ClassroomRoomModalProps) {
   const [token, setToken] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -77,6 +90,7 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
   const [activeTab, setActiveTab] = useState<"split" | "board">("split");
   const [isBoardFullscreen, setIsBoardFullscreen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [activeRoom, setActiveRoom] = useState<Room | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -137,67 +151,66 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
 
   return (
     <div className="fixed inset-0 z-50 flex h-screen w-screen flex-col overflow-hidden bg-slate-950 p-2 sm:p-3">
-      <LiveKitRoom
-        video={true}
-        audio={true}
-        token={token}
-        serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
-        data-lk-theme="default"
-        className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden"
-        onDisconnected={onClose}
-      >
-        {/* Header */}
-        <header className="relative z-40 flex h-12 shrink-0 items-center justify-between px-3 text-white bg-slate-900 rounded-xl border border-white/10 mb-2 gap-2 select-none">
-          <div className="flex items-center gap-3 min-w-0">
-            <h2 className="text-sm sm:text-base font-bold truncate">{courseTitle} — გაკვეთილი</h2>
-            <ConnectionStatusBadge />
-          </div>
+      {/* Header */}
+      <header className="relative z-40 flex h-12 shrink-0 items-center justify-between px-3 text-white bg-slate-900 rounded-xl border border-white/10 mb-2 gap-2">
+        <div className="flex items-center gap-3 min-w-0">
+          <h2 className="text-sm sm:text-base font-bold truncate">{courseTitle} — გაკვეთილი</h2>
+        </div>
 
-          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
-            <button
-              type="button"
-              onClick={() => setActiveTab("split")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                activeTab === "split" ? "bg-white text-slate-900 shadow-sm" : "text-white/70 hover:text-white"
-              }`}
-            >
-              <Layout className="size-3.5" />
-              <span className="hidden sm:inline">ვიდეო + დაფა</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("board")}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                activeTab === "board" ? "bg-white text-slate-900 shadow-sm" : "text-white/70 hover:text-white"
-              }`}
-            >
-              <PenTool className="size-3.5" />
-              <span className="hidden sm:inline">მხოლოდ დაფა</span>
-            </button>
-          </div>
+        <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+          <button
+            type="button"
+            onClick={() => setActiveTab("split")}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "split" ? "bg-white text-slate-900 shadow-sm" : "text-white/70 hover:text-white"
+            }`}
+          >
+            <Layout className="size-3.5" />
+            <span className="hidden sm:inline">ვიდეო + დაფა</span>
+          </button>
 
           <button
             type="button"
-            onClick={onClose}
-            className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 hover:bg-rose-600 text-white transition-colors"
+            onClick={() => setActiveTab("board")}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              activeTab === "board" ? "bg-white text-slate-900 shadow-sm" : "text-white/70 hover:text-white"
+            }`}
           >
-            <X className="size-4" />
+            <PenTool className="size-3.5" />
+            <span className="hidden sm:inline">მხოლოდ დაფა</span>
           </button>
-        </header>
+        </div>
 
-        {/* Workspace */}
-        <main className="relative flex flex-1 min-h-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
-          <div className="flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row gap-2.5 p-2">
-            
-            {/* მარცხენა სვეტი: ვიდეო / ჩატი */}
-            <div
-              className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-slate-950/80 border border-white/5 transition-all select-none ${
-                activeTab === "board"
-                  ? "hidden"
-                  : "w-full lg:w-[340px] xl:w-[400px] shrink-0"
-              }`}
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 hover:bg-rose-600 text-white transition-colors"
+        >
+          <X className="size-4" />
+        </button>
+      </header>
+
+      {/* Main Container */}
+      <main className="relative flex flex-1 min-h-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
+        <div className="flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row gap-2.5 p-2">
+          
+          {/* მარცხენა სვეტი: LiveKit-ის ფარგლებში იზოლირებული */}
+          <div
+            className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-slate-950/80 border border-white/5 transition-all ${
+              activeTab === "board" ? "hidden" : "w-full lg:w-[340px] xl:w-[400px] shrink-0"
+            }`}
+          >
+            <LiveKitRoom
+              video={true}
+              audio={true}
+              token={token}
+              serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+              data-lk-theme="default"
+              className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden"
+              onDisconnected={onClose}
             >
+              <RoomInstanceBridge onRoom={setActiveRoom} />
+
               {isChatOpen ? (
                 <div className="relative flex-1 min-h-0 w-full overflow-hidden p-2 [&_.lk-chat]:h-full [&_.lk-chat]:w-full [&_.lk-chat-messages]:overflow-y-auto">
                   <Chat />
@@ -231,20 +244,21 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose }: Classroom
                   <MessageSquare className="size-4" />
                 </button>
               </div>
-            </div>
 
-            {/* დაფის ზონა - იზოლირებული LiveKit-ის Idle სტილებისგან */}
-            <div className="relative isolate flex flex-1 h-full min-h-0 min-w-0 overflow-hidden rounded-xl bg-white pointer-events-auto z-10 [&_*]:!pointer-events-auto">
-              <ClassWhiteboard
-                isFullscreen={isBoardFullscreen}
-                onToggleFullscreen={() => setIsBoardFullscreen(!isBoardFullscreen)}
-              />
-            </div>
+              <RoomAudioRenderer />
+            </LiveKitRoom>
           </div>
 
-          <RoomAudioRenderer />
-        </main>
-      </LiveKitRoom>
+          {/* მარჯვენა სვეტი: დაფა (LiveKit-ის სტილებისგან სრულად დამოუკიდებელი) */}
+          <div className="relative flex flex-1 h-full min-h-0 min-w-0 overflow-hidden rounded-xl bg-white">
+            <ClassWhiteboard
+              room={activeRoom}
+              isFullscreen={isBoardFullscreen}
+              onToggleFullscreen={() => setIsBoardFullscreen(!isBoardFullscreen)}
+            />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
