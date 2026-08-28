@@ -19,6 +19,7 @@
     "unrs-resolver": true
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.1",
     "@hookform/resolvers": "^5.9.1",
     "@livekit/components-react": "^2.9.24",
     "@livekit/components-styles": "^1.2.0",
