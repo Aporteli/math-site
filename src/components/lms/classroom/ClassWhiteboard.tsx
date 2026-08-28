@@ -87,11 +87,15 @@ export function ClassWhiteboard({ isFullscreen, onToggleFullscreen }: ClassWhite
   }, [room, store]);
 
   return (
-    <div className={`relative flex flex-col bg-white overflow-hidden ${
-      isFullscreen ? "fixed inset-0 z-[100] h-screen w-screen" : "h-full w-full rounded-2xl border border-hairline shadow-sm"
-    }`}>
+    <div
+      className={`relative flex flex-col bg-white overflow-hidden isolate ${
+        isFullscreen
+          ? "fixed inset-0 z-[100] h-screen w-screen"
+          : "h-full w-full rounded-2xl border border-hairline shadow-sm"
+      }`}
+    >
       {/* ზედა მართვის პანელი */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-md p-1.5 rounded-xl border border-hairline shadow-md">
+      <div className="absolute top-3 right-3 z-30 flex items-center gap-2 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-hairline shadow-md pointer-events-auto">
         <button
           type="button"
           onClick={onToggleFullscreen}
@@ -102,13 +106,24 @@ export function ClassWhiteboard({ isFullscreen, onToggleFullscreen }: ClassWhite
         </button>
       </div>
 
-      <div className="flex-1 w-full h-full">
+      {/* tldraw კონტეინერი CSS override-ით, რომელიც პანელების გაქრობას ბლოკავს */}
+      <div className="relative flex-1 w-full h-full min-h-0 min-w-0 [&_.tlui-layout]:!opacity-100 [&_.tlui-layout]:!visible [&_.tlui-layout]:!pointer-events-auto [&_.tlui-toolbar]:!opacity-100 [&_.tlui-toolbar]:!visible [&_.tlui-style-panel]:!opacity-100 [&_.tlui-style-panel]:!visible [&_.tlui-menu__zone]:!opacity-100 [&_.tlui-menu__zone]:!visible">
         <Tldraw
           store={store}
+          hideUi={false}
+          autoFocus={false}
           onMount={(mountedEditor) => {
             setEditor(mountedEditor);
+            // გამოვრთოთ Focus/Zen Mode-ის ავტომატური გააქტიურება
+            try {
+              mountedEditor.updateInstanceState({
+                isFocusMode: false,
+                isDebugMode: false,
+              });
+            } catch (e) {
+              console.error(e);
+            }
           }}
-          autoFocus={false}
         />
       </div>
     </div>
