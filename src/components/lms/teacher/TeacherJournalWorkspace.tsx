@@ -56,7 +56,7 @@ type PopoverState = {
 const WEEKDAY_LABELS = ["ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ", "კვ"];
 const MONTH_LABELS = [
   "იანვარი", "თებერვალი", "მარტი", "აპრილი", "მაისი", "ივნისი",
-  "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი",
+  "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოებერი", "დეკემბერი",
 ];
 
 const COLOR_OPTIONS: EventColor[] = ["navy", "sky", "emerald", "amber", "rose", "violet"];
@@ -130,7 +130,8 @@ function emptyDraft(dateKey: string): JournalEvent {
 
 const POPOVER_QUICK_WIDTH = 320;
 const POPOVER_FULL_WIDTH = 400;
-const POPOVER_ESTIMATED_HEIGHT = 420;
+const POPOVER_QUICK_HEIGHT = 280;
+const POPOVER_EXPANDED_HEIGHT = 540;
 
 export function TeacherJournalWorkspace() {
   const { toggleSidebarDrawer } = useDashboardFrame();
@@ -226,9 +227,9 @@ export function TeacherJournalWorkspace() {
     setGuestDraft("");
   }
 
-  function clampPosition(rawTop: number, rawLeft: number, width: number) {
-    const padding = 12;
-    const height = POPOVER_ESTIMATED_HEIGHT;
+  function clampPosition(rawTop: number, rawLeft: number, width: number, isExp = false) {
+    const padding = 16;
+    const height = isExp ? POPOVER_EXPANDED_HEIGHT : POPOVER_QUICK_HEIGHT;
     const maxLeft = window.innerWidth - width - padding;
     const maxTop = window.innerHeight - height - padding;
     return {
@@ -239,7 +240,7 @@ export function TeacherJournalWorkspace() {
 
   function openCreateFromElement(el: HTMLElement, date: Date) {
     const rect = el.getBoundingClientRect();
-    const pos = clampPosition(rect.top, rect.left, POPOVER_QUICK_WIDTH);
+    const pos = clampPosition(rect.top, rect.left, POPOVER_QUICK_WIDTH, false);
     setExpanded(false);
     setPopover({ mode: "create", anchor: pos, draft: emptyDraft(toDateKey(date)) });
   }
@@ -247,16 +248,25 @@ export function TeacherJournalWorkspace() {
   function handleEventClick(e: React.MouseEvent<HTMLDivElement>, ev: JournalEvent) {
     e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
-    const pos = clampPosition(rect.top, rect.left, POPOVER_FULL_WIDTH);
+    const pos = clampPosition(rect.top, rect.left, POPOVER_FULL_WIDTH, true);
     setExpanded(true);
     setPopover({ mode: "edit", anchor: pos, draft: { ...ev } });
   }
 
   function handleAddClick(e: React.MouseEvent<HTMLButtonElement>) {
     const rect = e.currentTarget.getBoundingClientRect();
-    const pos = clampPosition(rect.bottom + 8, rect.right - POPOVER_QUICK_WIDTH, POPOVER_QUICK_WIDTH);
+    const pos = clampPosition(rect.bottom + 8, rect.right - POPOVER_QUICK_WIDTH, POPOVER_QUICK_WIDTH, false);
     setExpanded(false);
     setPopover({ mode: "create", anchor: pos, draft: emptyDraft(toDateKey(today)) });
+  }
+
+  function toggleExpandMore() {
+    setExpanded(true);
+    setPopover((prev) => {
+      if (!prev) return null;
+      const reClamped = clampPosition(prev.anchor.top, prev.anchor.left, POPOVER_FULL_WIDTH, true);
+      return { ...prev, anchor: reClamped };
+    });
   }
 
   function updateDraft(patch: Partial<JournalEvent>) {
@@ -510,7 +520,7 @@ export function TeacherJournalWorkspace() {
         </div>
       </div>
 
-      {/* 1. თვის ხედი (Month View) */}
+      {/* 1. თვის ხედი */}
       {view === "month" && (
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
           <div className="grid grid-cols-7 border-b border-hairline bg-paper/30 shrink-0">
@@ -598,14 +608,14 @@ export function TeacherJournalWorkspace() {
           <div className="fixed inset-0 z-40" onClick={closePopover} />
           <div
             style={{ top: popover.anchor.top, left: popover.anchor.left }}
-            className={`fixed z-50 rounded-2xl border border-hairline bg-white shadow-2xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150 ${
+            className={`fixed z-50 rounded-2xl border border-hairline bg-white shadow-2xl ring-1 ring-black/5 transition-[top,width] duration-150 animate-in fade-in zoom-in-95 ${
               expanded ? "w-[400px]" : "w-80"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className={`h-1.5 w-full rounded-t-2xl ${COLOR_DOT[draft.color]}`} />
 
-            <div className="max-h-[75vh] overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div className="max-h-[85vh] overflow-y-auto p-4 space-y-4 custom-scrollbar">
               <div className="flex items-start gap-2">
                 <input
                   autoFocus
@@ -791,7 +801,7 @@ export function TeacherJournalWorkspace() {
                 ) : !expanded ? (
                   <button
                     type="button"
-                    onClick={() => setExpanded(true)}
+                    onClick={toggleExpandMore}
                     className="text-xs font-bold text-navy hover:underline"
                   >
                     მეტი პარამეტრი
