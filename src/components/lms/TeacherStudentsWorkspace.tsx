@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Users,
   Search,
@@ -22,11 +23,21 @@ import {
   Video,
   ImageIcon,
 } from 'lucide-react';
-import { deleteTargetedAssignmentAction, markAssignmentGradedAction } from '@/lib/actions/teacher-students';
+import { deleteTargetedAssignmentAction, getProblemDetailsAction, markAssignmentGradedAction } from '@/lib/actions/teacher-students';
 import { sendProblemToStudentAction } from '@/lib/actions/students';
 import { TeacherViewProblemModal } from '@/components/lms/teacher/TeacherViewProblemModal';
 import { KatexPreview } from '@/components/math/katex-preview';
-import { ClassroomRoomModal } from '@/components/lms/classroom/ClassroomRoomModal';
+const ClassroomRoomModal = dynamic(
+  () => import('@/components/lms/classroom/ClassroomRoomModal').then((m) => m.ClassroomRoomModal),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+        <Loader2 className="size-8 animate-spin text-white" />
+      </div>
+    ),
+  },
+);
 
 interface StudentAssignment {
   id: string;
@@ -39,12 +50,7 @@ interface StudentAssignment {
   promptTex?: string;
   problemImageUrl?: string | null;
   studentAttachmentUrl?: string | null;
-  comments: {
-    id: string;
-    body: string;
-    createdAt: string;
-    author: { name: string; role: string };
-  }[];
+  commentCount: number;
 }
 
 interface StudentItem {
@@ -61,8 +67,6 @@ interface SetProblem {
   setId: string;
   setTitle: string;
   title: string;
-  promptTex: string;
-  solutionTex: string;
 }
 
 interface TeacherStudentsWorkspaceProps {
@@ -139,6 +143,12 @@ export function TeacherStudentsWorkspace({
   const [assigning, setAssigning] = useState(false);
   const [problemSearchQuery, setProblemSearchQuery] = useState('');
 
+  const [selectedProblemDetails, setSelectedProblemDetails] = useState<{
+    promptTex: string;
+    solutionTex: string;
+  } | null>(null);
+  const [loadingProblemDetails, setLoadingProblemDetails] = useState(false);
+
   const [assignImage, setAssignImage] = useState<string | null>(null);
   const [assignImageName, setAssignImageName] = useState<string | null>(null);
   const assignFileRef = useRef<HTMLInputElement>(null);
@@ -162,10 +172,49 @@ export function TeacherStudentsWorkspace({
     }
   }, [isAnyModalOpen]);
 
-  const filteredCourses = courses.filter((c) => c.title.toLowerCase().includes(classSearchQuery.toLowerCase()));
+  // ბარათის პირობის/ამოხსნის ლაზური ჩატვირთვა — მხოლოდ არჩევისას
+  useEffect(() => {
+    if (selectedProblemId === 'custom') {
+      setSelectedProblemDetails(null);
+      setLoadingProblemDetails(false);
+      return;
+    }
 
-  const studentsInActiveCourse = students.filter((s) =>
-    activeCourseId === 'all' ? true : s.courses.some((c) => c.id === activeCourseId),
+    let cancelled = false;
+    setLoadingProblemDetails(true);
+    setSelectedProblemDetails(null);
+
+    getProblemDetailsAction(selectedProblemId)
+      .then((res) => {
+        if (cancelled) return;
+        if (res.success) {
+          setSelectedProblemDetails({
+            promptTex: res.promptTex ?? '',
+            solutionTex: res.solutionTex ?? '',
+          });
+        }
+        setLoadingProblemDetails(false);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadingProblemDetails(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProblemId]);
+
+  const filteredCourses = useMemo(
+    () => courses.filter((c) => c.title.toLowerCase().includes(classSearchQuery.toLowerCase())),
+    [courses, classSearchQuery],
+  );
+
+  const studentsInActiveCourse = useMemo(
+    () =>
+      students.filter((s) =>
+        activeCourseId === 'all' ? true : s.courses.some((c) => c.id === activeCourseId),
+      ),
+    [students, activeCourseId],
   );
 
   const activeStudent = students.find((s) => s.id === selectedStudentId);
@@ -190,19 +239,21 @@ export function TeacherStudentsWorkspace({
     }
   }, [studentAvailableDates]);
 
-  // ამოწმებს აქვს თუ არა მოსწავლეს რაიმე გაუხსნელი დავალება
-  const studentHasUnreadSubmission = (student: StudentItem) => {
-    if (!isReady) return false;
-
-    return student.assignments.some((a) => {
-      const isSubmitted =
-        (a.status === 'SUBMITTED' || a.status === 'RETURNED' || Boolean(a.studentAttachmentUrl)) &&
-        a.status !== 'GRADED';
-      
-      // თუ ჩაბარებულია და ამ დავალების ID ჯერ არ არის ნანახებში - ე.ი. წაუკითხავია
-      return isSubmitted && !viewedKeys.has(a.id);
-    });
-  };
+  // მოსწავლეები, რომლებსაც გაუხსნელი (წაუკითხავი) დავალება აქვთ — წინასწარ გამოითვლება
+  const unreadStudentIds = useMemo(() => {
+    if (!isReady) return new Set<string>();
+    const ids = new Set<string>();
+    for (const student of students) {
+      const hasUnread = student.assignments.some((a) => {
+        const isSubmitted =
+          (a.status === 'SUBMITTED' || a.status === 'RETURNED' || Boolean(a.studentAttachmentUrl)) &&
+          a.status !== 'GRADED';
+        return isSubmitted && !viewedKeys.has(a.id);
+      });
+      if (hasUnread) ids.add(student.id);
+    }
+    return ids;
+  }, [students, viewedKeys, isReady]);
 
   const assignmentsForSelectedDate = useMemo(() => {
     if (!activeStudent || !activeStudent.assignments) return [];
@@ -230,10 +281,14 @@ export function TeacherStudentsWorkspace({
   }, [selectedDateKey]);
 
   const selectedProblem = availableSetProblems.find((p) => p.id === selectedProblemId);
-  const filteredSetProblems = availableSetProblems.filter(
-    (p) =>
-      p.title.toLowerCase().includes(problemSearchQuery.toLowerCase()) ||
-      p.setTitle.toLowerCase().includes(problemSearchQuery.toLowerCase()),
+  const filteredSetProblems = useMemo(
+    () =>
+      availableSetProblems.filter(
+        (p) =>
+          p.title.toLowerCase().includes(problemSearchQuery.toLowerCase()) ||
+          p.setTitle.toLowerCase().includes(problemSearchQuery.toLowerCase()),
+      ),
+    [availableSetProblems, problemSearchQuery],
   );
 
   const handleCourseChange = (courseId: string) => {
@@ -319,13 +374,13 @@ export function TeacherStudentsWorkspace({
       };
     } else {
       const prob = availableSetProblems.find((p) => p.id === selectedProblemId);
-      if (!prob) return;
+      if (!prob || !selectedProblemDetails) return;
       problemData = {
         id: prob.id,
         topic: prob.title,
         difficulty: 'medium',
-        promptTex: prob.promptTex || '',
-        solutionTex: prob.solutionTex || '',
+        promptTex: selectedProblemDetails.promptTex || '',
+        solutionTex: selectedProblemDetails.solutionTex || '',
       };
     }
 
@@ -350,16 +405,7 @@ export function TeacherStudentsWorkspace({
           promptTex: problemData.promptTex,
           problemImageUrl: assignImage,
           studentAttachmentUrl: null,
-          comments: safeComment
-            ? [
-                {
-                  id: 'cmt-' + Date.now(),
-                  body: safeComment,
-                  createdAt: new Date().toISOString(),
-                  author: { name: 'თქვენ', role: 'TEACHER' },
-                },
-              ]
-            : [],
+          commentCount: safeComment ? 1 : 0,
         };
 
         setStudents((prev) =>
@@ -399,7 +445,8 @@ export function TeacherStudentsWorkspace({
   const isSendDisabled =
     assigning ||
     (selectedProblemId === 'custom' && !assignImage && !(assignComment ?? '').trim()) ||
-    (selectedProblemId !== 'custom' && !selectedProblem);
+    (selectedProblemId !== 'custom' &&
+      (!selectedProblem || loadingProblemDetails || !selectedProblemDetails));
 
   return (
     <div className="space-y-6">
@@ -458,7 +505,7 @@ export function TeacherStudentsWorkspace({
             {filteredCourses.map((course) => {
               const active = course.id === activeCourseId;
               const courseStudents = students.filter((s) => s.courses.some((c) => c.id === course.id));
-              const courseHasUnread = isReady && courseStudents.some((s) => studentHasUnreadSubmission(s));
+              const courseHasUnread = courseStudents.some((s) => unreadStudentIds.has(s.id));
 
               return (
                 <button
@@ -506,7 +553,7 @@ export function TeacherStudentsWorkspace({
             ) : (
               studentsInActiveCourse.map((student) => {
                 const isSelected = selectedStudentId === student.id;
-                const hasUnread = isReady && studentHasUnreadSubmission(student);
+                const hasUnread = unreadStudentIds.has(student.id);
 
                 return (
                   <button
@@ -661,10 +708,10 @@ export function TeacherStudentsWorkspace({
                                 <UploadCloud className="size-3" /> მოსწავლის პასუხი მიღებულია
                               </span>
                             )}
-                            {assignment.comments && assignment.comments.length > 0 && (
+                            {assignment.commentCount > 0 && (
                               <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
                                 <MessageSquare className="size-3" />
-                                {assignment.comments.length}
+                                {assignment.commentCount}
                               </span>
                             )}
                           </div>
@@ -906,9 +953,19 @@ export function TeacherStudentsWorkspace({
                       </span>
                       <h4 className="text-base font-bold text-ink">{selectedProblem.title}</h4>
                     </div>
-                    <div className="rounded-2xl border border-hairline-soft bg-slate-50/60 p-5 overflow-x-auto">
-                      <KatexPreview tex={selectedProblem.promptTex} className="text-ink text-base leading-relaxed" />
-                    </div>
+                    {loadingProblemDetails ? (
+                      <div className="rounded-2xl border border-hairline-soft bg-slate-50/60 p-8 flex items-center justify-center">
+                        <Loader2 className="size-5 animate-spin text-muted" />
+                      </div>
+                    ) : selectedProblemDetails ? (
+                      <div className="rounded-2xl border border-hairline-soft bg-slate-50/60 p-5 overflow-x-auto">
+                        <KatexPreview tex={selectedProblemDetails.promptTex} className="text-ink text-base leading-relaxed" />
+                      </div>
+                    ) : (
+                      <p className="rounded-2xl border border-hairline-soft bg-slate-50/60 p-5 text-xs text-muted">
+                        ბარათის პირობის ჩატვირთვა ვერ მოხერხდა
+                      </p>
+                    )}
                   </div>
                 ) : null}
 

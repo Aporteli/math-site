@@ -143,3 +143,40 @@ export async function markAssignmentGradedAction(submissionIdOrAssignmentId: str
     return { success: false, error: "სტატუსის განახლება ვერ მოხერხდა" };
   }
 }
+
+/**
+ * ბარათის (ამოცანის) პირობისა და ამოხსნის ლაზური ჩატვირთვა.
+ * მხოლოდ მასწავლებლის მიერ კონკრეტული ბარათის არჩევისას იძახება,
+ * რათა საწყისი გვერდი არ დაიტვირთოს ყველა ამოცანის სრული LaTeX-ით.
+ */
+export async function getProblemDetailsAction(
+  problemId: string,
+): Promise<{ success: boolean; promptTex?: string; solutionTex?: string; error?: string }> {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      return { success: false, error: "ავტორიზაცია ვერ მოხერხდა" };
+    }
+
+    const problem = await prisma.problem.findFirst({
+      where: {
+        id: problemId,
+        ...(session.user.role === "ADMIN" ? {} : { authorId: session.user.id }),
+      },
+      select: { promptTex: true, solutionTex: true },
+    });
+
+    if (!problem) {
+      return { success: false, error: "ბარათი ვერ მოიძებნა" };
+    }
+
+    return {
+      success: true,
+      promptTex: problem.promptTex || "",
+      solutionTex: problem.solutionTex || "",
+    };
+  } catch (error) {
+    console.error("Failed to fetch problem details:", error);
+    return { success: false, error: "ბარათის ჩატვირთვა ვერ მოხერხდა" };
+  }
+}

@@ -50,11 +50,8 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
                 include: {
                   assignment: {
                     include: {
-                      comments: {
-                        include: {
-                          author: { select: { name: true, role: true } },
-                        },
-                        orderBy: { createdAt: "asc" },
+                      _count: {
+                        select: { comments: true },
                       },
                     },
                   },
@@ -73,8 +70,14 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
     where: { authorId: session.user.id },
     include: {
       items: {
-        include: {
-          problem: true,
+        select: {
+          problem: {
+            select: {
+              id: true,
+              topic: true,
+              kind: true,
+            },
+          },
         },
         orderBy: { position: "asc" },
       },
@@ -88,8 +91,6 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
       setId: set.id,
       setTitle: set.title,
       title: item.problem.topic || item.problem.kind || "ბარათი",
-      promptTex: item.problem.promptTex || item.problem.formula || "",
-      solutionTex: item.problem.solutionTex || "",
     }))
   );
 
@@ -125,12 +126,7 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
               problemImageUrl: a.attachmentUrl || (typeof payload.imageUrl === "string" ? payload.imageUrl : null),
               // მოსწავლის მიერ ატვირთული პასუხი
               studentAttachmentUrl: sub.attachmentUrl || null,
-              comments: a.comments.map((c: any) => ({
-                id: c.id,
-                body: c.body,
-                createdAt: c.createdAt.toISOString(),
-                author: c.author,
-              })),
+              commentCount: a._count?.comments ?? 0,
             };
           }),
         });
