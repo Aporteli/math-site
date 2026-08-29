@@ -1,17 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  Sparkles,
-  X,
-  Send,
-  Image as ImageIcon,
-  Loader2,
-  Trash2,
-  HelpCircle,
-  BookOpen,
-  Lightbulb,
-} from 'lucide-react';
+import { Sparkles, X, Send, Image as ImageIcon, Loader2, Trash2, HelpCircle, BookOpen, Lightbulb } from 'lucide-react';
 import { AI_MODELS, type AiModelId } from '@/lib/math/problems/ai-models';
 import { askRawAiAction } from '@/lib/math/problems/ai-raw-action';
 import { KatexPreview } from '@/components/math/katex-preview';
@@ -79,7 +69,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
         }
       }
     },
-    [processImageFile]
+    [processImageFile],
   );
 
   useEffect(() => {
@@ -139,8 +129,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
   return (
     <div
       onPaste={handlePaste}
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 backdrop-blur-xs"
-    >
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 backdrop-blur-xs">
       {/* 👈 გარეთ დაკლიკების ფონური ღილაკი */}
       <button
         type="button"
@@ -150,7 +139,6 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
       />
 
       <div className="relative z-10 flex h-[88vh] w-full max-w-3xl flex-col rounded-2xl border border-white/10 bg-slate-900 text-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        
         {/* Header */}
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 px-4 bg-slate-950/60">
           <div className="flex items-center gap-2 text-indigo-400">
@@ -162,8 +150,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value as AiModelId)}
-              className="rounded-lg bg-slate-800 border border-white/10 px-2.5 py-1 text-xs font-medium text-slate-200 outline-none focus:border-indigo-500"
-            >
+              className="rounded-lg bg-slate-800 border border-white/10 px-2.5 py-1 text-xs font-medium text-slate-200 outline-none focus:border-indigo-500">
               {AI_MODELS.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.id} ({m.provider})
@@ -174,8 +161,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:bg-rose-500/20 hover:text-rose-400 transition-colors"
-            >
+              className="flex size-8 items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:bg-rose-500/20 hover:text-rose-400 transition-colors">
               <X className="size-4" />
             </button>
           </div>
@@ -183,7 +169,6 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
 
         {/* 3 სწრაფი პრომპტის ღილაკი */}
         <div className="flex flex-wrap items-center gap-2 border-b border-white/5 bg-slate-950/30 p-2.5">
-          <span className="text-[11px] font-semibold text-slate-400 pl-1">სწრაფი მოქმედება:</span>
           {QUICK_PROMPTS.map((qp, idx) => {
             const Icon = qp.icon;
             return (
@@ -195,8 +180,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
                   setPrompt(qp.prompt);
                   void executeAiRequest(qp.prompt);
                 }}
-                className="flex items-center gap-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/40 disabled:opacity-50 transition-all"
-              >
+                className="flex items-center gap-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/40 disabled:opacity-50 transition-all">
                 <Icon className="size-3.5 text-indigo-400" />
                 <span>{qp.label}</span>
               </button>
@@ -207,9 +191,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
         {/* პასუხის არეალი */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {error && (
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-400">
-              {error}
-            </div>
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-400">{error}</div>
           )}
 
           {response ? (
@@ -246,31 +228,20 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
               <span className="text-xs text-slate-300 max-w-[200px] truncate">
                 {image.file.name || 'დაკოპირებული სურათი'}
               </span>
-              <button
-                type="button"
-                onClick={handleRemoveImage}
-                className="ml-auto text-slate-400 hover:text-rose-400"
-              >
+              <button type="button" onClick={handleRemoveImage} className="ml-auto text-slate-400 hover:text-rose-400">
                 <Trash2 className="size-3.5" />
               </button>
             </div>
           )}
 
           <div className="flex items-center gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageSelect}
-              accept="image/*"
-              className="hidden"
-            />
+            <input type="file" ref={fileInputRef} onChange={handleImageSelect} accept="image/*" className="hidden" />
 
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               title="სურათის მიმაგრება"
-              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 transition-colors"
-            >
+              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 transition-colors">
               <ImageIcon className="size-4" />
             </button>
 
@@ -292,13 +263,11 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
               type="button"
               disabled={loading || (!prompt.trim() && !image)}
               onClick={() => executeAiRequest(prompt)}
-              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40 transition-colors"
-            >
+              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40 transition-colors">
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

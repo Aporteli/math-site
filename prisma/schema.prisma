@@ -103,6 +103,7 @@ model User {
   lessonNotes          LessonNote[]
   whiteboardsAsStudent WhiteboardAssignment[] @relation("WhiteboardStudent")
   whiteboardsAsTeacher WhiteboardAssignment[] @relation("WhiteboardTeacher")
+  journalEvents        JournalEvent[]
 
   @@map("users")
 }
@@ -415,4 +416,27 @@ model WhiteboardAssignment {
   @@index([teacherId])
   @@index([courseId])
   @@map("whiteboard_assignments")
+}
+
+model JournalEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  date        String
+  allDay      Boolean  @default(false)
+  startTime   String   @default("09:00")
+  endTime     String   @default("10:00")
+  location    String   @default("")
+  description String   @default("") @db.Text
+  guests      String[] @default([])
+  color       String   @default("navy")
+  repeat      String   @default("none")
+  reminder    String   @default("30")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("journal_events")
 }

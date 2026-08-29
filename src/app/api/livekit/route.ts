@@ -12,47 +12,40 @@ export async function GET(req: NextRequest) {
       return new NextResponse('Missing courseId', { status: 400 });
     }
 
+    // 1. სესიის შემოწმება — დაულოგინებელი მომხმარებლის დაბლოკვა (401)
     const session = await getSession();
-    let userId = session?.user?.id;
-    let userName = session?.user?.name || 'მომხმარებელი';
-    let isTeacherUser = false;
+    const userId = session?.user?.id;
+    const userName = session?.user?.name || 'მომხმარებელი';
+    const userRole = (session?.user as any)?.role;
 
-    // 1. ავტორიზაცია და უფლებების შემოწმება
-    if (userId) {
-      const course = await prisma.course.findUnique({
-        where: { id: courseId },
-        select: { teacherId: true },
+    if (!userId) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
+    // 2. კურსის და უფლებების შემოწმება
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { teacherId: true },
+    });
+
+    if (!course) {
+      return new NextResponse('Course not found', { status: 404 });
+    }
+
+    const isTeacher = course.teacherId === userId || userRole === 'ADMIN';
+
+    if (!isTeacher) {
+      const enrollment = await prisma.enrollment.findFirst({
+        where: {
+          courseId: courseId,
+          userId: userId,
+          status: 'ACTIVE',
+        },
       });
 
-      if (!course) {
-        return new NextResponse('Course not found', { status: 404 });
-      }
-
-      let hasAccess = false;
-
-      if (course.teacherId === userId) {
-        hasAccess = true;
-        isTeacherUser = true;
-      } else {
-        const enrollment = await prisma.enrollment.findFirst({
-          where: {
-            courseId: courseId,
-            userId: userId,
-            status: 'ACTIVE',
-          },
-        });
-        if (enrollment) {
-          hasAccess = true;
-        }
-      }
-
-      if (!hasAccess) {
+      if (!enrollment) {
         return new NextResponse('Access denied for this course', { status: 403 });
       }
-    } else {
-      const randomGuestId = Math.random().toString(36).substring(2, 6);
-      userId = `guest-${randomGuestId}`;
-      userName = `სტუმარი-${randomGuestId}`;
     }
 
     const apiKey = process.env.LIVEKIT_API_KEY;
@@ -65,11 +58,11 @@ export async function GET(req: NextRequest) {
 
     const roomName = `course-${courseId}`;
 
-    // 2. ოთახის დარეგისტრირება მუდმივი სტატუსით (არ დაიხურება 24 საათის განმავლობაში)
+    // 3. ოთახის დარეგისტრირება მუდმივი სტატუსით (არ დაიხურება 24 საათის განმავლობაში)
     try {
       const httpUrl = livekitUrl.replace('wss://', 'https://').replace('ws://', 'http://');
       const roomService = new RoomServiceClient(httpUrl, apiKey, apiSecret);
-      
+
       await roomService.createRoom({
         name: roomName,
         emptyTimeout: 60 * 60 * 24, // 24 საათი ცარიელიც რომ იყოს, ოთახი არ წაიშლება
@@ -79,7 +72,7 @@ export async function GET(req: NextRequest) {
       // თუ ოთახი უკვე შექმნილია, შეცდომას ვაიგნორებთ და ჩვეულებრივ ვაგრძელებთ
     }
 
-    // 3. ტოკენის გენერაცია
+    // 4. ტოკენის გენერაცია
     const at = new AccessToken(apiKey, apiSecret, {
       identity: userId,
       name: userName,

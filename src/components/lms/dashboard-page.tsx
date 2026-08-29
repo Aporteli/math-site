@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { WorkspaceScreen } from "@/components/lms/workspace-screen";
+import { TeacherJournalWorkspace } from "@/components/lms/teacher/TeacherJournalWorkspace";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import {
@@ -45,6 +46,16 @@ export async function TeacherWorkspacePage({
   const teacher = getDictionary(locale).dashboard.teacher;
   const page = teacher.pages[id];
 
+  const renderContent = () => {
+    switch (id as string) {
+      case "journal":
+      case "calendar":
+        return <TeacherJournalWorkspace />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <WorkspaceScreen
       locale={locale}
@@ -52,7 +63,9 @@ export async function TeacherWorkspacePage({
       subtitle={page.subtitle}
       links={TEACHER_NAV}
       labels={teacher.nav}
-    />
+    >
+      {renderContent()}
+    </WorkspaceScreen>
   );
 }
 

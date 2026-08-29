@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
@@ -12,6 +12,21 @@ import { localePath, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/types";
 import { SIDEBAR_COOKIE } from "@/lib/dashboard";
 import { setCookie } from "@/lib/helpers/cookies";
+
+// Context კალენდრიდან პანელის სამართავად
+interface DashboardContextType {
+  sidebarDrawerOpen: boolean;
+  toggleSidebarDrawer: () => void;
+  isJournalPage: boolean;
+}
+
+const DashboardContext = createContext<DashboardContextType>({
+  sidebarDrawerOpen: false,
+  toggleSidebarDrawer: () => {},
+  isJournalPage: false,
+});
+
+export const useDashboardFrame = () => useContext(DashboardContext);
 
 type DashboardFrameProps = {
   locale: Locale;
@@ -36,18 +51,27 @@ export function DashboardFrame(props: DashboardFrameProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(props.initialCollapsed);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [journalDrawerOpen, setJournalDrawerOpen] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollY = useRef(0);
 
+  const isJournalPage =
+    pathname.endsWith("/teacher/journal") ||
+    pathname.endsWith("/teacher/calendar");
+
   useEffect(() => {
     setMobileOpen(false);
+    setJournalDrawerOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    if (!mobileOpen) return;
+    if (!mobileOpen && !journalDrawerOpen) return;
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setMobileOpen(false);
+      if (event.key === "Escape") {
+        setMobileOpen(false);
+        setJournalDrawerOpen(false);
+      }
     }
 
     document.body.style.overflow = "hidden";
@@ -57,9 +81,11 @@ export function DashboardFrame(props: DashboardFrameProps) {
       document.body.style.overflow = "";
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [mobileOpen]);
+  }, [mobileOpen, journalDrawerOpen]);
 
   useEffect(() => {
+    if (isJournalPage) return;
+
     lastScrollY.current = window.scrollY;
 
     function onScroll() {
@@ -85,12 +111,16 @@ export function DashboardFrame(props: DashboardFrameProps) {
 
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [mobileOpen]);
+  }, [mobileOpen, isJournalPage]);
 
   function toggleCollapsed() {
     const next = !collapsed;
     setCollapsed(next);
     setCookie(SIDEBAR_COOKIE, next ? "1" : "0");
+  }
+
+  function toggleSidebarDrawer() {
+    setJournalDrawerOpen((prev) => !prev);
   }
 
   const navLabel = dict.dashboard.navLabel;
@@ -101,7 +131,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
         label={navLabel}
         role="teacher"
         labels={props.labels}
-        collapsed={collapsed}
+        collapsed={isJournalPage ? true : collapsed}
       />
     ) : (
       <DashboardNav
@@ -109,7 +139,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
         label={navLabel}
         role="student"
         labels={props.labels}
-        collapsed={collapsed}
+        collapsed={isJournalPage ? true : collapsed}
       />
     );
 
@@ -131,88 +161,140 @@ export function DashboardFrame(props: DashboardFrameProps) {
     );
 
   return (
-    <div className="min-h-screen bg-paper">
-      <aside
-        className={[
-          "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-hairline bg-white transition-[width] duration-200 lg:flex",
-          collapsed ? "w-[4.75rem]" : "w-72",
-        ].join(" ")}
-      >
-        <SidebarChrome
-          locale={locale}
-          dict={dict}
-          roleLabel={roleLabel}
-          userName={userName}
-          collapsed={collapsed}
-          onToggle={toggleCollapsed}
-          nav={nav}
-        />
-      </aside>
-
-      {mobileOpen ? (
-        <div className="lg:hidden">
-          <button
-            type="button"
-            className="fixed inset-0 z-40 bg-ink/25"
-            aria-label={dict.dashboard.closeNav}
-            onClick={() => setMobileOpen(false)}
-          />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-hairline bg-white shadow-lg">
+    <DashboardContext.Provider
+      value={{
+        sidebarDrawerOpen: journalDrawerOpen,
+        toggleSidebarDrawer,
+        isJournalPage,
+      }}
+    >
+      <div className={`bg-paper ${isJournalPage ? "h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen"}`}>
+        {/* სტანდარტული გვერდითა პანელი (სხვა გვერდებზე ჩვეულებრივად ჩანს, ჟურნალის გვერდზე მთლიანად დამალულია) */}
+        {!isJournalPage && (
+          <aside
+            className={[
+              "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-hairline bg-white transition-[width] duration-200 lg:flex",
+              collapsed ? "w-[4.75rem]" : "w-72",
+            ].join(" ")}
+          >
             <SidebarChrome
               locale={locale}
               dict={dict}
               roleLabel={roleLabel}
               userName={userName}
-              collapsed={false}
-              onToggle={() => setMobileOpen(false)}
-              closeLabel={dict.dashboard.closeNav}
-              nav={mobileNav}
+              collapsed={collapsed}
+              onToggle={toggleCollapsed}
+              nav={nav}
             />
           </aside>
-        </div>
-      ) : null}
+        )}
 
-      <div
-        className={[
-          "transition-[padding] duration-200",
-          collapsed ? "lg:pl-[4.75rem]" : "lg:pl-72",
-        ].join(" ")}
-      >
-        <header
-          className={[
-            "sticky top-0 z-30 border-b border-hairline bg-paper/80 backdrop-blur-md",
-            "motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out",
-            headerHidden ? "-translate-y-full" : "translate-y-0",
-          ].join(" ")}
-        >
-          <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
+        {/* ჟურნალის გვერდის მოტივტივე (Slide-over) პანელი */}
+        {isJournalPage && (
+          <>
+            {journalDrawerOpen && (
+              <div
+                className="fixed inset-0 z-40 bg-ink/20 backdrop-blur-[2px] transition-opacity animate-in fade-in duration-200"
+                onClick={() => setJournalDrawerOpen(false)}
+              />
+            )}
+            <aside
+              className={`fixed inset-y-0 left-0 z-50 flex w-[4.75rem] flex-col border-r border-hairline bg-white shadow-2xl transition-transform duration-300 ease-out ${
+                journalDrawerOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
+            >
+              <SidebarChrome
+                locale={locale}
+                dict={dict}
+                roleLabel={roleLabel}
+                userName={userName}
+                collapsed={true}
+                onToggle={() => setJournalDrawerOpen(false)}
+                closeLabel={dict.dashboard.closeNav}
+                nav={nav}
+              />
+            </aside>
+          </>
+        )}
+
+        {/* მობილურის ნავიგაციის ფანჯარა */}
+        {mobileOpen ? (
+          <div className="lg:hidden">
             <button
               type="button"
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-hairline bg-white text-ink transition-colors hover:border-navy/30 hover:text-navy lg:hidden"
-              aria-label={dict.dashboard.openNav}
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen(true)}
-            >
-              <Menu className="size-4" aria-hidden="true" />
-            </button>
-            <div className="min-w-0 flex-1 lg:hidden">
-              <SiteLogo locale={locale} brand={dict.brand} />
-            </div>
-            <p className="hidden min-w-0 flex-1 text-sm font-medium text-muted lg:block">
-              {dict.dashboard.workspace}
-            </p>
-            <LanguageSwitcher locale={locale} label={dict.header.language} />
-            <Link
-              href={localePath(locale, "/")}
-              className="hidden rounded-full border border-hairline bg-white px-3 py-2 text-sm font-medium text-body transition-colors hover:border-navy/30 hover:text-navy sm:inline-flex"
-            >
-              {dict.nav.home}
-            </Link>
+              className="fixed inset-0 z-40 bg-ink/25"
+              aria-label={dict.dashboard.closeNav}
+              onClick={() => setMobileOpen(false)}
+            />
+            <aside className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-hairline bg-white shadow-lg">
+              <SidebarChrome
+                locale={locale}
+                dict={dict}
+                roleLabel={roleLabel}
+                userName={userName}
+                collapsed={false}
+                onToggle={() => setMobileOpen(false)}
+                closeLabel={dict.dashboard.closeNav}
+                nav={mobileNav}
+              />
+            </aside>
           </div>
-        </header>
-        <main className="px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+        ) : null}
+
+        <div
+          className={[
+            "flex-1 flex flex-col min-w-0 transition-[padding] duration-200",
+            !isJournalPage && (collapsed ? "lg:pl-[4.75rem]" : "lg:pl-72"),
+            isJournalPage ? "h-full overflow-hidden" : "",
+          ].join(" ")}
+        >
+          {!isJournalPage && (
+            <header
+              className={[
+                "sticky top-0 z-30 border-b border-hairline bg-paper/80 backdrop-blur-md shrink-0",
+                "motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out",
+                headerHidden ? "-translate-y-full" : "translate-y-0",
+              ].join(" ")}
+            >
+              <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
+                <button
+                  type="button"
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-hairline bg-white text-ink transition-colors hover:border-navy/30 hover:text-navy lg:hidden"
+                  aria-label={dict.dashboard.openNav}
+                  aria-expanded={mobileOpen}
+                  onClick={() => setMobileOpen(true)}
+                >
+                  <Menu className="size-4" aria-hidden="true" />
+                </button>
+                <div className="min-w-0 flex-1 lg:hidden">
+                  <SiteLogo locale={locale} brand={dict.brand} />
+                </div>
+                <p className="hidden min-w-0 flex-1 text-sm font-medium text-muted lg:block">
+                  {dict.dashboard.workspace}
+                </p>
+                <LanguageSwitcher locale={locale} label={dict.header.language} />
+                <Link
+                  href={localePath(locale, "/")}
+                  className="hidden rounded-full border border-hairline bg-white px-3 py-2 text-sm font-medium text-body transition-colors hover:border-navy/30 hover:text-navy sm:inline-flex"
+                >
+                  {dict.nav.home}
+                </Link>
+              </div>
+            </header>
+          )}
+
+          <main
+            className={
+              isJournalPage
+               ? "h-[100dvh] w-full p-2 sm:p-3 overflow-hidden flex flex-col box-border"
+                : "px-4 py-8 sm:px-6 lg:px-8"
+            }
+          >
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </DashboardContext.Provider>
   );
 }
 
