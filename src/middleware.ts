@@ -34,7 +34,7 @@ function withLocalePrefix(request: NextRequest) {
   return NextResponse.redirect(url);
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasLocale = locales.some((locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`));
 
@@ -46,7 +46,6 @@ export async function proxy(request: NextRequest) {
   const needsAuth = isTeacherPath(path) || isStudentPath(path) || isLoginPath(path);
   if (!needsAuth) return NextResponse.next();
 
-  // secureCookie აუცილებელია Vercel (HTTPS) პროდაქშენ გარემოსთვის
   const isSecure = process.env.NODE_ENV === 'production' || request.url.startsWith('https://');
   const token = await getToken({
     req: request,
@@ -56,9 +55,8 @@ export async function proxy(request: NextRequest) {
 
   const role = isUserRole(token?.role) ? token.role : null;
 
-  // თუ მომხმარებელი შესულია და ისევ ლოგინის გვერდზე მიდის
+  // თუ შესულია და ისევ ლოგინის გვერდზე მიდის
   if (isLoginPath(path)) {
-    // თუ არ არის დალოგინებული ან უბრალო ვიზიტორია, დავტოვოთ ლოგინზე
     if (!role || role === 'VISITOR') return NextResponse.next();
 
     const destination = resolvePostLoginHref(role, locale, request.nextUrl.searchParams.get('callbackUrl'));
@@ -74,10 +72,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  // თუ მომხმარებელს არ აქვს კონკრეტულ გვერდზე წვდომა (მაგ. VISITOR ცდილობს მასწავლებლის პანელში შესვლას)
+  // თუ როლი არ ემთხვევა გვერდს (მაგ. STUDENT ცდილობს TEACHER-ის გვერდზე შესვლას)
   if (!canAccessPath(path, role)) {
     const home = request.nextUrl.clone();
-    // თუ VISITOR-ია გადავიყვანოთ მთავარ გვერდზე, რათა ციკლში არ ჩავარდეს
     if (role === 'VISITOR') {
       home.pathname = `/${locale}`;
     } else {
@@ -91,5 +88,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next|api|.*\\.).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import {
   LiveKitRoom,
@@ -65,13 +65,18 @@ function ConnectionStatusBadge() {
 }
 
 function MyVideoGrid() {
-  const tracks = useTracks(
+  const rawTracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
       { source: Track.Source.ScreenShare, withPlaceholder: false },
     ],
     { onlySubscribed: false },
   );
+
+  // ვფილტრავთ ტრეკებს, რომელთა მონაწილეც აღარ იმყოფება ოთახში (Console Warning-ის თავიდან ასაცილებლად)
+  const tracks = useMemo(() => {
+    return rawTracks.filter((trackRef) => Boolean(trackRef.participant && trackRef.participant.sid));
+  }, [rawTracks]);
 
   return (
     <div className="relative flex-1 min-h-0 w-full overflow-hidden p-1.5">
@@ -169,13 +174,13 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
   return (
     <div className="fixed inset-0 z-50 flex h-screen w-screen flex-col overflow-hidden bg-slate-950 p-2 sm:p-3">
       
-      {/* AI მოდალი იხსნება მხოლოდ მასწავლებლისთვის */}
-      {isTeacher ? (
+      {/* AI ასისტენტის მოდალი მხოლოდ მასწავლებლისთვის */}
+      {isTeacher && (
         <ClassroomAiModal
           isOpen={isAiModalOpen}
           onClose={() => setIsAiModalOpen(false)}
         />
-      ) : null}
+      )}
 
       <header className="relative z-40 flex h-12 shrink-0 items-center justify-between px-3 text-white bg-slate-900 rounded-xl border border-white/10 mb-2 gap-2">
         <div className="flex items-center gap-3 min-w-0">
@@ -205,8 +210,8 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
         </div>
 
         <div className="flex items-center gap-2">
-          {/* ღილაკი გამოჩნდება მხოლოდ მასწავლებელთან */}
-          {isTeacher ? (
+          {/* ღილაკი ჩანს მხოლოდ მასწავლებელთან */}
+          {isTeacher && (
             <button
               type="button"
               onClick={() => setIsAiModalOpen(true)}
@@ -215,7 +220,7 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
               <Sparkles className="size-3.5 text-indigo-200" />
               <span className="hidden sm:inline">AI ასისტენტი</span>
             </button>
-          ) : null}
+          )}
 
           <button
             type="button"

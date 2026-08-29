@@ -65,9 +65,6 @@ export function isStudentPath(path: string) {
 }
 
 export function canAccessPath(path: string, role: UserRole) {
-  if (isLocalDashboardPreview() && (isTeacherPath(path) || isStudentPath(path))) {
-    return true;
-  }
   if (isTeacherPath(path)) return role === 'TEACHER' || role === 'ADMIN';
   if (isStudentPath(path)) return role === 'STUDENT' || role === 'ADMIN';
   // ვიზიტორს და ნებისმიერ სხვა როლს აქვს წვდომა ყველა დანარჩენ საჯარო გვერდზე

@@ -5,7 +5,6 @@ import { authOptions } from "@/lib/auth/options";
 import { prisma } from "@/lib/prisma";
 import {
   dashboardHomeForRole,
-  isLocalDashboardPreview,
   LOGIN_PATH,
 } from "@/lib/auth/paths";
 import type { UserRole } from "@/lib/auth/roles";
@@ -49,8 +48,10 @@ export async function requireRole(locale: Locale, roles: UserRole[]) {
     console.error("REQUIRE_ROLE_DB_FETCH_ERROR:", error);
   }
 
-  // Only redirect when the database role is also not allowed.
-  if (!isLocalDashboardPreview() && !roles.includes(currentRole)) {
+  // Redirect unauthorized roles to their own dashboard. This applies in every
+  // environment (including local development) so STUDENT/VISITOR users cannot
+  // browse teacher-only routes.
+  if (!roles.includes(currentRole)) {
     redirect(localePath(locale, dashboardHomeForRole(currentRole)));
   }
 

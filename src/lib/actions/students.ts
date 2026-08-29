@@ -26,10 +26,24 @@ export interface ProblemPayloadInput {
 }
 
 /**
- * 1. მოსწავლეების სიის წამოღება
+ * დამხმარე შემოწმება: არის თუ არა მომხმარებელი მასწავლებელი ან ადმინი
+ */
+async function assertTeacherSession() {
+  const session = await getSession();
+  const role = (session?.user as any)?.role;
+  if (!session?.user?.id || (role !== "TEACHER" && role !== "ADMIN")) {
+    throw new Error("წვდომა უარყოფილია: საჭიროა მასწავლებლის უფლებები");
+  }
+  return session;
+}
+
+/**
+ * 1. მოსწავლეების სიის წამოღება (ხელმისაწვდომია მხოლოდ მასწავლებლისთვის)
  */
 export async function getStudentsAction(): Promise<StudentData[]> {
   try {
+    await assertTeacherSession();
+
     const students = await prisma.user.findMany({
       where: {
         role: "STUDENT",
@@ -59,8 +73,7 @@ export async function getStudentsAction(): Promise<StudentData[]> {
  */
 export async function getTeacherClassesAction(): Promise<ClassData[]> {
   try {
-    const session = await getSession();
-    if (!session?.user?.id) return [];
+    const session = await assertTeacherSession();
 
     const courses = await prisma.course.findMany({
       where: {
@@ -107,6 +120,8 @@ export async function sendProblemToStudentAction({
   attachmentUrl?: string | null;
 }) {
   try {
+    await assertTeacherSession();
+
     const enrollment = await prisma.enrollment.findFirst({
       where: {
         userId: studentId,
@@ -156,9 +171,9 @@ export async function sendProblemToStudentAction({
     });
 
     return { success: true, assignmentId: assignment.id };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to send problem to student:", error);
-    return { success: false, error: "ამოცანის გაგზავნა ვერ მოხერხდა" };
+    return { success: false, error: error.message || "ამოცანის გაგზავნა ვერ მოხერხდა" };
   }
 }
 
@@ -177,6 +192,8 @@ export async function sendProblemToClassAction({
   attachmentUrl?: string | null;
 }) {
   try {
+    await assertTeacherSession();
+
     const assignment = await prisma.assignment.create({
       data: {
         courseId: courseId,
@@ -219,9 +236,9 @@ export async function sendProblemToClassAction({
     }
 
     return { success: true, assignmentId: assignment.id };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to send problem to class:", error);
-    return { success: false, error: "კლასისთვის ამოცანის გაგზავნა ვერ მოხერხდა" };
+    return { success: false, error: error.message || "კლასისთვის ამოცანის გაგზავნა ვერ მოხერხდა" };
   }
 }
 
@@ -269,7 +286,6 @@ export async function getStudentAssignmentsAction() {
         problemStatus = "uploaded";
       }
 
-      // მასწავლებლის მიერ გაგზავნილი სურათის (დაფის / ფოტოს) ამოღება
       const teacherImage =
         a.attachmentUrl ||
         payload.imageUrl ||
@@ -288,7 +304,7 @@ export async function getStudentAssignmentsAction() {
         overdue: a.dueAt ? new Date(a.dueAt) < new Date() : false,
         note: a.instructions || undefined,
         instructions: a.instructions || undefined,
-        attachmentUrl: teacherImage, // გადავცემთ პირდაპირ დავალებაზე
+        attachmentUrl: teacherImage,
         customPayload: payload,
         problems: [
           {
@@ -298,8 +314,8 @@ export async function getStudentAssignmentsAction() {
             promptTex: payload.promptTex || payload.text || a.instructions || "",
             status: problemStatus,
             fileName: submission?.attachmentUrl || undefined,
-            previewUrl: submission?.attachmentUrl || undefined, // მოსწავლის პასუხი
-            teacherAttachmentUrl: teacherImage, // მასწავლებლის სურათი
+            previewUrl: submission?.attachmentUrl || undefined,
+            teacherAttachmentUrl: teacherImage,
             grade: submission?.grade ? Number(submission.grade.score) : undefined,
             feedback: submission?.grade?.comment || undefined,
           },
