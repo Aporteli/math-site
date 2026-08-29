@@ -306,11 +306,26 @@ async function ensureSeedTopics(
   }
 }
 
+let seedDataPromise: Promise<void> | null = null;
+
+/** Runs the idempotent seed + legacy-migration writes once per server process. */
+async function ensureSeedData(): Promise<void> {
+  if (!seedDataPromise) {
+    seedDataPromise = (async () => {
+      const branchIds = await ensureSeedBranches();
+      await migrateLegacyMathematics(branchIds);
+      await ensureSeedTopics(branchIds);
+    })().catch((error) => {
+      seedDataPromise = null;
+      throw error;
+    });
+  }
+  return seedDataPromise;
+}
+
 /** Ensure default subject branches and seeded topics exist (idempotent). */
 export async function ensureDefaultTaxonomy(): Promise<TaxonomyNodeDto[]> {
-  const branchIds = await ensureSeedBranches();
-  await migrateLegacyMathematics(branchIds);
-  await ensureSeedTopics(branchIds);
+  await ensureSeedData();
   return listTaxonomyNodes();
 }
 

@@ -10,7 +10,6 @@ import { getSession } from '@/lib/auth/session';
 import { ensureDbUser } from '@/lib/auth/ensure-user';
 import { SEED_PROBLEM_BANK, HIDDEN_SEED_COOKIE, parseHiddenSeedIds, withoutHiddenSeeds } from '@/lib/math/problems';
 import { loadDraftLessonSet, loadTeacherProblems } from '@/lib/math/problems/persist';
-import { loadTeacherFamilies } from '@/lib/math/problems/family-persist';
 import { canUseAdminSlashPrompts } from '@/lib/math/problems/slash-prompts-access';
 import { ensureDefaultTaxonomy } from '@/lib/math/problems/taxonomy';
 
@@ -40,7 +39,6 @@ export default async function TeacherProblemsPage({ params }: PageProps) {
 
   let saved = catalog;
   let lessonSetIds: string[] = [];
-  let families: Awaited<ReturnType<typeof loadTeacherFamilies>> = [];
   let taxonomyNodes: Awaited<ReturnType<typeof ensureDefaultTaxonomy>> = [];
 
   if (session?.user?.email) {
@@ -78,7 +76,6 @@ export default async function TeacherProblemsPage({ params }: PageProps) {
       copy={dict.dashboard.teacher.problemBank}
       initialBank={saved}
       initialLessonSetIds={lessonSetIds}
-      initialFamilies={families}
       hydrateSavedBank
       visibleToolIds={[ 'chat', 'import', 'variants']}
       initialPanel={null}
