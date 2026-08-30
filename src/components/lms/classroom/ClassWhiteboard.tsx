@@ -525,6 +525,7 @@ export function ClassWhiteboard({
   isFullscreen,
   isTeacher = false,
 }: ClassWhiteboardProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<KonvaCanvasHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const penMenuRef = useRef<HTMLDivElement>(null);
@@ -638,6 +639,18 @@ export function ClassWhiteboard({
       setCanUndo(false);
       setCanRedo(false);
     }
+  }, []);
+
+  // 🌟 Android Scroll lock: ყოველთვის აბრუნებს კონტეინერს საწყის წერტილზე
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handleScrollReset = () => {
+      if (el.scrollTop !== 0) el.scrollTop = 0;
+      if (el.scrollLeft !== 0) el.scrollLeft = 0;
+    };
+    el.addEventListener("scroll", handleScrollReset, { passive: true });
+    return () => el.removeEventListener("scroll", handleScrollReset);
   }, []);
 
   useEffect(() => {
@@ -1134,9 +1147,10 @@ export function ClassWhiteboard({
 
   return (
     <div
+      ref={containerRef}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
-      className={`relative w-full h-full overflow-hidden overscroll-none touch-none select-none ${
+      className={`relative flex flex-col w-full h-full overflow-hidden overscroll-none touch-none select-none ${
         isDark ? "bg-slate-950 text-slate-100" : "bg-white text-slate-900"
       } ${
         isFullscreen
@@ -1321,7 +1335,7 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* 🌟 1. მცურავი კომპაქტური ზედა პანელი 🌟 */}
+      {/* 🌟 1. ზედა პანელი 🌟 */}
       <div className="absolute top-3 inset-x-0 z-[100] flex justify-center px-2 pointer-events-none">
         <div className="pointer-events-auto max-w-full overflow-visible rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
           <div className="flex w-max items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5">
@@ -1632,7 +1646,7 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
-            {/* 🌟 კომპაქტური ფერის ამომრჩევი (Color Dropdown) 🌟 */}
+            {/* Color Dropdown */}
             <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
               <button
                 type="button"
@@ -1698,8 +1712,8 @@ export function ClassWhiteboard({
         </div>
       </div>
 
-      {/* 🌟 2. ტილო (Canvas) 🌟 */}
-      <div className="absolute inset-0 w-full h-full overflow-hidden bg-transparent">
+      {/* 🌟 2. ტილო (Canvas) — იკავებს დარჩენილ სიმაღლეს Flexbox-ით 🌟 */}
+      <div className="relative flex-1 w-full min-h-0 overflow-hidden bg-transparent">
         <KonvaCanvas
           ref={canvasRef}
           elements={pages[currentPageIndex] || []}
@@ -1714,14 +1728,14 @@ export function ClassWhiteboard({
         />
       </div>
 
-      {/* 🌟 3. ქვედა პანელი (მასშტაბირების ღილაკებით) 🌟 */}
-      <div className="absolute bottom-3 inset-x-0 z-[100] flex flex-col items-center gap-2 px-2 pointer-events-none">
+      {/* 🌟 3. ქვედა პანელი (სტაბილური Flex-Block, რომელიც არასოდეს გაქრება) 🌟 */}
+      <div className="relative z-[100] flex flex-col items-center justify-center pb-3 pt-1 px-2 pointer-events-auto shrink-0 select-none">
         
-        {/* დაფების მინიატურების ზოლი */}
+        {/* დაფების მცურავი მინიატურების ზოლი */}
         {isPagesTrayOpen && (
           <div
             ref={pagesTrayRef}
-            className="pointer-events-auto max-w-[94vw] sm:max-w-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150"
+            className="absolute bottom-14 max-w-[94vw] sm:max-w-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 z-[120]"
           >
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-800 px-1">
               <div className="flex items-center gap-2">
@@ -1765,10 +1779,10 @@ export function ClassWhiteboard({
           </div>
         )}
 
-        {/* ქვედა ღილაკების პანელი */}
-        <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2 sm:px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl select-none">
+        {/* მთავარი ქვედა ღილაკების პანელი */}
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2 sm:px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
           
-          {/* 🌟 მასშტაბირების (Zoom) ბლოკი 🌟 */}
+          {/* Zoom ბლოკი */}
           <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 dark:border-slate-800">
             <button
               type="button"
