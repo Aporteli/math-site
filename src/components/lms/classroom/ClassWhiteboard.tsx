@@ -171,7 +171,6 @@ class ChunkAssembler {
   }
 }
 
-// 🌟 დაფის მინიატურული პრევიუ (Mini Canvas Renderer)
 function BoardThumbnail({
   elements,
   isActive,
@@ -308,7 +307,6 @@ function BoardThumbnail({
   );
 }
 
-// 🌟 გაგზავნის მოდალში მრავალმხრივი არჩევის მინიატურა (Multi-Select Thumbnail)
 function AssignBoardThumbnail({
   elements,
   isSelected,
@@ -419,7 +417,6 @@ function AssignBoardThumbnail({
       <div className="relative w-24 h-15 rounded-xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950">
         <canvas ref={canvasRef} width={96} height={60} className="w-full h-full object-contain" />
         
-        {/* მონიშვნის მარკერი */}
         <div className={`absolute top-1 right-1 flex size-4 items-center justify-center rounded-full border transition-all ${
           isSelected 
             ? "bg-indigo-600 border-indigo-600 text-white" 
@@ -436,7 +433,6 @@ function AssignBoardThumbnail({
   );
 }
 
-// 🌟 ელემენტების ექსპორტი სურათად (Off-Screen HTML5 Canvas)
 function renderElementsToDataUrl(elements: CanvasElement[], isDark: boolean): string {
   const canvas = document.createElement("canvas");
   canvas.width = 1200;
@@ -623,7 +619,6 @@ export function ClassWhiteboard({
   const [assignPending, setAssignPending] = useState(false);
   const [assignError, setAssignError] = useState<string | null>(null);
 
-  // 🌟 მრავალმხრივი არჩევა დაფებისა და მოსწავლეებისთვის
   const [selectedPagesForAssign, setSelectedPagesForAssign] = useState<number[]>([0]);
   const [selectedStudentIdentities, setSelectedStudentIdentities] = useState<string[]>([]);
 
@@ -1124,11 +1119,11 @@ export function ClassWhiteboard({
     <div
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
-      className={`relative w-full h-full overflow-hidden ${
+      className={`relative w-full h-full overflow-hidden overscroll-none touch-none select-none ${
         isDark ? "bg-slate-950 text-slate-100" : "bg-white text-slate-900"
       } ${
         isFullscreen
-          ? "fixed inset-0 z-[9999] h-screen w-screen"
+          ? "fixed inset-0 z-[9999] h-[100dvh] w-screen"
           : "rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
       }`}
     >
@@ -1171,7 +1166,7 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* 🌟 მასწავლებლის გაგზავნის მოდალი (გასწორებული სუფთა სტილებით) 🌟 */}
+      {/* 🌟 მასწავლებლის გაგზავნის მოდალი 🌟 */}
       {isTeacher && isAssignModalOpen && (
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[110] w-[340px] sm:w-[400px] rounded-3xl bg-white dark:bg-slate-900 p-4 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
@@ -1193,7 +1188,6 @@ export function ClassWhiteboard({
             </button>
           </div>
 
-          {/* 1. დაფების არჩევა */}
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1.5 px-0.5">
               <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
@@ -1228,7 +1222,6 @@ export function ClassWhiteboard({
             </div>
           </div>
 
-          {/* 2. მოსწავლეების სია (სუფთა ჩარჩოებით) */}
           <div className="space-y-1.5 mb-3.5">
             <div className="flex items-center justify-between px-0.5">
               <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
@@ -1288,7 +1281,6 @@ export function ClassWhiteboard({
             )}
           </div>
 
-          {/* 3. გაგზავნის ღილაკი */}
           <button
             type="button"
             disabled={assignPending || selectedPagesForAssign.length === 0 || selectedStudentIdentities.length === 0}
@@ -1312,11 +1304,10 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* 🌟 1. მცურავი, ცენტრირებული ზედა პანელი 🌟 */}
+      {/* 🌟 1. მცურავი ზედა პანელი 🌟 */}
       <div className="absolute top-3 inset-x-0 z-[100] flex justify-center px-2 pointer-events-none">
         <div className="pointer-events-auto max-w-full overflow-visible rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
           <div className="flex w-max items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5">
-            
             {/* Undo / Redo */}
             <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 dark:border-slate-800">
               <button
@@ -1348,7 +1339,7 @@ export function ClassWhiteboard({
               </button>
             </div>
 
-            {/* მასშტაბირების (Zoom) ბლოკი პროცენტებით */}
+            {/* მასშტაბირება */}
             <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 dark:border-slate-800">
               <button
                 type="button"
@@ -1414,7 +1405,7 @@ export function ClassWhiteboard({
               <Hand className="size-3.5 sm:size-4" />
             </button>
 
-            {/* ლაზერის ინსტრუმენტი */}
+            {/* Laser Tool */}
             <button
               type="button"
               title="ლაზერული მაჩვენებელი (Laser Pointer)"
@@ -1432,7 +1423,7 @@ export function ClassWhiteboard({
               <Crosshair className="size-3.5 sm:size-4" />
             </button>
 
-            {/* კალმის კონტეინერი */}
+            {/* Pen Tool */}
             <div ref={penMenuRef} className="relative flex shrink-0 items-center">
               <div
                 className={`flex items-center h-7 sm:h-8 rounded-xl transition-all shadow-xs ${
@@ -1517,7 +1508,7 @@ export function ClassWhiteboard({
               )}
             </div>
 
-            {/* ფიგურების დროფდოუნი */}
+            {/* Shapes Tool */}
             <div ref={shapesMenuRef} className="relative flex shrink-0 items-center">
               <div
                 className={`flex items-center h-7 sm:h-8 rounded-xl transition-all shadow-xs ${
@@ -1585,7 +1576,7 @@ export function ClassWhiteboard({
               )}
             </div>
 
-            {/* ტექსტი */}
+            {/* Text Tool */}
             <button
               type="button"
               title="ტექსტი"
@@ -1603,7 +1594,7 @@ export function ClassWhiteboard({
               <Type className="size-3.5 sm:size-4" />
             </button>
 
-            {/* სურათის ატვირთვის ღილაკი */}
+            {/* Image Upload */}
             <button
               type="button"
               title="სურათის ატვირთვა"
@@ -1613,7 +1604,7 @@ export function ClassWhiteboard({
               <ImageIcon className="size-3.5 sm:size-4" />
             </button>
 
-            {/* საშლელი */}
+            {/* Eraser Tool */}
             <button
               type="button"
               title="საშლელი"
@@ -1645,7 +1636,7 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
-            {/* ფერების პალიტრა */}
+            {/* Color Palette */}
             <div className="flex shrink-0 items-center gap-1">
               {["#1e293b", "#ef4444", "#10b981", "#3b82f6", "#f59e0b", "#8b5cf6"].map((c) => (
                 <button
@@ -1662,7 +1653,7 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
-            {/* Dark Mode გადამრთველი */}
+            {/* Dark Mode */}
             <button
               type="button"
               onClick={() => setIsDark(!isDark)}
@@ -1672,7 +1663,7 @@ export function ClassWhiteboard({
               {isDark ? <Sun className="size-3.5 sm:size-4 text-amber-400" /> : <Moon className="size-3.5 sm:size-4" />}
             </button>
 
-            {/* სანაგვე */}
+            {/* Clear Board */}
             <button
               type="button"
               onClick={() => setIsClearConfirmOpen(true)}
@@ -1701,10 +1692,10 @@ export function ClassWhiteboard({
         />
       </div>
 
-      {/* 🌟 3. ქვედა პანელი და მცურავი დაფების მინიატურების ზოლი 🌟 */}
+      {/* 🌟 3. ქვედა პანელი 🌟 */}
       <div className="absolute bottom-3 inset-x-0 z-[100] flex flex-col items-center gap-2 px-2 pointer-events-none">
         
-        {/* მცურავი ჰორიზონტალური მინიატურების ზოლი */}
+        {/* დაფების მინიატურების ზოლი */}
         {isPagesTrayOpen && (
           <div
             ref={pagesTrayRef}
@@ -1752,7 +1743,7 @@ export function ClassWhiteboard({
           </div>
         )}
 
-        {/* მთავარი ქვედა ღილაკების პანელი */}
+        {/* ქვედა ღილაკების პანელი */}
         <div className="pointer-events-auto flex items-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl select-none">
           <button
             type="button"
