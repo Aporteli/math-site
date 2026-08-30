@@ -179,7 +179,7 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex h-screen w-screen flex-col overflow-hidden bg-slate-950 p-2 sm:p-3">
+    <div className="fixed inset-0 z-50 flex h-[100dvh] w-screen flex-col overflow-hidden bg-slate-950 pt-2 pr-2 pl-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:pt-3 sm:pr-3 sm:pl-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
       {isTeacher && (
         <ClassroomAiModal
           isOpen={isAiModalOpen}

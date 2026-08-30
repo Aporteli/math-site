@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import "../globals.css";
 import { SiteAiChatWidget } from "@/components/lms/problem-bank/site-ai-chat-widget";
@@ -14,6 +14,16 @@ import { canUseAdminSlashPrompts } from "@/lib/math/problems/slash-prompts-acces
 // AbortSignal.timeout() limits fire and return a clean error.
 // NOTE: Vercel Hobby caps this at 10s — use a Pro plan (Fluid Compute) to honor 300s.
 export const maxDuration = 300;
+
+// Let content extend into the device safe areas (Android system navigation bar /
+// gesture bar) so `env(safe-area-inset-*)` resolves to a real value instead of 0.
+// Without this, fixed full-screen surfaces (classroom whiteboard, mobile nav) sit
+// underneath the tablet navigation bar and their bottom toolbars get clipped.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 type LocaleParams = { params: Promise<{ locale: string }> };
 

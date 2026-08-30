@@ -126,7 +126,7 @@ export function StudentCourseVideoCallButton({
       {/* React Portal: მოდალი იხსნება document.body-ში და სცდება HeroPage-ის საზღვრებს */}
       {isOpen && mounted &&
         createPortal(
-          <div className="fixed inset-0 z-[999999] flex h-screen w-screen bg-slate-900/90 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen bg-slate-900/90 backdrop-blur-sm">
             <ClassroomRoomModal
               courseId={courseId}
               courseTitle={courseTitle}

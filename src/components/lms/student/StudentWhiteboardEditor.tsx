@@ -62,7 +62,7 @@ export function StudentWhiteboardEditor({
   }
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] min-h-[480px] flex-col gap-3">
+    <div className="flex h-[calc(100dvh-7rem)] min-h-[480px] flex-col gap-3">
       <header className="flex items-center gap-3 rounded-2xl border border-hairline bg-white px-4 py-3 shadow-sm">
         <Link
           href={localePath(locale, "/student/whiteboards")}
