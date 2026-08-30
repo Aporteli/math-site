@@ -641,7 +641,7 @@ export function ClassWhiteboard({
     }
   }, []);
 
-  // 🌟 Android Scroll lock: ყოველთვის აბრუნებს კონტეინერს საწყის წერტილზე
+  // 🌟 Android Scroll lock
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -1150,11 +1150,11 @@ export function ClassWhiteboard({
       ref={containerRef}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
-      className={`relative flex flex-col w-full h-full overflow-hidden overscroll-none touch-none select-none ${
+      className={`relative grid grid-rows-[1fr_auto] w-full h-full max-h-full min-h-0 overflow-hidden overscroll-none touch-none select-none ${
         isDark ? "bg-slate-950 text-slate-100" : "bg-white text-slate-900"
       } ${
         isFullscreen
-          ? "fixed inset-0 z-[9999] h-[100dvh] w-screen"
+          ? "!fixed !inset-0 !z-[9999] !w-screen !h-[100dvh]"
           : "rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
       }`}
     >
@@ -1712,8 +1712,8 @@ export function ClassWhiteboard({
         </div>
       </div>
 
-      {/* 🌟 2. ტილო (Canvas) — იკავებს დარჩენილ სიმაღლეს Flexbox-ით 🌟 */}
-      <div className="relative flex-1 w-full min-h-0 overflow-hidden bg-transparent">
+      {/* 🌟 2. ტილო (Row 1: იკავებს დარჩენილ სიმაღლეს) 🌟 */}
+      <div className="relative w-full h-full min-h-0 overflow-hidden bg-transparent">
         <KonvaCanvas
           ref={canvasRef}
           elements={pages[currentPageIndex] || []}
@@ -1728,10 +1728,10 @@ export function ClassWhiteboard({
         />
       </div>
 
-      {/* 🌟 3. ქვედა პანელი (სტაბილური Flex-Block, რომელიც არასოდეს გაქრება) 🌟 */}
+      {/* 🌟 3. ქვედა პანელი (Row 2: ფიქსირებული Grid-Row, რომელიც ვერასოდეს გაქრება) 🌟 */}
       <div className="relative z-[100] flex flex-col items-center justify-center pb-3 pt-1 px-2 pointer-events-auto shrink-0 select-none">
         
-        {/* დაფების მცურავი მინიატურების ზოლი */}
+        {/* დაფების მინიატურების ზოლი */}
         {isPagesTrayOpen && (
           <div
             ref={pagesTrayRef}
