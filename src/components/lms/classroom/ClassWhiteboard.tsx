@@ -641,16 +641,23 @@ export function ClassWhiteboard({
     }
   }, []);
 
-  // 🌟 Android Scroll lock
+  // 🌟 Android Dynamic Viewport & Scroll Locking
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const handleScrollReset = () => {
+
+    const preventScroll = () => {
+      if (window.scrollY !== 0) window.scrollTo(0, 0);
       if (el.scrollTop !== 0) el.scrollTop = 0;
       if (el.scrollLeft !== 0) el.scrollLeft = 0;
     };
-    el.addEventListener("scroll", handleScrollReset, { passive: true });
-    return () => el.removeEventListener("scroll", handleScrollReset);
+
+    window.addEventListener("scroll", preventScroll, { passive: true });
+    el.addEventListener("scroll", preventScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", preventScroll);
+      el.removeEventListener("scroll", preventScroll);
+    };
   }, []);
 
   useEffect(() => {
@@ -1150,11 +1157,11 @@ export function ClassWhiteboard({
       ref={containerRef}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
-      className={`relative grid grid-rows-[1fr_auto] w-full h-full max-h-full min-h-0 overflow-hidden overscroll-none touch-none select-none ${
+      className={`relative flex flex-col w-full h-full max-h-full min-h-0 overflow-hidden overscroll-none touch-none select-none ${
         isDark ? "bg-slate-950 text-slate-100" : "bg-white text-slate-900"
       } ${
         isFullscreen
-          ? "!fixed !inset-0 !z-[9999] !w-screen !h-[100dvh]"
+          ? "fixed inset-0 z-[9999] h-screen w-screen"
           : "rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm"
       }`}
     >
@@ -1712,8 +1719,8 @@ export function ClassWhiteboard({
         </div>
       </div>
 
-      {/* 🌟 2. ტილო (Row 1: იკავებს დარჩენილ სიმაღლეს) 🌟 */}
-      <div className="relative w-full h-full min-h-0 overflow-hidden bg-transparent">
+      {/* 🌟 2. ტილო (Canvas) — Flex-1 აკონტროლებს სიმაღლეს 🌟 */}
+      <div className="relative flex-1 w-full min-h-0 overflow-hidden bg-transparent">
         <KonvaCanvas
           ref={canvasRef}
           elements={pages[currentPageIndex] || []}
@@ -1728,10 +1735,10 @@ export function ClassWhiteboard({
         />
       </div>
 
-      {/* 🌟 3. ქვედა პანელი (Row 2: ფიქსირებული Grid-Row, რომელიც ვერასოდეს გაქრება) 🌟 */}
+      {/* 🌟 3. ქვედა პანელი — ჩაშენებული ქვედა ზოლი (In-Flow Footer) 🌟 */}
       <div className="relative z-[100] flex flex-col items-center justify-center pb-3 pt-1 px-2 pointer-events-auto shrink-0 select-none">
         
-        {/* დაფების მინიატურების ზოლი */}
+        {/* დაფების მცურავი მინიატურების ზოლი */}
         {isPagesTrayOpen && (
           <div
             ref={pagesTrayRef}
