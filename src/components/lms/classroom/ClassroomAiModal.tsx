@@ -140,13 +140,8 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
 
       <div className="relative z-10 flex h-[88vh] w-full max-w-3xl flex-col rounded-2xl border border-white/10 bg-slate-900 text-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 px-4 bg-slate-950/60">
-          <div className="flex items-center gap-2 text-indigo-400">
-            <Sparkles className="size-5" />
-            <span className="font-bold text-sm sm:text-base text-white">AI გაკვეთილის ასისტენტი</span>
-          </div>
-
-          <div className="flex items-center gap-3">
+        <div className="pt-3 h-14 shrink-0 border-b border-white/10 px-4 bg-slate-950/60">
+          <div className="flex items-center justify-between gap-3">
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value as AiModelId)}

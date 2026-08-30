@@ -27,6 +27,7 @@ import { deleteTargetedAssignmentAction, getProblemDetailsAction, markAssignment
 import { sendProblemToStudentAction } from '@/lib/actions/students';
 import { TeacherViewProblemModal } from '@/components/lms/teacher/TeacherViewProblemModal';
 import { KatexPreview } from '@/components/math/katex-preview';
+
 const ClassroomRoomModal = dynamic(
   () => import('@/components/lms/classroom/ClassroomRoomModal').then((m) => m.ClassroomRoomModal),
   {
@@ -91,8 +92,49 @@ function formatDateToKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-// ახალი გასაღები, რათა ძველი არასწორი ქეში გაიწმინდოს
-const STORAGE_KEY = 'mathlab_teacher_viewed_assignments_v1';
+function isImageString(str?: string | null): boolean {
+  if (!str || typeof str !== 'string') return false;
+  const trimmed = str.trim();
+  return (
+    trimmed.startsWith('data:image/') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('/') ||
+    trimmed.endsWith('.png') ||
+    trimmed.endsWith('.jpg') ||
+    trimmed.endsWith('.jpeg') ||
+    trimmed.endsWith('.webp')
+  );
+}
+
+function extractFirstImageUrl(raw?: string | null): string | null {
+  if (!raw || typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+        return parsed[0];
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  if (isImageString(trimmed)) {
+    return trimmed;
+  }
+
+  return null;
+}
+
+// 🌟 უნიკალური ვერსიის გასაღები დავალებისთვის
+function getAssignmentViewKey(a: StudentAssignment): string {
+  return `${a.id}:${a.submissionId || ''}:${a.studentAttachmentUrl || ''}:${a.status}`;
+}
+
+const STORAGE_KEY = 'mathlab_teacher_viewed_assignments_v2';
 
 export function TeacherStudentsWorkspace({
   initialStudents = [],
@@ -126,6 +168,37 @@ export function TeacherStudentsWorkspace({
       setIsReady(true);
     }
   }, []);
+
+  // 🌟 როცა მოსწავლე დავალებას აუქმებს / იბრუნებს, წაიშალოს წაკითხულებიდან, რათა თავიდან გამოგზავნისას ბურთულა ისევ აინთოს
+  useEffect(() => {
+    if (!isReady) return;
+    let changed = false;
+    const next = new Set(viewedKeys);
+
+    for (const student of students) {
+      for (const a of student.assignments) {
+        const isSubmitted =
+          (a.status === 'SUBMITTED' || a.status === 'RETURNED' || Boolean(a.studentAttachmentUrl)) &&
+          a.status !== 'GRADED';
+
+        if (!isSubmitted) {
+          for (const key of Array.from(next)) {
+            if (key.startsWith(`${a.id}:`) || key === a.id) {
+              next.delete(key);
+              changed = true;
+            }
+          }
+        }
+      }
+    }
+
+    if (changed) {
+      setViewedKeys(next);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next)));
+      } catch (e) {}
+    }
+  }, [students, isReady, viewedKeys]);
 
   const [deletingAssignmentId, setDeletingAssignmentId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -172,7 +245,6 @@ export function TeacherStudentsWorkspace({
     }
   }, [isAnyModalOpen]);
 
-  // ბარათის პირობის/ამოხსნის ლაზური ჩატვირთვა — მხოლოდ არჩევისას
   useEffect(() => {
     if (selectedProblemId === 'custom') {
       setSelectedProblemDetails(null);
@@ -239,7 +311,7 @@ export function TeacherStudentsWorkspace({
     }
   }, [studentAvailableDates]);
 
-  // მოსწავლეები, რომლებსაც გაუხსნელი (წაუკითხავი) დავალება აქვთ — წინასწარ გამოითვლება
+  // 🌟 მოსწავლეები, რომლებსაც გაუხსნელი/ახალი დავალება აქვთ
   const unreadStudentIds = useMemo(() => {
     if (!isReady) return new Set<string>();
     const ids = new Set<string>();
@@ -248,7 +320,8 @@ export function TeacherStudentsWorkspace({
         const isSubmitted =
           (a.status === 'SUBMITTED' || a.status === 'RETURNED' || Boolean(a.studentAttachmentUrl)) &&
           a.status !== 'GRADED';
-        return isSubmitted && !viewedKeys.has(a.id);
+        const key = getAssignmentViewKey(a);
+        return isSubmitted && !viewedKeys.has(key);
       });
       if (hasUnread) ids.add(student.id);
     }
@@ -296,21 +369,26 @@ export function TeacherStudentsWorkspace({
     setSelectedStudentId(null);
   };
 
-  // როცა მასწავლებელი ირჩევს მოსწავლეს, ყველა მისი ამჟამად გაუხსნელი დავალება ინიშნება წაკითხულად
+  // 🌟 მოსწავლის არჩევისას მისი ყველა მიმდინარე გაგზავნილი დავალება ინიშნება წაკითხულად
   const handleStudentSelect = (studentId: string) => {
     setSelectedStudentId(studentId);
     
     const student = students.find((s) => s.id === studentId);
     if (student) {
-      const newUnreadIds = student.assignments.filter((a) => {
-        const isSub = (a.status === 'SUBMITTED' || a.status === 'RETURNED' || Boolean(a.studentAttachmentUrl)) && a.status !== 'GRADED';
-        return isSub && !viewedKeys.has(a.id);
-      }).map(a => a.id);
+      const newUnreadKeys = student.assignments
+        .filter((a) => {
+          const isSub =
+            (a.status === 'SUBMITTED' || a.status === 'RETURNED' || Boolean(a.studentAttachmentUrl)) &&
+            a.status !== 'GRADED';
+          const key = getAssignmentViewKey(a);
+          return isSub && !viewedKeys.has(key);
+        })
+        .map((a) => getAssignmentViewKey(a));
 
-      if (newUnreadIds.length > 0) {
+      if (newUnreadKeys.length > 0) {
         setViewedKeys((prev) => {
           const next = new Set(prev);
-          newUnreadIds.forEach(id => next.add(id));
+          newUnreadKeys.forEach((key) => next.add(key));
           try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next)));
           } catch (e) {}
@@ -473,7 +551,6 @@ export function TeacherStudentsWorkspace({
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-1.5 pe-0.5 custom-scrollbar">
-            {/* 1. ყველა მოსწავლე (წერტილის გარეშე) */}
             <button
               type="button"
               onClick={() => handleCourseChange('all')}
@@ -501,7 +578,6 @@ export function TeacherStudentsWorkspace({
               </span>
             </button>
 
-            {/* 2. ჯგუფები / კლასები */}
             {filteredCourses.map((course) => {
               const active = course.id === activeCourseId;
               const courseStudents = students.filter((s) => s.courses.some((c) => c.id === course.id));
@@ -546,7 +622,6 @@ export function TeacherStudentsWorkspace({
 
         {/* სვეტი 2: მოსწავლეების ტაბები და სამუშაო დაფა */}
         <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white shadow-sm overflow-hidden">
-          {/* ზედა ტაბების ზოლი */}
           <div className="bg-paper/30 border-b border-hairline pt-2 px-2 overflow-x-auto flex custom-scrollbar">
             {studentsInActiveCourse.length === 0 ? (
               <p className="py-3 px-4 text-xs font-bold text-muted">ამ კლასში მოსწავლეები არ არიან</p>
@@ -678,6 +753,10 @@ export function TeacherStudentsWorkspace({
                     const isSubmitted =
                       assignment.status === 'SUBMITTED' || Boolean(assignment.studentAttachmentUrl);
 
+                    const boardImageUrl =
+                      extractFirstImageUrl(assignment.problemImageUrl) ||
+                      extractFirstImageUrl(assignment.promptTex);
+
                     return (
                       <div
                         key={assignment.id}
@@ -716,29 +795,24 @@ export function TeacherStudentsWorkspace({
                             )}
                           </div>
 
-                          {/* სათაური */}
-                          <h4 className="text-sm font-bold text-ink group-hover:text-navy transition-colors line-clamp-1 leading-snug">
-                            {assignment.title}
-                          </h4>
-
-                          {/* 1. მასწავლებლის მიმაგრებული სურათი ან ამოცანის პირობა */}
-                          {assignment.problemImageUrl ? (
-                            <div className="flex-1 min-h-[140px] rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 flex flex-col items-center justify-center overflow-hidden">
-                              <span className="text-[10px] font-bold text-slate-500 self-start mb-1.5 flex items-center gap-1">
-                                <ImageIcon className="size-3 text-navy" /> დაფა / ამოცანის სურათი
+                          {/* 1. დაფის სურათის პრევიუ მუქი ფონით */}
+                          {boardImageUrl ? (
+                            <div className="flex-1 min-h-[140px] rounded-xl border border-slate-800 bg-slate-950 p-3 flex flex-col items-center justify-center overflow-hidden shadow-inner">
+                              <span className="text-[10px] font-bold text-slate-400 self-start mb-1.5 flex items-center gap-1.5">
+                                <ImageIcon className="size-3 text-indigo-400" /> დაფა / ამოცანის სურათი
                               </span>
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
-                                src={assignment.problemImageUrl}
+                                src={boardImageUrl}
                                 alt="ამოცანის სურათი"
-                                className="flex-1 w-full max-h-56 rounded-lg object-contain bg-white border border-slate-200"
+                                className="flex-1 w-full max-h-56 rounded-lg object-contain bg-slate-900/60 border border-slate-800/80"
                               />
                             </div>
                           ) : assignment.promptTex ? (
-                            <div className="flex-1 min-h-[140px] rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 flex flex-col justify-center overflow-x-auto custom-scrollbar">
+                            <div className="flex-1 min-h-[140px] rounded-xl bg-paper-deep p-4 flex flex-col justify-center overflow-x-auto custom-scrollbar">
                               <KatexPreview
                                 tex={assignment.promptTex}
-                                className="text-sm text-ink/90 leading-relaxed pointer-events-none"
+                                className="text-sm text-ink leading-relaxed pointer-events-none"
                               />
                             </div>
                           ) : null}
@@ -806,254 +880,235 @@ export function TeacherStudentsWorkspace({
         />
       )}
 
-      {/* 2. ბარათის დამატების მოდალი */}
+      
+    {/* 2. ბარათის დამატების მოდალი */}
       {isAssignModalOpen && activeStudent && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => !assigning && setIsAssignModalOpen(false)}>
           <div
-            className="flex h-[85vh] max-h-[720px] w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 slide-in-from-bottom-2 duration-200"
+            className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between gap-4 border-b border-hairline bg-gradient-to-b from-paper/60 to-white px-6 py-5">
-              <div className="flex min-w-0 items-center gap-3.5">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-navy/10 bg-navy-tint text-navy">
-                  <BookOpen className="size-5" />
+            
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <Send className="size-5" />
                 </div>
-                <div className="min-w-0">
-                  <h3 className="text-lg font-bold text-ink leading-tight">ბარათის გაგზავნა</h3>
-                  <p className="text-sm text-muted mt-0.5 truncate">
-                    მიმღები: <span className="font-bold text-ink">{activeStudent.name}</span>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 leading-tight">დავალების გაგზავნა</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    მოსწავლე: <span className="font-bold text-slate-800">{activeStudent.name}</span>
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAssignModalOpen(false)}
-                className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-hairline bg-white text-muted shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600">
-                <X className="size-5" />
+                className="flex size-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors">
+                <X className="size-4" />
               </button>
             </div>
 
-            <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
-              {/* მარცხენა მხარე */}
-              <div className="flex min-h-0 shrink-0 flex-col border-b border-hairline bg-paper/40 lg:w-[300px] lg:border-b-0 lg:border-r">
-                <div className="flex items-center justify-between border-b border-hairline/70 px-5 py-4">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="size-3.5 text-navy" />
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted">აირჩიეთ ბარათი</label>
-                  </div>
-                  <span className="rounded-full bg-white border border-hairline px-2 py-0.5 text-[10px] font-bold text-muted">
-                    {availableSetProblems.length}
-                  </span>
-                </div>
+            {/* Mode Switcher Tabs */}
+            <div className="px-6 pt-4 pb-2 border-b border-slate-100 bg-white">
+              <div className="flex p-1 bg-slate-100 rounded-xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedProblemId('custom')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                    selectedProblemId === 'custom'
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-900'
+                  }`}>
+                  <ImageIcon className="size-3.5" />
+                  <span>თავისუფალი (სურათი / ტექსტი)</span>
+                </button>
+                {availableSetProblems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (selectedProblemId === 'custom' && availableSetProblems[0]) {
+                        setSelectedProblemId(availableSetProblems[0].id);
+                      }
+                    }}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+                      selectedProblemId !== 'custom'
+                        ? 'bg-white text-indigo-600 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-900'
+                    }`}>
+                    <BookOpen className="size-3.5" />
+                    <span>ბანკიდან არჩევა ({availableSetProblems.length})</span>
+                  </button>
+                )}
+              </div>
+            </div>
 
-                <div className="px-3 pt-3">
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+              
+              {/* Mode 1: თავისუფალი დავალება */}
+              {selectedProblemId === 'custom' ? (
+                <>
+                  {/* <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1.5">დავალების სათაური</label>
+                    <input
+                      type="text"
+                      value={customTitle}
+                      onChange={(e) => setCustomTitle(e.target.value)}
+                      placeholder="მაგ: განტოლებები (გვერდი 45)"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                    />
+                  </div> */}
+
+                  {/* სურათის ატვირთვა */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1.5">სურათის მიმაგრება</label>
+                    <input
+                      ref={assignFileRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="sr-only"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const base64 = await fileToBase64(file);
+                          setAssignImage(base64);
+                          setAssignImageName(file.name);
+                        }
+                      }}
+                    />
+
+                    {assignImage ? (
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-2.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={assignImage} alt="Attachment" className="size-14 rounded-lg object-cover border bg-white" />
+                        <span className="text-xs font-bold text-slate-800 truncate flex-1">{assignImageName}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAssignImage(null);
+                            setAssignImageName(null);
+                          }}
+                          className="flex size-7 items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors">
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => assignFileRef.current?.click()}
+                        className="w-full flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/60 py-5 text-xs font-bold text-slate-600 hover:border-indigo-400 hover:bg-indigo-50/30 hover:text-indigo-600 transition-all">
+                        <UploadCloud className="size-5 text-slate-400" />
+                        <span>დააწკაპუნეთ სურათის ასარჩევად</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* ინსტრუქცია */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1.5">შენიშვნა / ინსტრუქცია (არასავალდებულო)</label>
+                    <textarea
+                      value={assignComment}
+                      onChange={(e) => setAssignComment(e.target.value)}
+                      placeholder="ჩაწერეთ მითითებები მოსწავლისთვის..."
+                      className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                      rows={3}
+                    />
+                  </div>
+                </>
+              ) : (
+                /* Mode 2: ბანკიდან არჩევა */
+                <div className="space-y-4">
+                  {/* საძიებო */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" />
                     <input
                       type="text"
                       value={problemSearchQuery}
                       onChange={(e) => setProblemSearchQuery(e.target.value)}
                       placeholder="მოძებნეთ ბარათი..."
-                      className="w-full rounded-xl border border-hairline bg-white py-2 pl-9 pr-3 text-xs font-medium text-ink outline-none transition-colors focus:border-navy"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9 pr-3 text-xs font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
                     />
                   </div>
-                </div>
 
-                <div className="max-h-[220px] flex-1 space-y-1.5 overflow-y-auto p-3 custom-scrollbar lg:max-h-none">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProblemId('custom')}
-                    className={`group/item flex w-full items-center gap-3 rounded-xl border-l-[3px] py-2.5 pl-3 pr-2.5 text-left transition-all ${
-                      selectedProblemId === 'custom'
-                        ? 'border-l-navy bg-white shadow-sm ring-1 ring-navy/15'
-                        : 'border-l-transparent bg-white/60 hover:border-l-navy/30 hover:bg-white'
-                    }`}>
-                    <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${selectedProblemId === 'custom' ? 'bg-navy text-white' : 'bg-navy-tint text-navy'}`}>
-                      <ImageIcon className="size-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className={`truncate text-sm font-bold ${selectedProblemId === 'custom' ? 'text-navy' : 'text-ink'}`}>
-                        თავისუფალი დავალება
-                      </p>
-                      <p className="text-[10px] text-muted">სურათის ან ტექსტის გაგზავნა</p>
-                    </div>
-                    {selectedProblemId === 'custom' && <Check className="size-4 text-navy shrink-0" strokeWidth={3} />}
-                  </button>
-
-                  {availableSetProblems.length > 0 && (
-                    <div className="my-2 border-t border-hairline/60"></div>
-                  )}
-
-                  {filteredSetProblems.length === 0 && availableSetProblems.length > 0 ? (
-                    <p className="py-6 text-center text-xs text-muted">ბარათი არ მოიძებნა</p>
-                  ) : (
-                    filteredSetProblems.map((prob) => {
+                  {/* ბარათების ჩამოსაშლელი / სია */}
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 custom-scrollbar pr-1 border border-slate-100 rounded-xl p-2 bg-slate-50/40">
+                    {filteredSetProblems.map((prob) => {
                       const isSelected = selectedProblemId === prob.id;
                       return (
                         <button
                           key={prob.id}
                           type="button"
                           onClick={() => setSelectedProblemId(prob.id)}
-                          className={`group/item flex w-full items-start gap-2.5 rounded-xl border-l-[3px] py-2.5 pl-3 pr-2.5 text-left transition-all ${
+                          className={`flex w-full items-center justify-between p-2.5 rounded-lg text-left transition-all ${
                             isSelected
-                              ? 'border-l-navy bg-white shadow-sm ring-1 ring-navy/15'
-                              : 'border-l-transparent bg-white/60 hover:border-l-navy/30 hover:bg-white'
+                              ? 'bg-indigo-600 text-white shadow-xs'
+                              : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-200/60'
                           }`}>
-                          <div className="min-w-0 flex-1">
-                            <span
-                              className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-md border ${
-                                isSelected ? 'bg-navy text-white border-navy' : 'bg-paper text-navy border-hairline'
-                              }`}>
+                          <div className="min-w-0 flex-1 pr-2">
+                            <span className={`text-[9px] font-bold uppercase tracking-wider block ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>
                               {prob.setTitle}
                             </span>
-                            <p
-                              className={`mt-1.5 truncate text-sm font-bold ${
-                                isSelected ? 'text-navy' : 'text-ink'
-                              }`}>
-                              {prob.title}
-                            </p>
+                            <p className="text-xs font-bold truncate mt-0.5">{prob.title}</p>
                           </div>
-                          <div
-                            className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                              isSelected
-                                ? 'border-navy bg-navy'
-                                : 'border-hairline bg-white opacity-0 group-hover/item:opacity-100'
-                            }`}>
-                            {isSelected && <Check className="size-2.5 text-white" strokeWidth={3} />}
-                          </div>
+                          {isSelected && <Check className="size-4 shrink-0 text-white" />}
                         </button>
                       );
-                    })
-                  )}
-                </div>
-              </div>
+                    })}
+                  </div>
 
-              {/* მარჯვენა მხარე */}
-              <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-5">
-                {selectedProblemId === 'custom' ? (
-                  <div className="space-y-3">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted">დავალების სათაური</label>
-                    <input
-                      type="text"
-                      value={customTitle}
-                      onChange={(e) => setCustomTitle(e.target.value)}
-                      placeholder="მაგ: განტოლებები (გვერდი 45) / თავისუფალი ამოცანა"
-                      className="w-full rounded-xl border border-hairline bg-white px-4 py-3 text-sm font-bold text-ink outline-none transition-shadow focus:border-navy focus:ring-4 focus:ring-navy/5"
+                  {/* არჩეული ბარათის პრევიუ */}
+                  {selectedProblem && (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">ამოცანის პირობა:</span>
+                      {loadingProblemDetails ? (
+                        <div className="py-4 flex justify-center"><Loader2 className="size-4 animate-spin text-slate-400" /></div>
+                      ) : selectedProblemDetails ? (
+                        <KatexPreview tex={selectedProblemDetails.promptTex} className="text-xs text-slate-900" />
+                      ) : null}
+                    </div>
+                  )}
+
+                  {/* შენიშვნა */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1.5">დამატებითი მითითება</label>
+                    <textarea
+                      value={assignComment}
+                      onChange={(e) => setAssignComment(e.target.value)}
+                      placeholder="ჩაწერეთ მითითება ამ ამოცანისთვის..."
+                      className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition-all"
+                      rows={2}
                     />
-                    <p className="text-xs text-muted">
-                      შეგიძლიათ ატვირთოთ სურათი ქვემოთ ან დაწეროთ ინსტრუქცია. სეტის არჩევა სავალდებულო არ არის.
-                    </p>
                   </div>
-                ) : selectedProblem ? (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="rounded-md bg-navy text-white text-[10px] font-bold uppercase px-2.5 py-1 border border-navy">
-                        {selectedProblem.setTitle}
-                      </span>
-                      <h4 className="text-base font-bold text-ink">{selectedProblem.title}</h4>
-                    </div>
-                    {loadingProblemDetails ? (
-                      <div className="rounded-2xl border border-hairline-soft bg-slate-50/60 p-8 flex items-center justify-center">
-                        <Loader2 className="size-5 animate-spin text-muted" />
-                      </div>
-                    ) : selectedProblemDetails ? (
-                      <div className="rounded-2xl border border-hairline-soft bg-slate-50/60 p-5 overflow-x-auto">
-                        <KatexPreview tex={selectedProblemDetails.promptTex} className="text-ink text-base leading-relaxed" />
-                      </div>
-                    ) : (
-                      <p className="rounded-2xl border border-hairline-soft bg-slate-50/60 p-5 text-xs text-muted">
-                        ბარათის პირობის ჩატვირთვა ვერ მოხერხდა
-                      </p>
-                    )}
-                  </div>
-                ) : null}
-
-                <div className="rounded-2xl bg-amber-50/40 p-5 border border-amber-200/60 shadow-inner space-y-3">
-                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800">
-                    <MessageSquare className="size-4" />
-                    მასწავლებლის შენიშვნა / ტექსტური ინსტრუქცია
-                  </label>
-                  <textarea
-                    value={assignComment}
-                    onChange={(e) => setAssignComment(e.target.value)}
-                    placeholder={selectedProblemId === 'custom' ? "დაწერეთ ამოცანის პირობა ან მითითება აქ..." : "ჩაწერეთ დამატებითი მითითებები ამ ამოცანისთვის..."}
-                    className="w-full resize-none rounded-xl border border-amber-200 bg-white p-4 text-sm text-ink outline-none transition-shadow placeholder:text-amber-900/30 focus:border-amber-400 focus:ring-4 focus:ring-amber-400/10"
-                    rows={3}
-                  />
                 </div>
-
-                <div className="rounded-2xl bg-paper p-5 border border-hairline space-y-3">
-                  <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted">
-                    <UploadCloud className="size-4 text-navy" />
-                    სურათის მიმაგრება ბარათზე
-                  </label>
-
-                  <input
-                    ref={assignFileRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="sr-only"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const base64 = await fileToBase64(file);
-                        setAssignImage(base64);
-                        setAssignImageName(file.name);
-                      }
-                    }}
-                  />
-
-                  {assignImage ? (
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-white p-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={assignImage} alt="Attachment" className="size-12 rounded-lg object-cover border" />
-                      <span className="text-xs font-bold text-ink truncate flex-1">{assignImageName}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAssignImage(null);
-                          setAssignImageName(null);
-                        }}
-                        className="text-rose-600 hover:text-rose-700 p-1">
-                        <X className="size-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => assignFileRef.current?.click()}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-hairline bg-white py-4 text-xs font-bold text-navy hover:bg-navy-tint/30 transition-colors">
-                      <UploadCloud className="size-4" />
-                      <span>აირჩიეთ ფოტო კომპიუტერიდან</span>
-                    </button>
-                  )}
-                </div>
-              </div>
+              )}
             </div>
 
-            <div className="border-t border-hairline bg-white px-6 py-5 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 shadow-[0_-4px_20px_-15px_rgba(0,0,0,0.1)]">
+            {/* Footer */}
+            <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-4 flex justify-end gap-2.5">
               <button
                 type="button"
                 disabled={assigning}
                 onClick={() => setIsAssignModalOpen(false)}
-                className="w-full sm:w-auto rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-ink border border-hairline hover:bg-paper transition-colors disabled:opacity-50">
+                className="rounded-xl bg-white px-4 py-2 text-xs font-bold text-slate-700 border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50">
                 გაუქმება
               </button>
               <button
                 type="button"
                 disabled={isSendDisabled}
                 onClick={handleSendProblemToStudent}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-6 py-2.5 text-sm font-bold text-white hover:bg-navy-strong disabled:opacity-50 transition-all shadow-md active:scale-95">
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-xs active:scale-95">
                 {assigning ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader2 className="size-3.5 animate-spin" />
                     <span>იგზავნება...</span>
                   </>
                 ) : (
                   <>
-                    <Send className="size-4" />
-                    <span>ბარათის გაგზავნა</span>
+                    <Send className="size-3.5" />
+                    <span>გაგზავნა</span>
                   </>
                 )}
               </button>

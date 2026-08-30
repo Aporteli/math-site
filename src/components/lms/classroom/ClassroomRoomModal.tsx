@@ -16,7 +16,7 @@ import {
 import type { Room } from 'livekit-client';
 import { ConnectionState, Track } from 'livekit-client';
 import '@livekit/components-styles';
-import { X, Layout, PenTool, Loader2, MessageSquare, Sparkles } from 'lucide-react';
+import { X, Layout, PenTool, Loader2, MessageSquare, Sparkles, Undo, Redo } from 'lucide-react';
 import { ClassroomAiModal } from './ClassroomAiModal';
 
 const ClassWhiteboard = dynamic(() => import('./ClassWhiteboard').then((mod) => mod.ClassWhiteboard), {
@@ -73,7 +73,6 @@ function MyVideoGrid() {
     { onlySubscribed: false },
   );
 
-  // ვფილტრავთ ტრეკებს, რომელთა მონაწილეც აღარ იმყოფება ოთახში (Console Warning-ის თავიდან ასაცილებლად)
   const tracks = useMemo(() => {
     return rawTracks.filter((trackRef) => Boolean(trackRef.participant && trackRef.participant.sid));
   }, [rawTracks]);
@@ -107,6 +106,14 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [activeRoom, setActiveRoom] = useState<Room | null>(null);
+
+  const handleUndo = () => {
+    window.dispatchEvent(new CustomEvent('whiteboard-undo'));
+  };
+
+  const handleRedo = () => {
+    window.dispatchEvent(new CustomEvent('whiteboard-redo'));
+  };
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('hide-ai-widget'));
@@ -173,8 +180,6 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
 
   return (
     <div className="fixed inset-0 z-50 flex h-screen w-screen flex-col overflow-hidden bg-slate-950 p-2 sm:p-3">
-      
-      {/* AI ასისტენტის მოდალი მხოლოდ მასწავლებლისთვის */}
       {isTeacher && (
         <ClassroomAiModal
           isOpen={isAiModalOpen}
@@ -187,30 +192,49 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
           <h2 className="text-sm sm:text-base font-bold truncate">{courseTitle} — გაკვეთილი</h2>
         </div>
 
-        <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
-          <button
-            type="button"
-            onClick={() => setActiveTab('split')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'split' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'
-            }`}>
-            <Layout className="size-3.5" />
-            <span className="hidden sm:inline">ვიდეო + დაფა</span>
-          </button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+            <button
+              type="button"
+              onClick={handleUndo}
+              title="უკან დაბრუნება (Undo)"
+              className="flex size-7 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-all active:scale-95">
+              <Undo className="size-3.5" />
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('board')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'board' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'
-            }`}>
-            <PenTool className="size-3.5" />
-            <span className="hidden sm:inline">მხოლოდ დაფა</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleRedo}
+              title="წინ გადასვლა (Redo)"
+              className="flex size-7 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white transition-all active:scale-95">
+              <Redo className="size-3.5" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+            <button
+              type="button"
+              onClick={() => setActiveTab('split')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                activeTab === 'split' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'
+              }`}>
+              <Layout className="size-3.5" />
+              <span className="hidden sm:inline">ვიდეო + დაფა</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('board')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                activeTab === 'board' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'
+              }`}>
+              <PenTool className="size-3.5" />
+              <span className="hidden sm:inline">მხოლოდ დაფა</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* ღილაკი ჩანს მხოლოდ მასწავლებელთან */}
           {isTeacher && (
             <button
               type="button"

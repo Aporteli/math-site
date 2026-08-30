@@ -67,7 +67,6 @@ type FilterStatus = 'all' | 'notStarted' | 'inProgress' | 'submitted';
 
 interface StudentAssignmentsProps {
   locale: Locale;
-  assignments?: Assignment[];
 }
 
 const GEORGIAN_MONTHS = [
@@ -219,26 +218,48 @@ function parseAndFormatDate(assignment: Assignment): { key: string; label: strin
 }
 
 function isImageString(str?: string | null): boolean {
-  if (!str) return false;
+  if (!str || typeof str !== 'string') return false;
+  const trimmed = str.trim();
   return (
-    str.startsWith('data:image/') ||
-    str.startsWith('http://') ||
-    str.startsWith('https://') ||
-    str.startsWith('/') ||
-    str.endsWith('.png') ||
-    str.endsWith('.jpg') ||
-    str.endsWith('.jpeg') ||
-    str.endsWith('.webp')
+    trimmed.startsWith('data:image/') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('/') ||
+    trimmed.endsWith('.png') ||
+    trimmed.endsWith('.jpg') ||
+    trimmed.endsWith('.jpeg') ||
+    trimmed.endsWith('.webp')
   );
 }
 
-export default function StudentAssignments({ locale, assignments: initialPropsAssignments }: StudentAssignmentsProps) {
-  const [assignments, setAssignments] = useState<Assignment[]>(initialPropsAssignments || []);
+function extractFirstImageUrl(raw?: string | null): string | null {
+  if (!raw || typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+        return parsed[0];
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  if (isImageString(trimmed)) {
+    return trimmed;
+  }
+
+  return null;
+}
+
+export default function StudentAssignments({ locale }: StudentAssignmentsProps) {
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [courses, setCourses] = useState<StudentCourse[]>([]);
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [notice, setNotice] = useState<string | null>(null);
-  const [loading, setLoading] = useState(!initialPropsAssignments);
-
+  const [loading, setLoading] = useState(true);
   const [selectedDateKey, setSelectedDateKey] = useState<string>(() => formatDateToKey(new Date()));
 
   const [dateGroupAttachments, setDateGroupAttachments] = useState<
@@ -248,7 +269,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
   const [uploadingDateKey, setUploadingDateKey] = useState<string | null>(null);
   const [submittingDateKey, setSubmittingDateKey] = useState<string | null>(null);
   const [withdrawingDateKey, setWithdrawingDateKey] = useState<string | null>(null);
-
   const [activeProblemModal, setActiveProblemModal] = useState<{
     assignmentId: string;
     problem: AssignmentProblem;
@@ -265,12 +285,8 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
   }
 
   useEffect(() => {
-    if (initialPropsAssignments) {
-      setAssignments(initialPropsAssignments);
-      return;
-    }
     void loadData();
-  }, [initialPropsAssignments]);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -324,20 +340,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
   const todayAssignments = useMemo(() => {
     return assignments.filter((a) => parseAndFormatDate(a).key === selectedDateKey);
   }, [assignments, selectedDateKey]);
-
-  const openCount = useMemo(() => {
-    return todayAssignments.filter((a) => {
-      const { done, total } = progressOf(a);
-      return done < total;
-    }).length;
-  }, [todayAssignments]);
-
-  const submittedCount = useMemo(() => {
-    return todayAssignments.filter((a) => {
-      const { done, total } = progressOf(a);
-      return total > 0 && done === total;
-    }).length;
-  }, [todayAssignments]);
 
   async function handleGroupFileUpload(dateKey: string, files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -421,9 +423,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
     setTimeout(() => setNotice(null), 3500);
   }
 
-  /**
-   * მთლიანი დღის პასუხების დაბრუნება / წაშლა (დარესეტება)
-   */
   async function handleResetDateGroup(dateKey: string, items: Assignment[]) {
     const confirmed = confirm('დარწმუნებული ხართ, რომ გსურთ ამ დღის ყველა ატვირთული პასუხის დაბრუნება და წაშლა?');
     if (!confirmed) return;
@@ -434,7 +433,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
     const res = await withdrawStudentHomeworkAction({ assignmentIds: itemIds });
 
     if (res.success) {
-      // 1. ვასუფთავებთ ადგილობრივ მდგომარეობას
       setAssignments((prev) =>
         prev.map((a) =>
           itemIds.includes(a.id)
@@ -451,7 +449,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
         ),
       );
 
-      // 2. ვხსნით დაბლოკვას
       setSubmittedDateGroups((prev) => ({
         ...prev,
         [dateKey]: false,
@@ -554,19 +551,35 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
         description={copy.hero.description}
         aside={
           <div className="flex w-full flex-col gap-2.5">
-            {/* 1. ღია */}
-            <div className="rounded-2xl border border-hairline bg-white px-4 py-3 shadow-xs">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted">ღია</p>
-              <p className="mt-0.5 text-xl font-bold text-ink">{openCount}</p>
+            {/* 🌟 დღის ჯგუფური სტატუსის ერთიანი, სუფთა ბარათი (3-ფაზიანი ლოგიკა) 🌟 */}
+            <div className={`rounded-2xl border px-4 py-3 shadow-xs transition-all ${
+              todayAssignments.length === 0
+                ? 'border-slate-200 bg-slate-50/70 text-slate-600'
+                : isGroupAlreadySubmitted 
+                  ? 'border-emerald-200 bg-emerald-50/70 text-emerald-800' 
+                  : 'border-amber-200 bg-amber-50/40 text-amber-900'
+            }`}>
+              <div className="mt-1 flex items-center gap-2">
+                {todayAssignments.length === 0 ? (
+                  <>
+                    <BookOpen className="size-5 text-slate-400 shrink-0" />
+                    <span className="text-base font-bold text-slate-600">დავალება არ არის</span>
+                  </>
+                ) : isGroupAlreadySubmitted ? (
+                  <>
+                    <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
+                    <span className="text-base font-bold text-emerald-700">გაგზავნილია</span>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="size-5 text-amber-500 shrink-0" />
+                    <span className="text-base font-bold text-slate-800">შესასრულებელი</span>
+                  </>
+                )}
+              </div>
             </div>
 
-            {/* 2. გაგზავნილი */}
-            <div className="rounded-2xl border border-hairline bg-white px-4 py-3 shadow-xs">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-blue-700">გაგზავნილი</p>
-              <p className="mt-0.5 text-xl font-bold text-blue-700">{submittedCount}</p>
-            </div>
-
-            {/* 3. ვიდეო გაკვეთილის ღილაკი */}
+            {/* ვიდეო გაკვეთილის ღილაკი */}
             {courses.length > 0 && (
               <div className="flex w-full flex-col gap-2 [&>*]:!w-full [&>*]:!flex [&>*]:!items-center [&>*]:!gap-2 [&_button:first-child]:!flex-1 [&_button:first-child]:!justify-center">
                 {courses.map((course) => (
@@ -585,7 +598,7 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
       />
 
       <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[38rem] lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-stretch">
-        {/* სვეტი 1: ფილტრები */}
+        {/* სვეტი 1: ფილტრები (რიცხვების გარეშე) */}
         <aside className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2 border-b border-hairline pb-3">
             <Filter className="size-4 text-navy" />
@@ -607,14 +620,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
                         : 'bg-paper/50 hover:bg-paper-deep text-ink/80'
                     }`}>
                     <span>{f.label}</span>
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-lg ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-white border border-hairline text-muted'
-                      }`}>
-                      {f.id === 'all'
-                        ? todayAssignments.length
-                        : todayAssignments.filter((a) => matchesFilter(a, f.id)).length}
-                    </span>
                   </button>
                 );
               })}
@@ -625,13 +630,11 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
         {/* სვეტი 2: მოსწავლის სამუშაო სივრცე */}
         <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white shadow-sm overflow-hidden">
           <div className="flex-1 flex flex-col min-h-0 p-5">
-            {/* ზედა ზოლი */}
             <div className="border-b border-hairline pb-4">
               <h3 className="text-base font-bold text-ink">დავალებები</h3>
               <p className="text-xs text-muted mt-0.5">ყოველდღიური დავალებები და ამოცანები</p>
             </div>
 
-            {/* თარიღის ნავიგატორი (< თარიღი >) */}
             <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-hairline bg-paper/50 px-4 py-2.5">
               <div className="flex items-center gap-2.5">
                 <CalendarIcon className="size-4 text-navy" />
@@ -676,7 +679,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
               </div>
             )}
 
-            {/* დავალებების ჩამონათვალი */}
             <div className="flex-1 overflow-y-auto pt-4 pe-1 custom-scrollbar space-y-4">
               {loading ? (
                 <div className="py-20 flex flex-col items-center justify-center gap-2 text-sm font-semibold text-muted">
@@ -699,18 +701,13 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
                       const firstProblemTex = firstProblem?.promptTex;
 
                       const customPayload = (assignment.customPayload as Record<string, unknown>) || {};
+                      
                       const boardImageUrl =
-                        (isImageString(assignment.attachmentUrl) ? assignment.attachmentUrl : null) ||
-                        (isImageString(firstProblem?.teacherAttachmentUrl)
-                          ? firstProblem?.teacherAttachmentUrl
-                          : null) ||
-                        (typeof customPayload.imageUrl === 'string' && isImageString(customPayload.imageUrl)
-                          ? customPayload.imageUrl
-                          : null) ||
-                        (typeof customPayload.attachmentUrl === 'string' && isImageString(customPayload.attachmentUrl)
-                          ? customPayload.attachmentUrl
-                          : null) ||
-                        (isImageString(firstProblemTex) ? firstProblemTex : null);
+                        extractFirstImageUrl(assignment.attachmentUrl) ||
+                        extractFirstImageUrl(firstProblem?.teacherAttachmentUrl) ||
+                        (typeof customPayload.imageUrl === 'string' ? extractFirstImageUrl(customPayload.imageUrl) : null) ||
+                        (typeof customPayload.attachmentUrl === 'string' ? extractFirstImageUrl(customPayload.attachmentUrl) : null) ||
+                        extractFirstImageUrl(firstProblemTex);
 
                       const isGraded = meta.id === 'graded';
 
@@ -734,7 +731,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
                               : 'border-hairline bg-white hover:border-navy/40 hover:shadow-md'
                           }`}>
                           <div className="flex flex-1 flex-col gap-2.5 min-w-0">
-                            {/* ზედა ბეიჯები */}
                             <div className="flex items-center gap-2 flex-wrap">
                               <span
                                 className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-0.5 text-[10px] ${meta.className}`}>
@@ -743,29 +739,27 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
                               </span>
                             </div>
 
-                            {/* ამოცანის პირობა ან დაფის სურათი */}
                             {boardImageUrl ? (
-                              <div className="flex-1 min-h-[140px] rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 flex flex-col items-center justify-center overflow-hidden">
-                                <span className="text-[10px] font-bold text-slate-500 self-start mb-1.5 flex items-center gap-1">
-                                  <ImageIcon className="size-3 text-navy" /> დაფა / ამოცანის სურათი
+                              <div className="flex-1 min-h-[140px] rounded-xl border border-slate-800 bg-slate-950 p-3 flex flex-col items-center justify-center overflow-hidden shadow-inner">
+                                <span className="text-[10px] font-bold text-slate-400 self-start mb-1.5 flex items-center gap-1.5">
+                                  <ImageIcon className="size-3 text-indigo-400" /> დაფა / ამოცანის სურათი
                                 </span>
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={boardImageUrl}
                                   alt="დაფის ჩანაწერი"
-                                  className="flex-1 w-full max-h-56 rounded-lg object-contain bg-white border border-slate-200"
+                                  className="flex-1 w-full max-h-56 rounded-lg object-contain bg-slate-900/60 border border-slate-800/80"
                                 />
                               </div>
                             ) : firstProblemTex ? (
-                              <div className="flex-1 min-h-[140px] rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 flex flex-col justify-center overflow-x-auto custom-scrollbar">
+                              <div className="flex-1 min-h-[140px] rounded-xl  bg-paper-deep p-4 flex flex-col justify-center overflow-x-auto custom-scrollbar">
                                 <KatexPreview
                                   tex={firstProblemTex}
-                                  className="text-sm text-ink/90 leading-relaxed pointer-events-none"
+                                  className="text-sm text-ink leading-relaxed pointer-events-none"
                                 />
                               </div>
                             ) : null}
 
-                            {/* მასწავლებლის შენიშვნა */}
                             {teacherNote &&
                               teacherNote.trim() !== '' &&
                               teacherNote.trim() !== 'გთხოვთ ამოხსნათ მოცემული ამოცანა.' && (
@@ -778,7 +772,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
                               )}
                           </div>
 
-                          {/* ქვედა ზოლი */}
                           <div className="flex items-center justify-between pt-3 border-t border-hairline-soft">
                             <span className="text-xs font-bold text-navy group-hover:underline flex items-center gap-1">
                               სრულად ნახვა{' '}
@@ -790,7 +783,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
                     })}
                   </div>
 
-                  {/* პასუხების ატვირთვა / დაბრუნება არჩეული დღისთვის */}
                   <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4.5 shadow-2xs">
                     {isGroupAlreadySubmitted ? (
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-1">
@@ -800,7 +792,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
                         </div>
 
                         <div className="flex items-center gap-2 w-full sm:w-auto">
-                          {/* პასუხის დაბრუნების (წაშლის) ღილაკი */}
                           <button
                             type="button"
                             disabled={isWithdrawing}
@@ -897,7 +888,6 @@ export default function StudentAssignments({ locale, assignments: initialPropsAs
         </section>
       </div>
 
-      {/* ამოცანის მოდალი */}
       {activeProblemModal && (
         <ProblemDetailModal
           problem={activeProblemModal.problem}
