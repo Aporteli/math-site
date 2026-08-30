@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { SubmissionStatus } from "@prisma/client";
+import { resolveImageUrlOrArray } from "@/lib/storage/blob";
 
 /**
  * 1. მოსწავლის დავალების/პასუხის გაგზავნა
@@ -28,6 +29,12 @@ export async function submitStudentHomeworkAction({
       return { success: false, error: "დავალება ვერ მოიძებნა" };
     }
 
+    // Upload any Base64 attachment to Vercel Blob before persisting the URL.
+    const resolvedAttachmentUrl = await resolveImageUrlOrArray(attachmentUrl);
+    if (!resolvedAttachmentUrl) {
+      return { success: false, error: "მიმაგრებული ფაილი ცარიელია" };
+    }
+
     // შევამოწმოთ არსებობს თუ არა უკვე Submission ამ სტუდენტისთვის
     const existingSubmission = await prisma.submission.findFirst({
       where: {
@@ -41,7 +48,7 @@ export async function submitStudentHomeworkAction({
       submission = await prisma.submission.update({
         where: { id: existingSubmission.id },
         data: {
-          attachmentUrl,
+          attachmentUrl: resolvedAttachmentUrl,
           status: SubmissionStatus.SUBMITTED,
           submittedAt: new Date(),
         },
@@ -51,7 +58,7 @@ export async function submitStudentHomeworkAction({
         data: {
           assignmentId,
           studentId: session.user.id,
-          attachmentUrl,
+          attachmentUrl: resolvedAttachmentUrl,
           status: SubmissionStatus.SUBMITTED,
           submittedAt: new Date(),
         },

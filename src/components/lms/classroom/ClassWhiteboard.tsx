@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import type { CanvasElement, KonvaCanvasHandle } from "./KonvaCanvas";
 import { sendProblemToStudentAction } from "@/lib/actions/students";
+import { uploadImageToStorageAction } from "@/lib/actions/upload";
 
 const KonvaCanvas = dynamic(() => import("./KonvaCanvas"), {
   ssr: false,
@@ -1028,9 +1029,25 @@ export function ClassWhiteboard({
         boardImages.push({ pageIdx, url: renderedUrl });
       }
 
+      // Upload every board snapshot to Vercel Blob first, then persist only the URLs.
+      const uploadedBoardUrls = await Promise.all(
+        boardImages.map((board) =>
+          uploadImageToStorageAction({
+            dataUrl: board.url,
+            fileName: `board-page-${board.pageIdx + 1}.png`,
+          }),
+        ),
+      );
+      const resolvedBoardImages = boardImages.map((board, index) => ({
+        pageIdx: board.pageIdx,
+        url: uploadedBoardUrls[index]?.success && uploadedBoardUrls[index]?.url
+          ? uploadedBoardUrls[index].url!
+          : board.url,
+      }));
+
       const sendPromises = [];
       for (const studentIdentity of selectedStudentIdentities) {
-        for (const board of boardImages) {
+        for (const board of resolvedBoardImages) {
           const title = `${courseTitle || "დაფის ამოცანა"} — გვერდი ${board.pageIdx + 1}`;
           sendPromises.push(
             sendProblemToStudentAction({

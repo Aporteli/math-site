@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { AssignmentStatus, AssignmentType } from "@prisma/client";
+import { resolveImageUrlOrArray } from "@/lib/storage/blob";
 
 export interface StudentData {
   id: string;
@@ -122,6 +123,10 @@ export async function sendProblemToStudentAction({
   try {
     await assertTeacherSession();
 
+    // Any Base64 attachment is uploaded to Vercel Blob before the record is
+    // written, so only the public URL ends up in the database.
+    const resolvedAttachmentUrl = await resolveImageUrlOrArray(attachmentUrl);
+
     const enrollment = await prisma.enrollment.findFirst({
       where: {
         userId: studentId,
@@ -150,14 +155,14 @@ export async function sendProblemToStudentAction({
         publishedAt: new Date(),
         title: problem.topic ? `ამოცანა: ${problem.topic}` : "ინდივიდუალური ამოცანა",
         instructions: instructions?.trim() || "",
-        attachmentUrl: attachmentUrl || null,
+        attachmentUrl: resolvedAttachmentUrl,
         customPayload: {
           problemId: problem.id,
           promptTex: problem.promptTex,
           topic: problem.topic,
           difficulty: problem.difficulty,
           templateId: problem.templateId,
-          imageUrl: attachmentUrl || null,
+          imageUrl: resolvedAttachmentUrl,
         },
       },
     });
@@ -194,6 +199,9 @@ export async function sendProblemToClassAction({
   try {
     await assertTeacherSession();
 
+    // Upload any Base64 attachment to Vercel Blob before persisting the URL.
+    const resolvedAttachmentUrl = await resolveImageUrlOrArray(attachmentUrl);
+
     const assignment = await prisma.assignment.create({
       data: {
         courseId: courseId,
@@ -203,14 +211,14 @@ export async function sendProblemToClassAction({
         publishedAt: new Date(),
         title: problem.topic ? `ამოცანა: ${problem.topic}` : "საკლასო ამოცანა",
         instructions: instructions?.trim() || "",
-        attachmentUrl: attachmentUrl || null,
+        attachmentUrl: resolvedAttachmentUrl,
         customPayload: {
           problemId: problem.id,
           promptTex: problem.promptTex,
           topic: problem.topic,
           difficulty: problem.difficulty,
           templateId: problem.templateId,
-          imageUrl: attachmentUrl || null,
+          imageUrl: resolvedAttachmentUrl,
         },
       },
     });

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { deleteTargetedAssignmentAction, getProblemDetailsAction, markAssignmentGradedAction } from '@/lib/actions/teacher-students';
 import { sendProblemToStudentAction } from '@/lib/actions/students';
+import { uploadImageToStorageAction } from '@/lib/actions/upload';
 import { TeacherViewProblemModal } from '@/components/lms/teacher/TeacherViewProblemModal';
 import { KatexPreview } from '@/components/math/katex-preview';
 
@@ -465,10 +466,21 @@ export function TeacherStudentsWorkspace({
     setAssigning(true);
 
     try {
+      let resolvedImage: string | null = assignImage;
+      if (assignImage) {
+        const uploaded = await uploadImageToStorageAction({
+          dataUrl: assignImage,
+          fileName: assignImageName || undefined,
+        });
+        if (uploaded.success && uploaded.url) {
+          resolvedImage = uploaded.url;
+        }
+      }
+
       const res = await sendProblemToStudentAction({
         studentId: activeStudent.id,
         instructions: safeComment || undefined,
-        attachmentUrl: assignImage || null,
+        attachmentUrl: resolvedImage,
         problem: problemData,
       });
 
@@ -481,7 +493,7 @@ export function TeacherStudentsWorkspace({
           status: 'PUBLISHED',
           createdAt: new Date().toISOString(),
           promptTex: problemData.promptTex,
-          problemImageUrl: assignImage,
+          problemImageUrl: resolvedImage,
           studentAttachmentUrl: null,
           commentCount: safeComment ? 1 : 0,
         };

@@ -27,6 +27,7 @@ import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { getStudentAssignmentsAction, getStudentCoursesAction, type StudentCourse } from '@/lib/actions/students';
 import { submitStudentHomeworkAction, withdrawStudentHomeworkAction } from '@/lib/actions/student-submission';
+import { uploadImageToStorageAction } from '@/lib/actions/upload';
 import { ProblemDetailModal } from '@/components/lms/ProblemDetailModal';
 import { StudentCourseVideoCallButton } from '@/components/lms/student/StudentCourseVideoCallButton';
 import { convertPdfToImages } from '@/lib/pdf-helpers';
@@ -386,7 +387,18 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
     if (files.length === 0) return;
 
     setSubmittingDateKey(dateKey);
-    const combinedUrls = JSON.stringify(files.map((a) => a.url));
+
+    // Upload every attachment to Vercel Blob first, then persist only the URLs.
+    const resolvedUrls = await Promise.all(
+      files.map(async (a) => {
+        const uploaded = await uploadImageToStorageAction({
+          dataUrl: a.url,
+          fileName: a.fileName,
+        });
+        return uploaded.success && uploaded.url ? uploaded.url : a.url;
+      }),
+    );
+    const combinedUrls = JSON.stringify(resolvedUrls);
     const itemIds = new Set(items.map((i) => i.id));
 
     await Promise.all(
@@ -498,9 +510,18 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
     const problem = assignment?.problems.find((p) => p.id === problemId);
     if (!assignment || !problem?.previewUrl) return;
 
+    let url: string = problem.previewUrl;
+    const uploaded = await uploadImageToStorageAction({
+      dataUrl: problem.previewUrl,
+      fileName: problem.fileName,
+    });
+    if (uploaded.success && uploaded.url) {
+      url = uploaded.url;
+    }
+
     const res = await submitStudentHomeworkAction({
       assignmentId: assignment.id,
-      attachmentUrl: problem.previewUrl,
+      attachmentUrl: url,
     });
 
     if (res.success) {
