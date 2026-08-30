@@ -529,7 +529,9 @@ export function ClassWhiteboard({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const penMenuRef = useRef<HTMLDivElement>(null);
   const shapesMenuRef = useRef<HTMLDivElement>(null);
+  const colorMenuRef = useRef<HTMLDivElement>(null);
   const pagesTrayRef = useRef<HTMLDivElement>(null);
+  const lastLaserSentRef = useRef<number>(0);
   const storageKeyPages = `konva_whiteboard_pages_${courseId}`;
   const chunkAssemblerRef = useRef<ChunkAssembler>(new ChunkAssembler());
 
@@ -612,6 +614,7 @@ export function ClassWhiteboard({
 
   const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
   const [isShapesMenuOpen, setIsShapesMenuOpen] = useState(false);
+  const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [students, setStudents] = useState<RemoteParticipant[]>([]);
@@ -644,6 +647,9 @@ export function ClassWhiteboard({
       }
       if (shapesMenuRef.current && !shapesMenuRef.current.contains(e.target as Node)) {
         setIsShapesMenuOpen(false);
+      }
+      if (colorMenuRef.current && !colorMenuRef.current.contains(e.target as Node)) {
+        setIsColorMenuOpen(false);
       }
       if (pagesTrayRef.current && !pagesTrayRef.current.contains(e.target as Node)) {
         const target = e.target as HTMLElement;
@@ -699,14 +705,18 @@ export function ClassWhiteboard({
       const participant = room?.localParticipant;
       if (!participant || !room || room.state !== ConnectionState.Connected) return;
 
-      const bytes = new TextEncoder().encode(JSON.stringify(payload));
-      const chunks = chunkPayload(bytes);
+      try {
+        const bytes = new TextEncoder().encode(JSON.stringify(payload));
+        const chunks = chunkPayload(bytes);
 
-      for (let i = 0; i < chunks.length; i++) {
-        await participant.publishData(chunks[i] as any, { reliable });
-        if (chunks.length > 1 && i < chunks.length - 1) {
-          await new Promise((res) => setTimeout(res, 5));
+        for (let i = 0; i < chunks.length; i++) {
+          await participant.publishData(chunks[i] as any, { reliable });
+          if (chunks.length > 1 && i < chunks.length - 1) {
+            await new Promise((res) => setTimeout(res, 5));
+          }
         }
+      } catch (err) {
+        console.warn("Data channel publish skipped (reconnecting):", err);
       }
     },
     [room]
@@ -714,7 +724,14 @@ export function ClassWhiteboard({
 
   const handleLaserMove = useCallback(
     (pos: { x: number; y: number } | null) => {
-      void publishDataSafe({ type: "WHITEBOARD_LASER", point: pos }, false);
+      const now = Date.now();
+      if (!pos || now - lastLaserSentRef.current > 35) {
+        lastLaserSentRef.current = now;
+        void publishDataSafe(
+          { type: "WHITEBOARD_LASER", point: pos, pageIndex: currentPageIndexRef.current },
+          false
+        );
+      }
     },
     [publishDataSafe]
   );
@@ -949,7 +966,6 @@ export function ClassWhiteboard({
     const nextIdx = Math.min(currentPageIndex, updated.length - 1);
     setCurrentPageIndex(nextIdx);
     void publishDataSafe({ type: "WHITEBOARD_PAGE_COUNT", count: updated.length });
-    void publishDataSafe({ type: "WHITEBOARD_PAGE_SWITCH", pageIndex: nextIdx });
   };
 
   const handleSwitchPage = (idx: number) => {
@@ -959,7 +975,6 @@ export function ClassWhiteboard({
       historyMapRef.current.set(idx, { states: [pages[idx] || []], index: 0 });
     }
     updateUndoRedoState();
-    void publishDataSafe({ type: "WHITEBOARD_PAGE_SWITCH", pageIndex: idx });
   };
 
   const handleAssignSelectedBoards = async () => {
@@ -1079,14 +1094,14 @@ export function ClassWhiteboard({
           setTimeout(() => {
             isRemoteUpdateRef.current = false;
           }, 30);
-        } else if (data.type === "WHITEBOARD_PAGE_SWITCH") {
-          setCurrentPageIndex(data.pageIndex);
         } else if (data.type === "WHITEBOARD_PAGE_COUNT") {
           const newPages = [...pagesRef.current];
           while (newPages.length < data.count) newPages.push([]);
           setPages(newPages);
         } else if (data.type === "WHITEBOARD_LASER") {
-          canvasRef.current?.renderRemoteLaser(data.point);
+          if (data.pageIndex === undefined || data.pageIndex === currentPageIndexRef.current) {
+            canvasRef.current?.renderRemoteLaser(data.point);
+          }
         }
       } catch (err) {
         console.error("Packet reassembly error:", err);
@@ -1114,6 +1129,8 @@ export function ClassWhiteboard({
   const isShapeActive = shapeTools.some((s) => s.id === activeTool);
 
   const zoomPercent = Math.round(zoomScale * 100);
+
+  const colorsList = ["#1e293b", "#ef4444", "#10b981", "#3b82f6", "#f59e0b", "#8b5cf6"];
 
   return (
     <div
@@ -1166,7 +1183,7 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* 🌟 მასწავლებლის გაგზავნის მოდალი 🌟 */}
+      {/* მასწავლებლის გაგზავნის მოდალი */}
       {isTeacher && isAssignModalOpen && (
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[110] w-[340px] sm:w-[400px] rounded-3xl bg-white dark:bg-slate-900 p-4 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
@@ -1304,7 +1321,7 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* 🌟 1. მცურავი ზედა პანელი 🌟 */}
+      {/* 🌟 1. მცურავი კომპაქტური ზედა პანელი 🌟 */}
       <div className="absolute top-3 inset-x-0 z-[100] flex justify-center px-2 pointer-events-none">
         <div className="pointer-events-auto max-w-full overflow-visible rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
           <div className="flex w-max items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5">
@@ -1339,36 +1356,6 @@ export function ClassWhiteboard({
               </button>
             </div>
 
-            {/* მასშტაბირება */}
-            <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={handleZoomOut}
-                title="დაპატარავება (Ctrl + -)"
-                className="flex size-7 sm:size-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
-              >
-                <ZoomOut className="size-3.5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={handleZoomReset}
-                title="100%-ზე დაბრუნება (Ctrl + 0)"
-                className="flex h-7 sm:h-8 items-center justify-center px-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 transition-colors min-w-[38px] sm:min-w-[44px]"
-              >
-                {zoomPercent}%
-              </button>
-
-              <button
-                type="button"
-                onClick={handleZoomIn}
-                title="გადიდება (Ctrl + +)"
-                className="flex size-7 sm:size-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
-              >
-                <ZoomIn className="size-3.5" />
-              </button>
-            </div>
-
             {/* Select Tool */}
             <button
               type="button"
@@ -1377,6 +1364,7 @@ export function ClassWhiteboard({
                 setActiveTool("select");
                 setIsPenMenuOpen(false);
                 setIsShapesMenuOpen(false);
+                setIsColorMenuOpen(false);
               }}
               className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
                 activeTool === "select"
@@ -1395,6 +1383,7 @@ export function ClassWhiteboard({
                 setActiveTool("hand");
                 setIsPenMenuOpen(false);
                 setIsShapesMenuOpen(false);
+                setIsColorMenuOpen(false);
               }}
               className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
                 activeTool === "hand"
@@ -1413,6 +1402,7 @@ export function ClassWhiteboard({
                 setActiveTool("laser");
                 setIsPenMenuOpen(false);
                 setIsShapesMenuOpen(false);
+                setIsColorMenuOpen(false);
               }}
               className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
                 activeTool === "laser"
@@ -1439,6 +1429,7 @@ export function ClassWhiteboard({
                     setActiveTool("pen");
                     setIsPenMenuOpen(false);
                     setIsShapesMenuOpen(false);
+                    setIsColorMenuOpen(false);
                   }}
                   className="flex items-center gap-1 h-full px-2 rounded-l-xl focus:outline-none"
                 >
@@ -1452,6 +1443,7 @@ export function ClassWhiteboard({
                   onClick={() => {
                     setIsPenMenuOpen((prev) => !prev);
                     setIsShapesMenuOpen(false);
+                    setIsColorMenuOpen(false);
                   }}
                   className={`flex items-center justify-center px-1 h-full rounded-r-xl transition-colors border-l ${
                     activeTool === "pen"
@@ -1524,6 +1516,7 @@ export function ClassWhiteboard({
                     setActiveTool(currentShapeObj.id);
                     setIsShapesMenuOpen(false);
                     setIsPenMenuOpen(false);
+                    setIsColorMenuOpen(false);
                   }}
                   className="flex items-center justify-center size-7 sm:size-8 rounded-l-xl focus:outline-none"
                 >
@@ -1536,6 +1529,7 @@ export function ClassWhiteboard({
                   onClick={() => {
                     setIsShapesMenuOpen((prev) => !prev);
                     setIsPenMenuOpen(false);
+                    setIsColorMenuOpen(false);
                   }}
                   className={`flex items-center justify-center px-1 h-full rounded-r-xl transition-colors border-l ${
                     isShapeActive
@@ -1584,6 +1578,7 @@ export function ClassWhiteboard({
                 setActiveTool("text");
                 setIsPenMenuOpen(false);
                 setIsShapesMenuOpen(false);
+                setIsColorMenuOpen(false);
               }}
               className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
                 activeTool === "text"
@@ -1612,6 +1607,7 @@ export function ClassWhiteboard({
                 setActiveTool("eraser");
                 setIsPenMenuOpen(false);
                 setIsShapesMenuOpen(false);
+                setIsColorMenuOpen(false);
               }}
               className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
                 activeTool === "eraser"
@@ -1636,19 +1632,45 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
-            {/* Color Palette */}
-            <div className="flex shrink-0 items-center gap-1">
-              {["#1e293b", "#ef4444", "#10b981", "#3b82f6", "#f59e0b", "#8b5cf6"].map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setStrokeColor(c)}
-                  className={`size-4 sm:size-5 rounded-full transition-transform ${
-                    strokeColor === c ? "scale-125 ring-2 ring-indigo-500 ring-offset-1" : "hover:scale-110"
-                  }`}
-                  style={{ backgroundColor: c }}
+            {/* 🌟 კომპაქტური ფერის ამომრჩევი (Color Dropdown) 🌟 */}
+            <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsColorMenuOpen((prev) => !prev);
+                  setIsPenMenuOpen(false);
+                  setIsShapesMenuOpen(false);
+                }}
+                title="ფერის არჩევა"
+                className="flex items-center gap-1 h-7 sm:h-8 px-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200/60 dark:border-slate-700/60"
+              >
+                <div
+                  className="size-4 sm:size-4.5 rounded-full border border-black/10 dark:border-white/20 shadow-2xs"
+                  style={{ backgroundColor: isDark && strokeColor === "#1e293b" ? "#ffffff" : strokeColor }}
                 />
-              ))}
+                <ChevronDown className={`size-2.5 sm:size-3 text-slate-500 transition-transform duration-200 ${isColorMenuOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isColorMenuOpen && (
+                <div className="absolute top-10 right-0 z-[120] rounded-2xl bg-white dark:bg-slate-900 p-2.5 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center gap-1.5">
+                    {colorsList.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => {
+                          setStrokeColor(c);
+                          setIsColorMenuOpen(false);
+                        }}
+                        className={`size-6 rounded-full transition-transform ${
+                          strokeColor === c ? "scale-125 ring-2 ring-indigo-500 ring-offset-1" : "hover:scale-110"
+                        }`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
@@ -1692,7 +1714,7 @@ export function ClassWhiteboard({
         />
       </div>
 
-      {/* 🌟 3. ქვედა პანელი 🌟 */}
+      {/* 🌟 3. ქვედა პანელი (მასშტაბირების ღილაკებით) 🌟 */}
       <div className="absolute bottom-3 inset-x-0 z-[100] flex flex-col items-center gap-2 px-2 pointer-events-none">
         
         {/* დაფების მინიატურების ზოლი */}
@@ -1744,12 +1766,43 @@ export function ClassWhiteboard({
         )}
 
         {/* ქვედა ღილაკების პანელი */}
-        <div className="pointer-events-auto flex items-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl select-none">
+        <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2 sm:px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl select-none">
+          
+          {/* 🌟 მასშტაბირების (Zoom) ბლოკი 🌟 */}
+          <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={handleZoomOut}
+              title="დაპატარავება (Ctrl + -)"
+              className="flex size-7 sm:size-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+            >
+              <ZoomOut className="size-3.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleZoomReset}
+              title="100%-ზე დაბრუნება (Ctrl + 0)"
+              className="flex h-7 sm:h-8 items-center justify-center px-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 transition-colors min-w-[36px] sm:min-w-[42px]"
+            >
+              {zoomPercent}%
+            </button>
+
+            <button
+              type="button"
+              onClick={handleZoomIn}
+              title="გადიდება (Ctrl + +)"
+              className="flex size-7 sm:size-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+            >
+              <ZoomIn className="size-3.5" />
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={() => handleSwitchPage(currentPageIndex - 1)}
             disabled={currentPageIndex === 0}
-            className="flex size-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors"
+            className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors"
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -1759,7 +1812,7 @@ export function ClassWhiteboard({
             data-tray-trigger
             onClick={() => setIsPagesTrayOpen((prev) => !prev)}
             title="ყველა დაფის ნახვა"
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
               isPagesTrayOpen
                 ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500"
                 : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
@@ -1773,7 +1826,7 @@ export function ClassWhiteboard({
             type="button"
             onClick={() => handleSwitchPage(currentPageIndex + 1)}
             disabled={currentPageIndex === pages.length - 1}
-            className="flex size-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors"
+            className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors"
           >
             <ChevronRight className="size-4" />
           </button>
@@ -1781,7 +1834,7 @@ export function ClassWhiteboard({
           <button
             type="button"
             onClick={handleAddNewPage}
-            className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium transition-colors"
+            className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium transition-colors"
           >
             <Plus className="size-3.5" />
             <span>ახალი</span>
@@ -1800,7 +1853,7 @@ export function ClassWhiteboard({
                 updateParticipantList();
               }}
               title="დაფის სურათის გაგზავნა მოსწავლესთან"
-              className="flex items-center gap-1.5 h-8 px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors shadow-xs"
+              className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors shadow-xs"
             >
               <Send className="size-3.5" />
               <span>გაგზავნა</span>
