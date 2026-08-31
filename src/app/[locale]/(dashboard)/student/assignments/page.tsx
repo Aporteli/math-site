@@ -16,11 +16,13 @@ import {
   X,
   Send,
   BookOpen,
-  MessageSquare,
   Lock,
   Filter,
   ImageIcon,
   RotateCcw,
+  Layers,
+  ZoomIn,
+  FileText,
 } from 'lucide-react';
 import { PageHero } from '@/components/ui/page-hero';
 import type { Locale } from '@/i18n/config';
@@ -35,6 +37,7 @@ import { KatexPreview } from '@/components/math/katex-preview';
 
 type Difficulty = 'easy' | 'medium' | 'hard' | 'olympiad';
 type ProblemStatus = 'notStarted' | 'uploaded' | 'submitted' | 'graded';
+type StudentContentTab = 'tasks' | 'answers' | 'materials';
 
 type AssignmentProblem = {
   id: string;
@@ -52,6 +55,7 @@ type AssignmentProblem = {
 type Assignment = {
   id: string;
   title: string;
+  type?: string;
   course: string;
   dueLabel?: string;
   createdAt?: string;
@@ -60,6 +64,7 @@ type Assignment = {
   note?: string;
   instructions?: string;
   attachmentUrl?: string | null;
+  problemImageUrl?: string | null;
   customPayload?: any;
   problems: AssignmentProblem[];
 };
@@ -91,25 +96,6 @@ function formatGeorgianDateString(d: Date): string {
   const year = d.getFullYear();
   return `${day} ${month}, ${year}`;
 }
-
-const DIFFICULTY_CONFIG: Record<Difficulty, { label: string; badge: string }> = {
-  easy: {
-    label: 'მარტივი',
-    badge: 'bg-slate-100 text-slate-700 border-slate-300',
-  },
-  medium: {
-    label: 'საშუალო',
-    badge: 'bg-amber-50 text-amber-800 border-amber-300',
-  },
-  hard: {
-    label: 'რთული',
-    badge: 'bg-rose-50 text-rose-800 border-rose-300',
-  },
-  olympiad: {
-    label: 'ოლიმპიადური',
-    badge: 'bg-indigo-50 text-indigo-800 border-indigo-300',
-  },
-};
 
 function progressOf(assignment: Assignment) {
   const total = assignment.problems.length;
@@ -233,15 +219,15 @@ function isImageString(str?: string | null): boolean {
   );
 }
 
-function extractFirstImageUrl(raw?: string | null): string | null {
-  if (!raw || typeof raw !== 'string') return null;
+function extractImageUrls(raw?: string | null): string[] {
+  if (!raw || typeof raw !== 'string') return [];
   const trimmed = raw.trim();
 
   if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
     try {
       const parsed = JSON.parse(trimmed);
-      if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
-        return parsed[0];
+      if (Array.isArray(parsed)) {
+        return parsed.filter((x): x is string => typeof x === 'string' && isImageString(x));
       }
     } catch {
       // ignore
@@ -249,16 +235,30 @@ function extractFirstImageUrl(raw?: string | null): string | null {
   }
 
   if (isImageString(trimmed)) {
-    return trimmed;
+    return [trimmed];
   }
 
-  return null;
+  return [];
+}
+
+function extractFirstImageUrl(raw?: string | null): string | null {
+  const urls = extractImageUrls(raw);
+  return urls.length > 0 ? urls[0] : null;
+}
+
+function isAssignmentMaterial(a: Assignment): boolean {
+  return (
+    a.type === 'MATERIAL' ||
+    (typeof a.instructions === 'string' && a.instructions.trim().toLowerCase() === 'მასალა') ||
+    (typeof a.note === 'string' && a.note.trim().toLowerCase() === 'მასალა')
+  );
 }
 
 export default function StudentAssignments({ locale }: StudentAssignmentsProps) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [courses, setCourses] = useState<StudentCourse[]>([]);
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
+  const [activeTab, setActiveTab] = useState<StudentContentTab>('tasks');
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDateKey, setSelectedDateKey] = useState<string>(() => formatDateToKey(new Date()));
@@ -270,10 +270,13 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
   const [uploadingDateKey, setUploadingDateKey] = useState<string | null>(null);
   const [submittingDateKey, setSubmittingDateKey] = useState<string | null>(null);
   const [withdrawingDateKey, setWithdrawingDateKey] = useState<string | null>(null);
+
   const [activeProblemModal, setActiveProblemModal] = useState<{
     assignmentId: string;
     problem: AssignmentProblem;
   } | null>(null);
+
+  const [previewModalImage, setPreviewModalImage] = useState<string | null>(null);
 
   const dict = getDictionary(locale);
   const copy = dict.studentAssignments;
@@ -338,8 +341,39 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
     });
   }, [assignments, selectedDateKey, statusFilter]);
 
+  // 🌟 1. დავალებები (სრულიად გამორიცხავს მასალებს)
+  const taskAssignments = useMemo(() => {
+    return assignmentsForSelectedDate.filter((a) => !isAssignmentMaterial(a));
+  }, [assignmentsForSelectedDate]);
+
+  // 🌟 2. მოსწავლის მიერ გამოგზავნილი პასუხები
+  const submittedAnswersForDate = useMemo(() => {
+    const answers: { id: string; url: string; title: string; status: string }[] = [];
+    taskAssignments.forEach((a) => {
+      a.problems.forEach((p, idx) => {
+        if (p.previewUrl) {
+          const urls = extractImageUrls(p.previewUrl);
+          urls.forEach((url, uIdx) => {
+            answers.push({
+              id: `${a.id}-${p.id}-${idx}-${uIdx}`,
+              url,
+              title: `${a.title} - პასუხი ${urls.length > 1 ? `#${uIdx + 1}` : ''}`,
+              status: p.status,
+            });
+          });
+        }
+      });
+    });
+    return answers;
+  }, [taskAssignments]);
+
+  // 🌟 3. მხოლოდ სასწავლო მასალები
+  const materialsForDate = useMemo(() => {
+    return assignmentsForSelectedDate.filter((a) => isAssignmentMaterial(a));
+  }, [assignmentsForSelectedDate]);
+
   const todayAssignments = useMemo(() => {
-    return assignments.filter((a) => parseAndFormatDate(a).key === selectedDateKey);
+    return assignments.filter((a) => parseAndFormatDate(a).key === selectedDateKey && !isAssignmentMaterial(a));
   }, [assignments, selectedDateKey]);
 
   async function handleGroupFileUpload(dateKey: string, files: FileList | null) {
@@ -388,8 +422,6 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
 
     setSubmittingDateKey(dateKey);
 
-    // Upload every attachment to Vercel Blob first, then persist only the URLs.
-    // Never fall back to the raw Base64 value.
     let resolvedUrls: string[] = [];
     try {
       resolvedUrls = await Promise.all(
@@ -443,7 +475,8 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
     }));
 
     setSubmittingDateKey(null);
-    setNotice('ჯგუფის პასუხები წარმატებით გაიგზავნა!');
+    setNotice('პასუხები წარმატებით გაიგზავნა და გადავიდა „პასუხების“ ტაბში!');
+    setActiveTab('answers');
     setTimeout(() => setNotice(null), 3500);
   }
 
@@ -482,85 +515,14 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
         [dateKey]: [],
       }));
 
-      setNotice('პასუხები წარმატებით წაიშალა და დაბრუნდა სამუშაო რეჟიმში.');
+      setNotice('პასუხები წარმატებით წაიშალა.');
+      setActiveTab('tasks');
       setTimeout(() => setNotice(null), 3500);
     } else {
       alert('შეცდომა: ' + (res.error || 'პასუხების წაშლა ვერ მოხერხდა'));
     }
 
     setWithdrawingDateKey(null);
-  }
-
-  function updateProblem(
-    assignmentId: string,
-    problemId: string,
-    updater: (problem: AssignmentProblem) => AssignmentProblem,
-  ) {
-    setAssignments((prev) =>
-      prev.map((assignment) =>
-        assignment.id !== assignmentId
-          ? assignment
-          : {
-              ...assignment,
-              problems: assignment.problems.map((problem) => (problem.id !== problemId ? problem : updater(problem))),
-            },
-      ),
-    );
-  }
-
-  function handleRemoveFile(assignmentId: string, problemId: string) {
-    updateProblem(assignmentId, problemId, (problem) => ({
-      ...problem,
-      status: 'notStarted',
-      fileName: undefined,
-      previewUrl: undefined,
-    }));
-  }
-
-  async function handleMarkSubmitted(assignmentId: string, problemId: string) {
-    const assignment = assignments.find((a) => a.id === assignmentId);
-    const problem = assignment?.problems.find((p) => p.id === problemId);
-    if (!assignment || !problem?.previewUrl) return;
-
-    const uploaded = await uploadImageToStorageAction({
-      dataUrl: problem.previewUrl,
-      fileName: problem.fileName,
-    });
-    if (!uploaded.success || !uploaded.url) {
-      alert('სურათის ატვირთვა ვერ მოხერხდა');
-      return;
-    }
-
-    const res = await submitStudentHomeworkAction({
-      assignmentId: assignment.id,
-      attachmentUrl: uploaded.url,
-    });
-
-    if (res.success) {
-      updateProblem(assignmentId, problemId, (p) => ({ ...p, status: 'submitted' }));
-      setNotice('დავალება წარმატებით გაიგზავნა!');
-      setTimeout(() => setNotice(null), 3500);
-    } else {
-      alert('გაგზავნა ვერ მოხერხდა');
-    }
-  }
-
-  async function handleWithdrawSingle(assignmentId: string, problemId: string) {
-    const res = await withdrawStudentHomeworkAction({ assignmentIds: [assignmentId] });
-    if (res.success) {
-      updateProblem(assignmentId, problemId, (problem) => ({
-        ...problem,
-        status: 'notStarted',
-        previewUrl: undefined,
-        fileName: undefined,
-      }));
-      setSubmittedDateGroups((prev) => ({
-        ...prev,
-        [selectedDateKey]: false,
-      }));
-      setNotice('დავალება დაბრუნდა ჩასასწორებლად');
-      setTimeout(() => setNotice(null), 3500);
-    }
   }
 
   const currentGroupFiles = dateGroupAttachments[selectedDateKey] || [];
@@ -570,10 +532,8 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
 
   const isGroupAlreadySubmitted =
     submittedDateGroups[selectedDateKey] ||
-    (assignmentsForSelectedDate.length > 0 &&
-      assignmentsForSelectedDate.every((a) =>
-        a.problems.every((p) => p.status === 'submitted' || p.status === 'graded'),
-      ));
+    (taskAssignments.length > 0 &&
+      taskAssignments.every((a) => a.problems.every((p) => p.status === 'submitted' || p.status === 'graded')));
 
   return (
     <div className="space-y-6">
@@ -584,14 +544,14 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
         description={copy.hero.description}
         aside={
           <div className="flex w-full flex-col gap-2.5">
-            {/* 🌟 დღის ჯგუფური სტატუსის ერთიანი, სუფთა ბარათი (3-ფაზიანი ლოგიკა) 🌟 */}
-            <div className={`rounded-2xl border px-4 py-3 shadow-xs transition-all ${
-              todayAssignments.length === 0
-                ? 'border-slate-200 bg-slate-50/70 text-slate-600'
-                : isGroupAlreadySubmitted 
-                  ? 'border-emerald-200 bg-emerald-50/70 text-emerald-800' 
-                  : 'border-amber-200 bg-amber-50/40 text-amber-900'
-            }`}>
+            <div
+              className={`rounded-2xl border px-4 py-3 shadow-xs transition-all ${
+                todayAssignments.length === 0
+                  ? 'border-slate-200 bg-slate-50/70 text-slate-600'
+                  : isGroupAlreadySubmitted
+                    ? 'border-emerald-200 bg-emerald-50/70 text-emerald-800'
+                    : 'border-amber-200 bg-amber-50/40 text-amber-900'
+              }`}>
               <div className="mt-1 flex items-center gap-2">
                 {todayAssignments.length === 0 ? (
                   <>
@@ -612,7 +572,6 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
               </div>
             </div>
 
-            {/* ვიდეო გაკვეთილის ღილაკი */}
             {courses.length > 0 && (
               <div className="flex w-full flex-col gap-2 [&>*]:!w-full [&>*]:!flex [&>*]:!items-center [&>*]:!gap-2 [&_button:first-child]:!flex-1 [&_button:first-child]:!justify-center">
                 {courses.map((course) => (
@@ -630,8 +589,8 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
         }
       />
 
-      <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[38rem] lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-stretch">
-        {/* სვეტი 1: ფილტრები (რიცხვების გარეშე) */}
+      <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[38rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
+        {/* სვეტი 1: ფილტრები */}
         <aside className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white p-4 shadow-sm">
           <div className="flex items-center gap-2 border-b border-hairline pb-3">
             <Filter className="size-4 text-navy" />
@@ -662,84 +621,137 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
 
         {/* სვეტი 2: მოსწავლის სამუშაო სივრცე */}
         <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white shadow-sm overflow-hidden">
-          <div className="flex-1 flex flex-col min-h-0 p-5">
-            <div className="border-b border-hairline pb-4">
-              <h3 className="text-base font-bold text-ink">დავალებები</h3>
-              <p className="text-xs text-muted mt-0.5">ყოველდღიური დავალებები და ამოცანები</p>
+          {/* ზედა ზოლი 1: სათაური + კალენდარი */}
+          <div className="bg-paper/30 border-b border-hairline px-4 py-2 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-ink">სამუშაო სივრცე</h3>
+              <span className="rounded-lg bg-navy-tint px-2 py-0.5 text-[10px] font-bold text-navy border border-navy/10">
+                {taskAssignments.length}
+              </span>
             </div>
 
-            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-hairline bg-paper/50 px-4 py-2.5">
-              <div className="flex items-center gap-2.5">
-                <CalendarIcon className="size-4 text-navy" />
-                <h4 className="text-sm font-bold text-ink">{formattedSelectedDate}</h4>
-                <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700 border border-hairline shadow-2xs">
-                  {assignmentsForSelectedDate.length} დავალება
-                </span>
-              </div>
+            {/* ზედა მარჯვენა კალენდარი */}
+            <div className="flex items-center gap-1 shrink-0 bg-white px-2 py-1 rounded-xl border border-hairline shadow-2xs">
+              <button
+                type="button"
+                onClick={() => handleShiftDate(-1)}
+                title="წინა დღე"
+                className="flex size-7 items-center justify-center rounded-lg hover:bg-paper text-slate-700 transition-colors">
+                <ChevronLeft className="size-4" />
+              </button>
 
-              <div className="flex items-center gap-1.5 self-end sm:self-auto bg-white p-1 rounded-xl border border-hairline shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => handleShiftDate(-1)}
-                  title="წინა დღე"
-                  className="flex size-7 items-center justify-center rounded-lg hover:bg-paper text-slate-700 transition-colors">
-                  <ChevronLeft className="size-4" />
-                </button>
-
+              <div className="flex items-center gap-1 px-1">
+                <CalendarIcon className="size-3.5 text-navy shrink-0" />
                 <input
                   type="date"
                   value={selectedDateKey}
                   onChange={(e) => {
                     if (e.target.value) setSelectedDateKey(e.target.value);
                   }}
-                  className="text-xs font-semibold text-slate-700 bg-transparent px-2 py-1 outline-none cursor-pointer"
+                  className="text-xs font-bold text-slate-800 bg-transparent outline-none cursor-pointer"
                 />
-
-                <button
-                  type="button"
-                  onClick={() => handleShiftDate(1)}
-                  title="შემდეგი დღე"
-                  className="flex size-7 items-center justify-center rounded-lg hover:bg-paper text-slate-700 transition-colors">
-                  <ChevronRight className="size-4" />
-                </button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => handleShiftDate(1)}
+                title="შემდეგი დღე"
+                className="flex size-7 items-center justify-center rounded-lg hover:bg-paper text-slate-700 transition-colors">
+                <ChevronRight className="size-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* 🌟 ზედა ზოლი 2: სამი საკონტროლო ტაბი (დავალებები, პასუხები, მასალები) 🌟 */}
+          <div className="bg-paper/40 border-b border-hairline px-4 py-2 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 p-1 bg-paper-deep rounded-2xl border border-hairline/80">
+              <button
+                type="button"
+                onClick={() => setActiveTab('tasks')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'tasks'
+                    ? 'bg-white text-navy shadow-xs ring-1 ring-black/5'
+                    : 'text-muted hover:text-ink'
+                }`}>
+                <BookOpen className="size-3.5" />
+                <span>დავალებები</span>
+                <span className="text-[10px] opacity-70">({taskAssignments.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('answers')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'answers'
+                    ? 'bg-white text-navy shadow-xs ring-1 ring-black/5'
+                    : 'text-muted hover:text-ink'
+                }`}>
+                <CheckCircle2 className="size-3.5 text-emerald-600" />
+                <span>პასუხები</span>
+                {submittedAnswersForDate.length > 0 && (
+                  <span className="rounded-full bg-emerald-100 text-emerald-700 px-1.5 py-0.2 text-[9px] font-bold">
+                    {submittedAnswersForDate.length}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('materials')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  activeTab === 'materials'
+                    ? 'bg-white text-navy shadow-xs ring-1 ring-black/5'
+                    : 'text-muted hover:text-ink'
+                }`}>
+                <Layers className="size-3.5 text-indigo-500" />
+                <span>მასალები</span>
+                {materialsForDate.length > 0 && (
+                  <span className="rounded-full bg-indigo-100 text-indigo-700 px-1.5 py-0.2 text-[9px] font-bold">
+                    {materialsForDate.length}
+                  </span>
+                )}
+              </button>
             </div>
 
-            {notice && (
-              <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-800 shadow-xs">
-                <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
-                <span>{notice}</span>
-              </div>
-            )}
+            <span className="text-xs font-bold text-slate-700 bg-white px-3 py-1 rounded-xl border border-hairline shadow-2xs hidden sm:inline-block">
+              {formattedSelectedDate}
+            </span>
+          </div>
 
-            <div className="flex-1 overflow-y-auto pt-4 pe-1 custom-scrollbar space-y-4">
-              {loading ? (
-                <div className="py-20 flex flex-col items-center justify-center gap-2 text-sm font-semibold text-muted">
-                  <Loader2 className="size-6 animate-spin text-navy" />
-                  <span>იტვირთება...</span>
-                </div>
-              ) : assignmentsForSelectedDate.length === 0 ? (
-                <div className="py-16 flex flex-col items-center justify-center text-center text-muted rounded-2xl border border-dashed border-hairline p-6 bg-paper/20">
-                  <BookOpen className="size-9 opacity-30 mb-2" />
-                  <p className="text-sm font-bold text-ink">ამ თარიღისთვის დავალებები არ არის</p>
-                  <p className="text-xs max-w-xs mt-1">{formattedSelectedDate}-ს დავალებები არ მოიძებნა.</p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                    {assignmentsForSelectedDate.map((assignment) => {
+          <div className="flex-1 flex flex-col min-h-0 p-5">
+            {/* 🌟 1. დავალებების ტაბი (სუფთა ამოცანები, მასალების გარეშე) 🌟 */}
+            {activeTab === 'tasks' && (
+              <div className="flex-1 overflow-y-auto pt-1 pe-1 custom-scrollbar">
+                {loading ? (
+                  <div className="py-20 flex flex-col items-center justify-center gap-2 text-sm font-semibold text-muted">
+                    <Loader2 className="size-6 animate-spin text-navy" />
+                    <span>იტვირთება...</span>
+                  </div>
+                ) : taskAssignments.length === 0 ? (
+                  <div className="py-16 flex flex-col items-center justify-center text-center text-muted rounded-2xl border border-dashed border-hairline p-6 bg-paper/20">
+                    <BookOpen className="size-9 opacity-30 mb-2" />
+                    <p className="text-sm font-bold text-ink">ამ თარიღისთვის დავალებები არ არის</p>
+                    <p className="text-xs max-w-xs mt-1">{formattedSelectedDate}-ს დავალებები არ მოიძებნა.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                    {taskAssignments.map((assignment) => {
                       const meta = assignmentStatusMeta(assignment);
                       const teacherNote = assignment.instructions || assignment.note;
                       const firstProblem = assignment.problems?.[0];
                       const firstProblemTex = firstProblem?.promptTex;
 
                       const customPayload = (assignment.customPayload as Record<string, unknown>) || {};
-                      
+
                       const boardImageUrl =
                         extractFirstImageUrl(assignment.attachmentUrl) ||
                         extractFirstImageUrl(firstProblem?.teacherAttachmentUrl) ||
-                        (typeof customPayload.imageUrl === 'string' ? extractFirstImageUrl(customPayload.imageUrl) : null) ||
-                        (typeof customPayload.attachmentUrl === 'string' ? extractFirstImageUrl(customPayload.attachmentUrl) : null) ||
+                        (typeof customPayload.imageUrl === 'string'
+                          ? extractFirstImageUrl(customPayload.imageUrl)
+                          : null) ||
+                        (typeof customPayload.attachmentUrl === 'string'
+                          ? extractFirstImageUrl(customPayload.attachmentUrl)
+                          : null) ||
                         extractFirstImageUrl(firstProblemTex);
 
                       const isGraded = meta.id === 'graded';
@@ -758,37 +770,34 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
                               });
                             }
                           }}
-                          className={`flex flex-col justify-between gap-3.5 rounded-2xl border p-4 transition-all cursor-pointer group min-h-[280px] ${
+                          className={`flex flex-col justify-between rounded-2xl border p-3 transition-all cursor-pointer group min-h-[210px] ${
                             isGraded
                               ? 'border-emerald-200 bg-emerald-50/20 shadow-xs'
                               : 'border-hairline bg-white hover:border-navy/40 hover:shadow-md'
                           }`}>
-                          <div className="flex flex-1 flex-col gap-2.5 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex flex-col gap-2 min-w-0">
+                            <div className="flex items-center justify-between gap-1.5">
                               <span
-                                className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-0.5 text-[10px] ${meta.className}`}>
+                                className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] ${meta.className}`}>
                                 <meta.icon className="size-3" />
-                                <span>{meta.label}</span>
+                                <span className="truncate">{meta.label}</span>
                               </span>
                             </div>
 
                             {boardImageUrl ? (
-                              <div className="flex-1 min-h-[140px] rounded-xl border border-slate-800 bg-slate-950 p-3 flex flex-col items-center justify-center overflow-hidden shadow-inner">
-                                <span className="text-[10px] font-bold text-slate-400 self-start mb-1.5 flex items-center gap-1.5">
-                                  <ImageIcon className="size-3 text-indigo-400" /> დაფა / ამოცანის სურათი
-                                </span>
+                              <div className="w-full h-32 rounded-xl border border-slate-800 bg-slate-950 p-1.5 flex items-center justify-center overflow-hidden shadow-inner">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={boardImageUrl}
                                   alt="დაფის ჩანაწერი"
-                                  className="flex-1 w-full max-h-56 rounded-lg object-contain bg-slate-900/60 border border-slate-800/80"
+                                  className="w-full h-full object-contain rounded bg-slate-900/60"
                                 />
                               </div>
                             ) : firstProblemTex ? (
-                              <div className="flex-1 min-h-[140px] rounded-xl  bg-paper-deep p-4 flex flex-col justify-center overflow-x-auto custom-scrollbar">
+                              <div className="w-full h-32 rounded-xl bg-paper-deep p-3 flex items-center justify-center overflow-hidden">
                                 <KatexPreview
                                   tex={firstProblemTex}
-                                  className="text-sm text-ink leading-relaxed pointer-events-none"
+                                  className="text-xs text-ink line-clamp-3 pointer-events-none leading-relaxed"
                                 />
                               </div>
                             ) : null}
@@ -796,8 +805,8 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
                             {teacherNote &&
                               teacherNote.trim() !== '' &&
                               teacherNote.trim() !== 'გთხოვთ ამოხსნათ მოცემული ამოცანა.' && (
-                                <div className="rounded-lg bg-amber-50/50 p-2.5 border border-amber-100/50">
-                                  <p className="text-xs text-amber-900/70 line-clamp-2">
+                                <div className="rounded-lg bg-amber-50/50 p-2 border border-amber-100/50">
+                                  <p className="text-[11px] text-amber-900/70 line-clamp-2">
                                     <span className="font-bold text-amber-800/80 mr-1">შენიშვნა:</span>
                                     {teacherNote}
                                   </p>
@@ -805,176 +814,267 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
                               )}
                           </div>
 
-                          <div className="flex items-center justify-between pt-3 border-t border-hairline-soft">
+                          <div className="flex items-center justify-between pt-2 border-t border-hairline-soft">
                             <span className="text-xs font-bold text-navy group-hover:underline flex items-center gap-1">
-                              სრულად ნახვა{' '}
-                              <span className="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                              ნახვა <span className="transition-transform group-hover:translate-x-0.5">→</span>
                             </span>
                           </div>
                         </div>
                       );
                     })}
                   </div>
+                )}
+              </div>
+            )}
 
-                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4.5 shadow-2xs">
-                    {isGroupAlreadySubmitted ? (
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-1">
-                        <div className="flex items-center gap-2 text-emerald-700 text-xs font-bold">
-                          <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
-                          <span>ამ დღის პასუხები უკვე გაგზავნილია</span>
+            {/* 🌟 2. პასუხების ტაბი (მხოლოდ მოსწავლის გამოგზავნილი ნამუშევრები) 🌟 */}
+            {activeTab === 'answers' && (
+              <div className="flex-1 overflow-y-auto pt-1 pe-1 custom-scrollbar">
+                {submittedAnswersForDate.length === 0 ? (
+                  <div className="py-16 flex flex-col items-center justify-center text-center text-muted rounded-2xl border border-dashed border-hairline p-6 bg-paper/20">
+                    <CheckCircle2 className="size-9 opacity-30 mb-2 text-emerald-600" />
+                    <p className="text-sm font-bold text-ink">პასუხები ჯერ არ გაგიგზავნიათ</p>
+                    <p className="text-xs max-w-xs mt-1">გამოიყენეთ ქვედა პანელი პასუხის ასატვირთად და გასაგზავნად.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                    {submittedAnswersForDate.map((ans) => (
+                      <div
+                        key={ans.id}
+                        onClick={() => setPreviewModalImage(ans.url)}
+                        className="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-emerald-50/20 p-3 transition-all cursor-pointer group shadow-2xs hover:shadow-md min-h-[210px]">
+                        <div className="flex flex-col gap-2 min-w-0">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
+                              <CheckCircle2 className="size-3" /> ჩაბარებულია
+                            </span>
+                          </div>
+
+                          <div className="w-full h-32 rounded-xl border border-slate-200 bg-white p-1 flex items-center justify-center overflow-hidden">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={ans.url}
+                              alt="მოსწავლის პასუხი"
+                              className="w-full h-full object-contain rounded"
+                            />
+                          </div>
                         </div>
 
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <button
-                            type="button"
-                            disabled={isWithdrawing}
-                            onClick={() => handleResetDateGroup(selectedDateKey, assignmentsForSelectedDate)}
-                            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-100 hover:border-rose-300 transition-all shadow-2xs active:scale-95 disabled:opacity-50">
-                            {isWithdrawing ? (
-                              <Loader2 className="size-3.5 animate-spin" />
-                            ) : (
-                              <RotateCcw className="size-3.5" />
-                            )}
-                            <span>პასუხის დაბრუნება (წაშლა)</span>
-                          </button>
-
-                          <span className="inline-flex items-center gap-1 rounded-md bg-paper-deep px-2.5 py-1 text-[10px] font-semibold text-muted border border-slate-200 shrink-0">
-                            <Lock className="size-3" />
-                            <span>დახურულია</span>
+                        <div className="flex items-center justify-between pt-2 border-t border-emerald-100">
+                          <span className="text-xs font-bold text-emerald-700 group-hover:underline flex items-center gap-1">
+                            გადიდება <ZoomIn className="size-3" />
                           </span>
                         </div>
                       </div>
-                    ) : (
-                      <>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                          <div>
-                            <h4 className="text-xs font-bold text-ink">ჯგუფური პასუხების მიმაგრება</h4>
-                            <p className="text-[11px] text-muted mt-0.5">
-                              ატვირთეთ ფაილები მთლიანი დღის ({assignmentsForSelectedDate.length} დავალების)
-                              პასუხებისთვის ერთად.
-                            </p>
-                          </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
-                          <div className="flex items-center gap-2 w-full sm:w-auto">
-                            <label className="cursor-pointer flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-ink hover:bg-paper transition-colors shadow-2xs">
-                              {isUploading ? (
-                                <Loader2 className="size-3.5 animate-spin text-navy" />
-                              ) : (
-                                <UploadCloud className="size-3.5 text-navy" />
-                              )}
-                              <span>ფაილის არჩევა</span>
-                              <input
-                                type="file"
-                                multiple
-                                accept="image/*,application/pdf"
-                                className="hidden"
-                                onChange={(e) =>
-                                  handleGroupFileUpload(selectedDateKey, e.target.files).finally(() => {
-                                    e.target.value = '';
-                                  })
-                                }
-                              />
-                            </label>
+            {/* 🌟 3. მასალების ტაბი (სასწავლო მასალები - PDF, Word, TXT, სურათები) 🌟 */}
+            {activeTab === 'materials' && (
+              <div className="flex-1 overflow-y-auto pt-1 pe-1 custom-scrollbar">
+                {materialsForDate.length === 0 ? (
+                  <div className="py-16 flex flex-col items-center justify-center text-center text-muted rounded-2xl border border-dashed border-hairline p-6 bg-paper/20">
+                    <Layers className="size-9 opacity-30 mb-2 text-indigo-500" />
+                    <p className="text-sm font-bold text-ink">სასწავლო მასალები არ არის</p>
+                    <p className="text-xs max-w-xs mt-1">ამ თარიღისთვის მასალები არ მოიძებნა.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                    {materialsForDate.map((mat) => {
+                      const fileUrl =
+                        mat.attachmentUrl ||
+                        mat.problemImageUrl ||
+                        (typeof mat.customPayload?.imageUrl === 'string' ? mat.customPayload.imageUrl : null) ||
+                        (typeof mat.customPayload?.attachmentUrl === 'string' ? mat.customPayload.attachmentUrl : null);
 
-                            {currentGroupFiles.length > 0 && (
-                              <button
-                                type="button"
-                                disabled={isSubmitting}
-                                onClick={() => handleSubmitDateGroup(selectedDateKey, assignmentsForSelectedDate)}
-                                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-xs font-bold text-white hover:bg-navy-strong disabled:opacity-50 transition-colors shadow-xs">
-                                {isSubmitting ? (
-                                  <Loader2 className="size-3.5 animate-spin" />
-                                ) : (
-                                  <Send className="size-3.5" />
-                                )}
-                                <span>გაგზავნა ({currentGroupFiles.length})</span>
-                              </button>
+                      const isImg = isImageString(fileUrl);
+
+                      return (
+                        <div
+                          key={mat.id}
+                          onClick={() => {
+                            if (fileUrl) {
+                              if (isImg) {
+                                setPreviewModalImage(fileUrl);
+                              } else {
+                                window.open(fileUrl, '_blank');
+                              }
+                            }
+                          }}
+                          className="flex flex-col justify-between rounded-2xl border border-indigo-200 bg-indigo-50/20 p-3.5 transition-all cursor-pointer group hover:border-indigo-400 hover:shadow-md min-h-[210px]">
+                          <div className="flex flex-col gap-2 min-w-0">
+                            <span className="rounded-lg bg-indigo-100 text-indigo-700 px-2 py-0.5 text-[10px] font-bold self-start border border-indigo-200/60">
+                              სასწავლო მასალა
+                            </span>
+
+                            {isImg && fileUrl ? (
+                              <div className="w-full h-32 rounded-xl border border-slate-800 bg-slate-950 p-1 flex items-center justify-center overflow-hidden shadow-inner">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={fileUrl} alt={mat.title} className="w-full h-full object-contain rounded" />
+                              </div>
+                            ) : (
+                              <div className="w-full h-32 rounded-xl bg-white border border-indigo-100 p-3 flex flex-col items-center justify-center text-center shadow-2xs">
+                                <FileText className="size-10 text-indigo-600 mb-1.5" />
+                                <p className="text-xs font-bold text-slate-800 line-clamp-1">{mat.title}</p>
+                                <span className="text-[10px] font-semibold text-indigo-600 mt-1">ფაილის გახსნა ↗</span>
+                              </div>
+                            )}
+                            {mat.instructions && mat.instructions !== 'მასალა' && (
+                              <p className="text-[11px] text-muted line-clamp-1">{mat.instructions}</p>
                             )}
                           </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-indigo-100/70">
+                            <span className="text-xs font-bold text-indigo-700 group-hover:underline flex items-center gap-1">
+                              {isImg ? 'გადიდება' : 'ჩამოტვირთვა / გახსნა'}{' '}
+                              <span className="transition-transform group-hover:translate-x-0.5">→</span>
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 🌟 ქვედა ნაწილი: ძირში ფიქსირებული პასუხების მიმაგრების პანელი (ჩანს მხოლოდ დავალებების ტაბზე) 🌟 */}
+            {activeTab === 'tasks' && (
+              <div className="shrink-0 mt-3 pt-3 border-t border-hairline">
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 shadow-2xs">
+                  {isGroupAlreadySubmitted ? (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-1">
+                      <div className="flex items-center gap-2 text-emerald-700 text-xs font-bold">
+                        <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+                        <span>ამ დღის პასუხები უკვე გაგზავნილია (იხილეთ „პასუხების“ ტაბში)</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <button
+                          type="button"
+                          disabled={isWithdrawing}
+                          onClick={() => handleResetDateGroup(selectedDateKey, taskAssignments)}
+                          className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-100 hover:border-rose-300 transition-all shadow-2xs active:scale-95 disabled:opacity-50">
+                          {isWithdrawing ? (
+                            <Loader2 className="size-3.5 animate-spin" />
+                          ) : (
+                            <RotateCcw className="size-3.5" />
+                          )}
+                          <span>პასუხის დაბრუნება (წაშლა)</span>
+                        </button>
+
+                        <span className="inline-flex items-center gap-1 rounded-md bg-paper-deep px-2.5 py-1 text-[10px] font-semibold text-muted border border-slate-200 shrink-0">
+                          <Lock className="size-3" />
+                          <span>დახურულია</span>
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div>
+                          <h4 className="text-xs font-bold text-ink">ჯგუფური პასუხების მიმაგრება</h4>
+                          <p className="text-[11px] text-muted mt-0.5">
+                            ატვირთეთ ფაილები მთლიანი დღის ({taskAssignments.length} დავალების) პასუხებისთვის ერთად.
+                          </p>
                         </div>
 
-                        {currentGroupFiles.length > 0 && (
-                          <div className="mt-3 flex flex-wrap gap-2 pt-3 border-t border-slate-100">
-                            {currentGroupFiles.map((att) => (
-                              <div
-                                key={att.id}
-                                className="group/thumb relative rounded-xl border border-slate-200 bg-white p-0.5 shadow-xs">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={att.url} alt="file" className="h-12 w-12 rounded-lg object-cover" />
-                                <button
-                                  type="button"
-                                  onClick={() => removeGroupAttachment(selectedDateKey, att.id)}
-                                  className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-rose-500 text-white shadow-xs">
-                                  <X className="size-2.5" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <label className="cursor-pointer flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-ink hover:bg-paper transition-colors shadow-2xs">
+                            {isUploading ? (
+                              <Loader2 className="size-3.5 animate-spin text-navy" />
+                            ) : (
+                              <UploadCloud className="size-3.5 text-navy" />
+                            )}
+                            <span>ფაილის არჩევა</span>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*,application/pdf"
+                              className="hidden"
+                              onChange={(e) =>
+                                handleGroupFileUpload(selectedDateKey, e.target.files).finally(() => {
+                                  e.target.value = '';
+                                })
+                              }
+                            />
+                          </label>
+
+                          {currentGroupFiles.length > 0 && (
+                            <button
+                              type="button"
+                              disabled={isSubmitting}
+                              onClick={() => handleSubmitDateGroup(selectedDateKey, taskAssignments)}
+                              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-xs font-bold text-white hover:bg-navy-strong disabled:opacity-50 transition-colors shadow-xs">
+                              {isSubmitting ? (
+                                <Loader2 className="size-3.5 animate-spin" />
+                              ) : (
+                                <Send className="size-3.5" />
+                              )}
+                              <span>გაგზავნა ({currentGroupFiles.length})</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {currentGroupFiles.length > 0 && (
+                        <div className="mt-3 flex flex-wrap gap-2 pt-3 border-t border-slate-100">
+                          {currentGroupFiles.map((att) => (
+                            <div
+                              key={att.id}
+                              className="group/thumb relative rounded-xl border border-slate-200 bg-white p-0.5 shadow-xs">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={att.url} alt="file" className="h-12 w-12 rounded-lg object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => removeGroupAttachment(selectedDateKey, att.id)}
+                                className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-rose-500 text-white shadow-xs">
+                                <X className="size-2.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </div>
 
+      {/* ამოცანის მოდალი */}
       {activeProblemModal && (
         <ProblemDetailModal
           problem={activeProblemModal.problem}
           assignmentTitle={assignments.find((a) => a.id === activeProblemModal.assignmentId)?.title || 'დავალება'}
           onClose={() => setActiveProblemModal(null)}
-          onFile={async (file) => {
-            const base64 = await fileToBase64(file);
-            updateProblem(activeProblemModal.assignmentId, activeProblemModal.problem.id, (problem) => ({
-              ...problem,
-              status: 'uploaded',
-              fileName: file.name,
-              previewUrl: base64,
-            }));
-            setActiveProblemModal((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    problem: {
-                      ...prev.problem,
-                      status: 'uploaded',
-                      fileName: file.name,
-                      previewUrl: base64,
-                    },
-                  }
-                : null,
-            );
-          }}
-          onRemoveFile={() => {
-            handleRemoveFile(activeProblemModal.assignmentId, activeProblemModal.problem.id);
-            setActiveProblemModal((prev) =>
-              prev
-                ? {
-                    ...prev,
-                    problem: {
-                      ...prev.problem,
-                      status: 'notStarted',
-                      fileName: undefined,
-                      previewUrl: undefined,
-                    },
-                  }
-                : null,
-            );
-          }}
-          onMarkSubmitted={async () => {
-            await handleMarkSubmitted(activeProblemModal.assignmentId, activeProblemModal.problem.id);
-            setActiveProblemModal((prev) =>
-              prev ? { ...prev, problem: { ...prev.problem, status: 'submitted' } } : null,
-            );
-          }}
-          onWithdraw={async () => {
-            await handleWithdrawSingle(activeProblemModal.assignmentId, activeProblemModal.problem.id);
-            setActiveProblemModal(null);
-          }}
         />
+      )}
+
+      {/* სურათის სრულეკრანიანი ნახვის მოდალი */}
+      {previewModalImage && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md animate-in fade-in duration-150 cursor-zoom-out"
+          onClick={() => setPreviewModalImage(null)}>
+          <button
+            type="button"
+            onClick={() => setPreviewModalImage(null)}
+            className="absolute right-5 top-5 flex size-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition-colors hover:bg-white/25">
+            <X className="size-6" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewModalImage}
+            alt="გადიდებული სურათი"
+            className="max-h-[92vh] max-w-[94vw] rounded-2xl object-contain shadow-2xl animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
       )}
     </div>
   );

@@ -38,6 +38,7 @@ import {
   ZoomOut,
   Layers,
   Check,
+  BookOpen,
 } from "lucide-react";
 import type { CanvasElement, KonvaCanvasHandle } from "./KonvaCanvas";
 import { sendProblemToStudentAction } from "@/lib/actions/students";
@@ -622,6 +623,7 @@ export function ClassWhiteboard({
   const [students, setStudents] = useState<RemoteParticipant[]>([]);
   const [assignedStatus, setAssignedStatus] = useState<string | null>(null);
   const [assignPending, setAssignPending] = useState(false);
+  const [assignTargetType, setAssignTargetType] = useState<"task" | "material" | null>(null);
   const [assignError, setAssignError] = useState<string | null>(null);
 
   const [selectedPagesForAssign, setSelectedPagesForAssign] = useState<number[]>([0]);
@@ -642,7 +644,6 @@ export function ClassWhiteboard({
     }
   }, []);
 
-  // 🌟 Android Dynamic Viewport & Scroll Locking
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -998,7 +999,8 @@ export function ClassWhiteboard({
     updateUndoRedoState();
   };
 
-  const handleAssignSelectedBoards = async () => {
+  // 🌟 დაფის გაგზავნის ფუნქცია: დავალებებში ან მასალებში 🌟
+  const handleAssignSelectedBoards = async (mode: "task" | "material") => {
     if (selectedPagesForAssign.length === 0) {
       setAssignError("გთხოვთ მონიშნოთ მინიმუმ 1 დაფა");
       setTimeout(() => setAssignError(null), 2500);
@@ -1012,6 +1014,7 @@ export function ClassWhiteboard({
     }
 
     setAssignPending(true);
+    setAssignTargetType(mode);
     setAssignError(null);
 
     try {
@@ -1029,17 +1032,15 @@ export function ClassWhiteboard({
         boardImages.push({ pageIdx, url: renderedUrl });
       }
 
-      // Upload every board snapshot to Vercel Blob first, then persist only the URLs.
       const uploadedBoardUrls = await Promise.all(
         boardImages.map((board) =>
           uploadImageToStorageAction({
             dataUrl: board.url,
-            fileName: `board-page-${board.pageIdx + 1}.png`,
-          }),
-        ),
+            fileName: `${mode === "material" ? "material" : "board"}-page-${board.pageIdx + 1}.png`,
+          })
+        )
       );
-      // Never fall back to the raw canvas Data URL: the server action must only
-      // receive the resolved Vercel Blob URL.
+
       const resolvedBoardImages: { pageIdx: number; url: string }[] = [];
       for (let index = 0; index < boardImages.length; index++) {
         const uploaded = uploadedBoardUrls[index];
@@ -1055,16 +1056,20 @@ export function ClassWhiteboard({
       const sendPromises = [];
       for (const studentIdentity of selectedStudentIdentities) {
         for (const board of resolvedBoardImages) {
-          const title = `${courseTitle || "დაფის ამოცანა"} — გვერდი ${board.pageIdx + 1}`;
+          const isMat = mode === "material";
+          const title = isMat
+            ? `${courseTitle || "სასწავლო მასალა"} (დაფა ${board.pageIdx + 1})`
+            : `${courseTitle || "დაფის ამოცანა"} — გვერდი ${board.pageIdx + 1}`;
+
           sendPromises.push(
             sendProblemToStudentAction({
               studentId: studentIdentity,
-              instructions: undefined,
+              instructions: isMat ? "მასალა" : undefined,
               attachmentUrl: board.url,
               problem: {
-                id: `whiteboard-${Date.now()}-${board.pageIdx}`,
+                id: `${isMat ? "mat" : "whiteboard"}-${Date.now()}-${board.pageIdx}`,
                 topic: title,
-                difficulty: "medium",
+                difficulty: isMat ? "easy" : "medium",
                 promptTex: "",
                 solutionTex: "",
               },
@@ -1077,10 +1082,14 @@ export function ClassWhiteboard({
       const hasFailure = results.some((r) => !r.success);
 
       if (hasFailure) {
-        throw new Error("ზოგიერთი დავალების გაგზავნა ვერ მოხერხდა");
+        throw new Error("ზოგიერთი ჩანაწერის გაგზავნა ვერ მოხერხდა");
       }
 
-      setAssignedStatus(`წარმატებით გაეგზავნა ${selectedStudentIdentities.length} მოსწავლეს!`);
+      setAssignedStatus(
+        mode === "material"
+          ? `მასალები წარმატებით გაეგზავნა ${selectedStudentIdentities.length} მოსწავლეს!`
+          : `დავალებები წარმატებით გაეგზავნა ${selectedStudentIdentities.length} მოსწავლეს!`
+      );
       setTimeout(() => {
         setAssignedStatus(null);
         setIsAssignModalOpen(false);
@@ -1090,6 +1099,7 @@ export function ClassWhiteboard({
       setAssignError(err.message || "გაგზავნა ვერ მოხერხდა");
     } finally {
       setAssignPending(false);
+      setAssignTargetType(null);
     }
   };
 
@@ -1228,15 +1238,15 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* მასწავლებლის გაგზავნის მოდალი */}
+      {/* 🌟 მასწავლებლის გაგზავნის მოდალი (დავალებებში / მასალებში) 🌟 */}
       {isTeacher && isAssignModalOpen && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[110] w-[340px] sm:w-[400px] rounded-3xl bg-white dark:bg-slate-900 p-4 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[110] w-[340px] sm:w-[420px] rounded-3xl bg-white dark:bg-slate-900 p-4 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <div className="flex size-7 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
                 <Send className="size-3.5" />
               </div>
-              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">დაფის გაგზავნა დავალებად</span>
+              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">დაფის გაგზავნა</span>
             </div>
             <button
               type="button"
@@ -1343,30 +1353,50 @@ export function ClassWhiteboard({
             )}
           </div>
 
-          <button
-            type="button"
-            disabled={assignPending || selectedPagesForAssign.length === 0 || selectedStudentIdentities.length === 0}
-            onClick={handleAssignSelectedBoards}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
-          >
-            {assignPending ? (
-              <>
-                <Loader2 className="size-3.5 animate-spin" />
-                <span>იგზავნება...</span>
-              </>
-            ) : (
-              <>
-                <Send className="size-3.5" />
-                <span>
-                  გაგზავნა ({selectedPagesForAssign.length} დაფა ➔ {selectedStudentIdentities.length} მოსწავლე)
-                </span>
-              </>
-            )}
-          </button>
+          {/* 🌟 ორი ღილაკი: დავალებებში და მასალებში 🌟 */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              disabled={assignPending || selectedPagesForAssign.length === 0 || selectedStudentIdentities.length === 0}
+              onClick={() => handleAssignSelectedBoards("task")}
+              className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+            >
+              {assignPending && assignTargetType === "task" ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin" />
+                  <span>იგზავნება...</span>
+                </>
+              ) : (
+                <>
+                  <BookOpen className="size-3.5" />
+                  <span>დავალებებში</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              disabled={assignPending || selectedPagesForAssign.length === 0 || selectedStudentIdentities.length === 0}
+              onClick={() => handleAssignSelectedBoards("material")}
+              className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+            >
+              {assignPending && assignTargetType === "material" ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin" />
+                  <span>იგზავნება...</span>
+                </>
+              ) : (
+                <>
+                  <Layers className="size-3.5 text-indigo-400" />
+                  <span>მასალებში</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
 
-      {/* 🌟 1. ზედა პანელი 🌟 */}
+      {/* ზედა პანელი */}
       <div className="absolute top-3 inset-x-0 z-[100] flex justify-center px-2 pointer-events-none">
         <div className="pointer-events-auto max-w-full overflow-visible rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
           <div className="flex w-max items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5">
@@ -1743,7 +1773,7 @@ export function ClassWhiteboard({
         </div>
       </div>
 
-      {/* 🌟 2. ტილო (Canvas) — Flex-1 აკონტროლებს სიმაღლეს 🌟 */}
+      {/* ტილო */}
       <div className="relative flex-1 w-full min-h-0 overflow-hidden bg-transparent">
         <KonvaCanvas
           ref={canvasRef}
@@ -1759,7 +1789,7 @@ export function ClassWhiteboard({
         />
       </div>
 
-      {/* 🌟 3. ქვედა პანელი — ჩაშენებული ქვედა ზოლი (In-Flow Footer) 🌟 */}
+      {/* ქვედა პანელი */}
       <div className={`relative z-[100] flex flex-col items-center justify-center pt-1 px-2 pointer-events-auto shrink-0 select-none ${isFullscreen ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))]" : "pb-3"}`}>
         
         {/* დაფების მცურავი მინიატურების ზოლი */}

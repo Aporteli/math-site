@@ -13,17 +13,21 @@ import type { Dictionary } from "@/i18n/types";
 import { SIDEBAR_COOKIE } from "@/lib/dashboard";
 import { setCookie } from "@/lib/helpers/cookies";
 
-// Context კალენდრიდან პანელის სამართავად
+// Context კალენდრიდან და გვერდებიდან პანელის სამართავად
 interface DashboardContextType {
   sidebarDrawerOpen: boolean;
   toggleSidebarDrawer: () => void;
   isJournalPage: boolean;
+  sidebarActions: React.ReactNode | null;
+  setSidebarActions: (actions: React.ReactNode | null) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType>({
   sidebarDrawerOpen: false,
   toggleSidebarDrawer: () => {},
   isJournalPage: false,
+  sidebarActions: null,
+  setSidebarActions: () => {},
 });
 
 export const useDashboardFrame = () => useContext(DashboardContext);
@@ -53,6 +57,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [journalDrawerOpen, setJournalDrawerOpen] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
+  const [sidebarActions, setSidebarActions] = useState<React.ReactNode | null>(null);
   const lastScrollY = useRef(0);
 
   const isJournalPage =
@@ -62,6 +67,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
   useEffect(() => {
     setMobileOpen(false);
     setJournalDrawerOpen(false);
+    setSidebarActions(null);
   }, [pathname]);
 
   useEffect(() => {
@@ -166,10 +172,11 @@ export function DashboardFrame(props: DashboardFrameProps) {
         sidebarDrawerOpen: journalDrawerOpen,
         toggleSidebarDrawer,
         isJournalPage,
+        sidebarActions,
+        setSidebarActions,
       }}
     >
       <div className={`bg-paper ${isJournalPage ? "h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen"}`}>
-        {/* სტანდარტული გვერდითა პანელი (სხვა გვერდებზე ჩვეულებრივად ჩანს, ჟურნალის გვერდზე მთლიანად დამალულია) */}
         {!isJournalPage && (
           <aside
             className={[
@@ -185,11 +192,11 @@ export function DashboardFrame(props: DashboardFrameProps) {
               collapsed={collapsed}
               onToggle={toggleCollapsed}
               nav={nav}
+              sidebarActions={sidebarActions}
             />
           </aside>
         )}
 
-        {/* ჟურნალის გვერდის მოტივტივე (Slide-over) პანელი */}
         {isJournalPage && (
           <>
             {journalDrawerOpen && (
@@ -212,12 +219,12 @@ export function DashboardFrame(props: DashboardFrameProps) {
                 onToggle={() => setJournalDrawerOpen(false)}
                 closeLabel={dict.dashboard.closeNav}
                 nav={nav}
+                sidebarActions={sidebarActions}
               />
             </aside>
           </>
         )}
 
-        {/* მობილურის ნავიგაციის ფანჯარა */}
         {mobileOpen ? (
           <div className="lg:hidden">
             <button
@@ -236,6 +243,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
                 onToggle={() => setMobileOpen(false)}
                 closeLabel={dict.dashboard.closeNav}
                 nav={mobileNav}
+                sidebarActions={sidebarActions}
               />
             </aside>
           </div>
@@ -286,7 +294,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
           <main
             className={
               isJournalPage
-               ? "h-[100dvh] w-full p-2 sm:p-3 overflow-hidden flex flex-col box-border"
+                ? "h-[100dvh] w-full p-2 sm:p-3 overflow-hidden flex flex-col box-border"
                 : "px-4 py-8 sm:px-6 lg:px-8"
             }
           >
@@ -307,6 +315,7 @@ function SidebarChrome({
   onToggle,
   closeLabel,
   nav,
+  sidebarActions,
 }: {
   locale: Locale;
   dict: Dictionary;
@@ -316,6 +325,7 @@ function SidebarChrome({
   onToggle: () => void;
   closeLabel?: string;
   nav: React.ReactNode;
+  sidebarActions?: React.ReactNode;
 }) {
   const toggleLabel = closeLabel
     ? closeLabel
@@ -355,7 +365,20 @@ function SidebarChrome({
           )}
         </button>
       </div>
+
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-3">{nav}</div>
+
+      {sidebarActions && (
+        <div
+          className={[
+            "border-t border-hairline bg-paper/30 transition-all",
+            collapsed ? "p-2 flex flex-col items-center gap-2" : "p-3 space-y-2",
+          ].join(" ")}
+        >
+          {sidebarActions}
+        </div>
+      )}
+
       <div
         className={[
           "border-t border-hairline",

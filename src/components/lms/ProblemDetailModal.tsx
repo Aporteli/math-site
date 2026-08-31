@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { X, UploadCloud, CheckCircle2, RotateCcw, Send, Loader2, ImageIcon, ZoomIn } from 'lucide-react';
+import { useState } from 'react';
+import { X, ImageIcon, ZoomIn } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 
 type Difficulty = 'easy' | 'medium' | 'hard' | 'olympiad';
@@ -22,10 +22,10 @@ export interface ProblemDetailModalProps {
     feedback?: string;
   };
   onClose: () => void;
-  onFile: (file: File) => Promise<void>;
-  onRemoveFile: () => void;
-  onMarkSubmitted: () => Promise<void>;
-  onWithdraw: () => void;
+  onFile?: (file: File) => Promise<void>;
+  onRemoveFile?: () => void;
+  onMarkSubmitted?: () => Promise<void>;
+  onWithdraw?: () => void;
 }
 
 function parseImageUrls(raw?: string | null): string[] {
@@ -69,17 +69,9 @@ export function ProblemDetailModal({
   assignmentTitle,
   problem,
   onClose,
-  onFile,
-  onRemoveFile,
-  onMarkSubmitted,
-  onWithdraw,
 }: ProblemDetailModalProps) {
-  const [submitting, setSubmitting] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isSubmitted = problem.status === 'submitted' || problem.status === 'graded';
   const isGraded = problem.status === 'graded';
 
   const teacherImageRaw =
@@ -87,27 +79,6 @@ export function ProblemDetailModal({
     (isImageString(problem.promptTex) ? problem.promptTex : null);
 
   const teacherImages = parseImageUrls(teacherImageRaw);
-  const studentImages = parseImageUrls(problem.previewUrl);
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      await onFile(file);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSend = async () => {
-    setSubmitting(true);
-    try {
-      await onMarkSubmitted();
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   return (
     <>
@@ -118,7 +89,8 @@ export function ProblemDetailModal({
           className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-150"
           onClick={(e) => e.stopPropagation()}>
           {/* ჰედერი */}
-          <div className="flex items-center justify-end border-b border-hairline bg-paper/30 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-hairline bg-paper/30 px-6 py-4">
+            <h3 className="text-sm font-bold text-ink truncate">{assignmentTitle}</h3>
             <button
               type="button"
               onClick={onClose}
@@ -127,14 +99,12 @@ export function ProblemDetailModal({
             </button>
           </div>
 
-          {/* მოდალის შიგთავსი */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-            {/* 1. ამოცანის პირობა (სურათი + ფორმულა) */}
+          {/* მოდალის შიგთავსი - მხოლოდ ამოცანის პირობა */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-muted">ამოცანის პირობა</label>
 
-              <div className="rounded-2xl border  border-slate-200 bg-slate-50/70 p-4 flex flex-col gap-3">
-                {/* მასწავლებლის მიერ მიმაგრებული დაფა / სურათი (მუქი ფონით, რათა თეთრი ხაზები მკაფიოდ გამოჩნდეს) */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 flex flex-col gap-3">
                 {teacherImages.length > 0 && (
                   <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-950 p-3 shadow-inner">
                     <span className="text-[10px] font-bold text-slate-400 self-start flex items-center gap-1.5 px-1">
@@ -149,7 +119,7 @@ export function ProblemDetailModal({
                         <img
                           src={imgUrl}
                           alt="ამოცანის სურათი"
-                          className="max-h-72 w-auto max-w-full rounded-lg object-contain transition-transform group-hover:scale-[1.01]"
+                          className="max-h-80 w-auto max-w-full rounded-lg object-contain transition-transform group-hover:scale-[1.01]"
                         />
                         <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
                           <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900/90 px-3 py-1.5 text-xs font-semibold text-white shadow-md backdrop-blur-xs border border-slate-700">
@@ -161,9 +131,8 @@ export function ProblemDetailModal({
                   </div>
                 )}
 
-                {/* ტექსტური / KaTeX ამოცანა */}
                 {problem.promptTex && !isImageString(problem.promptTex) && (
-                  <div className="rounded-2xl  bg-paper-deep p-4 space-y-3">
+                  <div className="rounded-2xl bg-paper-deep p-4 space-y-3">
                     <div className="overflow-x-auto py-2">
                       <KatexPreview tex={problem.promptTex} className="text-sm text-ink leading-relaxed" />
                     </div>
@@ -172,54 +141,7 @@ export function ProblemDetailModal({
               </div>
             </div>
 
-            {/* 2. მოსწავლის პასუხი / ნამუშევარი */}
-            <div className="space-y-2">
-              {studentImages.length > 0 ? (
-                <div className="space-y-3">
-                  {studentImages.map((imgUrl, idx) => (
-                    <div
-                      key={idx}
-                      className="relative rounded-2xl border border-hairline bg-white p-3 flex items-center gap-4 shadow-2xs">
-                      <div
-                        onClick={() => setExpandedImage(imgUrl)}
-                        className="group relative size-20 shrink-0 cursor-zoom-in overflow-hidden rounded-xl border border-slate-200">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={imgUrl}
-                          alt="ნამუშევარი"
-                          className="size-full object-cover transition-transform group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ZoomIn className="size-4 text-white" />
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-ink truncate">
-                          {problem.fileName && !problem.fileName.startsWith('[')
-                            ? problem.fileName
-                            : `ატვირთული ფაილი ${studentImages.length > 1 ? `#${idx + 1}` : ''}`}
-                        </p>
-                        <p className="text-[11px] text-emerald-600 font-semibold mt-0.5 flex items-center gap-1">
-                          <CheckCircle2 className="size-3.5" /> ფაილი მიმაგრებულია
-                        </p>
-                      </div>
-
-                      {!isSubmitted && (
-                        <button
-                          type="button"
-                          onClick={onRemoveFile}
-                          className="flex size-8 items-center justify-center rounded-xl border border-hairline bg-white text-rose-600 hover:bg-rose-50 transition-colors">
-                          <X className="size-4" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-
-            {/* 3. მასწავლებლის შეფასება */}
+            {/* მასწავლებლის შეფასება (თუ შეფასებულია) */}
             {isGraded && (
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 space-y-1">
                 <p className="text-xs font-bold text-emerald-800">მასწავლებლის შეფასება</p>
