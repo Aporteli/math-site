@@ -1038,12 +1038,19 @@ export function ClassWhiteboard({
           }),
         ),
       );
-      const resolvedBoardImages = boardImages.map((board, index) => ({
-        pageIdx: board.pageIdx,
-        url: uploadedBoardUrls[index]?.success && uploadedBoardUrls[index]?.url
-          ? uploadedBoardUrls[index].url!
-          : board.url,
-      }));
+      // Never fall back to the raw canvas Data URL: the server action must only
+      // receive the resolved Vercel Blob URL.
+      const resolvedBoardImages: { pageIdx: number; url: string }[] = [];
+      for (let index = 0; index < boardImages.length; index++) {
+        const uploaded = uploadedBoardUrls[index];
+        if (!uploaded?.success || !uploaded.url) {
+          throw new Error("დაფის სურათის ატვირთვა ვერ მოხერხდა");
+        }
+        resolvedBoardImages.push({
+          pageIdx: boardImages[index].pageIdx,
+          url: uploaded.url,
+        });
+      }
 
       const sendPromises = [];
       for (const studentIdentity of selectedStudentIdentities) {

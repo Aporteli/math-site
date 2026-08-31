@@ -466,15 +466,19 @@ export function TeacherStudentsWorkspace({
     setAssigning(true);
 
     try {
-      let resolvedImage: string | null = assignImage;
+      // Only the resolved Vercel Blob URL may reach the server action — never
+      // the original canvas/data-URL state.
+      let resolvedImage: string | null = null;
       if (assignImage) {
         const uploaded = await uploadImageToStorageAction({
           dataUrl: assignImage,
           fileName: assignImageName || undefined,
         });
-        if (uploaded.success && uploaded.url) {
-          resolvedImage = uploaded.url;
+        if (!uploaded.success || !uploaded.url) {
+          alert('სურათის ატვირთვა ვერ მოხერხდა');
+          return;
         }
+        resolvedImage = uploaded.url;
       }
 
       const res = await sendProblemToStudentAction({

@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { AssignmentStatus, AssignmentType } from "@prisma/client";
-import { resolveImageUrlOrArray } from "@/lib/storage/blob";
+import { resolveAttachmentUrl } from "@/lib/storage/blob";
 
 export interface StudentData {
   id: string;
@@ -123,9 +123,10 @@ export async function sendProblemToStudentAction({
   try {
     await assertTeacherSession();
 
-    // Any Base64 attachment is uploaded to Vercel Blob before the record is
-    // written, so only the public URL ends up in the database.
-    const resolvedAttachmentUrl = await resolveImageUrlOrArray(attachmentUrl);
+    // Backend guard: a raw `data:image/...` canvas snapshot is uploaded to
+    // Vercel Blob before the record is written, so only the public URL is
+    // stored in `attachmentUrl`.
+    const resolvedAttachmentUrl = await resolveAttachmentUrl(attachmentUrl);
 
     const enrollment = await prisma.enrollment.findFirst({
       where: {
@@ -199,8 +200,10 @@ export async function sendProblemToClassAction({
   try {
     await assertTeacherSession();
 
-    // Upload any Base64 attachment to Vercel Blob before persisting the URL.
-    const resolvedAttachmentUrl = await resolveImageUrlOrArray(attachmentUrl);
+    // Backend guard: a raw `data:image/...` canvas snapshot is uploaded to
+    // Vercel Blob before the record is written, so only the public URL is
+    // stored in `attachmentUrl`.
+    const resolvedAttachmentUrl = await resolveAttachmentUrl(attachmentUrl);
 
     const assignment = await prisma.assignment.create({
       data: {

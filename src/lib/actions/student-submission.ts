@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth/session";
 import { SubmissionStatus } from "@prisma/client";
-import { resolveImageUrlOrArray } from "@/lib/storage/blob";
+import { resolveAttachmentUrl } from "@/lib/storage/blob";
 
 /**
  * 1. მოსწავლის დავალების/პასუხის გაგზავნა
@@ -29,8 +29,10 @@ export async function submitStudentHomeworkAction({
       return { success: false, error: "დავალება ვერ მოიძებნა" };
     }
 
-    // Upload any Base64 attachment to Vercel Blob before persisting the URL.
-    const resolvedAttachmentUrl = await resolveImageUrlOrArray(attachmentUrl);
+    // Backend guard: a raw `data:image/...` canvas snapshot is uploaded to
+    // Vercel Blob before the record is written, so only the public URL is
+    // stored in `attachmentUrl`.
+    const resolvedAttachmentUrl = await resolveAttachmentUrl(attachmentUrl);
     if (!resolvedAttachmentUrl) {
       return { success: false, error: "მიმაგრებული ფაილი ცარიელია" };
     }

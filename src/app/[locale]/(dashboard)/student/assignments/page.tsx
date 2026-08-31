@@ -389,15 +389,27 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
     setSubmittingDateKey(dateKey);
 
     // Upload every attachment to Vercel Blob first, then persist only the URLs.
-    const resolvedUrls = await Promise.all(
-      files.map(async (a) => {
-        const uploaded = await uploadImageToStorageAction({
-          dataUrl: a.url,
-          fileName: a.fileName,
-        });
-        return uploaded.success && uploaded.url ? uploaded.url : a.url;
-      }),
-    );
+    // Never fall back to the raw Base64 value.
+    let resolvedUrls: string[] = [];
+    try {
+      resolvedUrls = await Promise.all(
+        files.map(async (a) => {
+          const uploaded = await uploadImageToStorageAction({
+            dataUrl: a.url,
+            fileName: a.fileName,
+          });
+          if (!uploaded.success || !uploaded.url) {
+            throw new Error('UPLOAD_FAILED');
+          }
+          return uploaded.url;
+        }),
+      );
+    } catch (error) {
+      console.error('Failed to upload attachment:', error);
+      alert('სურათის ატვირთვა ვერ მოხერხდა');
+      setSubmittingDateKey(null);
+      return;
+    }
     const combinedUrls = JSON.stringify(resolvedUrls);
     const itemIds = new Set(items.map((i) => i.id));
 
@@ -510,18 +522,18 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
     const problem = assignment?.problems.find((p) => p.id === problemId);
     if (!assignment || !problem?.previewUrl) return;
 
-    let url: string = problem.previewUrl;
     const uploaded = await uploadImageToStorageAction({
       dataUrl: problem.previewUrl,
       fileName: problem.fileName,
     });
-    if (uploaded.success && uploaded.url) {
-      url = uploaded.url;
+    if (!uploaded.success || !uploaded.url) {
+      alert('სურათის ატვირთვა ვერ მოხერხდა');
+      return;
     }
 
     const res = await submitStudentHomeworkAction({
       assignmentId: assignment.id,
-      attachmentUrl: url,
+      attachmentUrl: uploaded.url,
     });
 
     if (res.success) {

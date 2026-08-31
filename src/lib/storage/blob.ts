@@ -10,7 +10,7 @@ const MIME_EXTENSIONS: Record<string, string> = {
   "image/svg+xml": "svg",
 };
 
-const DATA_URL_RE = /^data:([a-zA-Z0-9.+-]+);base64,([\s\S]*)$/;
+const DATA_URL_RE = /^data:([^;,]+);base64,([\s\S]*)$/;
 
 export function isDataUrl(value: string): boolean {
   return DATA_URL_RE.test(value.trim());
@@ -126,6 +126,32 @@ export async function resolveImageUrlOrArray(
     } catch {
       // Not valid JSON — treat it as a single value below.
     }
+  }
+
+  return resolveImageValue(trimmed, options);
+}
+
+/**
+ * Backend guard for assignment/problem attachments.
+ *
+ * Raw canvas snapshots (`data:image/...`) must never be persisted to the
+ * database. This uploads them to Vercel Blob first and returns only the public
+ * URL, while leaving already-hosted URLs and legacy JSON arrays intact.
+ */
+export async function resolveAttachmentUrl(
+  value: string | null | undefined,
+  options: UploadImageOptions = {},
+): Promise<string | null> {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+    return resolveImageUrlOrArray(trimmed, options);
+  }
+
+  if (trimmed.startsWith("data:image/")) {
+    return uploadImageDataUrl(trimmed, options);
   }
 
   return resolveImageValue(trimmed, options);
