@@ -62,7 +62,8 @@ export function DashboardFrame(props: DashboardFrameProps) {
 
   const isJournalPage =
     pathname.endsWith("/teacher/journal") ||
-    pathname.endsWith("/teacher/calendar");
+    pathname.endsWith("/teacher/calendar") ||
+    pathname.endsWith("/teacher/whiteboard");
 
   useEffect(() => {
     setMobileOpen(false);

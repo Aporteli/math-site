@@ -207,16 +207,21 @@ function parseAndFormatDate(assignment: Assignment): { key: string; label: strin
 
 function isImageString(str?: string | null): boolean {
   if (!str || typeof str !== 'string') return false;
-  const trimmed = str.trim();
+  const trimmed = str.toLowerCase().trim();
+
+  // თუ ფაილი PDF ან სხვა დოკუმენტია, სურათად არ ჩაითვალოს
+  if (trimmed.endsWith('.pdf') || trimmed.endsWith('.txt') || trimmed.endsWith('.docx') || trimmed.endsWith('.doc')) {
+    return false;
+  }
+
   return (
     trimmed.startsWith('data:image/') ||
-    trimmed.startsWith('http://') ||
-    trimmed.startsWith('https://') ||
-    trimmed.startsWith('/') ||
-    trimmed.endsWith('.png') ||
-    trimmed.endsWith('.jpg') ||
-    trimmed.endsWith('.jpeg') ||
-    trimmed.endsWith('.webp')
+    trimmed.includes('.png') ||
+    trimmed.includes('.jpg') ||
+    trimmed.includes('.jpeg') ||
+    trimmed.includes('.webp') ||
+    trimmed.includes('.gif') ||
+    trimmed.includes('.svg')
   );
 }
 
@@ -250,7 +255,12 @@ function extractFirstImageUrl(raw?: string | null): string | null {
 function isAssignmentMaterial(a: Assignment): boolean {
   return (
     a.type === 'MATERIAL' ||
-    (typeof a.id === 'string' && a.id.startsWith('mat-')) ||
+    (a.problems && a.problems.length > 0 && a.problems.some((p) => p.promptTex)) ||
+    (typeof a.id === 'string' &&
+      (a.id.startsWith('mat-') ||
+        a.id.startsWith('ai-prob-') ||
+        a.id.startsWith('whiteboard-') ||
+        a.id.startsWith('mat-'))) ||
     (typeof a.instructions === 'string' &&
       (a.instructions.trim().toLowerCase() === 'მასალა' ||
         a.instructions.trim().toLowerCase().startsWith('მასალა:'))) ||
@@ -632,7 +642,6 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
 
         {/* სვეტი 2: მოსწავლის სამუშაო სივრცე */}
         <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white shadow-sm overflow-hidden">
-          
           {/* ზედა ზოლი 1: სათაური და კალენდარი */}
           <div className="bg-paper/30 border-b border-hairline px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div className="flex items-center gap-2">
@@ -901,13 +910,21 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
                     {materialsForDate.map((mat) => {
-                      const fileUrl =
+                      const firstProb = mat.problems?.[0];
+                      const promptText = firstProb?.promptTex || mat.instructions;
+
+                      // 🌟 სწორი ლინკის ამოღება (სტრიქონია თუ JSON მასივი)
+                      const rawFileUrl =
                         mat.attachmentUrl ||
                         mat.problemImageUrl ||
+                        firstProb?.teacherAttachmentUrl ||
                         (typeof mat.customPayload?.imageUrl === 'string' ? mat.customPayload.imageUrl : null) ||
                         (typeof mat.customPayload?.attachmentUrl === 'string' ? mat.customPayload.attachmentUrl : null);
 
+                      const fileUrl =
+                        extractFirstImageUrl(rawFileUrl) || (typeof rawFileUrl === 'string' ? rawFileUrl.trim() : null);
                       const isImg = isImageString(fileUrl);
+                      const isFile = Boolean(fileUrl) && !isImg;
 
                       return (
                         <div
@@ -920,6 +937,11 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
                                 isAnswer: false,
                                 instructions: mat.instructions,
                               });
+                            } else if (firstProb && firstProb.promptTex) {
+                              setActiveProblemModal({
+                                assignmentId: mat.id,
+                                problem: firstProb,
+                              });
                             }
                           }}
                           className="flex flex-col justify-between rounded-2xl border border-indigo-200 bg-indigo-50/20 p-3.5 transition-all cursor-pointer group hover:border-indigo-400 hover:shadow-md min-h-[210px]">
@@ -929,20 +951,41 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
                             </span>
 
                             {isImg && fileUrl ? (
-                              <div className="w-full h-32 rounded-xl border border-slate-800 bg-slate-950 p-1 flex items-center justify-center overflow-hidden shadow-inner">
-                                <img src={fileUrl} alt={mat.title} className="w-full h-full object-contain rounded" />
+                              <div className="w-full h-32 rounded-xl border border-slate-200 bg-slate-50 p-1 flex items-center justify-center overflow-hidden shadow-inner">
+                                <img
+                                  src={fileUrl}
+                                  alt={mat.title}
+                                  className="w-full h-full object-contain rounded"
+                                  onError={(e) => {
+                                    // თუ სურათი ფიზიკურად არ იტვირთება, ავტომატურად დაიმალოს გატეხილი აიქონი
+                                    const target = e.target as HTMLElement;
+                                    target.style.display = 'none';
+                                    if (target.parentElement) {
+                                      target.parentElement.innerHTML =
+                                        '<div class="flex flex-col items-center justify-center text-indigo-600"><svg class="size-8 mb-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="text-[10px] font-bold">ფაილის ნახვა</span></div>';
+                                    }
+                                  }}
+                                />
+                              </div>
+                            ) : isFile ? (
+                              <div className="w-full h-32 rounded-xl bg-white border border-indigo-100 p-3 flex flex-col items-center justify-center text-center shadow-2xs">
+                                <FileText className="size-10 text-indigo-600 mb-1.5" />
+                                <p className="text-xs font-bold text-slate-800 line-clamp-1">{mat.title}</p>
+                                <span className="text-[10px] font-semibold text-indigo-600 mt-1">ფაილის გახსნა ↗</span>
+                              </div>
+                            ) : promptText ? (
+                              <div className="w-full h-32 rounded-xl bg-paper-deep p-3 flex items-center justify-center overflow-hidden">
+                                <KatexPreview
+                                  tex={promptText}
+                                  className="text-xs text-ink line-clamp-3 pointer-events-none leading-relaxed"
+                                />
                               </div>
                             ) : (
                               <div className="w-full h-32 rounded-xl bg-white border border-indigo-100 p-3 flex flex-col items-center justify-center text-center shadow-2xs">
                                 <FileText className="size-10 text-indigo-600 mb-1.5" />
                                 <p className="text-xs font-bold text-slate-800 line-clamp-1">{mat.title}</p>
-                                <span className="text-[10px] font-semibold text-indigo-600 mt-1">ფაილის ნახვა ↗</span>
+                                <span className="text-[10px] font-semibold text-indigo-600 mt-1">ფაილის გახსნა ↗</span>
                               </div>
-                            )}
-
-                            <p className="text-xs font-bold text-slate-900 truncate mt-1">{mat.title}</p>
-                            {mat.instructions && mat.instructions !== 'მასალა' && (
-                              <p className="text-[11px] text-muted line-clamp-1">{mat.instructions}</p>
                             )}
                           </div>
 
@@ -1085,18 +1128,11 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
               <div className="flex items-center gap-3 min-w-0 pr-2">
                 <div
                   className={`flex size-10 items-center justify-center rounded-xl shrink-0 ${
-                    previewMaterialModal.isAnswer
-                      ? 'bg-emerald-50 text-emerald-600'
-                      : 'bg-indigo-50 text-indigo-600'
+                    previewMaterialModal.isAnswer ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'
                   }`}>
-                  {previewMaterialModal.isAnswer ? (
-                    <CheckCircle2 className="size-5" />
-                  ) : (
-                    <Layers className="size-5" />
-                  )}
+                  {previewMaterialModal.isAnswer ? <CheckCircle2 className="size-5" /> : <Layers className="size-5" />}
                 </div>
                 <div className="min-w-0">
-                 
                   {previewMaterialModal.instructions && previewMaterialModal.instructions !== 'მასალა' && (
                     <p className="text-xs text-slate-500 mt-0.5 truncate">{previewMaterialModal.instructions}</p>
                   )}

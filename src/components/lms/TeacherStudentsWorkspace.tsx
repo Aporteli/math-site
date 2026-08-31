@@ -104,18 +104,37 @@ function formatDateToKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+function isDocumentString(str?: string | null): boolean {
+  if (!str || typeof str !== 'string') return false;
+  const trimmed = str.toLowerCase().trim();
+  return (
+    trimmed.endsWith('.pdf') ||
+    trimmed.endsWith('.txt') ||
+    trimmed.endsWith('.doc') ||
+    trimmed.endsWith('.docx') ||
+    trimmed.endsWith('.rtf') ||
+    trimmed.endsWith('.csv') ||
+    trimmed.endsWith('.bin') ||
+    (trimmed.startsWith('data:') && !trimmed.startsWith('data:image/'))
+  );
+}
+
 function isImageString(str?: string | null): boolean {
   if (!str || typeof str !== 'string') return false;
-  const trimmed = str.trim();
+  const trimmed = str.toLowerCase().trim();
+
+  // PDF / Word / text files are stored as .bin blob URLs here and must never
+  // be rendered through <img>.
+  if (isDocumentString(trimmed)) return false;
+
   return (
     trimmed.startsWith('data:image/') ||
-    trimmed.startsWith('http://') ||
-    trimmed.startsWith('https://') ||
-    trimmed.startsWith('/') ||
-    trimmed.endsWith('.png') ||
-    trimmed.endsWith('.jpg') ||
-    trimmed.endsWith('.jpeg') ||
-    trimmed.endsWith('.webp')
+    trimmed.includes('.png') ||
+    trimmed.includes('.jpg') ||
+    trimmed.includes('.jpeg') ||
+    trimmed.includes('.webp') ||
+    trimmed.includes('.gif') ||
+    trimmed.includes('.svg')
   );
 }
 
@@ -126,8 +145,9 @@ function extractFirstImageUrl(raw?: string | null): string | null {
   if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
     try {
       const parsed = JSON.parse(trimmed);
-      if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
-        return parsed[0];
+      if (Array.isArray(parsed)) {
+        const firstImage = parsed.find((item): item is string => typeof item === 'string' && isImageString(item));
+        if (firstImage) return firstImage;
       }
     } catch {
       // ignore
@@ -153,11 +173,7 @@ function isMaterialItem(a: StudentAssignment): boolean {
       (a.instructions.trim().toLowerCase() === 'მასალა' ||
         a.instructions.trim().toLowerCase().startsWith('მასალა:'))) ||
     (typeof a.promptTex === 'string' && a.promptTex.startsWith('ფაილი:')) ||
-    (typeof a.problemImageUrl === 'string' &&
-      (a.problemImageUrl.endsWith('.pdf') ||
-        a.problemImageUrl.endsWith('.doc') ||
-        a.problemImageUrl.endsWith('.docx') ||
-        a.problemImageUrl.endsWith('.txt')))
+    (typeof a.problemImageUrl === 'string' && isDocumentString(a.problemImageUrl))
   );
 }
 
@@ -977,12 +993,8 @@ export function TeacherStudentsWorkspace({
                           extractFirstImageUrl(assignment.promptTex);
 
                     const isPdfOrDoc =
-                      assignment.problemImageUrl &&
-                      !isImageString(assignment.problemImageUrl) &&
-                      (assignment.problemImageUrl.endsWith('.pdf') ||
-                        assignment.problemImageUrl.endsWith('.doc') ||
-                        assignment.problemImageUrl.endsWith('.docx') ||
-                        assignment.problemImageUrl.endsWith('.txt'));
+                      Boolean(assignment.problemImageUrl) &&
+                      isDocumentString(assignment.problemImageUrl);
 
                     return (
                       <div
@@ -1041,7 +1053,7 @@ export function TeacherStudentsWorkspace({
                                 className="w-full h-full object-contain rounded bg-slate-900/60"
                               />
                             </div>
-                          ) : isPdfOrDoc || isMaterial ? (
+                          ) : isPdfOrDoc ? (
                             <div className="w-full h-32 rounded-xl bg-indigo-50/70 border border-indigo-100 p-3 flex flex-col items-center justify-center text-center">
                               <FileText className="size-9 text-indigo-600 mb-1.5" />
                               <p className="text-xs font-bold text-slate-800 line-clamp-1">{assignment.title}</p>
@@ -1053,6 +1065,12 @@ export function TeacherStudentsWorkspace({
                                 tex={assignment.promptTex}
                                 className="text-xs text-ink line-clamp-3 pointer-events-none leading-relaxed"
                               />
+                            </div>
+                          ) : isMaterial ? (
+                            <div className="w-full h-32 rounded-xl bg-indigo-50/70 border border-indigo-100 p-3 flex flex-col items-center justify-center text-center">
+                              <FileText className="size-9 text-indigo-600 mb-1.5" />
+                              <p className="text-xs font-bold text-slate-800 line-clamp-1">{assignment.title}</p>
+                              <span className="text-[10px] font-semibold text-indigo-600 mt-1">მასალის გახსნა ↗</span>
                             </div>
                           ) : null}
                         </div>

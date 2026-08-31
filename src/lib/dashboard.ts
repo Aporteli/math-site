@@ -33,6 +33,7 @@ export interface DashboardLink<Id extends string> {
 
 export const TEACHER_NAV: DashboardLink<TeacherNavId>[] = [
   { id: "journal", href: "/teacher/journal", icon: BookOpen },
+  { id: "whiteboard", href: "/teacher/whiteboard", icon: PenTool },
   { id: "admin", href: "/teacher/admin", icon: Shield },
   { id: "problems", href: "/teacher/problems", icon: Library },
   { id: "tools", href: "/teacher/tools", icon: Wrench },

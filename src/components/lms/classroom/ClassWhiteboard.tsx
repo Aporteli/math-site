@@ -39,10 +39,19 @@ import {
   Layers,
   Check,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 import type { CanvasElement, KonvaCanvasHandle } from "./KonvaCanvas";
 import { sendProblemToStudentAction } from "@/lib/actions/students";
 import { uploadImageToStorageAction } from "@/lib/actions/upload";
+import { TeacherAiChatPanel } from "@/components/lms/problem-bank/teacher-ai-chat-panel";
+import { loadAiModelStatusAction } from "@/lib/math/problems/actions";
+import {
+  DEFAULT_AI_MODEL,
+  type AiModelId,
+  type AiModelStatus,
+  type ProblemBankCopy,
+} from "@/lib/math/problems";
 
 const KonvaCanvas = dynamic(() => import("./KonvaCanvas"), {
   ssr: false,
@@ -52,6 +61,108 @@ const KonvaCanvas = dynamic(() => import("./KonvaCanvas"), {
     </div>
   ),
 });
+
+const DEFAULT_AI_COPY = {
+  title: "ამოცანების ბანკი",
+  prompt: "პირობა",
+  solution: "ამოხსნა",
+  difficulties: { easy: "მარტივი", medium: "საშუალო", hard: "რთული" },
+  topics: {
+    algebra: "ალგებრა",
+    geometry: "გეომეტრია",
+    trigonometry: "ტრიგონომეტრია",
+    calculus: "მათემატიკური ანალიზი",
+    combinatorics: "კომბინატორიკა",
+    probability: "ალბათობა",
+    number_theory: "რიცხვთა თეორია",
+    logic: "ლოგიკა",
+    other: "სხვა",
+  },
+  years: {
+    grade7: "VII კლასი",
+    grade8: "VIII კლასი",
+    grade9: "IX კლასი",
+    grade10: "X კლასი",
+    grade11: "XI კლასი",
+    grade12: "XII კლასი",
+    ent: "ეროვნული გამოცდები",
+    other: "სხვა",
+  },
+  chat: {
+    title: "AI ასისტენტი",
+    open: "AI ასისტენტის გახსნა",
+    close: "დახურვა",
+    launcher: "AI",
+    model: "მოდელი",
+    models: {
+      "gemini-flash-lite": "Gemini 2.5 Flash Lite",
+      "gemini-flash": "Gemini 2.5 Flash",
+      "gemini-pro": "Gemini 2.5 Pro",
+      "deepseek-chat": "DeepSeek V3",
+      "deepseek-reasoner": "DeepSeek R1",
+      "gpt-4o-mini": "GPT-4o mini",
+      "gpt-4o": "GPT-4o",
+      "claude-haiku": "Claude 3.5 Haiku",
+      "claude-sonnet": "Claude 3.7 Sonnet",
+    },
+    limitLabel: "ლიმიტი",
+    limitNoKey: "გასაღები არაა მითითებული",
+    limitExhausted: "ლიმიტი ამოიწურა",
+    limitReady: "მზადაა",
+    limitUsed: "გამოყენებულია: {used}/{limit}",
+    replyLanguage: "პასუხის ენა",
+    languages: {
+      ka: "ქართული",
+      en: "English",
+    },
+    clear: "გასუფთავება",
+    emptyTitle: "დასვით კითხვა, ჩასვით (Ctrl+V) სურათი ან მოითხოვეთ ამოცანა",
+    you: "თქვენ",
+    assistant: "ასისტენტი",
+    cardsTitle: "ამოცანის ბარათები",
+    savingCard: "ინახება...",
+    saveToBank: "ბანკში შენახვა",
+    saveAllToBank: "ყველას ბანკში შენახვა",
+    saveToLab: "ლაბორატორიაში შენახვა",
+    saveAllToLab: "ყველას ლაბორატორიაში შენახვა",
+    savedToBank: "შენახულია ბანკში",
+    savedToLab: "შენახულია ლაბორატორიაში",
+    saveFailed: "შენახვა ვერ მოხერხდა",
+    addImage: "სურათის დამატება",
+    imageHint: "შეგიძლიათ ატვირთოთ ან ჩასვათ (Ctrl+V) ამოცანის სურათი",
+    removeImage: "სურათის წაშლა",
+    inputLabel: "ტექსტი",
+    inputPlaceholder: "ჩაწერეთ შეკითხვა, მათემატიკური ამოცანა ან ჩასვით სურათი...",
+    previewLabel: "KaTeX წინასწარი ნახვა",
+    sending: "იგზავნება...",
+    send: "გაგზავნა",
+    thinking: "AI ფიქრობს...",
+    emptyReply: "პასუხი ცარიელია",
+    errorMissingKey: "API გასაღები არ არის მითითებული",
+    errorInvalidKey: "API გასაღები არასწორია",
+    errorLimit: "მოთხოვნების ლიმიტი ამოიწურა",
+    errorBilling: "ბილინგის შეცდომა",
+    errorTimeout: "მოთხოვნის დრო ამოიწურა",
+    errorUnauthorized: "ავტორიზაციის შეცდომა",
+    errorBadOutput: "არასწორი პასუხი",
+    errorImageUnsupported: "ეს მოდელი არ უჭერს მხარს სურათებს",
+    errorFailed: "მოთხოვნა ვერ შესრულდა",
+    slashPrompts: {
+      title: "სწრაფი პრომპტები",
+      manage: "პრომპტების მართვა",
+      add: "დამატება",
+      edit: "რედაქტირება",
+      delete: "წაშლა",
+      name: "სახელი",
+      prompt: "პრომპტი",
+      save: "შენახვა",
+      cancel: "გაუქმება",
+      fillTitle: "პარამეტრების შევსება",
+      fillConfirm: "ჩასმა",
+      noPrompts: "პრომპტები არ არის",
+    },
+  },
+} as unknown as ProblemBankCopy;
 
 interface ClassWhiteboardProps {
   room: Room | null;
@@ -557,6 +668,22 @@ export function ClassWhiteboard({
   const [zoomScale, setZoomScale] = useState<number>(1);
   const [isPagesTrayOpen, setIsPagesTrayOpen] = useState<boolean>(false);
 
+  // 🌟 AI Chat states (მხოლოდ მასწავლებლისთვის)
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [aiModel, setAiModel] = useState<AiModelId>(DEFAULT_AI_MODEL);
+  const [aiModelStatus, setAiModelStatus] = useState<AiModelStatus[] | null>(null);
+
+  useEffect(() => {
+    if (!isTeacher) return;
+    let cancelled = false;
+    void loadAiModelStatusAction().then((status) => {
+      if (!cancelled) setAiModelStatus(status);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isTeacher]);
+
   const handleZoomIn = () => {
     setZoomScale((prev) => Math.min(4, Math.round((prev + 0.15) * 100) / 100));
   };
@@ -999,7 +1126,6 @@ export function ClassWhiteboard({
     updateUndoRedoState();
   };
 
-  // 🌟 დაფის გაგზავნის ფუნქცია: დავალებებში ან მასალებში 🌟
   const handleAssignSelectedBoards = async (mode: "task" | "material") => {
     if (selectedPagesForAssign.length === 0) {
       setAssignError("გთხოვთ მონიშნოთ მინიმუმ 1 დაფა");
@@ -1238,7 +1364,7 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* 🌟 მასწავლებლის გაგზავნის მოდალი (დავალებებში / მასალებში) 🌟 */}
+      {/* 🌟 მასწავლებლის გაგზავნის მოდალი (მხოლოდ მასწავლებლისთვის) 🌟 */}
       {isTeacher && isAssignModalOpen && (
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[110] w-[340px] sm:w-[420px] rounded-3xl bg-white dark:bg-slate-900 p-4 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
@@ -1353,7 +1479,6 @@ export function ClassWhiteboard({
             )}
           </div>
 
-          {/* 🌟 ორი ღილაკი: დავალებებში და მასალებში 🌟 */}
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -1705,6 +1830,7 @@ export function ClassWhiteboard({
               <Maximize2 className="size-3.5 sm:size-4" />
             </button>
 
+      
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
             {/* Color Dropdown */}
@@ -1788,6 +1914,43 @@ export function ClassWhiteboard({
           onLaserMove={handleLaserMove}
         />
       </div>
+
+      {/* 🌟 ქვედა მარჯვენა მცურავი AI ასისტენტის ღილაკი (მხოლოდ მასწავლებლისთვის) 🌟 */}
+      {isTeacher && (
+        <button
+          type="button"
+          aria-label="AI ასისტენტი"
+          title="AI ასისტენტი"
+          onClick={() => setIsAiModalOpen(true)}
+          className="absolute right-4 bottom-16 sm:bottom-20 z-[1000] flex h-11 w-11 items-center justify-center rounded-full bg-navy text-sm font-bold text-white shadow-xl hover:bg-navy-strong hover:scale-105 active:scale-95 transition-all focus:outline-none border-2 border-white/20"
+        >
+          <Sparkles className="size-5 text-amber-300" />
+        </button>
+      )}
+
+      {/* 🌟 სრული AI ასისტენტის მოდალი (TeacherAiChatPanel) 🌟 */}
+      {isTeacher && isAiModalOpen && (
+        <div className="fixed inset-0 z-[1000001] flex items-end justify-end bg-slate-950/50 p-3 sm:items-center sm:justify-center sm:p-6 backdrop-blur-xs animate-in fade-in duration-150">
+          <button
+            type="button"
+            aria-label="დახურვა"
+            className="absolute inset-0 cursor-default bg-transparent"
+            onClick={() => setIsAiModalOpen(false)}
+          />
+          <div className="relative z-10 w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-150">
+            <TeacherAiChatPanel
+              copy={DEFAULT_AI_COPY.chat}
+              fullCopy={DEFAULT_AI_COPY}
+              model={aiModel}
+              onModelChange={setAiModel}
+              modelStatus={aiModelStatus || []}
+              onClose={() => setIsAiModalOpen(false)}
+              showSaveToLab={true}
+              className="max-h-[min(85vh,56rem)] overflow-y-auto"
+            />
+          </div>
+        </div>
+      )}
 
       {/* ქვედა პანელი */}
       <div className={`relative z-[100] flex flex-col items-center justify-center pt-1 px-2 pointer-events-auto shrink-0 select-none ${isFullscreen ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))]" : "pb-3"}`}>

@@ -145,9 +145,7 @@ export async function markAssignmentGradedAction(submissionIdOrAssignmentId: str
 }
 
 /**
- * ბარათის (ამოცანის) პირობისა და ამოხსნის ლაზური ჩატვირთვა.
- * მხოლოდ მასწავლებლის მიერ კონკრეტული ბარათის არჩევისას იძახება,
- * რათა საწყისი გვერდი არ დაიტვირთოს ყველა ამოცანის სრული LaTeX-ით.
+ * ბარათის (ამოცანის) პირობისა და ამოხსნის ლაზური ჩატვირთვა
  */
 export async function getProblemDetailsAction(
   problemId: string,
@@ -178,5 +176,70 @@ export async function getProblemDetailsAction(
   } catch (error) {
     console.error("Failed to fetch problem details:", error);
     return { success: false, error: "ბარათის ჩატვირთვა ვერ მოხერხდა" };
+  }
+}
+
+
+/**
+ * მასწავლებლის კურსებისა და მოსწავლეების სიის წამოღება დაფის მოდალისთვის
+ */
+export async function getTeacherStudentsAction() {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      return { success: false, error: "ავტორიზაცია ვერ მოხერხდა" };
+    }
+
+    const teacherCourses = await prisma.course.findMany({
+      where: session.user.role === "ADMIN" ? {} : { teacherId: session.user.id },
+      include: {
+        enrollments: {
+          where: {
+            user: {
+              role: "STUDENT",
+            },
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const courseGroups = teacherCourses.map((course) => {
+      const studentsMap = new Map<string, { id: string; name: string; email?: string }>();
+
+      course.enrollments.forEach((enrollment) => {
+        const student = enrollment.user;
+        if (student && !studentsMap.has(student.id)) {
+          studentsMap.set(student.id, {
+            id: student.id,
+            name: student.name || "მოსწავლე",
+            email: student.email || undefined,
+          });
+        }
+      });
+
+      return {
+        id: course.id,
+        title: course.title,
+        students: Array.from(studentsMap.values()),
+      };
+    });
+
+    return {
+      success: true,
+      courseGroups,
+    };
+  } catch (error) {
+    console.error("Failed to fetch teacher courses and students:", error);
+    return { success: false, error: "მონაცემების წამოღება ვერ მოხერხდა" };
   }
 }

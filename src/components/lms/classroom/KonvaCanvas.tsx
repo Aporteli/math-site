@@ -28,6 +28,7 @@ export interface KonvaCanvasHandle {
   toDataURL: () => string | null;
   fitToContent: () => void;
   renderRemoteLaser: (point: { x: number; y: number } | null) => void;
+  deleteSelected: () => void;
 }
 
 interface KonvaCanvasProps {
@@ -40,6 +41,7 @@ interface KonvaCanvasProps {
   scale?: number;
   onScaleChange?: (newScale: number) => void;
   onLaserMove?: (pos: { x: number; y: number } | null) => void;
+  textPlaceholder?: string;
 }
 
 interface LaserPoint {
@@ -73,6 +75,114 @@ function getCenter(p1: { x: number; y: number }, p2: { x: number; y: number }) {
     x: (p1.x + p2.x) / 2,
     y: (p1.y + p2.y) / 2,
   };
+}
+
+// 🌟 ხაზების ჯაჭვისგან შეკრული მრავალკუთხედის ამოცნობა და გაერთიანება
+function tryMergeClosedPolygon(allElements: CanvasElement[], newLine: CanvasElement): CanvasElement[] | null {
+  if (newLine.type !== "line" || !newLine.points || newLine.points.length !== 4) return null;
+
+  interface Segment {
+    el: CanvasElement;
+    p1: { x: number; y: number };
+    p2: { x: number; y: number };
+  }
+
+  const getAbsEnds = (el: CanvasElement): { p1: { x: number; y: number }; p2: { x: number; y: number } } => {
+    const pts = el.points || [0, 0, 0, 0];
+    const cos = Math.cos(((el.rotation || 0) * Math.PI) / 180);
+    const sin = Math.sin(((el.rotation || 0) * Math.PI) / 180);
+    const ex = el.x || 0;
+    const ey = el.y || 0;
+    const sx = el.scaleX || 1;
+    const sy = el.scaleY || 1;
+
+    const x1 = pts[0] * sx;
+    const y1 = pts[1] * sy;
+    const x2 = pts[2] * sx;
+    const y2 = pts[3] * sy;
+
+    return {
+      p1: { x: ex + x1 * cos - y1 * sin, y: ey + x1 * sin + y1 * cos },
+      p2: { x: ex + x2 * cos - y2 * sin, y: ey + x2 * sin + y2 * cos },
+    };
+  };
+
+  const lineElements = allElements.filter((el) => el.type === "line" && el.points && el.points.length === 4);
+  const segments: Segment[] = [...lineElements, newLine].map((el) => ({
+    el,
+    ...getAbsEnds(el),
+  }));
+
+  const EPSILON = 18; // მიწებების მანძილი
+  const isClose = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y) <= EPSILON;
+
+  const used = new Set<string>();
+  const currentPath: { pt: { x: number; y: number }; seg: Segment }[] = [];
+
+  const lastSeg = segments[segments.length - 1]; // ახალი ხაზი
+
+  function findCycle(currentPoint: { x: number; y: number }, startPoint: { x: number; y: number }, depth: number): boolean {
+    if (depth >= 3 && isClose(currentPoint, startPoint)) {
+      return true;
+    }
+    if (depth > 8) return false;
+
+    for (const seg of segments) {
+      if (used.has(seg.el.id)) continue;
+
+      if (isClose(currentPoint, seg.p1)) {
+        used.add(seg.el.id);
+        currentPath.push({ pt: seg.p2, seg });
+        if (findCycle(seg.p2, startPoint, depth + 1)) return true;
+        currentPath.pop();
+        used.delete(seg.el.id);
+      } else if (isClose(currentPoint, seg.p2)) {
+        used.add(seg.el.id);
+        currentPath.push({ pt: seg.p1, seg });
+        if (findCycle(seg.p1, startPoint, depth + 1)) return true;
+        currentPath.pop();
+        used.delete(seg.el.id);
+      }
+    }
+    return false;
+  }
+
+  used.add(lastSeg.el.id);
+  currentPath.push({ pt: lastSeg.p2, seg: lastSeg });
+
+  let found = findCycle(lastSeg.p2, lastSeg.p1, 1);
+
+  if (!found) {
+    used.clear();
+    currentPath.length = 0;
+    used.add(lastSeg.el.id);
+    currentPath.push({ pt: lastSeg.p1, seg: lastSeg });
+    found = findCycle(lastSeg.p1, lastSeg.p2, 1);
+  }
+
+  if (found && currentPath.length >= 3) {
+    const polygonPoints: number[] = [];
+    currentPath.forEach((step) => {
+      polygonPoints.push(Math.round(step.pt.x), Math.round(step.pt.y));
+    });
+
+    const usedIds = new Set(currentPath.map((p) => p.seg.el.id));
+    const remaining = allElements.filter((el) => !usedIds.has(el.id));
+
+    const mergedPolygon: CanvasElement = {
+      id: `poly_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      type: "triangle", // Konva იყენებს დახურულ Line-ს closed: true
+      points: polygonPoints,
+      x: 0,
+      y: 0,
+      stroke: newLine.stroke,
+      strokeWidth: newLine.strokeWidth,
+    };
+
+    return [...remaining, mergedPolygon];
+  }
+
+  return null;
 }
 
 function CanvasImageElement({
@@ -126,7 +236,18 @@ function CanvasImageElement({
 }
 
 const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function KonvaCanvas(
-  { elements, onElementsChange, activeTool, strokeColor, strokeWidth, isDark, scale = 1, onScaleChange, onLaserMove },
+  {
+    elements,
+    onElementsChange,
+    activeTool,
+    strokeColor,
+    strokeWidth,
+    isDark,
+    scale = 1,
+    onScaleChange,
+    onLaserMove,
+    textPlaceholder = "დააჭირეთ ორჯერ ჩასასწორებლად",
+  },
   ref
 ) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -372,6 +493,14 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     });
   }, [scale]);
 
+  const deleteSelected = useCallback(() => {
+    if (!selectedId) return;
+    const remaining = elementsRef.current.filter((el) => el.id !== selectedId);
+    elementsRef.current = remaining;
+    onElementsChange(remaining);
+    setSelectedId(null);
+  }, [selectedId, onElementsChange]);
+
   useImperativeHandle(ref, () => ({
     toDataURL: () => {
       const stage = stageRef.current;
@@ -381,7 +510,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
         mainLayerRef.current?.batchDraw();
       }
 
-      // დროებითი ფონი, რათა ექსპორტირებული სურათი არ იყოს გამჭვირვალე
       const bgRect = new Konva.Rect({
         x: -stage.x() / stage.scaleX(),
         y: -stage.y() / stage.scaleY(),
@@ -404,7 +532,22 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     },
     fitToContent,
     renderRemoteLaser,
+    deleteSelected,
   }));
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (editingTextId) return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "TEXTAREA" || target.tagName === "INPUT")) return;
+      if ((event.key === "Delete" || event.key === "Backspace") && selectedId) {
+        event.preventDefault();
+        deleteSelected();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [editingTextId, selectedId, deleteSelected]);
 
   const handleTouchStart = (e: any) => {
     const touchEvent = e.evt as TouchEvent;
@@ -666,7 +809,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
         type: "text",
         x: pos.x,
         y: pos.y,
-        text: "დააჭირეთ ორჯერ ჩასასწორებლად",
+        text: textPlaceholder,
         fontSize: 36,
         scaleX: 1,
         scaleY: 1,
@@ -680,10 +823,12 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
     let startX = pos.x;
     let startY = pos.y;
+
+    // 🌟 Snap სხვა ფიგურების წვეროებთან
     if (activeTool === "line" || activeTool === "arrow" || activeTool === "triangle" || activeTool === "diamond") {
-      const SNAP_DIST = 15;
+      const SNAP_DIST = 18;
       for (const el of elementsRef.current) {
-        if (el.points && el.type !== "freedraw") {
+        if (el.points) {
           const cos = Math.cos(((el.rotation || 0) * Math.PI) / 180);
           const sin = Math.sin(((el.rotation || 0) * Math.PI) / 180);
           const ex = el.x || 0;
@@ -693,7 +838,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
             const py = el.points[i + 1] * (el.scaleY || 1);
             const absX = ex + px * cos - py * sin;
             const absY = ey + px * sin + py * cos;
-            if (Math.hypot(absX - pos.x, absY - pos.y) < SNAP_DIST) {
+            if (Math.hypot(absX - pos.x, absY - pos.y) <= SNAP_DIST) {
               startX = absX;
               startY = absY;
               break;
@@ -837,10 +982,12 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
     let snapX = pos.x;
     let snapY = pos.y;
+
+    // 🌟 Snap ბოლო წერტილისთვის
     if (activeTool === "line" || activeTool === "arrow" || activeTool === "triangle" || activeTool === "diamond") {
-      const SNAP_DIST = 15;
+      const SNAP_DIST = 18;
       for (const el of elementsRef.current) {
-        if (el.points && el.type !== "freedraw") {
+        if (el.points) {
           const cos = Math.cos(((el.rotation || 0) * Math.PI) / 180);
           const sin = Math.sin(((el.rotation || 0) * Math.PI) / 180);
           const ex = el.x || 0;
@@ -850,7 +997,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
             const py = el.points[i + 1] * (el.scaleY || 1);
             const absX = ex + px * cos - py * sin;
             const absY = ey + px * sin + py * cos;
-            if (Math.hypot(absX - pos.x, absY - pos.y) < SNAP_DIST) {
+            if (Math.hypot(absX - pos.x, absY - pos.y) <= SNAP_DIST) {
               snapX = absX;
               snapY = absY;
               break;
@@ -979,6 +1126,15 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     activeShapeRef.current = null;
 
     if (newElem) {
+      // 🌟 თუ ახალი ხაზით შეიკრა მრავალკუთხედი (სამკუთხედი, ოთხკუთხედი და ა.შ.), გაერთიანდეს ერთიან ფიგურად
+      if (newElem.type === "line") {
+        const mergedList = tryMergeClosedPolygon(elementsRef.current, newElem);
+        if (mergedList) {
+          onElementsChange(mergedList);
+          return;
+        }
+      }
+
       onElementsChange([...elementsRef.current, newElem]);
     }
   };
@@ -1184,7 +1340,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
             color: strokeColor,
             zIndex: 1000,
           }}
-          className="bg-transparent border border-dashed border-indigo-400 outline-none p-1 resize rounded min-w-[200px]"
+          className="bg-transparent border border-dashed border-navy outline-none p-1 resize rounded min-w-[200px]"
         />
       )}
 
@@ -1489,6 +1645,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
               />
             )}
 
+            {/* წვეროების გადაადგილების წერტილები (Anchor Points) */}
             {activeTool === "select" && selectedElement && selectedElement.points && selectedElement.type !== "freedraw" && (
               <Group
                 x={selectedElement.x || 0}
@@ -1503,7 +1660,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     x={selectedElement.points![i * 2]}
                     y={selectedElement.points![i * 2 + 1]}
                     radius={8}
-                    fill="#4f46e5"
+                    fill="#16233a"
                     stroke="#ffffff"
                     strokeWidth={2}
                     draggable
@@ -1514,7 +1671,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                       const newPoints = [...selectedElement.points!];
                       newPoints[i * 2] = e.target.x();
                       newPoints[i * 2 + 1] = e.target.y();
-                      const updatedElements = elementsRef.current.map(el =>
+                      const updatedElements = elementsRef.current.map((el) =>
                         el.id === selectedElement.id ? { ...el, points: newPoints } : el
                       );
                       elementsRef.current = updatedElements;
@@ -1522,12 +1679,12 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     }}
                     onDragEnd={(e) => { e.cancelBubble = true; }}
                     onMouseEnter={(e) => {
-                      const container = e.target.getStage()?.container();
-                      if (container) container.style.cursor = "crosshair";
+                      const c = e.target.getStage()?.container();
+                      if (c) c.style.cursor = "crosshair";
                     }}
                     onMouseLeave={(e) => {
-                      const container = e.target.getStage()?.container();
-                      if (container) container.style.cursor = "default";
+                      const c = e.target.getStage()?.container();
+                      if (c) c.style.cursor = "default";
                     }}
                   />
                 ))}

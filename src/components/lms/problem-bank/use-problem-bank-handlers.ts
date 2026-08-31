@@ -24,6 +24,7 @@ import {
   type ProblemYear,
   type SavedProblemFamily,
   type AiModelId,
+  type AiCheckMode,
 } from '@/lib/math/problems';
 import {
   generateFromTemplate,
@@ -36,6 +37,7 @@ import {
   canResampleProblem,
   canVary,
   templateJsonForProblem,
+  generateVariants,
 } from '@/lib/math/problems';
 import { childrenOf, taxonomyLabel } from '@/lib/math/problems/taxonomy-shared';
 import { stashProblemForLab, takeProblemForLab } from '@/lib/math/problems/lab-transfer';
@@ -63,6 +65,7 @@ interface UseProblemBankHandlersProps {
   genRequest: string;
   genReplyLocale: Locale;
   genModel: AiModelId;
+  genCheck: AiCheckMode;
   modelStatus: { id: string; wallet: unknown }[];
   variantCount: number;
   selectedProblemIds: string[];
@@ -125,6 +128,7 @@ export function useProblemBankHandlers({
   genRequest,
   genReplyLocale,
   genModel,
+  genCheck,
   modelStatus,
   variantCount,
   selectedProblemIds,
@@ -499,7 +503,7 @@ export function useProblemBankHandlers({
       return;
     }
     setBank((current) => mergeSaved(current, result.saved, result.idMap));
-    setLessonSetIds(result.ids);
+    setLessonSetIds(result.lessonSetIds);
     setDraftIds((current) =>
       remapIds(
         current.filter((id) => !unsaved.some((problem) => problem.id === id)),
@@ -515,10 +519,8 @@ export function useProblemBankHandlers({
       setGenerating(true);
       try {
         const result = await generateDiverseProblemsAction({
-          mode: 'diverse',
           request: genRequest,
-          locale,
-          replyLocale: genReplyLocale,
+          locale: genReplyLocale,
           model: genModel,
           check: genCheck,
           count: genCount,
@@ -539,13 +541,13 @@ export function useProblemBankHandlers({
       setGenerating(true);
       try {
         const result = await generateDiverseProblemsAction({
-          mode: 'algorithms',
           topic: genTopic === 'any' ? undefined : genTopic,
-          kind: genKind === 'any' ? undefined : genKind,
           difficulty: genDifficulty === 'any' ? undefined : genDifficulty,
           year: genYear === 'any' ? undefined : genYear,
           count: genCount,
-          locale,
+          locale: genReplyLocale,
+          check: genCheck,
+          model: genModel,
         });
         if (!result.ok) {
           setNotice(result.error === 'unauthorized' ? copy.generate.errorUnauthorized : copy.generate.errorFailed);
@@ -570,30 +572,26 @@ export function useProblemBankHandlers({
     }
   }
 
-  async function onVariants(event: FormEvent<HTMLFormElement>) {
+  function onVariants(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const selected = bank.find((problem) => problem.id === selectedId) ?? null;
-    if (!selected) return;
+    if (!selected) {
+      setNotice(copy.variantPanel.needProblem);
+      return;
+    }
 
     const template = templateJsonForProblem(selected, families);
-    if (!template) {
-      setNotice(copy.variantPanel.noTemplate);
+    if (!canVary(selected, template)) {
+      setNotice(copy.variantPanel.needFormula);
       return;
     }
 
     try {
-      const result = await generateDiverseProblemsAction({
-        mode: 'variants',
-        problemId: selected.id,
-        count: variantCount,
+      const created = generateVariants(selected, variantCount, {
+        template: template ?? undefined,
         locale,
       });
-      if (!result.ok) {
-        setNotice(result.error === 'unauthorized' ? copy.generate.errorUnauthorized : copy.generate.errorFailed);
-        return;
-      }
-
-      if (result.problems.length === 0) {
+      if (created.length === 0) {
         let familyRaw: unknown = null;
         if (template) {
           try {
@@ -603,12 +601,14 @@ export function useProblemBankHandlers({
           }
         }
         setNotice(
-          !canResampleProblem(selected, familyRaw) ? copy.variantPanel.needSlots : copy.variantPanel.noneVerified,
+          !canResampleProblem(selected, familyRaw)
+            ? copy.variantPanel.needSlots
+            : copy.variantPanel.noneVerified,
         );
         return;
       }
 
-      applyCreated(result.problems);
+      applyCreated(created);
       setNotice(null);
     } catch {
       setNotice(copy.variantPanel.noneVerified);

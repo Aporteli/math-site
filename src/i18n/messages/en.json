@@ -916,6 +916,7 @@
       "nav": {
         "overview": "Overview",
         "journal": "Classroom journal",
+        "whiteboard": "Whiteboard",
         "homework": "Homework review",
         "problems": "Problem bank",
         "reports": "Reports",
@@ -932,6 +933,10 @@
         "journal": {
           "title": "Classroom journal",
           "subtitle": "Attendance, grades and lesson notes by class."
+        },
+        "whiteboard": {
+          "title": "Classroom whiteboard",
+          "subtitle": "An interactive board for sketches, shapes and lesson visualisation."
         },
         "homework": {
           "title": "Homework review",
@@ -961,6 +966,46 @@
           "title": "Students",
           "subtitle": "Groups, enrolments and each student’s progress."
         }
+      },
+      "whiteboard": {
+        "title": "Classroom whiteboard",
+        "openMenu": "Open menu",
+        "tools": {
+          "select": "Select",
+          "hand": "Pan",
+          "pen": "Pen",
+          "shapes": "Shapes",
+          "line": "Line",
+          "arrow": "Arrow",
+          "rect": "Rectangle",
+          "circle": "Circle",
+          "triangle": "Triangle",
+          "diamond": "Diamond",
+          "star": "Star",
+          "text": "Text",
+          "image": "Image",
+          "eraser": "Eraser",
+          "laser": "Laser",
+          "delete": "Delete selection"
+        },
+        "strokeWidth": "Stroke width",
+        "colors": "Colors",
+        "undo": "Undo",
+        "redo": "Redo",
+        "clear": "Clear board",
+        "clearTitle": "Clear board",
+        "clearMessage": "Are you sure you want to erase the whole board?",
+        "cancel": "Cancel",
+        "confirmClear": "Clear",
+        "export": "Download PNG",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "zoomReset": "Reset zoom",
+        "fitToContent": "Fit to content",
+        "darkMode": "Dark theme",
+        "lightMode": "Light theme",
+        "textPlaceholder": "Double-click to edit",
+        "zoom": "Zoom"
       },
       "admin": {
         "eyebrow": "Administration",
@@ -2131,7 +2176,13 @@
     "solveButton": "Solve",
     "syntaxTitle": "Syntax Guide",
     "resultTitle": "Solution",
-    "emptyResult": "Enter an equation to see the solution here."
+    "emptyResult": "Enter an equation to see the solution here.",
+    "solveFor": "Solve for:",
+    "keyboard": "Keyboard",
+    "history": "Recent solutions",
+    "clearHistory": "Clear",
+    "graphTitle": "Graph visualisation",
+    "liveError": "Syntax is incomplete..."
   },
   "footer": {
     "contact": {
