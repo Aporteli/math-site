@@ -100,27 +100,11 @@ export function StudentCourseVideoCallButton({
         <button
           type="button"
           onClick={() => handleOpen("normal")}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-95"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-4.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-95"
         >
-          <Video className="size-3.5" />
-          <span>{label ?? "გაკვეთილზე შესვლა"}</span>
+          <Video className="size-5" />
+          <span className='text-[16px]'>{label ?? "გაკვეთილზე შესვლა"}</span>
         </button>
-
-        {showFullscreen && (
-          <button
-            type="button"
-            onClick={() => handleOpen("fullscreen")}
-            aria-label="სრული ეკრანი"
-            title="სრული ეკრანი"
-            className="inline-flex size-8 items-center justify-center rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-700 transition-all hover:bg-emerald-100 active:scale-95"
-          >
-            {isFullscreen ? (
-              <Minimize className="size-3.5" />
-            ) : (
-              <Maximize className="size-3.5" />
-            )}
-          </button>
-        )}
       </div>
 
       {/* React Portal: მოდალი იხსნება document.body-ში და სცდება HeroPage-ის საზღვრებს */}

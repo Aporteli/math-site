@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, ImageIcon, ZoomIn, UploadCloud } from 'lucide-react';
+import { X, ImageIcon, ZoomIn, UploadCloud, BookOpen, CheckCircle2 } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 
 const DEFAULT_JUNK_TEXT = '';
@@ -90,17 +90,23 @@ export function TeacherViewProblemModal({
           className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-150"
           onClick={(e) => e.stopPropagation()}>
           
-          {/* ჰედერი */}
+          {/* ჰედერი — მარცხნივ აიკონით და მოსწავლის სახელით */}
           <div className="flex items-center justify-between border-b border-hairline bg-paper/30 px-6 py-4">
-            <div>
-              <h3 className="text-base font-bold text-ink">
+            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+              <div
+                className={`flex size-8 items-center justify-center rounded-xl shrink-0 ${
+                  mode === 'answer' ? 'bg-emerald-50 text-emerald-600' : 'bg-navy/10 text-navy'
+                }`}>
+                {mode === 'answer' ? <CheckCircle2 className="size-4.5" /> : <BookOpen className="size-4.5" />}
+              </div>
+              <h3 className="text-base font-bold text-ink truncate">
                 {studentName} {mode === 'answer' ? '— მოსწავლის პასუხი' : '— ამოცანის პირობა'}
               </h3>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 items-center justify-center rounded-xl border border-hairline bg-white text-muted hover:bg-paper hover:text-ink transition-colors">
+              className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-hairline bg-white text-muted hover:bg-paper hover:text-ink transition-colors">
               <X className="size-4" />
             </button>
           </div>

@@ -145,7 +145,6 @@ function getAssignmentViewKey(a: StudentAssignment): string {
   return `${a.id}:${a.submissionId || ''}:${a.studentAttachmentUrl || ''}:${a.status}`;
 }
 
-// 🌟 უნივერსალური შემოწმება: არის თუ არა მასალა (რეფრეშის მერეც) 🌟
 function isMaterialItem(a: StudentAssignment): boolean {
   return (
     a.type === 'MATERIAL' ||
@@ -236,14 +235,13 @@ export function TeacherStudentsWorkspace({
     mode: 'task' | 'answer';
   } | null>(null);
 
-  // მასალის ნახვის მოდალი
   const [previewMaterialModal, setPreviewMaterialModal] = useState<{
     url: string;
     title: string;
     instructions?: string | null;
   } | null>(null);
 
-  // 1. დავალების დამატების მოდალი
+  // დავალების დამატების მოდალი
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedProblemId, setSelectedProblemId] = useState<string>('custom');
   const [customTitle, setCustomTitle] = useState('თავისუფალი დავალება');
@@ -259,7 +257,7 @@ export function TeacherStudentsWorkspace({
   const [assignImageName, setAssignImageName] = useState<string | null>(null);
   const assignFileRef = useRef<HTMLInputElement>(null);
 
-  // 2. მასალების ატვირთვის მოდალი
+  // მასალების ატვირთვის მოდალი
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
   const [materialTitle, setMaterialTitle] = useState('');
   const [materialNote, setMaterialNote] = useState('');
@@ -276,11 +274,11 @@ export function TeacherStudentsWorkspace({
 
   const isAnyModalOpen = Boolean(
     deletingAssignmentId ||
-      activeAssignmentModal ||
-      previewMaterialModal ||
-      isAssignModalOpen ||
-      isMaterialModalOpen ||
-      activeVideoCallCourse,
+    activeAssignmentModal ||
+    previewMaterialModal ||
+    isAssignModalOpen ||
+    isMaterialModalOpen ||
+    activeVideoCallCourse,
   );
 
   useEffect(() => {
@@ -393,23 +391,23 @@ export function TeacherStudentsWorkspace({
     });
   }, [activeStudent, selectedDateKey]);
 
-  // 🌟 ტაბების მიხედვით გაფილტრული სია (მკაცრი ფილტრაციით) 🌟
   const filteredTabAssignments = useMemo(() => {
     if (activeTab === 'answers') {
       return assignmentsForSelectedDate.filter(
-        (a) => !isMaterialItem(a) && (Boolean(a.studentAttachmentUrl) || a.status === 'SUBMITTED' || a.status === 'GRADED'),
+        (a) =>
+          !isMaterialItem(a) && (Boolean(a.studentAttachmentUrl) || a.status === 'SUBMITTED' || a.status === 'GRADED'),
       );
     }
     if (activeTab === 'materials') {
       return assignmentsForSelectedDate.filter((a) => isMaterialItem(a));
     }
-    // tasks tab -> მკაცრად მხოლოდ დავალებები (მასალების გარეშე)
     return assignmentsForSelectedDate.filter((a) => !isMaterialItem(a));
   }, [assignmentsForSelectedDate, activeTab]);
 
   const answersCountForDate = useMemo(() => {
     return assignmentsForSelectedDate.filter(
-      (a) => !isMaterialItem(a) && (Boolean(a.studentAttachmentUrl) || a.status === 'SUBMITTED' || a.status === 'GRADED'),
+      (a) =>
+        !isMaterialItem(a) && (Boolean(a.studentAttachmentUrl) || a.status === 'SUBMITTED' || a.status === 'GRADED'),
     ).length;
   }, [assignmentsForSelectedDate]);
 
@@ -588,7 +586,6 @@ export function TeacherStudentsWorkspace({
     }
   }
 
-  // 🌟 სასწავლო მასალის ატვირთვა (მკაფიო მარკირებით)
   async function handleUploadMaterial() {
     if (!activeStudent || !materialFileBase64) return;
 
@@ -781,17 +778,17 @@ export function TeacherStudentsWorkspace({
 
         {/* მარჯვენა სვეტი: მოსწავლეების ტაბები + ზედა კალენდარი + სამუშაო დაფა */}
         <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white shadow-sm overflow-hidden">
-          {/* ზედა ზოლი 1: მოსწავლეების ტაბები + კალენდარი */}
-          <div className="bg-paper/30 border-b border-hairline px-3 py-1.5 flex items-center justify-between gap-3">
-            <div className="flex-1 overflow-x-auto flex items-center gap-1.5 custom-scrollbar">
+          {/* 🌟 1. ზედა ზოლი: მოსწავლეების ტაბები და კალენდარი (მობილურზე 2 ხაზი, დესკტოპზე 1 ხაზი) 🌟 */}
+          <div className="bg-paper/30 border-b border-hairline px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            {/* მოსწავლეების ტაბები */}
+            <div className="flex-1 overflow-x-auto flex items-center gap-1.5 custom-scrollbar min-w-0 pb-0.5 sm:pb-0">
               {studentsInActiveCourse.length === 0 ? (
-                <p className="py-2 px-2 text-xs font-bold text-muted">ამ კლასში მოსწავლეები არ არიან</p>
+                <p className="py-1 px-1 text-xs font-bold text-muted">ამ კლასში მოსწავლეები არ არიან</p>
               ) : (
                 studentsInActiveCourse.map((student) => {
                   const isSelected = selectedStudentId === student.id;
                   const hasUnread = unreadStudentIds.has(student.id);
 
-                  // რიცხვი აჩვენებს მხოლოდ რეალურ დავალებებს
                   const dateAssignmentsCount = student.assignments.filter((a) => {
                     return formatDateToKey(new Date(a.createdAt)) === selectedDateKey && !isMaterialItem(a);
                   }).length;
@@ -800,7 +797,7 @@ export function TeacherStudentsWorkspace({
                     <button
                       key={student.id}
                       onClick={() => handleStudentSelect(student.id)}
-                      className={`relative flex items-center gap-2 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                      className={`relative flex items-center gap-2 shrink-0 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                         isSelected
                           ? 'bg-navy text-white shadow-sm'
                           : 'bg-white/80 text-muted hover:text-ink hover:bg-white border border-hairline'
@@ -811,7 +808,7 @@ export function TeacherStudentsWorkspace({
                         }`}>
                         {student.name.charAt(0)}
                       </div>
-                      <span>{student.name}</span>
+                      <span className="truncate max-w-[120px] sm:max-w-none">{student.name}</span>
 
                       <span
                         className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold ${
@@ -829,18 +826,18 @@ export function TeacherStudentsWorkspace({
               )}
             </div>
 
-            {/* ზედა მარჯვენა კალენდარი */}
+            {/* ზედა კალენდარი */}
             {activeStudent && (
-              <div className="flex items-center gap-1 shrink-0 bg-white px-2 py-1 rounded-xl border border-hairline shadow-2xs">
+              <div className="flex items-center justify-between sm:justify-end gap-1 shrink-0 bg-white px-2 py-1 rounded-xl border border-hairline shadow-2xs w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => handleShiftDate(-1)}
                   title="წინა დღე"
-                  className="flex size-7 items-center justify-center rounded-lg hover:bg-paper text-slate-700 transition-colors">
+                  className="flex size-7 items-center justify-center rounded-lg hover:bg-paper text-slate-700 transition-colors shrink-0">
                   <ChevronLeft className="size-4" />
                 </button>
 
-                <div className="flex items-center gap-1 px-1">
+                <div className="flex items-center justify-center gap-1 px-1 flex-1 sm:flex-none">
                   <CalendarIcon className="size-3.5 text-navy shrink-0" />
                   <input
                     type="date"
@@ -848,7 +845,7 @@ export function TeacherStudentsWorkspace({
                     onChange={(e) => {
                       if (e.target.value) setSelectedDateKey(e.target.value);
                     }}
-                    className="text-xs font-bold text-slate-800 bg-transparent outline-none cursor-pointer"
+                    className="text-xs font-bold text-slate-800 bg-transparent outline-none cursor-pointer text-center"
                   />
                 </div>
 
@@ -856,79 +853,81 @@ export function TeacherStudentsWorkspace({
                   type="button"
                   onClick={() => handleShiftDate(1)}
                   title="შემდეგი დღე"
-                  className="flex size-7 items-center justify-center rounded-lg hover:bg-paper text-slate-700 transition-colors">
+                  className="flex size-7 items-center justify-center rounded-lg hover:bg-paper text-slate-700 transition-colors shrink-0">
                   <ChevronRight className="size-4" />
                 </button>
               </div>
             )}
           </div>
 
-          {/* ზედა ზოლი 2: სამი საკონტროლო ტაბი (დავალებები, პასუხები, მასალები) */}
-          <div className="bg-paper/40 border-b border-hairline px-4 py-2 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 p-1 bg-paper-deep rounded-2xl border border-hairline/80">
-              <button
-                type="button"
-                onClick={() => setActiveTab('tasks')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  activeTab === 'tasks'
-                    ? 'bg-white text-navy shadow-xs ring-1 ring-black/5'
-                    : 'text-muted hover:text-ink'
-                }`}>
-                <BookOpen className="size-3.5" />
-                <span>დავალებები</span>
-                <span className="text-[10px] opacity-70">({tasksCountForDate})</span>
-              </button>
+          {/* 🌟 2. ტაბების ზოლი: დავალებები / პასუხები / მასალები (მობილურზე grid-cols-3) 🌟 */}
+          <div className="bg-paper/40 border-b border-hairline px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="w-full sm:w-auto p-1 bg-paper-deep rounded-2xl border border-hairline/80">
+              <div className="grid grid-cols-3 sm:flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('tasks')}
+                  className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all text-center ${
+                    activeTab === 'tasks'
+                      ? 'bg-white text-navy shadow-xs ring-1 ring-black/5'
+                      : 'text-muted hover:text-ink'
+                  }`}>
+                  <BookOpen className="size-3.5 shrink-0" />
+                  <span className="truncate">დავალებები</span>
+                  <span className="text-[10px] opacity-70 hidden sm:inline">({tasksCountForDate})</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('answers')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  activeTab === 'answers'
-                    ? 'bg-white text-navy shadow-xs ring-1 ring-black/5'
-                    : 'text-muted hover:text-ink'
-                }`}>
-                <CheckCircle2 className="size-3.5 text-emerald-600" />
-                <span>პასუხები</span>
-                {answersCountForDate > 0 && (
-                  <span className="rounded-full bg-emerald-100 text-emerald-700 px-1.5 py-0.2 text-[9px] font-bold">
-                    {answersCountForDate}
-                  </span>
-                )}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('answers')}
+                  className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all text-center ${
+                    activeTab === 'answers'
+                      ? 'bg-white text-navy shadow-xs ring-1 ring-black/5'
+                      : 'text-muted hover:text-ink'
+                  }`}>
+                  <CheckCircle2 className="size-3.5 text-emerald-600 shrink-0" />
+                  <span className="truncate">პასუხები</span>
+                  {answersCountForDate > 0 && (
+                    <span className="rounded-full bg-emerald-100 text-emerald-700 px-1.5 py-0.2 text-[9px] font-bold shrink-0">
+                      {answersCountForDate}
+                    </span>
+                  )}
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('materials')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  activeTab === 'materials'
-                    ? 'bg-white text-navy shadow-xs ring-1 ring-black/5'
-                    : 'text-muted hover:text-ink'
-                }`}>
-                <Layers className="size-3.5 text-indigo-500" />
-                <span>მასალები</span>
-                {materialsCountForDate > 0 && (
-                  <span className="rounded-full bg-indigo-100 text-indigo-700 px-1.5 py-0.2 text-[9px] font-bold">
-                    {materialsCountForDate}
-                  </span>
-                )}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('materials')}
+                  className={`flex items-center justify-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all text-center ${
+                    activeTab === 'materials'
+                      ? 'bg-white text-navy shadow-xs ring-1 ring-black/5'
+                      : 'text-muted hover:text-ink'
+                  }`}>
+                  <Layers className="size-3.5 text-indigo-500 shrink-0" />
+                  <span className="truncate">მასალები</span>
+                  {materialsCountForDate > 0 && (
+                    <span className="rounded-full bg-indigo-100 text-indigo-700 px-1.5 py-0.2 text-[9px] font-bold shrink-0">
+                      {materialsCountForDate}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
 
-            {/* მასალების ტაბზე გამოჩნდება ატვირთვის ღილაკი */}
+            {/* მასალების ატვირთვის ღილაკი */}
             {activeTab === 'materials' && activeStudent && (
               <button
                 type="button"
                 onClick={() => setIsMaterialModalOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition-all shadow-xs active:scale-95">
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 sm:py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition-all shadow-xs active:scale-95">
                 <UploadCloud className="size-3.5" />
                 <span>მასალის ატვირთვა</span>
               </button>
             )}
           </div>
 
-          <div className="flex-1 flex flex-col min-h-0 p-5">
+          <div className="flex-1 flex flex-col min-h-0 p-3.5 sm:p-5">
             {/* ბარათების Grid სექცია */}
-            <div className="flex-1 overflow-y-auto pt-2 pe-1 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto pt-1 pe-1 custom-scrollbar">
               {!activeStudent ? (
                 <div className="py-24 flex flex-col items-center justify-center text-center text-muted">
                   <Users className="size-12 opacity-30 mb-3 text-navy" />
@@ -962,9 +961,7 @@ export function TeacherStudentsWorkspace({
                       </button>
                     </>
                   )}
-                  <p className="text-xs max-w-xs mt-1">
-                    {formattedSelectedDate}-ს ამ სექციაში მონაცემები არ მოიძებნა.
-                  </p>
+                  <p className="text-xs max-w-xs mt-1">{formattedSelectedDate}-ს ამ სექციაში მონაცემები არ მოიძებნა.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
@@ -973,11 +970,11 @@ export function TeacherStudentsWorkspace({
                     const isSubmitted = assignment.status === 'SUBMITTED' || Boolean(assignment.studentAttachmentUrl);
                     const isMaterial = isMaterialItem(assignment);
 
-                    // პასუხების ტაბზე ვაჩვენებთ მოსწავლის პასუხის სურათს
                     const displayImageUrl =
                       activeTab === 'answers' && assignment.studentAttachmentUrl
                         ? extractFirstImageUrl(assignment.studentAttachmentUrl)
-                        : extractFirstImageUrl(assignment.problemImageUrl) || extractFirstImageUrl(assignment.promptTex);
+                        : extractFirstImageUrl(assignment.problemImageUrl) ||
+                          extractFirstImageUrl(assignment.promptTex);
 
                     const isPdfOrDoc =
                       assignment.problemImageUrl &&
@@ -991,7 +988,6 @@ export function TeacherStudentsWorkspace({
                       <div
                         key={assignment.id}
                         onClick={() => {
-                          // მასალაზე დაჭერისას იხსნება მოდალი
                           if (isMaterial && assignment.problemImageUrl) {
                             setPreviewMaterialModal({
                               url: assignment.problemImageUrl,
@@ -1059,13 +1055,9 @@ export function TeacherStudentsWorkspace({
                               />
                             </div>
                           ) : null}
-
-                          {isMaterial && (
-                            <p className="text-xs font-bold text-slate-800 truncate px-1">{assignment.title}</p>
-                          )}
                         </div>
 
-                        {/* ქვედა ზოლი: სრულად ნახვა და წაშლა */}
+                        {/* ქვედა ზოლი */}
                         <div className="flex items-center justify-between pt-2 border-t border-hairline-soft">
                           <span className="text-xs font-bold text-navy group-hover:underline flex items-center gap-1">
                             {isMaterial ? 'მასალის გახსნა' : 'ნახვა'}{' '}
@@ -1366,9 +1358,7 @@ export function TeacherStudentsWorkspace({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                  ფაილი (სურათი, PDF, Word, TXT)
-                </label>
+                <label className="text-xs font-bold text-slate-700 block mb-1.5">ფაილი (სურათი, PDF, Word, TXT)</label>
                 <input
                   ref={materialFileInputRef}
                   type="file"
@@ -1470,7 +1460,7 @@ export function TeacherStudentsWorkspace({
         />
       )}
 
-      {/* 🌟 5. მასალის ნახვის მოდალი (სურათი ან PDF/დოკუმენტი) 🌟 */}
+      {/* 5. მასალის ნახვის მოდალი */}
       {previewMaterialModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
@@ -1478,16 +1468,12 @@ export function TeacherStudentsWorkspace({
           <div
             className="flex h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-6 py-4 shrink-0">
               <div className="flex items-center gap-3 min-w-0 pr-2">
                 <div className="flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 shrink-0">
                   <Layers className="size-5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-base font-bold text-slate-900 leading-tight truncate">
-                    {previewMaterialModal.title}
-                  </h3>
                   {previewMaterialModal.instructions && previewMaterialModal.instructions !== 'მასალა' && (
                     <p className="text-xs text-slate-500 mt-0.5 truncate">{previewMaterialModal.instructions}</p>
                   )}
@@ -1513,7 +1499,6 @@ export function TeacherStudentsWorkspace({
               </div>
             </div>
 
-            {/* Content Body */}
             <div className="flex-1 bg-slate-950 p-2 overflow-hidden flex items-center justify-center">
               {isImageString(previewMaterialModal.url) ? (
                 /* eslint-disable-next-line @next/next/no-img-element */

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, ImageIcon, ZoomIn } from 'lucide-react';
+import { X, ImageIcon, ZoomIn, BookOpen } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 
 type Difficulty = 'easy' | 'medium' | 'hard' | 'olympiad';
@@ -88,13 +88,18 @@ export function ProblemDetailModal({
         <div
           className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-black/5 animate-in zoom-in-95 duration-150"
           onClick={(e) => e.stopPropagation()}>
-          {/* ჰედერი */}
+          {/* ჰედერი — მარცხნივ დავალებების აიკონი */}
           <div className="flex items-center justify-between border-b border-hairline bg-paper/30 px-6 py-4">
-            <h3 className="text-sm font-bold text-ink truncate">{assignmentTitle}</h3>
+            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+              <div className="flex size-8 items-center justify-center rounded-xl bg-navy/10 text-navy shrink-0">
+                <BookOpen className="size-4.5" />
+              </div>
+            
+            </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 items-center justify-center rounded-xl border border-hairline bg-white text-muted hover:bg-paper hover:text-ink transition-colors">
+              className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-hairline bg-white text-muted hover:bg-paper hover:text-ink transition-colors">
               <X className="size-4" />
             </button>
           </div>
