@@ -77,7 +77,17 @@ function getCenter(p1: { x: number; y: number }, p2: { x: number; y: number }) {
   };
 }
 
-// 🌟 ხაზების ჯაჭვისგან შეკრული მრავალკუთხედის ამოცნობა და გაერთიანება
+// 🌟 ტექსტის დაფორმატება ჩახლეჩების მოსაშორებლად
+function cleanPastedText(raw: string): string {
+  return raw
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.replace(/\n+/g, " ").trim())
+    .join("\n\n")
+    .trim();
+}
+
 function tryMergeClosedPolygon(allElements: CanvasElement[], newLine: CanvasElement): CanvasElement[] | null {
   if (newLine.type !== "line" || !newLine.points || newLine.points.length !== 4) return null;
 
@@ -113,13 +123,13 @@ function tryMergeClosedPolygon(allElements: CanvasElement[], newLine: CanvasElem
     ...getAbsEnds(el),
   }));
 
-  const EPSILON = 18; // მიწებების მანძილი
+  const EPSILON = 18;
   const isClose = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y) <= EPSILON;
 
   const used = new Set<string>();
   const currentPath: { pt: { x: number; y: number }; seg: Segment }[] = [];
 
-  const lastSeg = segments[segments.length - 1]; // ახალი ხაზი
+  const lastSeg = segments[segments.length - 1];
 
   function findCycle(currentPoint: { x: number; y: number }, startPoint: { x: number; y: number }, depth: number): boolean {
     if (depth >= 3 && isClose(currentPoint, startPoint)) {
@@ -171,7 +181,7 @@ function tryMergeClosedPolygon(allElements: CanvasElement[], newLine: CanvasElem
 
     const mergedPolygon: CanvasElement = {
       id: `poly_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      type: "triangle", // Konva იყენებს დახურულ Line-ს closed: true
+      type: "triangle",
       points: polygonPoints,
       x: 0,
       y: 0,
@@ -246,7 +256,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     scale = 1,
     onScaleChange,
     onLaserMove,
-    textPlaceholder = "დააჭირეთ ორჯერ ჩასასწორებლად",
   },
   ref
 ) {
@@ -255,10 +264,11 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [editingTextValue, setEditingTextValue] = useState("");
-  const [editingPos, setEditingPos] = useState<{ x: number; y: number; fontSize: number }>({
+  const [currentFontSize, setCurrentFontSize] = useState(24);
+  const [editingPos, setEditingPos] = useState<{ x: number; y: number; width: number }>({
     x: 0,
     y: 0,
-    fontSize: 32,
+    width: 550,
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -267,6 +277,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   const drawLayerRef = useRef<Konva.Layer>(null);
   const laserLayerRef = useRef<Konva.Layer>(null);
   const trRef = useRef<any>(null);
+  const textareaInputRef = useRef<HTMLTextAreaElement>(null);
 
   const isDrawing = useRef(false);
   const isErasing = useRef(false);
@@ -535,6 +546,64 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     deleteSelected,
   }));
 
+  const finishTextEditing = useCallback(() => {
+    if (!editingTextId) return;
+    const val = cleanPastedText(editingTextValue);
+
+    let finalWidth = editingPos.width / (scale || 1);
+    if (textareaInputRef.current) {
+      finalWidth = Math.max(140, textareaInputRef.current.offsetWidth / (scale || 1));
+    }
+
+    if (!val) {
+      const remaining = elementsRef.current.filter((el) => el.id !== editingTextId);
+      elementsRef.current = remaining;
+      onElementsChange(remaining);
+      setSelectedId(null);
+    } else {
+      const updated = elementsRef.current.map((el) =>
+        el.id === editingTextId
+          ? {
+              ...el,
+              text: val,
+              fontSize: currentFontSize,
+              width: finalWidth,
+            }
+          : el
+      );
+      elementsRef.current = updated;
+      onElementsChange(updated);
+    }
+    setEditingTextId(null);
+    setEditingTextValue("");
+  }, [editingTextId, editingTextValue, currentFontSize, editingPos.width, scale, onElementsChange]);
+
+  const startTextInlineEditing = useCallback(
+    (el: CanvasElement) => {
+      const stageScale = scale || 1;
+      setEditingTextId(el.id);
+      setEditingTextValue(el.text || "");
+      const fSize = el.fontSize || 24;
+      setCurrentFontSize(fSize);
+
+      const renderWidth = (el.width || 550) * stageScale;
+
+      setEditingPos({
+        x: (el.x || 50) * stageScale + stagePos.x,
+        y: (el.y || 50) * stageScale + stagePos.y,
+        width: Math.max(300, renderWidth),
+      });
+
+      setTimeout(() => {
+        if (textareaInputRef.current) {
+          textareaInputRef.current.focus();
+          textareaInputRef.current.select();
+        }
+      }, 30);
+    },
+    [scale, stagePos]
+  );
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (editingTextId) return;
@@ -776,7 +845,10 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
   const handlePointerDown = (e: any) => {
     if (isPinching.current) return;
-    if (editingTextId) finishTextEditing();
+    if (editingTextId) {
+      finishTextEditing();
+      return;
+    }
     if (activeTool === "hand") return;
 
     const pos = getRelativePointerPosition();
@@ -803,28 +875,31 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
     const id = `el_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
+    // T ინსტრუმენტი: იხსნება საწერი textarea
     if (activeTool === "text") {
       const newElem: CanvasElement = {
         id,
         type: "text",
         x: pos.x,
         y: pos.y,
-        text: textPlaceholder,
-        fontSize: 36,
+        width: 550,
+        text: "",
+        fontSize: currentFontSize || 24,
         scaleX: 1,
         scaleY: 1,
         stroke: strokeColor,
         strokeWidth: 1,
       };
-      onElementsChange([...elementsRef.current, newElem]);
+      elementsRef.current = [...elementsRef.current, newElem];
+      onElementsChange(elementsRef.current);
       setSelectedId(id);
+      startTextInlineEditing(newElem);
       return;
     }
 
     let startX = pos.x;
     let startY = pos.y;
 
-    // 🌟 Snap სხვა ფიგურების წვეროებთან
     if (activeTool === "line" || activeTool === "arrow" || activeTool === "triangle" || activeTool === "diamond") {
       const SNAP_DIST = 18;
       for (const el of elementsRef.current) {
@@ -983,7 +1058,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     let snapX = pos.x;
     let snapY = pos.y;
 
-    // 🌟 Snap ბოლო წერტილისთვის
     if (activeTool === "line" || activeTool === "arrow" || activeTool === "triangle" || activeTool === "diamond") {
       const SNAP_DIST = 18;
       for (const el of elementsRef.current) {
@@ -1126,7 +1200,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     activeShapeRef.current = null;
 
     if (newElem) {
-      // 🌟 თუ ახალი ხაზით შეიკრა მრავალკუთხედი (სამკუთხედი, ოთხკუთხედი და ა.შ.), გაერთიანდეს ერთიან ფიგურად
       if (newElem.type === "line") {
         const mergedList = tryMergeClosedPolygon(elementsRef.current, newElem);
         if (mergedList) {
@@ -1134,40 +1207,17 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
           return;
         }
       }
-
       onElementsChange([...elementsRef.current, newElem]);
     }
   };
 
-  const handleElementClick = (id: string) => {
+  const handleElementClick = (el: CanvasElement) => {
     if (activeTool === "select") {
-      setSelectedId(id);
+      setSelectedId(el.id);
+      if (el.type === "text") {
+        startTextInlineEditing(el);
+      }
     }
-  };
-
-  const handleTextDblClick = (el: CanvasElement) => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const stageScale = scale || 1;
-
-    setEditingTextId(el.id);
-    setEditingTextValue(el.text || "");
-    const effectiveFontSize = (el.fontSize || 36) * (el.scaleX || 1) * stageScale;
-
-    setEditingPos({
-      x: (el.x || 50) * stageScale + stagePos.x,
-      y: (el.y || 50) * stageScale + stagePos.y,
-      fontSize: effectiveFontSize,
-    });
-  };
-
-  const finishTextEditing = () => {
-    if (!editingTextId) return;
-    const updated = elementsRef.current.map((el) =>
-      el.id === editingTextId ? { ...el, text: editingTextValue } : el
-    );
-    onElementsChange(updated);
-    setEditingTextId(null);
   };
 
   const handleDragEnd = (id: string, e: any) => {
@@ -1206,8 +1256,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
         }
 
         if (el.type === "text") {
-          const currentFont = el.fontSize || 36;
-          const newFontSize = Math.max(12, Math.round(currentFont * Math.max(scaleX, scaleY)));
+          const newWidth = Math.max(80, (el.width || 550) * scaleX);
           node.scaleX(1);
           node.scaleY(1);
           return {
@@ -1215,7 +1264,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
             x: node.x(),
             y: node.y(),
             rotation,
-            fontSize: newFontSize,
+            width: newWidth,
             scaleX: 1,
             scaleY: 1,
           };
@@ -1305,43 +1354,131 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   return (
     <div
       ref={containerRef}
-      className={`w-full h-full relative touch-none select-none inset-0 overflow-hidden ${
+      className={`w-full h-full relative select-none inset-0 overflow-hidden ${
         activeTool === "hand"
           ? "cursor-grab active:cursor-grabbing"
           : activeTool === "laser"
           ? "cursor-crosshair active:cursor-none"
           : "cursor-crosshair"
       }`}
-      style={{ touchAction: "none" }}
     >
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Kalam:wght@700&display=swap');
       `}</style>
 
+      {/* 🌟 ტექსტის რედაქტირებისა და ზომის კონტროლის პანელი 🌟 */}
       {editingTextId && (
-        <textarea
-          autoFocus
-          value={editingTextValue}
-          onChange={(e) => setEditingTextValue(e.target.value)}
-          onBlur={finishTextEditing}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              finishTextEditing();
-            }
-          }}
+        <div
           style={{
             position: "absolute",
-            top: editingPos.y,
-            left: editingPos.x,
-            fontFamily: "'Caveat', 'Kalam', cursive, sans-serif",
-            fontSize: `${editingPos.fontSize}px`,
-            lineHeight: "1.2",
-            color: strokeColor,
-            zIndex: 1000,
+            top: Math.max(10, editingPos.y - 48),
+            left: Math.max(10, editingPos.x),
+            zIndex: 10000,
+            pointerEvents: "auto",
           }}
-          className="bg-transparent border border-dashed border-navy outline-none p-1 resize rounded min-w-[200px]"
-        />
+          className="flex flex-col gap-1"
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {/* ტექსტის ზომის სწრაფი მენიუ: onMouseDown preventDefault ხელს უშლის onBlur-ის გამოწვევას */}
+          <div 
+            className="flex items-center gap-1.5 bg-white/95 dark:bg-slate-900/95 p-1 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 text-xs w-max select-none"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <span className="text-[11px] font-bold text-slate-500 px-1">ზომა:</span>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                const nextSize = Math.max(12, currentFontSize - 4);
+                setCurrentFontSize(nextSize);
+                onElementsChange(
+                  elementsRef.current.map((el) => (el.id === editingTextId ? { ...el, fontSize: nextSize } : el))
+                );
+              }}
+              className="size-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 font-bold hover:bg-slate-200 text-slate-700 dark:text-slate-200"
+            >
+              -
+            </button>
+            <span className="font-mono font-bold px-1 min-w-[32px] text-center text-indigo-600 dark:text-indigo-400">
+              {currentFontSize}px
+            </span>
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                const nextSize = Math.min(72, currentFontSize + 4);
+                setCurrentFontSize(nextSize);
+                onElementsChange(
+                  elementsRef.current.map((el) => (el.id === editingTextId ? { ...el, fontSize: nextSize } : el))
+                );
+              }}
+              className="size-6 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 font-bold hover:bg-slate-200 text-slate-700 dark:text-slate-200"
+            >
+              +
+            </button>
+            {[18, 24, 32, 40, 48].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setCurrentFontSize(s);
+                  onElementsChange(
+                    elementsRef.current.map((el) => (el.id === editingTextId ? { ...el, fontSize: s } : el))
+                  );
+                }}
+                className={`px-1.5 py-0.5 rounded-md text-[11px] font-bold transition-colors ${
+                  currentFontSize === s
+                    ? "bg-indigo-600 text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          <textarea
+            ref={textareaInputRef}
+            value={editingTextValue}
+            onChange={(e) => setEditingTextValue(e.target.value)}
+            onPaste={(e) => {
+              e.stopPropagation();
+              const pasted = e.clipboardData.getData("text/plain");
+              if (pasted) {
+                e.preventDefault();
+                const cleaned = cleanPastedText(pasted);
+                const target = e.currentTarget;
+                const start = target.selectionStart;
+                const end = target.selectionEnd;
+                const nextVal = editingTextValue.substring(0, start) + cleaned + editingTextValue.substring(end);
+                setEditingTextValue(nextVal);
+              }
+            }}
+            onBlur={finishTextEditing}
+            placeholder="ჩაწერეთ ან ჩასვით ტექსტი..."
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.preventDefault();
+                finishTextEditing();
+              }
+            }}
+            style={{
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              fontSize: `${Math.max(14, currentFontSize * (scale || 1))}px`,
+              lineHeight: "1.4",
+              color: strokeColor === "#1e293b" && isDark ? "#ffffff" : strokeColor,
+              width: `${Math.max(300, editingPos.width)}px`,
+              minHeight: "85px",
+              pointerEvents: "auto",
+              userSelect: "text",
+              touchAction: "auto",
+            }}
+            className=" dark:bg-slate-900/95 border-2 border-indigo-500 shadow-2xl outline-none p-2.5 resize rounded-xl"
+          />
+        </div>
       )}
 
       {stageSize.width > 0 && stageSize.height > 0 && (
@@ -1378,7 +1515,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     el={el}
                     isListening={isListening}
                     activeTool={activeTool}
-                    onClick={() => handleElementClick(el.id)}
+                    onClick={() => handleElementClick(el)}
                     onDragEnd={(e) => handleDragEnd(el.id, e)}
                     onTransformEnd={(e) => handleTransformEnd(el.id, e)}
                   />
@@ -1404,8 +1541,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     hitStrokeWidth={Math.max(28, el.strokeWidth * 3)}
                     perfectDrawEnabled={false}
                     draggable={activeTool === "select"}
-                    onClick={() => handleElementClick(el.id)}
-                    onTap={() => handleElementClick(el.id)}
+                    onClick={() => handleElementClick(el)}
+                    onTap={() => handleElementClick(el)}
                     onDragEnd={(e) => handleDragEnd(el.id, e)}
                     onTransformEnd={(e) => handleTransformEnd(el.id, e)}
                   />
@@ -1429,8 +1566,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     strokeScaleEnabled={false}
                     hitStrokeWidth={Math.max(28, el.strokeWidth * 3)}
                     draggable={activeTool === "select"}
-                    onClick={() => handleElementClick(el.id)}
-                    onTap={() => handleElementClick(el.id)}
+                    onClick={() => handleElementClick(el)}
+                    onTap={() => handleElementClick(el)}
                     onDragEnd={(e) => handleDragEnd(el.id, e)}
                     onTransformEnd={(e) => handleTransformEnd(el.id, e)}
                   />
@@ -1456,8 +1593,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     strokeScaleEnabled={false}
                     hitStrokeWidth={Math.max(28, el.strokeWidth * 3)}
                     draggable={activeTool === "select"}
-                    onClick={() => handleElementClick(el.id)}
-                    onTap={() => handleElementClick(el.id)}
+                    onClick={() => handleElementClick(el)}
+                    onTap={() => handleElementClick(el)}
                     onDragEnd={(e) => handleDragEnd(el.id, e)}
                     onTransformEnd={(e) => handleTransformEnd(el.id, e)}
                   />
@@ -1481,8 +1618,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     strokeScaleEnabled={false}
                     hitStrokeWidth={24}
                     draggable={activeTool === "select"}
-                    onClick={() => handleElementClick(el.id)}
-                    onTap={() => handleElementClick(el.id)}
+                    onClick={() => handleElementClick(el)}
+                    onTap={() => handleElementClick(el)}
                     onDragEnd={(e) => handleDragEnd(el.id, e)}
                     onTransformEnd={(e) => handleTransformEnd(el.id, e)}
                   />
@@ -1505,8 +1642,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     strokeScaleEnabled={false}
                     hitStrokeWidth={24}
                     draggable={activeTool === "select"}
-                    onClick={() => handleElementClick(el.id)}
-                    onTap={() => handleElementClick(el.id)}
+                    onClick={() => handleElementClick(el)}
+                    onTap={() => handleElementClick(el)}
                     onDragEnd={(e) => handleDragEnd(el.id, e)}
                     onTransformEnd={(e) => handleTransformEnd(el.id, e)}
                   />
@@ -1531,8 +1668,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     strokeScaleEnabled={false}
                     hitStrokeWidth={24}
                     draggable={activeTool === "select"}
-                    onClick={() => handleElementClick(el.id)}
-                    onTap={() => handleElementClick(el.id)}
+                    onClick={() => handleElementClick(el)}
+                    onTap={() => handleElementClick(el)}
                     onDragEnd={(e) => handleDragEnd(el.id, e)}
                     onTransformEnd={(e) => handleTransformEnd(el.id, e)}
                   />
@@ -1557,8 +1694,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     strokeScaleEnabled={false}
                     hitStrokeWidth={24}
                     draggable={activeTool === "select"}
-                    onClick={() => handleElementClick(el.id)}
-                    onTap={() => handleElementClick(el.id)}
+                    onClick={() => handleElementClick(el)}
+                    onTap={() => handleElementClick(el)}
                     onDragEnd={(e) => handleDragEnd(el.id, e)}
                     onTransformEnd={(e) => handleTransformEnd(el.id, e)}
                   />
@@ -1583,8 +1720,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     strokeScaleEnabled={false}
                     hitStrokeWidth={24}
                     draggable={activeTool === "select"}
-                    onClick={() => handleElementClick(el.id)}
-                    onTap={() => handleElementClick(el.id)}
+                    onClick={() => handleElementClick(el)}
+                    onTap={() => handleElementClick(el)}
                     onDragEnd={(e) => handleDragEnd(el.id, e)}
                     onTransformEnd={(e) => handleTransformEnd(el.id, e)}
                   />
@@ -1597,22 +1734,22 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     id={el.id}
                     x={el.x}
                     y={el.y}
+                    width={el.width || 550}
+                    wrap="word"
                     text={el.text || ""}
-                    fontSize={el.fontSize || 36}
+                    fontSize={el.fontSize || 24}
                     scaleX={el.scaleX || 1}
                     scaleY={el.scaleY || 1}
                     rotation={el.rotation || 0}
-                    fontFamily="'Caveat', 'Kalam', cursive, sans-serif"
+                    fontFamily="system-ui, -apple-system, sans-serif"
                     fontStyle="bold"
-                    lineHeight={1.2}
+                    lineHeight={1.4}
                     fill={el.stroke}
                     visible={editingTextId !== el.id}
                     listening={isListening}
                     draggable={activeTool === "select"}
-                    onClick={() => handleElementClick(el.id)}
-                    onTap={() => handleElementClick(el.id)}
-                    onDblClick={() => handleTextDblClick(el)}
-                    onDblTap={() => handleTextDblClick(el)}
+                    onClick={() => handleElementClick(el)}
+                    onTap={() => handleElementClick(el)}
                     onDragEnd={(e) => handleDragEnd(el.id, e)}
                     onTransformEnd={(e) => handleTransformEnd(el.id, e)}
                   />
@@ -1621,23 +1758,29 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
               return null;
             })}
 
+            {/* 🌟 ტრანსფორმერი: ტექსტზე რჩება მხოლოდ მარცხენა/მარჯვენა სახელურები სიგანის გასაზრდელად */}
             {activeTool === "select" && (
               <Transformer
                 ref={trRef}
-                enabledAnchors={[
-                  "top-left",
-                  "top-center",
-                  "top-right",
-                  "middle-left",
-                  "middle-right",
-                  "bottom-left",
-                  "bottom-center",
-                  "bottom-right",
-                ]}
+                enabledAnchors={
+                  selectedElement?.type === "text"
+                    ? ["middle-left", "middle-right"]
+                    : [
+                        "top-left",
+                        "top-center",
+                        "top-right",
+                        "middle-left",
+                        "middle-right",
+                        "bottom-left",
+                        "bottom-center",
+                        "bottom-right",
+                      ]
+                }
                 centeredScaling={false}
                 keepRatio={false}
                 boundBoxFunc={(oldBox, newBox) => {
-                  if (newBox.width < 5 || newBox.height < 15) {
+                  if (selectedElement?.type === "text" && newBox.width < 100) return oldBox;
+                  if (selectedElement?.type !== "text" && (newBox.width < 5 || newBox.height < 15)) {
                     return oldBox;
                   }
                   return newBox;
@@ -1645,7 +1788,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
               />
             )}
 
-            {/* წვეროების გადაადგილების წერტილები (Anchor Points) */}
             {activeTool === "select" && selectedElement && selectedElement.points && selectedElement.type !== "freedraw" && (
               <Group
                 x={selectedElement.x || 0}

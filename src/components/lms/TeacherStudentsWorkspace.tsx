@@ -1141,7 +1141,7 @@ export function TeacherStudentsWorkspace({
               </button>
             </div>
 
-            <div className="px-6 pt-4 pb-2 border-b border-slate-100 bg-white">
+            {/* <div className="px-6 pt-4 pb-2 border-b border-slate-100 bg-white">
               <div className="flex p-1 bg-slate-100 rounded-xl gap-1">
                 <button
                   type="button"
@@ -1172,7 +1172,7 @@ export function TeacherStudentsWorkspace({
                   </button>
                 )}
               </div>
-            </div>
+            </div> */}
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
               {selectedProblemId === 'custom' ? (

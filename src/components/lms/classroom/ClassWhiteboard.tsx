@@ -406,7 +406,8 @@ function BoardThumbnail({
               e.stopPropagation();
               onDelete();
             }}
-            className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-md bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-700 shadow-xs"
+            /* 👈 მობილურზე მუდმივად ჩანს (opacity-100), კომპიუტერზე ჰოვერით */
+            className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-md bg-rose-600 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-rose-700 shadow-xs z-10"
           >
             <X className="size-3" />
           </button>
@@ -419,7 +420,6 @@ function BoardThumbnail({
     </div>
   );
 }
-
 function AssignBoardThumbnail({
   elements,
   isSelected,
@@ -1911,18 +1911,6 @@ export function ClassWhiteboard({
           onLaserMove={handleLaserMove}
         />
       </div>
-
-      {isTeacher && (
-        <button
-          type="button"
-          aria-label="AI ასისტენტი"
-          title="AI ასისტენტი"
-          onClick={() => setIsAiModalOpen(true)}
-          className="absolute right-4 bottom-16 sm:bottom-20 z-[1000] flex h-11 w-11 items-center justify-center rounded-full bg-navy text-sm font-bold text-white shadow-xl hover:bg-navy-strong hover:scale-105 active:scale-95 transition-all focus:outline-none border-2 border-white/20"
-        >
-          <Sparkles className="size-5 text-amber-300" />
-        </button>
-      )}
 
       {isTeacher && isAiModalOpen && (
         <div className="fixed inset-0 z-[1000001] flex items-end justify-end bg-slate-950/50 p-3 sm:items-center sm:justify-center sm:p-6 backdrop-blur-xs animate-in fade-in duration-150">
