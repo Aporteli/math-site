@@ -315,7 +315,7 @@ function BoardThumbnail({
     timerRef.current = setTimeout(() => {
       isLongPressedRef.current = true;
       onLongPress?.();
-    }, 800);
+    }, 700);
   };
 
   const cancelPress = () => {
@@ -325,7 +325,8 @@ function BoardThumbnail({
     }
   };
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     if (isLongPressedRef.current) {
       isLongPressedRef.current = false;
       return;
@@ -429,8 +430,9 @@ function BoardThumbnail({
       onMouseLeave={cancelPress}
       onTouchStart={startPress}
       onTouchEnd={cancelPress}
+      onContextMenu={(e) => e.preventDefault()}
       onClick={handleClick}
-      className={`group relative flex flex-col items-center gap-1.5 p-1.5 rounded-2xl cursor-pointer transition-all shrink-0 select-none ${
+      className={`group relative flex flex-col items-center gap-1.5 p-1.5 rounded-2xl cursor-pointer transition-all shrink-0 select-none [-webkit-touch-callout:none] ${
         isSelected
           ? "bg-indigo-600/20 ring-2 ring-indigo-600 dark:ring-indigo-400 shadow-md"
           : isActive
@@ -438,7 +440,7 @@ function BoardThumbnail({
           : "hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800"
       }`}
     >
-      <div className="relative w-28 h-18 rounded-xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950">
+      <div className="relative w-28 h-18 rounded-xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 pointer-events-none">
         <canvas ref={canvasRef} width={112} height={72} className="w-full h-full object-contain" />
 
         {isSelected && (
@@ -455,7 +457,7 @@ function BoardThumbnail({
               e.stopPropagation();
               onDelete();
             }}
-            className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-md bg-rose-600 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-rose-700 shadow-xs z-10"
+            className="pointer-events-auto absolute top-1 right-1 flex size-5 items-center justify-center rounded-md bg-rose-600 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-rose-700 shadow-xs z-10"
           >
             <X className="size-3" />
           </button>
