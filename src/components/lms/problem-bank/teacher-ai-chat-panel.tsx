@@ -15,7 +15,6 @@ import {
 import {
   Check,
   ChevronDown,
-  FlaskConical,
   GraduationCap,
   ImagePlus,
   Library,
@@ -95,13 +94,14 @@ interface TeacherAiChatPanelProps {
   className?: string;
   initialDraft?: string;
   initialImageBase64?: string;
+  initialImagesBase64?: string[];
   showSaveToLab?: boolean;
   enableSlashPrompts?: boolean;
   slashPromptsUserId?: string;
   onSavedProblems?: (
     problems: BankProblem[],
     target: "bank" | "lab",
-    meta?: { labIds?: string[]; idMap?: Record<string, string> },
+    meta?: { labIds?: string[]; idMap?: Record<string, string> }
   ) => void | Promise<void>;
 }
 
@@ -138,6 +138,7 @@ export function TeacherAiChatPanel({
   className = "",
   initialDraft = "",
   initialImageBase64 = "",
+  initialImagesBase64 = [],
   showSaveToLab = true,
   enableSlashPrompts = false,
   slashPromptsUserId = "",
@@ -163,12 +164,16 @@ export function TeacherAiChatPanel({
   const [manageSlashOpen, setManageSlashOpen] = useState(false);
   const [fillPrompt, setFillPrompt] = useState<AdminChatPrompt | null>(null);
   const fillInsertRef = useRef<{ tokenStart: number; cursor: number } | null>(null);
-  
-  // რეფი, რომელიც იმახსოვრებს ბოლო დამატებულ სურათს
-  const lastAddedImageRef = useRef<string | null>(null);
+
+  const [selectedProblemIds, setSelectedProblemIds] = useState<string[]>([]);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // გაორმაგების საწინააღმდეგო რეფი
+  const lastProcessedImagesKey = useRef<string>("");
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [assigningProblemText, setAssigningProblemText] = useState<{ topic: string; promptTex: string; solutionTex: string } | null>(null);
+  const [assigningProblems, setAssigningProblems] = useState<{ topic: string; promptTex: string; solutionTex: string }[]>([]);
+
   const [courseGroups, setCourseGroups] = useState<CourseGroup[]>([]);
   const [expandedCourseIds, setExpandedCourseIds] = useState<string[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
@@ -183,6 +188,7 @@ export function TeacherAiChatPanel({
     setMessages([]);
     setNotice(null);
     setSavedKeys({});
+    setSelectedProblemIds([]);
   }, [initialDraft]);
 
   useEffect(() => {
@@ -195,12 +201,28 @@ export function TeacherAiChatPanel({
 
   const filteredSlashPrompts = useMemo(
     () => filterAdminChatPrompts(slashPrompts, slashQuery),
-    [slashPrompts, slashQuery],
+    [slashPrompts, slashQuery]
   );
 
   useEffect(() => {
     setSlashActiveIndex(0);
   }, [slashQuery, slashMenuOpen]);
+
+  const handlePressStart = (id: string) => {
+    longPressTimer.current = setTimeout(() => {
+      setSelectedProblemIds((prev) =>
+        prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+      );
+      longPressTimer.current = null;
+    }, 1000);
+  };
+
+  const handlePressEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
 
   function syncSlashMenu(value: string, cursor: number) {
     if (!slashEnabled) {
@@ -293,21 +315,14 @@ export function TeacherAiChatPanel({
 
   const previewTex = draft.trim() ? toKatexFriendlyTex(draft) : "";
 
-  async function persistCards(
-    problems: BankProblem[],
-    target: "bank" | "lab",
-    keys: string[],
-  ) {
+  async function persistCards(problems: BankProblem[], target: "bank" | "lab", keys: string[]) {
     if (problems.length === 0) return;
     const batchKey = keys.join("|");
     setSavingKey(batchKey);
     setNotice(null);
     try {
       const payload = problems.map((problem) => toPersistInput(problem, target));
-      const result =
-        target === "lab"
-          ? await saveToLabAction(payload)
-          : await saveProblemsAction(payload);
+      const result = target === "lab" ? await saveToLabAction(payload) : await saveProblemsAction(payload);
       if (!result.ok) {
         setNotice(copy.saveFailed);
         return;
@@ -348,8 +363,8 @@ export function TeacherAiChatPanel({
     }
   }, []);
 
-  const handleOpenAssignModal = (problem: { topic: string; promptTex: string; solutionTex: string }) => {
-    setAssigningProblemText(problem);
+  const handleOpenAssignModal = (problems: { topic: string; promptTex: string; solutionTex: string }[]) => {
+    setAssigningProblems(problems);
     setSelectedStudentIds([]);
     setAssignError(null);
     setIsAssignModalOpen(true);
@@ -380,7 +395,7 @@ export function TeacherAiChatPanel({
   };
 
   const handleSendProblemToStudents = async (mode: "task" | "material") => {
-    if (!assigningProblemText) return;
+    if (assigningProblems.length === 0) return;
 
     if (selectedStudentIds.length === 0) {
       setAssignError("გთხოვთ მონიშნოთ მინიმუმ 1 მოსწავლე");
@@ -394,18 +409,20 @@ export function TeacherAiChatPanel({
 
     try {
       const isMat = mode === "material";
-      const sendPromises = selectedStudentIds.map((studentId) =>
-        sendProblemToStudentAction({
-          studentId,
-          instructions: isMat ? "მასალა" : undefined,
-          problem: {
-            id: `ai-prob-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-            topic: assigningProblemText.topic || "AI ამოცანა",
-            difficulty: isMat ? "easy" : "medium",
-            promptTex: assigningProblemText.promptTex,
-            solutionTex: assigningProblemText.solutionTex,
-          },
-        })
+      const sendPromises = selectedStudentIds.flatMap((studentId) =>
+        assigningProblems.map((prob) =>
+          sendProblemToStudentAction({
+            studentId,
+            instructions: isMat ? "მასალა" : undefined,
+            problem: {
+              id: `ai-prob-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              topic: prob.topic || "AI ამოცანა",
+              difficulty: isMat ? "easy" : "medium",
+              promptTex: prob.promptTex,
+              solutionTex: prob.solutionTex,
+            },
+          })
+        )
       );
 
       const results = await Promise.all(sendPromises);
@@ -417,8 +434,8 @@ export function TeacherAiChatPanel({
 
       setAssignedStatus(
         isMat
-          ? `მასალები წარმატებით გაეგზავნა ${selectedStudentIds.length} მოსწავლეს!`
-          : `დავალებები წარმატებით გაეგზავნა ${selectedStudentIds.length} მოსწავლეს!`
+          ? `მასალები წარმატებით გაეგზავნა ${selectedStudentIds.length} მოსწავლეს! (${assigningProblems.length} ჩანაწერი)`
+          : `დავალებები წარმატებით გაეგზავნა ${selectedStudentIds.length} მოსწავლეს! (${assigningProblems.length} ჩანაწერი)`
       );
       setTimeout(() => {
         setAssignedStatus(null);
@@ -439,29 +456,46 @@ export function TeacherAiChatPanel({
 
   async function addImages(files: File[]) {
     const drafts: ChatImageDraft[] = [];
-    for (const file of files.slice(0, 4)) {
+    for (const file of files.slice(0, 10)) {
       const prepared = await fileToChatImage(file);
       if (prepared) drafts.push(prepared);
     }
     if (drafts.length === 0) return;
-    setImages((current) => [...current, ...drafts].slice(0, 4));
+    setImages((current) => [...current, ...drafts].slice(0, 10));
   }
 
-  // დაცვა ორმაგი დამატებისგან React Strict Mode-ის გამო
+  // დაცული სურათების ჩატვირთვა (გაორმაგების გარეშე)
   useEffect(() => {
-    if (initialImageBase64 && initialImageBase64 !== lastAddedImageRef.current) {
-      lastAddedImageRef.current = initialImageBase64;
-      
-      fetch(initialImageBase64)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const file = new File([blob], "board-capture.png", { type: "image/png" });
-          void addImages([file]);
-        })
-        .catch(console.error);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialImageBase64]);
+    const rawList = initialImagesBase64.length > 0 ? initialImagesBase64 : initialImageBase64 ? [initialImageBase64] : [];
+    if (rawList.length === 0) return;
+
+    const currentKey = rawList.join("|").substring(0, 100);
+    if (lastProcessedImagesKey.current === currentKey) return;
+    lastProcessedImagesKey.current = currentKey;
+
+    const loadFiles = async () => {
+      const files: File[] = [];
+      for (let i = 0; i < rawList.length; i++) {
+        try {
+          const res = await fetch(rawList[i]);
+          const blob = await res.blob();
+          files.push(new File([blob], `board-capture-${i + 1}.png`, { type: "image/png" }));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      if (files.length > 0) {
+        const drafts: ChatImageDraft[] = [];
+        for (const file of files.slice(0, 10)) {
+          const prepared = await fileToChatImage(file);
+          if (prepared) drafts.push(prepared);
+        }
+        setImages(drafts);
+      }
+    };
+
+    void loadFiles();
+  }, [initialImageBase64, initialImagesBase64]);
 
   function onFileChange(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -502,6 +536,7 @@ export function TeacherAiChatPanel({
     setImages([]);
     setBusy(true);
     setNotice(null);
+    setSelectedProblemIds([]);
 
     try {
       const result = await teacherAiChatAction({
@@ -594,6 +629,7 @@ export function TeacherAiChatPanel({
             setMessages([]);
             setNotice(null);
             setSavedKeys({});
+            setSelectedProblemIds([]);
           }}
         >
           <RotateCcw className="size-4" aria-hidden="true" />
@@ -656,6 +692,8 @@ export function TeacherAiChatPanel({
                 bankProblems = [];
               }
 
+              const selectedInBlock = bankProblems.filter((p) => selectedProblemIds.includes(p.id));
+
               return (
                 <li key={`assistant-${index}`} className="flex justify-start">
                   <div className="max-w-[95%] space-y-3 sm:max-w-[85%]">
@@ -678,6 +716,24 @@ export function TeacherAiChatPanel({
                             {copy.cardsTitle}
                           </p>
                           <div className="flex flex-wrap gap-2">
+                            {selectedInBlock.length > 0 && (
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong shadow-xs transition-all active:scale-95"
+                                onClick={() =>
+                                  handleOpenAssignModal(
+                                    selectedInBlock.map((p) => ({
+                                      topic: p.topic,
+                                      promptTex: p.promptTex,
+                                      solutionTex: p.solutionTex,
+                                    }))
+                                  )
+                                }
+                              >
+                                <Send className="size-3.5" aria-hidden="true" />
+                                <span>მონიშნულების გაგზავნა ({selectedInBlock.length})</span>
+                              </button>
+                            )}
                             <button
                               type="button"
                               disabled={savingKey !== null}
@@ -686,7 +742,7 @@ export function TeacherAiChatPanel({
                                 void persistCards(
                                   bankProblems,
                                   "bank",
-                                  bankProblems.map((item) => item.id),
+                                  bankProblems.map((item) => item.id)
                                 )
                               }
                             >
@@ -701,26 +757,36 @@ export function TeacherAiChatPanel({
                           {bankProblems.map((problem) => {
                             const status = savedKeys[problem.id];
                             const busyThis = savingKey === problem.id;
+                            const isSelected = selectedProblemIds.includes(problem.id);
+
                             return (
                               <li
                                 key={problem.id}
-                                className="rounded-xl border border-hairline bg-white p-3"
+                                onMouseDown={() => handlePressStart(problem.id)}
+                                onMouseUp={handlePressEnd}
+                                onMouseLeave={handlePressEnd}
+                                onTouchStart={() => handlePressStart(problem.id)}
+                                onTouchEnd={handlePressEnd}
+                                className={`relative rounded-xl border p-3 transition-all ${
+                                  isSelected
+                                    ? "border-2 border-navy bg-sky-50 dark:border-sky-400 dark:bg-sky-900/30 shadow-md ring-2 ring-navy/10 dark:ring-sky-400/20 ring-offset-1"
+                                    : "border-hairline bg-white dark:border-slate-800 dark:bg-slate-900/50"
+                                }`}
                               >
+                                {isSelected && (
+                                  <div className="absolute -top-2.5 -left-2.5 flex size-6 items-center justify-center rounded-full bg-navy dark:bg-sky-500 text-white shadow-md z-10 animate-in zoom-in-75 duration-200">
+                                    <Check className="size-3.5 stroke-[3]" />
+                                  </div>
+                                )}
                                 <div className="mb-2 flex flex-wrap gap-2 text-[11px] text-muted">
                                   <span className="rounded-full bg-paper-deep px-2 py-0.5 font-semibold text-brass-strong">
                                     {fullCopy.difficulties[problem.difficulty]}
                                   </span>
-                                  <span>
-                                    {topicLabel(fullCopy.topics, problem.topic)}
-                                  </span>
-                                  {problem.year ? (
-                                    <span>{fullCopy.years[problem.year]}</span>
-                                  ) : null}
+                                  <span>{topicLabel(fullCopy.topics, problem.topic)}</span>
+                                  {problem.year ? <span>{fullCopy.years[problem.year]}</span> : null}
                                   {status ? (
                                     <span className="ml-auto font-semibold text-navy">
-                                      {status === "lab"
-                                        ? copy.savedToLab
-                                        : copy.savedToBank}
+                                      {status === "lab" ? copy.savedToLab : copy.savedToBank}
                                     </span>
                                   ) : null}
                                 </div>
@@ -731,8 +797,7 @@ export function TeacherAiChatPanel({
                                   tex={problem.promptTex}
                                   className="block min-w-0 overflow-x-auto hide-scrollbar text-ink [&_.katex]:text-[0.95rem]"
                                 />
-                                {problem.solutionTex.trim() &&
-                                problem.solutionTex.trim() !== "—" ? (
+                                {problem.solutionTex.trim() && problem.solutionTex.trim() !== "—" ? (
                                   <div className="mt-3 border-t border-hairline-soft pt-3">
                                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
                                       {fullCopy.solution}
@@ -743,38 +808,35 @@ export function TeacherAiChatPanel({
                                     />
                                   </div>
                                 ) : null}
-                                <div className="mt-3 flex flex-wrap gap-2">
+                                <div className="mt-3 flex flex-wrap gap-2 relative z-20">
                                   <button
                                     type="button"
                                     disabled={savingKey !== null}
                                     className="inline-flex items-center gap-1.5 rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint disabled:opacity-60"
-                                    onClick={() =>
-                                      void persistCards(
-                                        [problem],
-                                        "bank",
-                                        [problem.id],
-                                      )
-                                    }
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePressEnd();
+                                      void persistCards([problem], "bank", [problem.id]);
+                                    }}
                                   >
-                                    <Library
-                                      className="size-3.5"
-                                      aria-hidden="true"
-                                    />
-                                    {busyThis && savingKey === problem.id
-                                      ? copy.savingCard
-                                      : copy.saveToBank}
+                                    <Library className="size-3.5" aria-hidden="true" />
+                                    {busyThis && savingKey === problem.id ? copy.savingCard : copy.saveToBank}
                                   </button>
 
                                   <button
                                     type="button"
                                     className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong shadow-xs transition-all active:scale-95"
-                                    onClick={() =>
-                                      handleOpenAssignModal({
-                                        topic: problem.topic,
-                                        promptTex: problem.promptTex,
-                                        solutionTex: problem.solutionTex,
-                                      })
-                                    }
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePressEnd();
+                                      handleOpenAssignModal([
+                                        {
+                                          topic: problem.topic,
+                                          promptTex: problem.promptTex,
+                                          solutionTex: problem.solutionTex,
+                                        },
+                                      ]);
+                                    }}
                                   >
                                     <Send className="size-3.5" aria-hidden="true" />
                                     <span>კურსზე გაგზავნა</span>
@@ -890,9 +952,7 @@ export function TeacherAiChatPanel({
               setDraft(value);
               syncSlashMenu(value, event.target.selectionStart);
             }}
-            onClick={(event) =>
-              syncSlashMenu(event.currentTarget.value, event.currentTarget.selectionStart)
-            }
+            onClick={(event) => syncSlashMenu(event.currentTarget.value, event.currentTarget.selectionStart)}
             onKeyUp={(event) => {
               if (
                 event.key === "ArrowLeft" ||

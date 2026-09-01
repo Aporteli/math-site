@@ -2140,26 +2140,7 @@ export function ProblemBankWorkspace({
                 </div>
 
                 <div className="pt-8 mt-3 flex flex-col gap-6 border-t border-navy/10">
-                  <button
-                    type="button"
-                    className={
-                      lessonSetIds.includes(selected.id)
-                        ? 'inline-flex items-center justify-center gap-2 rounded-xl border border-navy/30 bg-navy-tint px-4 py-2.5 text-sm font-semibold text-navy'
-                        : 'inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong'
-                    }
-                    onClick={() => void toggleInSet(selected.id)}>
-                    {lessonSetIds.includes(selected.id) ? (
-                      <>
-                        <X className="size-4" aria-hidden="true" />
-                        {copy.removeFromSet}
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="size-4" aria-hidden="true" />
-                        {copy.addToSet}
-                      </>
-                    )}
-                  </button>
+                
                   {isUnsavedId(selected.id) && selected.source !== 'bank' ? (
                     <button
                       type="button"

@@ -287,21 +287,51 @@ class ChunkAssembler {
 function BoardThumbnail({
   elements,
   isActive,
+  isSelected,
   pageIndex,
   isDark,
   onClick,
+  onLongPress,
   onDelete,
   canDelete,
 }: {
   elements: CanvasElement[];
   isActive: boolean;
+  isSelected?: boolean;
   pageIndex: number;
   isDark: boolean;
   onClick: () => void;
+  onLongPress?: () => void;
   onDelete: () => void;
   canDelete: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressedRef = useRef(false);
+
+  const startPress = () => {
+    isLongPressedRef.current = false;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      isLongPressedRef.current = true;
+      onLongPress?.();
+    }, 800);
+  };
+
+  const cancelPress = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const handleClick = () => {
+    if (isLongPressedRef.current) {
+      isLongPressedRef.current = false;
+      return;
+    }
+    onClick();
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -317,7 +347,10 @@ function BoardThumbnail({
 
     if (elements.length === 0) return;
 
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
     elements.forEach((el) => {
       if (el.points && el.points.length > 0) {
         for (let i = 0; i < el.points.length; i += 2) {
@@ -339,7 +372,10 @@ function BoardThumbnail({
     });
 
     if (minX === Infinity) {
-      minX = 0; minY = 0; maxX = 800; maxY = 600;
+      minX = 0;
+      minY = 0;
+      maxX = 800;
+      maxY = 600;
     }
 
     const boundW = Math.max(100, maxX - minX);
@@ -388,16 +424,29 @@ function BoardThumbnail({
 
   return (
     <div
-      onClick={onClick}
-      className={`group relative flex flex-col items-center gap-1.5 p-1.5 rounded-2xl cursor-pointer transition-all shrink-0 ${
-        isActive
+      onMouseDown={startPress}
+      onMouseUp={cancelPress}
+      onMouseLeave={cancelPress}
+      onTouchStart={startPress}
+      onTouchEnd={cancelPress}
+      onClick={handleClick}
+      className={`group relative flex flex-col items-center gap-1.5 p-1.5 rounded-2xl cursor-pointer transition-all shrink-0 select-none ${
+        isSelected
+          ? "bg-indigo-600/20 ring-2 ring-indigo-600 dark:ring-indigo-400 shadow-md"
+          : isActive
           ? "bg-indigo-600/10 dark:bg-indigo-500/20 ring-2 ring-indigo-600 dark:ring-indigo-400"
           : "hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800"
       }`}
     >
       <div className="relative w-28 h-18 rounded-xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950">
         <canvas ref={canvasRef} width={112} height={72} className="w-full h-full object-contain" />
-        
+
+        {isSelected && (
+          <div className="absolute top-1 left-1 flex size-5 items-center justify-center rounded-full bg-indigo-600 text-white shadow-xs z-10 animate-in zoom-in-75 duration-150">
+            <Check className="size-3 stroke-[3]" />
+          </div>
+        )}
+
         {canDelete && (
           <button
             type="button"
@@ -406,7 +455,6 @@ function BoardThumbnail({
               e.stopPropagation();
               onDelete();
             }}
-            /* 👈 მობილურზე მუდმივად ჩანს (opacity-100), კომპიუტერზე ჰოვერით */
             className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-md bg-rose-600 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-rose-700 shadow-xs z-10"
           >
             <X className="size-3" />
@@ -414,12 +462,19 @@ function BoardThumbnail({
         )}
       </div>
 
-      <span className={`text-[11px] font-bold ${isActive ? "text-indigo-600 dark:text-indigo-400 font-extrabold" : "text-slate-600 dark:text-slate-400"}`}>
+      <span
+        className={`text-[11px] font-bold ${
+          isActive || isSelected
+            ? "text-indigo-600 dark:text-indigo-400 font-extrabold"
+            : "text-slate-600 dark:text-slate-400"
+        }`}
+      >
         დაფა {pageIndex + 1}
       </span>
     </div>
   );
 }
+
 function AssignBoardThumbnail({
   elements,
   isSelected,
@@ -449,7 +504,10 @@ function AssignBoardThumbnail({
 
     if (elements.length === 0) return;
 
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
     elements.forEach((el) => {
       if (el.points && el.points.length > 0) {
         for (let i = 0; i < el.points.length; i += 2) {
@@ -471,7 +529,10 @@ function AssignBoardThumbnail({
     });
 
     if (minX === Infinity) {
-      minX = 0; minY = 0; maxX = 800; maxY = 600;
+      minX = 0;
+      minY = 0;
+      maxX = 800;
+      maxY = 600;
     }
 
     const boundW = Math.max(100, maxX - minX);
@@ -529,17 +590,23 @@ function AssignBoardThumbnail({
     >
       <div className="relative w-24 h-15 rounded-xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950">
         <canvas ref={canvasRef} width={96} height={60} className="w-full h-full object-contain" />
-        
-        <div className={`absolute top-1 right-1 flex size-4 items-center justify-center rounded-full border transition-all ${
-          isSelected 
-            ? "bg-indigo-600 border-indigo-600 text-white" 
-            : "bg-white/80 border-slate-300 text-transparent group-hover:border-slate-400"
-        }`}>
+
+        <div
+          className={`absolute top-1 right-1 flex size-4 items-center justify-center rounded-full border transition-all ${
+            isSelected
+              ? "bg-indigo-600 border-indigo-600 text-white"
+              : "bg-white/80 border-slate-300 text-transparent group-hover:border-slate-400"
+          }`}
+        >
           <Check className="size-2.5 stroke-[3]" />
         </div>
       </div>
 
-      <span className={`text-[10px] font-bold ${isSelected ? "text-indigo-600 dark:text-indigo-400 font-extrabold" : "text-slate-600 dark:text-slate-400"}`}>
+      <span
+        className={`text-[10px] font-bold ${
+          isSelected ? "text-indigo-600 dark:text-indigo-400 font-extrabold" : "text-slate-600 dark:text-slate-400"
+        }`}
+      >
         გვერდი {pageIndex + 1}
       </span>
     </div>
@@ -560,7 +627,10 @@ function renderElementsToDataUrl(elements: CanvasElement[], isDark: boolean): st
     return canvas.toDataURL("image/png");
   }
 
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
   elements.forEach((el) => {
     if (el.points && el.points.length > 0) {
       for (let i = 0; i < el.points.length; i += 2) {
@@ -582,7 +652,10 @@ function renderElementsToDataUrl(elements: CanvasElement[], isDark: boolean): st
   });
 
   if (minX === Infinity) {
-    minX = 0; minY = 0; maxX = 800; maxY = 600;
+    minX = 0;
+    minY = 0;
+    maxX = 800;
+    maxY = 600;
   }
 
   const padding = 40;
@@ -665,13 +738,14 @@ export function ClassWhiteboard({
   });
 
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
+  const [selectedPages, setSelectedPages] = useState<number[]>([]);
   const [zoomScale, setZoomScale] = useState<number>(1);
   const [isPagesTrayOpen, setIsPagesTrayOpen] = useState<boolean>(false);
 
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiModel, setAiModel] = useState<AiModelId>(DEFAULT_AI_MODEL);
   const [aiModelStatus, setAiModelStatus] = useState<AiModelStatus[] | null>(null);
-  const [aiInitialImage, setAiInitialImage] = useState<string | undefined>(undefined);
+  const [aiInitialImages, setAiInitialImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (!isTeacher) return;
@@ -885,66 +959,72 @@ export function ClassWhiteboard({
     [publishDataSafe]
   );
 
-  const handleElementsChange = useCallback((newElems: CanvasElement[]) => {
-    if (isRemoteUpdateRef.current) return;
-    const pIndex = currentPageIndexRef.current;
-    const updated = [...pagesRef.current];
-    updated[pIndex] = newElems;
-    setPages(updated);
-    pagesRef.current = updated;
+  const handleElementsChange = useCallback(
+    (newElems: CanvasElement[]) => {
+      if (isRemoteUpdateRef.current) return;
+      const pIndex = currentPageIndexRef.current;
+      const updated = [...pagesRef.current];
+      updated[pIndex] = newElems;
+      setPages(updated);
+      pagesRef.current = updated;
 
-    let pageHist = historyMapRef.current.get(pIndex);
-    if (!pageHist) {
-      pageHist = { states: [[]], index: 0 };
-    }
-    const nextStates = pageHist.states.slice(0, pageHist.index + 1);
-    nextStates.push(newElems);
-    historyMapRef.current.set(pIndex, {
-      states: nextStates,
-      index: nextStates.length - 1,
-    });
-
-    updateUndoRedoState();
-
-    void publishDataSafe({
-      type: "WHITEBOARD_SYNC",
-      pageIndex: pIndex,
-      elements: newElems,
-    });
-  }, [publishDataSafe, updateUndoRedoState]);
-
-  const addImageToCanvas = useCallback((dataUrl: string) => {
-    const img = new window.Image();
-    img.src = dataUrl;
-    img.onload = () => {
-      const maxW = 450;
-      const maxH = 450;
-      let w = img.width || 300;
-      let h = img.height || 200;
-
-      if (w > maxW || h > maxH) {
-        const ratio = Math.min(maxW / w, maxH / h);
-        w = Math.round(w * ratio);
-        h = Math.round(h * ratio);
+      let pageHist = historyMapRef.current.get(pIndex);
+      if (!pageHist) {
+        pageHist = { states: [[]], index: 0 };
       }
+      const nextStates = pageHist.states.slice(0, pageHist.index + 1);
+      nextStates.push(newElems);
+      historyMapRef.current.set(pIndex, {
+        states: nextStates,
+        index: nextStates.length - 1,
+      });
 
-      const newImageElem: CanvasElement = {
-        id: `el_img_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        type: "image",
-        x: 100,
-        y: 100,
-        width: w,
-        height: h,
-        src: dataUrl,
-        stroke: "transparent",
-        strokeWidth: 0,
+      updateUndoRedoState();
+
+      void publishDataSafe({
+        type: "WHITEBOARD_SYNC",
+        pageIndex: pIndex,
+        elements: newElems,
+      });
+    },
+    [publishDataSafe, updateUndoRedoState]
+  );
+
+  const addImageToCanvas = useCallback(
+    (dataUrl: string, pos?: { x: number; y: number }) => {
+      const img = new window.Image();
+      img.src = dataUrl;
+      img.onload = () => {
+        const maxW = 450;
+        const maxH = 450;
+        let w = img.width || 300;
+        let h = img.height || 200;
+
+        if (w > maxW || h > maxH) {
+          const ratio = Math.min(maxW / w, maxH / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+
+        const newImageElem: CanvasElement = {
+          id: `el_img_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          type: "image",
+          x: pos ? pos.x : 100,
+          y: pos ? pos.y : 100,
+          width: w,
+          height: h,
+          src: dataUrl,
+          stroke: "transparent",
+          strokeWidth: 0,
+        };
+
+        const currentElems = pagesRef.current[currentPageIndexRef.current] || [];
+        handleElementsChange([...currentElems, newImageElem]);
+        setActiveTool("select");
       };
-
-      const currentElems = pagesRef.current[currentPageIndexRef.current] || [];
-      handleElementsChange([...currentElems, newImageElem]);
-      setActiveTool("select");
-    };
-  }, [handleElementsChange]);
+    },
+    [handleElementsChange]
+  );
 
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
@@ -1114,6 +1194,7 @@ export function ClassWhiteboard({
     setPages(updated);
     const nextIdx = Math.min(currentPageIndex, updated.length - 1);
     setCurrentPageIndex(nextIdx);
+    setSelectedPages((prev) => prev.filter((p) => p !== pageIdx).map((p) => (p > pageIdx ? p - 1 : p)));
     void publishDataSafe({ type: "WHITEBOARD_PAGE_COUNT", count: updated.length });
   };
 
@@ -1124,6 +1205,20 @@ export function ClassWhiteboard({
       historyMapRef.current.set(idx, { states: [pages[idx] || []], index: 0 });
     }
     updateUndoRedoState();
+  };
+
+  const togglePageSelect = (idx: number) => {
+    setSelectedPages((prev) =>
+      prev.includes(idx) ? prev.filter((p) => p !== idx) : [...prev, idx]
+    );
+  };
+
+  const selectAllPages = () => {
+    if (selectedPages.length === pages.length) {
+      setSelectedPages([]);
+    } else {
+      setSelectedPages(pages.map((_, i) => i));
+    }
   };
 
   const handleAssignSelectedBoards = async (mode: "task" | "material") => {
@@ -1230,15 +1325,25 @@ export function ClassWhiteboard({
   };
 
   const handleAskAIAboutBoard = () => {
-    let boardUrl = "";
-    if (canvasRef.current) {
-      boardUrl = canvasRef.current.toDataURL() || "";
+    const targetPages = selectedPages.length > 0 ? selectedPages : [currentPageIndex];
+    const imagesToPass: string[] = [];
+
+    for (const pageIdx of targetPages) {
+      if (pageIdx === currentPageIndexRef.current && canvasRef.current) {
+        const live = canvasRef.current.toDataURL();
+        if (live) {
+          imagesToPass.push(live);
+          continue;
+        }
+      }
+      const elems = pagesRef.current[pageIdx] || [];
+      const rendered = renderElementsToDataUrl(elems, isDark);
+      if (rendered) {
+        imagesToPass.push(rendered);
+      }
     }
-    if (!boardUrl) {
-      const elems = pagesRef.current[currentPageIndexRef.current] || [];
-      boardUrl = renderElementsToDataUrl(elems, isDark);
-    }
-    setAiInitialImage(boardUrl);
+
+    setAiInitialImages(imagesToPass);
     setIsAiModalOpen(true);
   };
 
@@ -1476,11 +1581,13 @@ export function ClassWhiteboard({
                       <span className="font-semibold truncate max-w-[240px]">
                         {student.name || student.identity}
                       </span>
-                      <div className={`flex size-4 shrink-0 items-center justify-center rounded-md transition-all ${
-                        isChecked 
-                          ? "bg-indigo-600 text-white" 
-                          : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900"
-                      }`}>
+                      <div
+                        className={`flex size-4 shrink-0 items-center justify-center rounded-md transition-all ${
+                          isChecked
+                            ? "bg-indigo-600 text-white"
+                            : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900"
+                        }`}
+                      >
                         {isChecked && <Check className="size-3 stroke-[3]" />}
                       </div>
                     </button>
@@ -1534,8 +1641,8 @@ export function ClassWhiteboard({
 
       {/* ზედა პანელი */}
       <div className="absolute top-2 sm:top-3 inset-x-0 z-[100] flex justify-center px-1 sm:px-2 pointer-events-none">
-        <div className="pointer-events-auto max-w-[96vw] overflow-x-auto thin-scrollbar touch-pan-x rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
-          <div className="flex w-max items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5">
+        <div className="pointer-events-auto rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 overflow-visible">
+          <div className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 overflow-visible">
             <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 dark:border-slate-800">
               <button
                 type="button"
@@ -1620,6 +1727,7 @@ export function ClassWhiteboard({
               <Crosshair className="size-3.5 sm:size-4" />
             </button>
 
+            {/* კალმის დროპდაუნი */}
             <div ref={penMenuRef} className="relative flex shrink-0 items-center">
               <div
                 className={`flex items-center h-7 sm:h-8 rounded-xl transition-all shadow-xs ${
@@ -1662,7 +1770,7 @@ export function ClassWhiteboard({
               </div>
 
               {isPenMenuOpen && (
-                <div className="absolute top-10 left-0 z-[120] w-52 sm:w-56 rounded-2xl bg-white dark:bg-slate-900 p-3 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-full mt-2 left-0 z-[120] w-52 sm:w-56 rounded-2xl bg-white dark:bg-slate-900 p-3 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">კალმის სისქე</span>
                     <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
@@ -1687,7 +1795,6 @@ export function ClassWhiteboard({
                         type="button"
                         onClick={() => {
                           setStrokeWidth(size);
-                          setIsPenMenuOpen(false);
                         }}
                         className={`size-6 sm:size-7 flex items-center justify-center rounded-xl transition-colors ${
                           strokeWidth === size
@@ -1706,6 +1813,7 @@ export function ClassWhiteboard({
               )}
             </div>
 
+            {/* ფიგურების დროპდაუნი */}
             <div ref={shapesMenuRef} className="relative flex shrink-0 items-center">
               <div
                 className={`flex items-center h-7 sm:h-8 rounded-xl transition-all shadow-xs ${
@@ -1747,7 +1855,7 @@ export function ClassWhiteboard({
               </div>
 
               {isShapesMenuOpen && (
-                <div className="absolute top-10 left-0 z-[120] w-36 rounded-2xl bg-white dark:bg-slate-900 p-2 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-full mt-2 left-0 z-[120] w-36 rounded-2xl bg-white dark:bg-slate-900 p-2 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
                   <div className="grid grid-cols-2 gap-1">
                     {shapeTools.map((s) => {
                       const SIcon = s.icon;
@@ -1833,6 +1941,7 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
+            {/* ფერების დროპდაუნი */}
             <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
               <button
                 type="button"
@@ -1852,15 +1961,14 @@ export function ClassWhiteboard({
               </button>
 
               {isColorMenuOpen && (
-                <div className="absolute top-10 right-0 z-[120] rounded-2xl bg-white dark:bg-slate-900 p-2.5 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="flex items-center gap-1.5">
+                <div className="absolute top-full mt-2 right-0 z-[120] w-max rounded-2xl bg-white dark:bg-slate-900 p-2.5 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center gap-2">
                     {colorsList.map((c) => (
                       <button
                         key={c}
                         type="button"
                         onClick={() => {
                           setStrokeColor(c);
-                          setIsColorMenuOpen(false);
                         }}
                         className={`size-6 rounded-full transition-transform ${
                           strokeColor === c ? "scale-125 ring-2 ring-indigo-500 ring-offset-1" : "hover:scale-110"
@@ -1909,8 +2017,21 @@ export function ClassWhiteboard({
           scale={zoomScale}
           onScaleChange={(newScale) => setZoomScale(newScale)}
           onLaserMove={handleLaserMove}
+          onPasteImage={addImageToCanvas}
         />
       </div>
+
+      {isTeacher && (
+        <button
+          type="button"
+          aria-label="AI ასისტენტი"
+          title="AI ასისტენტი"
+          onClick={handleAskAIAboutBoard}
+          className="absolute right-4 bottom-16 sm:bottom-20 z-[1000] flex h-11 w-11 items-center justify-center rounded-full bg-navy text-sm font-bold text-white shadow-xl hover:bg-navy-strong hover:scale-105 active:scale-95 transition-all focus:outline-none border-2 border-white/20"
+        >
+          <Sparkles className="size-5 text-amber-300" />
+        </button>
+      )}
 
       {isTeacher && isAiModalOpen && (
         <div className="fixed inset-0 z-[1000001] flex items-end justify-end bg-slate-950/50 p-3 sm:items-center sm:justify-center sm:p-6 backdrop-blur-xs animate-in fade-in duration-150">
@@ -1927,10 +2048,10 @@ export function ClassWhiteboard({
               model={aiModel}
               onModelChange={setAiModel}
               modelStatus={aiModelStatus || []}
-              initialImageBase64={aiInitialImage}
+              initialImagesBase64={aiInitialImages}
               onClose={() => {
                 setIsAiModalOpen(false);
-                setAiInitialImage(undefined);
+                setAiInitialImages([]);
               }}
               showSaveToLab={true}
               className="max-h-[min(85vh,56rem)] overflow-y-auto"
@@ -1940,8 +2061,11 @@ export function ClassWhiteboard({
       )}
 
       {/* ქვედა პანელი */}
-      <div className={`relative z-[100] flex flex-col items-center justify-center pt-1 px-1 sm:px-2 pointer-events-auto shrink-0 select-none ${isFullscreen ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))]" : "pb-3"}`}>
-        
+      <div
+        className={`relative z-[100] flex flex-col items-center justify-center pt-1 px-1 sm:px-2 pointer-events-auto shrink-0 select-none ${
+          isFullscreen ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))]" : "pb-3"
+        }`}
+      >
         {isPagesTrayOpen && (
           <div
             ref={pagesTrayRef}
@@ -1953,6 +2077,15 @@ export function ClassWhiteboard({
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   დაფის გვერდები ({pages.length})
                 </span>
+                {pages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={selectAllPages}
+                    className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline ml-2"
+                  >
+                    {selectedPages.length === pages.length ? "მონიშვნის მოხსნა" : "ყველას მონიშვნა"}
+                  </button>
+                )}
               </div>
               <button
                 type="button"
@@ -1970,8 +2103,10 @@ export function ClassWhiteboard({
                   pageIndex={idx}
                   elements={pageElems}
                   isActive={currentPageIndex === idx}
+                  isSelected={selectedPages.includes(idx)}
                   isDark={isDark}
                   onClick={() => handleSwitchPage(idx)}
+                  onLongPress={() => togglePageSelect(idx)}
                   onDelete={() => handleDeletePage(idx)}
                   canDelete={pages.length > 1}
                 />
@@ -1989,10 +2124,8 @@ export function ClassWhiteboard({
           </div>
         )}
 
-        {/* ქვედა ღილაკების პანელი: თხელი სქროლით */}
         <div className="max-w-[96vw] overflow-x-auto thin-scrollbar touch-pan-x rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl">
           <div className="flex w-max items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5">
-            
             <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 dark:border-slate-800">
               <button
                 type="button"
@@ -2043,7 +2176,14 @@ export function ClassWhiteboard({
               }`}
             >
               <Layers className="size-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>{currentPageIndex + 1} / {pages.length}</span>
+              <span>
+                {currentPageIndex + 1} / {pages.length}
+              </span>
+              {selectedPages.length > 0 && (
+                <span className="ml-1 rounded-full bg-indigo-600 px-1.5 py-0.2 text-[10px] font-bold text-white">
+                  {selectedPages.length}
+                </span>
+              )}
             </button>
 
             <button
@@ -2073,14 +2213,15 @@ export function ClassWhiteboard({
                   className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 text-white text-xs font-medium transition-colors shadow-xs shrink-0"
                 >
                   <Sparkles className="size-3.5 text-amber-300" />
-                  <span>AI-ს კითხვა</span>
+                  <span>AI-ს კითხვა {selectedPages.length > 0 ? `(${selectedPages.length})` : ""}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => {
                     setAssignError(null);
-                    setSelectedPagesForAssign([currentPageIndex]);
+                    const pagesToAssign = selectedPages.length > 0 ? selectedPages : [currentPageIndex];
+                    setSelectedPagesForAssign(pagesToAssign);
                     if (students.length > 0) {
                       setSelectedStudentIdentities([students[0].identity]);
                     }
@@ -2091,7 +2232,7 @@ export function ClassWhiteboard({
                   className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors shadow-xs shrink-0"
                 >
                   <Send className="size-3.5" />
-                  <span>გაგზავნა</span>
+                  <span>გაგზავნა {selectedPages.length > 0 ? `(${selectedPages.length})` : ""}</span>
                 </button>
               </>
             )}

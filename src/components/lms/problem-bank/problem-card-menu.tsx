@@ -262,12 +262,6 @@ export function ProblemCardMenu({
       onClick: () => run(() => onCopyPrompt(problem)),
     },
     {
-      id: 'set',
-      label: inSet ? copy.removeFromSet : copy.addToSet,
-      icon: inSet ? X : Plus,
-      onClick: () => run(() => onToggleSet(problem)),
-    },
-    {
       id: 'discard',
       label: problem.source === 'bank' ? copy.generate.remove : copy.generate.discard,
       icon: Trash2,

@@ -7,6 +7,7 @@ import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { DashboardNav } from "@/components/layout/dashboard-nav";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { SiteLogo } from "@/components/layout/site-logo";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/types";
@@ -282,6 +283,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
                   {dict.dashboard.workspace}
                 </p>
                 <LanguageSwitcher locale={locale} label={dict.header.language} />
+                <ThemeToggle label={dict.header.theme} />
                 <Link
                   href={localePath(locale, "/")}
                   className="hidden rounded-full border border-hairline bg-white px-3 py-2 text-sm font-medium text-body transition-colors hover:border-navy/30 hover:text-navy sm:inline-flex"

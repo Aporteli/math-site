@@ -39,17 +39,10 @@ export default async function LoginPage({ params }: LoginPageProps) {
       <div className="relative p-6 sm:p-8">
         <p className="text-sm font-semibold tracking-wide text-brass">{copy.eyebrow}</p>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink">{copy.title}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-body">{copy.subtitle}</p>
         <div className="mt-6">
           <Suspense fallback={<div className="h-48 rounded-xl bg-paper-deep" aria-hidden="true" />}>
             <LoginForm locale={locale} copy={copy} />
           </Suspense>
-        </div>
-        <div className="mt-6 rounded-xl bg-paper-deep px-4 py-3 text-sm text-body">
-          <p className="font-semibold text-ink">{copy.demoTitle}</p>
-          <p className="mt-1">{copy.demoTeacher}</p>
-          <p>{copy.demoStudent}</p>
-          <p className="mt-1 text-muted">{copy.demoPassword}</p>
         </div>
         <div className="mt-6 text-center">
           <Link href={localePath(locale, SIGNUP_PATH)} className="text-sm font-medium text-navy hover:text-navy-strong">

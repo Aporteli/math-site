@@ -44,6 +44,7 @@
     "openMenu": "Menu",
     "closeMenu": "Close menu",
     "language": "Change language",
+    "theme": "Change theme",
     "login": "Log in",
     "quickActions": "Quick actions"
   },
@@ -202,9 +203,9 @@
         "description": "Visualise functions, compare several graphs and watch parameters change in real time.",
         "badge": "Graph"
       },
-      "equations": {
-        "title": "Equation solver",
-        "description": "Step-by-step solutions of linear, quadratic and polynomial equations with every transformation shown.",
+      "quadratic-equations": {
+        "title": "Quadratic equation solver",
+        "description": "Step-by-step solutions of quadratic equations with every transformation shown.",
         "badge": "Step-by-step"
       },
       "fractions": {

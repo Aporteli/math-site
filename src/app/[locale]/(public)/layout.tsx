@@ -45,11 +45,7 @@ export default async function PublicLayout({
   const showJoinModal = user?.role === "VISITOR";
 
   return (
-    <div
-      className={`flex min-h-screen flex-col bg-paper pb-[calc(4.25rem+env(safe-area-inset-bottom))] ${
-        hasWorkspaceAccess ? "min-[500px]:pb-24" : "min-[500px]:pb-0"
-      }`}
-    >
+    <div className="flex min-h-screen flex-col bg-paper pb-[calc(4.25rem+env(safe-area-inset-bottom))] min-[500px]:pb-0">
       {showJoinModal ? <JoinClassModal locale={locale} /> : null}
 
       <SiteHeader locale={locale} dict={dict} session={user} />

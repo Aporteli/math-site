@@ -96,10 +96,10 @@ export const TOOL_SECTIONS: ToolSection[] = [
         href: "/teacher/tools/graphing",
       },
       {
-        id: "equations",
+        id: "quadratic-equations",
         icon: Equal,
         badgeColor: "brass",
-        href: "/teacher/tools/equation-solver",
+        href: "/teacher/tools/quadratic-equations",
       },
       {
         id: "fractions",

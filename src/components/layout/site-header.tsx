@@ -2,6 +2,7 @@ import { AuthEntry } from "@/components/auth/auth-entry";
 import { WorkspaceDock } from "@/components/auth/workspace-dock";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { NavLinks } from "@/components/layout/nav-links";
 import { SiteLogo } from "@/components/layout/site-logo";
@@ -67,6 +68,7 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
             <div className="hidden min-[500px]:contents">
               {search}
               <LanguageSwitcher locale={locale} label={dict.header.language} />
+              <ThemeToggle label={dict.header.theme} />
               {auth}
             </div>
 
@@ -100,6 +102,7 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
             menuPlacement="above"
             menuAlign="center"
           />
+          <ThemeToggle label={dict.header.theme} />
           {session ? (
             <WorkspaceDock
               locale={locale}

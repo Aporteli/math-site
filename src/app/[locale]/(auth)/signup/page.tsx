@@ -39,7 +39,6 @@ export default async function SignupPage({ params }: SignupPageProps) {
       <div className="relative p-6 sm:p-8">
         <p className="text-sm font-semibold tracking-wide text-brass">{copy.eyebrow}</p>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink">{copy.title}</h1>
-        <p className="mt-2 text-sm leading-relaxed text-body">{copy.subtitle}</p>
         <div className="mt-6">
           <Suspense fallback={<div className="h-48 rounded-xl bg-paper-deep" aria-hidden="true" />}>
             <SignupForm locale={locale} copy={copy} />

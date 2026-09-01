@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
+import { ThemeInit } from "@/components/layout/theme-init";
 import "../globals.css";
 import { SiteAiChatWidget } from "@/components/lms/problem-bank/site-ai-chat-widget";
 import { isLocale, locales } from "@/i18n/config";
@@ -61,9 +62,12 @@ export default async function LocaleLayout({
   const slash = canUseAdminSlashPrompts(session?.user);
 
   return (
-    <html lang={locale} data-scroll-behavior="smooth">
-      <body className="bg-paper text-ink">
-        {children}
+    <html lang={locale} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <body className="flex min-h-screen flex-col bg-paper text-ink">
+        <ThemeInit />
+        <div className="flex flex-1 flex-col">
+          {children}
+        </div>
         {showAiChat ? (
           <SiteAiChatWidget
             copy={dict.dashboard.teacher.problemBank}

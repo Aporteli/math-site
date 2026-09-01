@@ -1,14 +1,11 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { CatalogToolShell } from "@/components/tools/catalog-tool-shell";
-import { GraphingToolLoader } from "@/components/tools/graphing-tool-loader";
-import { EquationSolverLoader } from "@/components/tools/equation-solver-loader";
-import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
-import {
-  catalogToolStaticParams,
-  getCatalogToolByPath,
-} from "@/lib/tools";
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { CatalogToolShell } from '@/components/tools/catalog-tool-shell';
+import { GraphingToolLoader,  } from '@/components/tools/loaders/graphing-tool-loader';
+import { QuadraticSolverLoader } from '@/components/tools/loaders/quadratic-solver-loader';
+import { isLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { catalogToolStaticParams, getCatalogToolByPath } from '@/lib/tools';
 
 type ToolPageProps = {
   params: Promise<{ locale: string; toolSlug: string[] }>;
@@ -20,13 +17,11 @@ export function generateStaticParams() {
 
 export const dynamicParams = false;
 
-export async function generateMetadata({
-  params,
-}: ToolPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: ToolPageProps): Promise<Metadata> {
   const { locale, toolSlug } = await params;
   if (!isLocale(locale)) return {};
 
-  const tool = getCatalogToolByPath(toolSlug.join("/"));
+  const tool = getCatalogToolByPath(toolSlug.join('/'));
   if (!tool) return {};
 
   const item = getDictionary(locale).toolsPage.items[tool.id];
@@ -40,42 +35,26 @@ export default async function ToolPage({ params }: ToolPageProps) {
   const { locale, toolSlug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const tool = getCatalogToolByPath(toolSlug.join("/"));
+  const tool = getCatalogToolByPath(toolSlug.join('/'));
   if (!tool) notFound();
 
   const dict = getDictionary(locale);
   const item = dict.toolsPage.items[tool.id];
   const sectionTitle = dict.toolsPage.sections[tool.sectionId].title;
 
-  if (tool.id === "graphing") {
+  if (tool.id === 'graphing') {
     return (
-      <GraphingToolLoader
-        locale={locale}
-        copy={dict.graphingTool}
-        title={item.title}
-        description={item.description}
-      />
+      <GraphingToolLoader locale={locale} copy={dict.graphingTool} title={item.title} description={item.description} />
     );
   }
 
-  if (tool.id === "equations") {
+  if (tool.id === 'quadratic-equations') {
     return (
-      <EquationSolverLoader
-        locale={locale}
-        copy={dict.equations}
-        title={item.title}
-        description={item.description}
-      />
+      <QuadraticSolverLoader locale={locale} copy={dict.equations} title={item.title} description={item.description} />
     );
   }
 
   return (
-    <CatalogToolShell
-      locale={locale}
-      tool={tool}
-      item={item}
-      sectionTitle={sectionTitle}
-      copy={dict.toolsPage.tool}
-    />
+    <CatalogToolShell locale={locale} tool={tool} item={item} sectionTitle={sectionTitle} copy={dict.toolsPage.tool} />
   );
 }

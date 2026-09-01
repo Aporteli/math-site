@@ -579,13 +579,7 @@ export function ImportFamilyModal({
                     <p className={casOk ? 'text-sm text-navy' : 'text-sm text-brass-strong'}>{casNotice}</p>
                   ) : null}
                   <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      className="rounded-xl border border-navy/20 bg-white px-4 py-2 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint disabled:opacity-60"
-                      disabled={Boolean(preview?.diagnosis) || !preview?.problem}
-                      onClick={checkPreviewCas}>
-                      {family.checkCas}
-                    </button>
+                   
                     <button
                       type="button"
                       className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy-strong disabled:opacity-60"
@@ -593,15 +587,7 @@ export function ImportFamilyModal({
                       onClick={buildProblems}>
                       {family.build}
                     </button>
-                    <button
-                      type="button"
-                      className="rounded-xl border border-navy/20 bg-white px-4 py-2 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint disabled:opacity-60"
-                      disabled={
-                        Boolean(preview?.diagnosis) || !preview?.problem || auditIssues.length > 0 || savingFamily
-                      }
-                      onClick={() => void saveFamily()}>
-                      {savingFamily ? family.savingFamily : family.saveFamily}
-                    </button>
+                   
                   </div>
                 </>
               ) : null}
