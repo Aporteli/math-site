@@ -253,19 +253,21 @@ function extractFirstImageUrl(raw?: string | null): string | null {
 }
 
 function isAssignmentMaterial(a: Assignment): boolean {
+  // Only treat an item as a study material when it was explicitly sent as one.
+  // Tasks ("დავალებები") must never be re-classified as materials just because
+  // they contain problem text or an image / board snapshot.
+  const problemId =
+    typeof a.customPayload?.problemId === 'string' ? a.customPayload.problemId : '';
+  const instructions = (a.instructions ?? '').trim().toLowerCase();
+  const note = (a.note ?? '').trim().toLowerCase();
+
   return (
     a.type === 'MATERIAL' ||
-    (a.problems && a.problems.length > 0 && a.problems.some((p) => p.promptTex)) ||
-    (typeof a.id === 'string' &&
-      (a.id.startsWith('mat-') ||
-        a.id.startsWith('ai-prob-') ||
-        a.id.startsWith('whiteboard-') ||
-        a.id.startsWith('mat-'))) ||
-    (typeof a.instructions === 'string' &&
-      (a.instructions.trim().toLowerCase() === 'მასალა' ||
-        a.instructions.trim().toLowerCase().startsWith('მასალა:'))) ||
-    (typeof a.note === 'string' &&
-      (a.note.trim().toLowerCase() === 'მასალა' || a.note.trim().toLowerCase().startsWith('მასალა:')))
+    problemId.startsWith('mat-') ||
+    instructions === 'მასალა' ||
+    instructions.startsWith('მასალა:') ||
+    note === 'მასალა' ||
+    note.startsWith('მასალა:')
   );
 }
 

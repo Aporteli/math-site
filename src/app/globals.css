@@ -141,3 +141,37 @@ body {
 .katex-error {
   color: inherit !important;
 }
+
+/* თხელი, თანამედროვე სქროლბარი */
+.thin-scrollbar {
+  scrollbar-width: thin; /* Firefox-ისთვის */
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  height: 4px; /* ჰორიზონტალური სქროლის სისქე (სულ რაღაც 4px) */
+  width: 4px;  /* ვერტიკალური სქროლის სისქე */
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+/* სრულად უხილავი სქროლბარი (თუ საერთოდ არ გინდათ რომ გამოჩნდეს, მაგრამ ისქროლებოდეს) */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}

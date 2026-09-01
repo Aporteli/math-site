@@ -436,7 +436,7 @@ function AssignBoardThumbnail({
         const oy = el.y || 0;
         ctx.moveTo(ox + el.points[0], oy + el.points[1]);
         for (let i = 2; i < el.points.length; i += 2) {
-          ctx.lineTo(ox + el.points[i], oy + el.points[i + 1]);
+          ctx.lineTo(ox + el.points[i] , oy + el.points[i + 1]);
         }
         if (el.type === "triangle" || el.type === "diamond") {
           ctx.closePath();
@@ -526,7 +526,6 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const colorMenuRef = useRef<HTMLDivElement>(null);
   const pagesTrayRef = useRef<HTMLDivElement>(null);
 
-  // 🌟 Hydration-safe initial state
   const [pages, setPages] = useState<CanvasElement[][]>([[]]);
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
   const [activeTool, setActiveTool] = useState<ToolId>("pen");
@@ -545,10 +544,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [isPagesTrayOpen, setIsPagesTrayOpen] = useState(false);
 
-  // AI Modal State
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
-  // Send Modal States
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedPagesForAssign, setSelectedPagesForAssign] = useState<number[]>([0]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
@@ -569,7 +566,6 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     new Map()
   );
 
-  // 🌟 1. კლიენტზე მონაცემების უსაფრთხო ჩატვირთვა LocalStorage-დან
   useEffect(() => {
     try {
       const prefsRaw = localStorage.getItem(PREFS_KEY);
@@ -1061,7 +1057,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const effectiveStroke = isDark && strokeColor === DEFAULT_COLOR ? "#ffffff" : strokeColor;
 
   return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm">
+    <div className="relative flex h-full w-full min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm">
       <input
         ref={fileInputRef}
         type="file"
@@ -1080,9 +1076,9 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         }}
       />
 
-      {/* Toolbar */}
-      <div className="relative z-30 shrink-0 border-b border-hairline bg-gradient-to-b from-paper/60 to-white">
-        <div className="flex items-center gap-1.5 px-3 py-2 overflow-visible">
+      {/* Toolbar: მორგებული თხელი სქროლით (thin-scrollbar) */}
+      <div className="relative z-30 shrink-0 border-b border-hairline bg-gradient-to-b from-paper/60 to-white overflow-x-auto thin-scrollbar touch-pan-x">
+        <div className="flex w-max min-w-full items-center gap-1.5 px-3 py-2">
           <button
             type="button"
             onClick={toggleSidebarDrawer}
@@ -1120,7 +1116,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             <Crosshair className="size-4" />
           </ToolButton>
 
-          {/* 🌟 Pen Tool + Stroke Width Dropdown 🌟 */}
+          {/* Pen Tool + Stroke Width Dropdown */}
           <div ref={penMenuRef} className="relative flex shrink-0 items-center">
             <div
               className={`flex items-center h-8 rounded-xl transition-all shadow-xs ${
@@ -1205,7 +1201,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             )}
           </div>
 
-          {/* 🌟 Shapes Tool + Grid Dropdown 🌟 */}
+          {/* Shapes Tool */}
           <div ref={shapesMenuRef} className="relative flex shrink-0 items-center">
             <div
               className={`flex items-center h-8 rounded-xl transition-all shadow-xs ${
@@ -1292,7 +1288,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
 
           <div className="mx-1 h-6 w-px shrink-0 bg-hairline" />
 
-          {/* 🌟 Color Dropdown 🌟 */}
+          {/* Color Dropdown */}
           <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
             <button
               type="button"
@@ -1421,8 +1417,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         />
       </div>
 
-      {/* ქვედა მართვის პანელი */}
-      <div className="relative z-20 flex flex-col items-center justify-center p-2 bg-paper/30 border-t border-hairline select-none">
+      {/* ქვედა მართვის პანელი: თხელი სქროლით */}
+      <div className="relative z-20 shrink-0 flex flex-col items-center justify-center p-2 bg-paper/30 border-t border-hairline select-none">
         {isPagesTrayOpen && (
           <div
             ref={pagesTrayRef}
@@ -1468,64 +1464,65 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           </div>
         )}
 
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-white px-2 sm:px-3 py-1.5 rounded-2xl border border-hairline shadow-sm">
-          <button
-            type="button"
-            onClick={() => handleSwitchPage(currentPageIndex - 1)}
-            disabled={currentPageIndex === 0}
-            className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-paper hover:bg-paper-deep disabled:opacity-40 text-ink transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
+        <div className="max-w-[96vw] overflow-x-auto thin-scrollbar touch-pan-x rounded-2xl border border-hairline bg-white shadow-sm">
+          <div className="flex w-max items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5">
+            <button
+              type="button"
+              onClick={() => handleSwitchPage(currentPageIndex - 1)}
+              disabled={currentPageIndex === 0}
+              className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-paper hover:bg-paper-deep disabled:opacity-40 text-ink transition-colors"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
 
-          <button
-            type="button"
-            data-tray-trigger
-            onClick={() => setIsPagesTrayOpen((prev) => !prev)}
-            title="ყველა დაფის ნახვა"
-            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
-              isPagesTrayOpen ? "bg-navy text-white shadow-xs" : "hover:bg-paper text-ink"
-            }`}
-          >
-            <Layers className="size-3.5" />
-            <span>{currentPageIndex + 1} / {pages.length}</span>
-          </button>
+            <button
+              type="button"
+              data-tray-trigger
+              onClick={() => setIsPagesTrayOpen((prev) => !prev)}
+              title="ყველა დაფის ნახვა"
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+                isPagesTrayOpen ? "bg-navy text-white shadow-xs" : "hover:bg-paper text-ink"
+              }`}
+            >
+              <Layers className="size-3.5" />
+              <span>{currentPageIndex + 1} / {pages.length}</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => handleSwitchPage(currentPageIndex + 1)}
-            disabled={currentPageIndex === pages.length - 1}
-            className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-paper hover:bg-paper-deep disabled:opacity-40 text-ink transition-colors"
-          >
-            <ChevronRight className="size-4" />
-          </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchPage(currentPageIndex + 1)}
+              disabled={currentPageIndex === pages.length - 1}
+              className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-paper hover:bg-paper-deep disabled:opacity-40 text-ink transition-colors"
+            >
+              <ChevronRight className="size-4" />
+            </button>
 
-          <button
-            type="button"
-            onClick={handleAddNewPage}
-            className="flex items-center gap-1.5 h-7 sm:h-8 px-2.5 rounded-xl bg-paper hover:bg-paper-deep text-ink text-xs font-medium transition-colors"
-          >
-            <Plus className="size-3.5" />
-            <span>ახალი</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleAddNewPage}
+              className="flex items-center gap-1.5 h-7 sm:h-8 px-2.5 rounded-xl bg-paper hover:bg-paper-deep text-ink text-xs font-medium transition-colors"
+            >
+              <Plus className="size-3.5" />
+              <span>ახალი</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={handleOpenAssignModal}
-            title="დაფის სურათის გაგზავნა მოსწავლეებთან"
-            className="flex items-center gap-1.5 h-7 sm:h-8 px-3 rounded-xl bg-navy hover:bg-navy-strong text-white text-xs font-bold transition-all shadow-xs active:scale-95"
-          >
-            <Send className="size-3.5" />
-            <span>გაგზავნა</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleOpenAssignModal}
+              title="დაფის სურათის გაგზავნა მოსწავლეებთან"
+              className="flex items-center gap-1.5 h-7 sm:h-8 px-3 rounded-xl bg-navy hover:bg-navy-strong text-white text-xs font-bold transition-all shadow-xs active:scale-95 shrink-0"
+            >
+              <Send className="size-3.5" />
+              <span>გაგზავნა</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 🌟 გაგზავნის მოდალი 🌟 */}
+      {/* გაგზავნის მოდალი */}
       {isAssignModalOpen && (
         <div className="absolute inset-0 z-[150] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="flex max-h-[88vh] w-full max-w-xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl border border-hairline animate-in zoom-in-95 duration-150">
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-hairline bg-paper/30 px-6 py-4">
               <div className="flex items-center gap-2.5">
                 <div className="flex size-9 items-center justify-center rounded-xl bg-navy-tint text-navy">
@@ -1549,7 +1546,6 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
-              {/* დაფების შერჩევა */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-bold text-ink">
@@ -1584,7 +1580,6 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                 </div>
               </div>
 
-              {/* კურსები და მოსწავლეები */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-ink">
@@ -1737,7 +1732,6 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               )}
             </div>
 
-            {/* გაგზავნის ღილაკები */}
             <div className="border-t border-hairline bg-paper/30 p-4 grid grid-cols-2 gap-2.5">
               <button
                 type="button"
@@ -1781,7 +1775,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         </div>
       )}
 
-      {/* AI ასისტენტის Lazy-Loaded მოდალი */}
+      {/* AI Modal */}
       {isAiModalOpen && (
         <ClassroomAiModal
           isOpen={isAiModalOpen}

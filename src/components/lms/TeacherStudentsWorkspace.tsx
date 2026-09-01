@@ -934,7 +934,7 @@ export function TeacherStudentsWorkspace({
               <button
                 type="button"
                 onClick={() => setIsMaterialModalOpen(true)}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 sm:py-1.5 text-xs font-bold text-white hover:bg-indigo-700 transition-all shadow-xs active:scale-95">
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-500 text-white font-medium text-sm shadow-sm shadow-indigo-200 hover:bg-indigo-600 hover:shadow-md active:scale-[0.98] transition-all duration-200">
                 <UploadCloud className="size-3.5" />
                 <span>მასალის ატვირთვა</span>
               </button>

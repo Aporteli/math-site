@@ -6,7 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
-  useCallback, // 👈 დაამატეთ აქ
+  useCallback,
   type ChangeEvent,
   type ClipboardEvent as ReactClipboardEvent,
   type FormEvent,
@@ -94,6 +94,7 @@ interface TeacherAiChatPanelProps {
   onClose: () => void;
   className?: string;
   initialDraft?: string;
+  initialImageBase64?: string;
   showSaveToLab?: boolean;
   enableSlashPrompts?: boolean;
   slashPromptsUserId?: string;
@@ -136,6 +137,7 @@ export function TeacherAiChatPanel({
   onClose,
   className = "",
   initialDraft = "",
+  initialImageBase64 = "",
   showSaveToLab = true,
   enableSlashPrompts = false,
   slashPromptsUserId = "",
@@ -161,8 +163,10 @@ export function TeacherAiChatPanel({
   const [manageSlashOpen, setManageSlashOpen] = useState(false);
   const [fillPrompt, setFillPrompt] = useState<AdminChatPrompt | null>(null);
   const fillInsertRef = useRef<{ tokenStart: number; cursor: number } | null>(null);
+  
+  // რეფი, რომელიც იმახსოვრებს ბოლო დამატებულ სურათს
+  const lastAddedImageRef = useRef<string | null>(null);
 
-  // 🌟 გაგზავნის მოდალის State-ები
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assigningProblemText, setAssigningProblemText] = useState<{ topic: string; promptTex: string; solutionTex: string } | null>(null);
   const [courseGroups, setCourseGroups] = useState<CourseGroup[]>([]);
@@ -327,7 +331,6 @@ export function TeacherAiChatPanel({
     }
   }
 
-  // 🌟 კურსების წამოღება გაგზავნის მოდალისთვის 🌟
   const fetchCoursesAndStudents = useCallback(async () => {
     setLoadingCourses(true);
     try {
@@ -443,6 +446,22 @@ export function TeacherAiChatPanel({
     if (drafts.length === 0) return;
     setImages((current) => [...current, ...drafts].slice(0, 4));
   }
+
+  // დაცვა ორმაგი დამატებისგან React Strict Mode-ის გამო
+  useEffect(() => {
+    if (initialImageBase64 && initialImageBase64 !== lastAddedImageRef.current) {
+      lastAddedImageRef.current = initialImageBase64;
+      
+      fetch(initialImageBase64)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const file = new File([blob], "board-capture.png", { type: "image/png" });
+          void addImages([file]);
+        })
+        .catch(console.error);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialImageBase64]);
 
   function onFileChange(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
@@ -746,7 +765,6 @@ export function TeacherAiChatPanel({
                                       : copy.saveToBank}
                                   </button>
 
-                                  {/* 🌟 კურსზე გაგზავნის ღილაკი 1-ლი სურათის მიხედვით 🌟 */}
                                   <button
                                     type="button"
                                     className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong shadow-xs transition-all active:scale-95"
@@ -928,11 +946,9 @@ export function TeacherAiChatPanel({
         />
       ) : null}
 
-      {/* 🌟 კურსებისა და მოსწავლეების მოსანიშნი მოდალი (მე-2 სურათის მსგავსი) 🌟 */}
       {isAssignModalOpen && (
         <div className="absolute inset-0 z-[200] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-150 rounded-2xl">
           <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl border border-hairline animate-in zoom-in-95 duration-150">
-            {/* Header */}
             <div className="flex items-center justify-between border-b border-hairline bg-paper/30 px-6 py-4">
               <div className="flex items-center gap-2.5">
                 <div className="flex size-9 items-center justify-center rounded-xl bg-navy-tint text-navy">
@@ -1108,7 +1124,6 @@ export function TeacherAiChatPanel({
               )}
             </div>
 
-            {/* გაგზავნის ღილაკები */}
             <div className="border-t border-hairline bg-paper/30 p-4 grid grid-cols-2 gap-2.5">
               <button
                 type="button"

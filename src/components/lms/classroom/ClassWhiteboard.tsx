@@ -668,10 +668,10 @@ export function ClassWhiteboard({
   const [zoomScale, setZoomScale] = useState<number>(1);
   const [isPagesTrayOpen, setIsPagesTrayOpen] = useState<boolean>(false);
 
-  // 🌟 AI Chat states (მხოლოდ მასწავლებლისთვის)
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [aiModel, setAiModel] = useState<AiModelId>(DEFAULT_AI_MODEL);
   const [aiModelStatus, setAiModelStatus] = useState<AiModelStatus[] | null>(null);
+  const [aiInitialImage, setAiInitialImage] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!isTeacher) return;
@@ -1229,6 +1229,19 @@ export function ClassWhiteboard({
     }
   };
 
+  const handleAskAIAboutBoard = () => {
+    let boardUrl = "";
+    if (canvasRef.current) {
+      boardUrl = canvasRef.current.toDataURL() || "";
+    }
+    if (!boardUrl) {
+      const elems = pagesRef.current[currentPageIndexRef.current] || [];
+      boardUrl = renderElementsToDataUrl(elems, isDark);
+    }
+    setAiInitialImage(boardUrl);
+    setIsAiModalOpen(true);
+  };
+
   const togglePageSelectionForAssign = (idx: number) => {
     setSelectedPagesForAssign((prev) =>
       prev.includes(idx) ? prev.filter((p) => p !== idx) : [...prev, idx]
@@ -1333,7 +1346,6 @@ export function ClassWhiteboard({
         className="hidden"
       />
 
-      {/* გასუფთავების მოდალი */}
       {isClearConfirmOpen && (
         <div className="absolute inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="w-80 rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-2xl border border-slate-200 dark:border-slate-800 text-center animate-in zoom-in-95 duration-150">
@@ -1364,7 +1376,6 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* 🌟 მასწავლებლის გაგზავნის მოდალი (მხოლოდ მასწავლებლისთვის) 🌟 */}
       {isTeacher && isAssignModalOpen && (
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[110] w-[340px] sm:w-[420px] rounded-3xl bg-white dark:bg-slate-900 p-4 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
@@ -1522,10 +1533,9 @@ export function ClassWhiteboard({
       )}
 
       {/* ზედა პანელი */}
-      <div className="absolute top-3 inset-x-0 z-[100] flex justify-center px-2 pointer-events-none">
-        <div className="pointer-events-auto max-w-full overflow-visible rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
+      <div className="absolute top-2 sm:top-3 inset-x-0 z-[100] flex justify-center px-1 sm:px-2 pointer-events-none">
+        <div className="pointer-events-auto max-w-[96vw] overflow-x-auto thin-scrollbar touch-pan-x rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
           <div className="flex w-max items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5">
-            {/* Undo / Redo */}
             <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 dark:border-slate-800">
               <button
                 type="button"
@@ -1556,7 +1566,6 @@ export function ClassWhiteboard({
               </button>
             </div>
 
-            {/* Select Tool */}
             <button
               type="button"
               title="მონიშვნა / ზომის შეცვლა"
@@ -1575,7 +1584,6 @@ export function ClassWhiteboard({
               <MousePointer className="size-3.5 sm:size-4" />
             </button>
 
-            {/* Hand Tool (Pan) */}
             <button
               type="button"
               title="დაფის გადაადგილება (Pan)"
@@ -1594,7 +1602,6 @@ export function ClassWhiteboard({
               <Hand className="size-3.5 sm:size-4" />
             </button>
 
-            {/* Laser Tool */}
             <button
               type="button"
               title="ლაზერული მაჩვენებელი (Laser Pointer)"
@@ -1613,7 +1620,6 @@ export function ClassWhiteboard({
               <Crosshair className="size-3.5 sm:size-4" />
             </button>
 
-            {/* Pen Tool */}
             <div ref={penMenuRef} className="relative flex shrink-0 items-center">
               <div
                 className={`flex items-center h-7 sm:h-8 rounded-xl transition-all shadow-xs ${
@@ -1700,7 +1706,6 @@ export function ClassWhiteboard({
               )}
             </div>
 
-            {/* Shapes Tool */}
             <div ref={shapesMenuRef} className="relative flex shrink-0 items-center">
               <div
                 className={`flex items-center h-7 sm:h-8 rounded-xl transition-all shadow-xs ${
@@ -1770,7 +1775,6 @@ export function ClassWhiteboard({
               )}
             </div>
 
-            {/* Text Tool */}
             <button
               type="button"
               title="ტექსტი"
@@ -1789,7 +1793,6 @@ export function ClassWhiteboard({
               <Type className="size-3.5 sm:size-4" />
             </button>
 
-            {/* Image Upload */}
             <button
               type="button"
               title="სურათის ატვირთვა"
@@ -1799,7 +1802,6 @@ export function ClassWhiteboard({
               <ImageIcon className="size-3.5 sm:size-4" />
             </button>
 
-            {/* Eraser Tool */}
             <button
               type="button"
               title="საშლელი"
@@ -1820,7 +1822,6 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
-            {/* Fit to content */}
             <button
               type="button"
               onClick={() => canvasRef.current?.fitToContent()}
@@ -1830,10 +1831,8 @@ export function ClassWhiteboard({
               <Maximize2 className="size-3.5 sm:size-4" />
             </button>
 
-      
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
-            {/* Color Dropdown */}
             <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
               <button
                 type="button"
@@ -1876,7 +1875,6 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
 
-            {/* Dark Mode */}
             <button
               type="button"
               onClick={() => setIsDark(!isDark)}
@@ -1886,7 +1884,6 @@ export function ClassWhiteboard({
               {isDark ? <Sun className="size-3.5 sm:size-4 text-amber-400" /> : <Moon className="size-3.5 sm:size-4" />}
             </button>
 
-            {/* Clear Board */}
             <button
               type="button"
               onClick={() => setIsClearConfirmOpen(true)}
@@ -1915,7 +1912,6 @@ export function ClassWhiteboard({
         />
       </div>
 
-      {/* 🌟 ქვედა მარჯვენა მცურავი AI ასისტენტის ღილაკი (მხოლოდ მასწავლებლისთვის) 🌟 */}
       {isTeacher && (
         <button
           type="button"
@@ -1928,7 +1924,6 @@ export function ClassWhiteboard({
         </button>
       )}
 
-      {/* 🌟 სრული AI ასისტენტის მოდალი (TeacherAiChatPanel) 🌟 */}
       {isTeacher && isAiModalOpen && (
         <div className="fixed inset-0 z-[1000001] flex items-end justify-end bg-slate-950/50 p-3 sm:items-center sm:justify-center sm:p-6 backdrop-blur-xs animate-in fade-in duration-150">
           <button
@@ -1944,7 +1939,11 @@ export function ClassWhiteboard({
               model={aiModel}
               onModelChange={setAiModel}
               modelStatus={aiModelStatus || []}
-              onClose={() => setIsAiModalOpen(false)}
+              initialImageBase64={aiInitialImage}
+              onClose={() => {
+                setIsAiModalOpen(false);
+                setAiInitialImage(undefined);
+              }}
               showSaveToLab={true}
               className="max-h-[min(85vh,56rem)] overflow-y-auto"
             />
@@ -1953,9 +1952,8 @@ export function ClassWhiteboard({
       )}
 
       {/* ქვედა პანელი */}
-      <div className={`relative z-[100] flex flex-col items-center justify-center pt-1 px-2 pointer-events-auto shrink-0 select-none ${isFullscreen ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))]" : "pb-3"}`}>
+      <div className={`relative z-[100] flex flex-col items-center justify-center pt-1 px-1 sm:px-2 pointer-events-auto shrink-0 select-none ${isFullscreen ? "pb-[calc(0.75rem+env(safe-area-inset-bottom))]" : "pb-3"}`}>
         
-        {/* დაფების მცურავი მინიატურების ზოლი */}
         {isPagesTrayOpen && (
           <div
             ref={pagesTrayRef}
@@ -2003,100 +2001,113 @@ export function ClassWhiteboard({
           </div>
         )}
 
-        {/* მთავარი ქვედა ღილაკების პანელი */}
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2 sm:px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
-          
-          {/* Zoom ბლოკი */}
-          <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 dark:border-slate-800">
+        {/* ქვედა ღილაკების პანელი: თხელი სქროლით */}
+        <div className="max-w-[96vw] overflow-x-auto thin-scrollbar touch-pan-x rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl">
+          <div className="flex w-max items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5">
+            
+            <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 sm:pr-1.5 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={handleZoomOut}
+                title="დაპატარავება (Ctrl + -)"
+                className="flex size-7 sm:size-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+              >
+                <ZoomOut className="size-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleZoomReset}
+                title="100%-ზე დაბრუნება (Ctrl + 0)"
+                className="flex h-7 sm:h-8 items-center justify-center px-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 transition-colors min-w-[36px] sm:min-w-[42px]"
+              >
+                {zoomPercent}%
+              </button>
+
+              <button
+                type="button"
+                onClick={handleZoomIn}
+                title="გადიდება (Ctrl + +)"
+                className="flex size-7 sm:size-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+              >
+                <ZoomIn className="size-3.5" />
+              </button>
+            </div>
+
             <button
               type="button"
-              onClick={handleZoomOut}
-              title="დაპატარავება (Ctrl + -)"
-              className="flex size-7 sm:size-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+              onClick={() => handleSwitchPage(currentPageIndex - 1)}
+              disabled={currentPageIndex === 0}
+              className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors"
             >
-              <ZoomOut className="size-3.5" />
+              <ChevronLeft className="size-4" />
             </button>
 
             <button
               type="button"
-              onClick={handleZoomReset}
-              title="100%-ზე დაბრუნება (Ctrl + 0)"
-              className="flex h-7 sm:h-8 items-center justify-center px-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 transition-colors min-w-[36px] sm:min-w-[42px]"
+              data-tray-trigger
+              onClick={() => setIsPagesTrayOpen((prev) => !prev)}
+              title="ყველა დაფის ნახვა"
+              className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+                isPagesTrayOpen
+                  ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500"
+                  : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+              }`}
             >
-              {zoomPercent}%
+              <Layers className="size-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span>{currentPageIndex + 1} / {pages.length}</span>
             </button>
 
             <button
               type="button"
-              onClick={handleZoomIn}
-              title="გადიდება (Ctrl + +)"
-              className="flex size-7 sm:size-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+              onClick={() => handleSwitchPage(currentPageIndex + 1)}
+              disabled={currentPageIndex === pages.length - 1}
+              className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors"
             >
-              <ZoomIn className="size-3.5" />
+              <ChevronRight className="size-4" />
             </button>
+
+            <button
+              type="button"
+              onClick={handleAddNewPage}
+              className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium transition-colors"
+            >
+              <Plus className="size-3.5" />
+              <span>ახალი</span>
+            </button>
+
+            {isTeacher && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleAskAIAboutBoard}
+                  title="დაფის გაგზავნა AI-სთვის"
+                  className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 text-white text-xs font-medium transition-colors shadow-xs shrink-0"
+                >
+                  <Sparkles className="size-3.5 text-amber-300" />
+                  <span>AI-ს კითხვა</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAssignError(null);
+                    setSelectedPagesForAssign([currentPageIndex]);
+                    if (students.length > 0) {
+                      setSelectedStudentIdentities([students[0].identity]);
+                    }
+                    setIsAssignModalOpen(true);
+                    updateParticipantList();
+                  }}
+                  title="დაფის სურათის გაგზავნა მოსწავლესთან"
+                  className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors shadow-xs shrink-0"
+                >
+                  <Send className="size-3.5" />
+                  <span>გაგზავნა</span>
+                </button>
+              </>
+            )}
           </div>
-
-          <button
-            type="button"
-            onClick={() => handleSwitchPage(currentPageIndex - 1)}
-            disabled={currentPageIndex === 0}
-            className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-
-          <button
-            type="button"
-            data-tray-trigger
-            onClick={() => setIsPagesTrayOpen((prev) => !prev)}
-            title="ყველა დაფის ნახვა"
-            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
-              isPagesTrayOpen
-                ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500"
-                : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
-            }`}
-          >
-            <Layers className="size-3.5 text-indigo-600 dark:text-indigo-400" />
-            <span>{currentPageIndex + 1} / {pages.length}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSwitchPage(currentPageIndex + 1)}
-            disabled={currentPageIndex === pages.length - 1}
-            className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleAddNewPage}
-            className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium transition-colors"
-          >
-            <Plus className="size-3.5" />
-            <span>ახალი</span>
-          </button>
-
-          {isTeacher && (
-            <button
-              type="button"
-              onClick={() => {
-                setAssignError(null);
-                setSelectedPagesForAssign([currentPageIndex]);
-                if (students.length > 0) {
-                  setSelectedStudentIdentities([students[0].identity]);
-                }
-                setIsAssignModalOpen(true);
-                updateParticipantList();
-              }}
-              title="დაფის სურათის გაგზავნა მოსწავლესთან"
-              className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors shadow-xs"
-            >
-              <Send className="size-3.5" />
-              <span>გაგზავნა</span>
-            </button>
-          )}
         </div>
       </div>
     </div>

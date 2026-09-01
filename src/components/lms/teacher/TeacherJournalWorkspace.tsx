@@ -56,7 +56,7 @@ type PopoverState = {
 const WEEKDAY_LABELS = ["ორშ", "სამ", "ოთხ", "ხუთ", "პარ", "შაბ", "კვ"];
 const MONTH_LABELS = [
   "იანვარი", "თებერვალი", "მარტი", "აპრილი", "მაისი", "ივნისი",
-  "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოებერი", "დეკემბერი",
+  "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი",
 ];
 
 const COLOR_OPTIONS: EventColor[] = ["navy", "sky", "emerald", "amber", "rose", "violet"];
@@ -71,12 +71,12 @@ const COLOR_DOT: Record<EventColor, string> = {
 };
 
 const COLOR_CHIP: Record<EventColor, string> = {
-  navy: "bg-navy text-white",
-  sky: "bg-sky-500 text-white",
-  emerald: "bg-emerald-500 text-white",
-  amber: "bg-amber-500 text-white",
-  rose: "bg-rose-500 text-white",
-  violet: "bg-violet-500 text-white",
+  navy: "bg-navy text-white border-navy",
+  sky: "bg-sky-500 text-white border-sky-600",
+  emerald: "bg-emerald-500 text-white border-emerald-600",
+  amber: "bg-amber-500 text-white border-amber-600",
+  rose: "bg-rose-500 text-white border-rose-600",
+  violet: "bg-violet-500 text-white border-violet-600",
 };
 
 const REMINDER_LABELS: Record<ReminderOption, string> = {
@@ -95,6 +95,9 @@ const REPEAT_LABELS: Record<RepeatOption, string> = {
   monthly: "ყოველთვიურად",
 };
 
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const HOUR_HEIGHT = 60;
+
 function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
@@ -111,14 +114,19 @@ function isSameDay(a: Date, b: Date) {
   );
 }
 
-function emptyDraft(dateKey: string): JournalEvent {
+function timeToMinutes(timeStr: string) {
+  const [h, m] = (timeStr || "00:00").split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+function emptyDraft(dateKey: string, startH = 9, endH = 10): JournalEvent {
   return {
     id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     title: "",
     date: dateKey,
     allDay: false,
-    startTime: "09:00",
-    endTime: "10:00",
+    startTime: `${pad(startH)}:00`,
+    endTime: `${pad(endH)}:00`,
     location: "",
     description: "",
     guests: [],
@@ -126,6 +134,33 @@ function emptyDraft(dateKey: string): JournalEvent {
     repeat: "none",
     reminder: "30",
   };
+}
+
+function isEventOnDay(ev: JournalEvent, targetDate: Date): boolean {
+  const [ey, em, ed] = ev.date.split("-").map(Number);
+  const evDate = new Date(ey, em - 1, ed);
+
+  const targetMidnight = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+  const evMidnight = new Date(evDate.getFullYear(), evDate.getMonth(), evDate.getDate());
+  if (targetMidnight < evMidnight) return false;
+
+  if (ev.repeat === "none" || !ev.repeat) {
+    return isSameDay(evDate, targetDate);
+  }
+
+  if (ev.repeat === "daily") {
+    return true;
+  }
+
+  if (ev.repeat === "weekly") {
+    return evDate.getDay() === targetDate.getDay();
+  }
+
+  if (ev.repeat === "monthly") {
+    return evDate.getDate() === targetDate.getDate();
+  }
+
+  return false;
 }
 
 const POPOVER_QUICK_WIDTH = 320;
@@ -136,7 +171,7 @@ const POPOVER_EXPANDED_HEIGHT = 540;
 export function TeacherJournalWorkspace() {
   const { toggleSidebarDrawer } = useDashboardFrame();
   const [currentDate, setCurrentDate] = useState(() => new Date());
-  const [view, setView] = useState<ViewMode>("month");
+  const [view, setView] = useState<ViewMode>("week");
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
 
   const [events, setEvents] = useState<JournalEvent[]>([]);
@@ -199,18 +234,42 @@ export function TeacherJournalWorkspace() {
 
   const eventsByDate = useMemo(() => {
     const map: Record<string, JournalEvent[]> = {};
-    for (const ev of events) {
-      if (!map[ev.date]) map[ev.date] = [];
-      map[ev.date].push(ev);
+    const targetDates: Date[] = [];
+    if (view === "month") {
+      monthGrid.forEach((c) => targetDates.push(c.date));
+    } else if (view === "week") {
+      weekGrid.forEach((c) => targetDates.push(c.date));
+    } else if (view === "day") {
+      targetDates.push(currentDate);
+    } else {
+      for (let i = 0; i < 90; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() + i);
+        targetDates.push(d);
+      }
     }
-    for (const key in map) {
-      map[key].sort((a, b) => {
-        if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
-        return a.startTime.localeCompare(b.startTime);
-      });
+
+    for (const d of targetDates) {
+      const dKey = toDateKey(d);
+      const matchingEvents: JournalEvent[] = [];
+
+      for (const ev of events) {
+        if (isEventOnDay(ev, d)) {
+          matchingEvents.push(ev);
+        }
+      }
+
+      if (matchingEvents.length > 0) {
+        matchingEvents.sort((a, b) => {
+          if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+          return a.startTime.localeCompare(b.startTime);
+        });
+        map[dKey] = matchingEvents;
+      }
     }
+
     return map;
-  }, [events]);
+  }, [events, view, monthGrid, weekGrid, currentDate, today]);
 
   useEffect(() => {
     if (!popover) return;
@@ -238,11 +297,15 @@ export function TeacherJournalWorkspace() {
     };
   }
 
-  function openCreateFromElement(el: HTMLElement, date: Date) {
+  function openCreateFromElement(el: HTMLElement, date: Date, startH = 9) {
     const rect = el.getBoundingClientRect();
     const pos = clampPosition(rect.top, rect.left, POPOVER_QUICK_WIDTH, false);
     setExpanded(false);
-    setPopover({ mode: "create", anchor: pos, draft: emptyDraft(toDateKey(date)) });
+    setPopover({
+      mode: "create",
+      anchor: pos,
+      draft: emptyDraft(toDateKey(date), startH, (startH + 1) % 24),
+    });
   }
 
   function handleEventClick(e: React.MouseEvent<HTMLDivElement>, ev: JournalEvent) {
@@ -351,7 +414,7 @@ export function TeacherJournalWorkspace() {
     }
   }, [currentDate, view, weekGrid]);
 
-  const renderDayCell = (date: Date, inMonth: boolean) => {
+  const renderMonthDayCell = (date: Date, inMonth: boolean) => {
     const dateKey = toDateKey(date);
     const dayEvents = eventsByDate[dateKey] || [];
     const isToday = isSameDay(date, today);
@@ -362,31 +425,18 @@ export function TeacherJournalWorkspace() {
         role="button"
         tabIndex={0}
         onClick={(e) => openCreateFromElement(e.currentTarget, date)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            openCreateFromElement(e.currentTarget, date);
-          }
-        }}
-        className={`group relative flex h-full flex-col gap-1 border-b border-r border-hairline p-1.5 text-left transition-colors cursor-pointer hover:bg-paper/50 focus:outline-none focus-visible:bg-paper/60 overflow-hidden ${
+        className={`group relative flex h-full flex-col gap-1 border-b border-r border-hairline p-1.5 text-left transition-colors cursor-pointer hover:bg-paper/50 focus:outline-none overflow-hidden ${
           !inMonth ? "bg-paper/20" : ""
         }`}
       >
         <div className="flex items-center justify-between shrink-0">
-          <div className="flex flex-col items-center">
-            {view === "week" && (
-              <span className="text-[10px] font-bold text-muted uppercase tracking-wider mb-0.5">
-                {WEEKDAY_LABELS[(date.getDay() + 6) % 7]}
-              </span>
-            )}
-            <span
-              className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
-                isToday ? "bg-navy text-white" : inMonth ? "text-ink" : "text-muted/40"
-              }`}
-            >
-              {date.getDate()}
-            </span>
-          </div>
+          <span
+            className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+              isToday ? "bg-navy text-white" : inMonth ? "text-ink" : "text-muted/40"
+            }`}
+          >
+            {date.getDate()}
+          </span>
           <span className="hidden size-4 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy group-hover:flex">
             <Plus className="size-2.5" />
           </span>
@@ -395,12 +445,13 @@ export function TeacherJournalWorkspace() {
         <div className="flex flex-1 flex-col gap-1 min-w-0 overflow-y-auto no-scrollbar">
           {dayEvents.map((ev) => (
             <div
-              key={ev.id}
+              key={`${ev.id}-${dateKey}`}
               onClick={(e) => handleEventClick(e, ev)}
-              className={`relative truncate rounded px-1.5 py-0.5 text-[11px] font-bold leading-tight transition-transform origin-left hover:scale-[1.02] hover:z-10 shrink-0 ${COLOR_CHIP[ev.color]}`}
+              className={`relative truncate rounded px-1.5 py-0.5 text-[11px] font-bold leading-tight transition-transform origin-left hover:scale-[1.02] shrink-0 shadow-2xs flex items-center gap-1 ${COLOR_CHIP[ev.color]}`}
             >
-              {!ev.allDay && <span className="opacity-80 font-normal mr-1">{ev.startTime}</span>}
-              {ev.title || "(უსათაურო)"}
+              {ev.repeat !== "none" && <Repeat className="size-2.5 shrink-0 opacity-75" />}
+              {!ev.allDay && <span className="opacity-80 font-normal">{ev.startTime}</span>}
+              <span className="truncate">{ev.title || "(უსათაურო)"}</span>
             </div>
           ))}
         </div>
@@ -408,8 +459,67 @@ export function TeacherJournalWorkspace() {
     );
   };
 
+  const renderHourlyColumn = (date: Date, isLast = false) => {
+    const dateKey = toDateKey(date);
+    const dayEvents = eventsByDate[dateKey] || [];
+    const isToday = isSameDay(date, today);
+    const currentMinutes = today.getHours() * 60 + today.getMinutes();
+
+    return (
+      <div key={dateKey} className={`relative w-full h-full select-none ${!isLast ? "border-r border-hairline" : ""}`}>
+        {HOURS.map((hour) => (
+          <div
+            key={hour}
+            style={{ height: `${HOUR_HEIGHT}px` }}
+            onClick={(e) => openCreateFromElement(e.currentTarget, date, hour)}
+            className="border-b border-hairline/60 hover:bg-navy/5 cursor-pointer transition-colors relative group"
+          >
+            <div className="hidden group-hover:flex absolute inset-x-1 top-1 h-5 rounded bg-navy/10 items-center justify-center text-[10px] font-bold text-navy">
+              + {pad(hour)}:00
+            </div>
+          </div>
+        ))}
+
+        {isToday && (
+          <div
+            style={{ top: `${(currentMinutes / 60) * HOUR_HEIGHT}px` }}
+            className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+          >
+            <div className="size-2 rounded-full bg-rose-500 -ml-1" />
+            <div className="h-[2px] w-full bg-rose-500" />
+          </div>
+        )}
+
+        {dayEvents.map((ev) => {
+          if (ev.allDay) return null;
+          const startMin = timeToMinutes(ev.startTime);
+          const endMin = Math.max(startMin + 30, timeToMinutes(ev.endTime));
+          const top = (startMin / 60) * HOUR_HEIGHT;
+          const height = Math.max(26, ((endMin - startMin) / 60) * HOUR_HEIGHT - 2);
+
+          return (
+            <div
+              key={`${ev.id}-${dateKey}`}
+              onClick={(e) => handleEventClick(e, ev)}
+              style={{ top: `${top}px`, height: `${height}px` }}
+              className={`absolute inset-x-1 z-10 overflow-hidden rounded-xl border p-1.5 text-xs font-bold leading-tight shadow-md hover:z-30 hover:scale-[1.01] transition-all cursor-pointer ${COLOR_CHIP[ev.color]}`}
+            >
+              <div className="flex items-center gap-1">
+                {ev.repeat !== "none" && <Repeat className="size-3 shrink-0 opacity-75" />}
+                <span className="truncate">{ev.title || "(უსათაურო)"}</span>
+              </div>
+              <div className="text-[10px] opacity-80 font-normal">
+                {ev.startTime} - {ev.endTime}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm">
+    <div className="flex h-full w-full min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm">
       {/* Toolbar */}
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-hairline bg-gradient-to-b from-paper/60 to-white px-4 py-2.5">
         <div className="flex items-center gap-2.5">
@@ -531,31 +641,107 @@ export function TeacherJournalWorkspace() {
             ))}
           </div>
           <div className="grid flex-1 h-full min-h-0 grid-cols-7 grid-rows-6 overflow-hidden">
-            {monthGrid.map(({ date, inMonth }) => renderDayCell(date, inMonth))}
+            {monthGrid.map(({ date, inMonth }) => renderMonthDayCell(date, inMonth))}
           </div>
         </div>
       )}
 
-      {/* 2. კვირის ხედი */}
+      {/* 2. კვირის ხედი: ერთიანი Sticky Grid ხაზების 100%-ით გასწორებისთვის */}
       {view === "week" && (
-        <div className="grid flex-1 h-full min-h-0 grid-cols-7 overflow-hidden">
-          {weekGrid.map(({ date, inMonth }) => renderDayCell(date, inMonth))}
+        <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar relative">
+          <div className="grid grid-cols-[3.5rem_repeat(7,minmax(0,1fr))] min-w-full">
+            {/* Sticky სათაურების რიგი */}
+            <div className="sticky top-0 z-30 bg-paper/95 backdrop-blur-xs border-b border-r border-hairline h-14" />
+            {weekGrid.map(({ date }, idx) => {
+              const isToday = isSameDay(date, today);
+              const isLast = idx === weekGrid.length - 1;
+              return (
+                <div
+                  key={`header-${toDateKey(date)}`}
+                  className={`sticky top-0 z-30 bg-paper/95 backdrop-blur-xs py-2 text-center min-w-0 border-b border-hairline h-14 ${
+                    !isLast ? "border-r" : ""
+                  }`}
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted block truncate">
+                    {WEEKDAY_LABELS[(date.getDay() + 6) % 7]}
+                  </span>
+                  <span
+                    className={`inline-flex size-7 items-center justify-center rounded-full text-xs font-bold mt-0.5 ${
+                      isToday ? "bg-navy text-white" : "text-ink"
+                    }`}
+                  >
+                    {date.getDate()}
+                  </span>
+                </div>
+              );
+            })}
+
+            {/* საათების სვეტი */}
+            <div className="border-r border-hairline select-none bg-paper/10">
+              {HOURS.map((hour) => (
+                <div
+                  key={hour}
+                  style={{ height: `${HOUR_HEIGHT}px` }}
+                  className="relative text-right pr-2 text-[11px] font-semibold text-muted -top-2.5"
+                >
+                  {hour !== 0 ? `${pad(hour)}:00` : ""}
+                </div>
+              ))}
+            </div>
+
+            {/* 7 დღის საათობრივი სვეტები */}
+            {weekGrid.map(({ date }, idx) =>
+              renderHourlyColumn(date, idx === weekGrid.length - 1)
+            )}
+          </div>
         </div>
       )}
 
       {/* 3. დღის ხედი */}
       {view === "day" && (
-        <div className="flex-1 h-full min-h-0 overflow-hidden p-3">
-          {renderDayCell(currentDate, true)}
+        <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar relative">
+          <div className="grid grid-cols-[3.5rem_1fr] min-w-full">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-30 bg-paper/95 backdrop-blur-xs border-b border-r border-hairline h-14" />
+            <div className="sticky top-0 z-30 bg-paper/95 backdrop-blur-xs py-2.5 px-4 flex items-center gap-3 border-b border-hairline h-14">
+              <span
+                className={`flex size-8 items-center justify-center rounded-full text-sm font-bold ${
+                  isSameDay(currentDate, today) ? "bg-navy text-white" : "bg-paper text-ink"
+                }`}
+              >
+                {currentDate.getDate()}
+              </span>
+              <span className="text-xs font-bold text-ink">
+                {WEEKDAY_LABELS[(currentDate.getDay() + 6) % 7]}, {MONTH_LABELS[currentDate.getMonth()]}
+              </span>
+            </div>
+
+            {/* საათების სვეტი */}
+            <div className="border-r border-hairline select-none bg-paper/10">
+              {HOURS.map((hour) => (
+                <div
+                  key={hour}
+                  style={{ height: `${HOUR_HEIGHT}px` }}
+                  className="relative text-right pr-2.5 text-[11px] font-semibold text-muted -top-2.5"
+                >
+                  {hour !== 0 ? `${pad(hour)}:00` : ""}
+                </div>
+              ))}
+            </div>
+
+            {/* დღის სვეტი */}
+            <div>
+              {renderHourlyColumn(currentDate, true)}
+            </div>
+          </div>
         </div>
       )}
 
       {/* 4. განრიგის ხედი */}
       {view === "schedule" && (
-        <div className="flex-1 h-full min-h-0 overflow-y-auto p-6 bg-slate-50/50">
+        <div className="flex-1 h-full min-h-0 overflow-y-auto p-6 bg-slate-50/50 thin-scrollbar">
           <div className="max-w-3xl mx-auto space-y-6">
             {Object.keys(eventsByDate)
-              .filter(dateKey => new Date(dateKey) >= new Date(new Date().setHours(0,0,0,0)))
               .sort()
               .map(dateKey => {
                 const dateObj = new Date(dateKey);
@@ -570,13 +756,16 @@ export function TeacherJournalWorkspace() {
                     <div className="flex-1 space-y-2 pt-1">
                       {eventsByDate[dateKey].map(ev => (
                         <div
-                          key={ev.id}
+                          key={`${ev.id}-${dateKey}`}
                           onClick={(e) => handleEventClick(e as any, ev)}
                           className="flex items-center gap-4 bg-white p-3.5 rounded-xl border border-hairline shadow-sm hover:border-navy/30 hover:shadow-md cursor-pointer transition-all"
                         >
                           <div className={`size-2.5 rounded-full ${COLOR_DOT[ev.color]}`} />
                           <div className="flex-1">
-                            <h4 className="text-xs font-bold text-ink">{ev.title || "(უსათაურო)"}</h4>
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="text-xs font-bold text-ink">{ev.title || "(უსათაურო)"}</h4>
+                              {ev.repeat !== "none" && <Repeat className="size-3 text-muted" />}
+                            </div>
                             <div className="flex gap-3 mt-1 text-[11px] text-muted font-medium">
                               {ev.allDay ? (
                                 <span>მთელი დღე</span>
@@ -592,7 +781,7 @@ export function TeacherJournalWorkspace() {
                   </div>
                 )
             })}
-            {events.length === 0 && (
+            {Object.keys(eventsByDate).length === 0 && (
               <div className="text-center py-20 text-muted font-medium flex flex-col items-center gap-3">
                 <List className="size-8 opacity-20" />
                 მომავალი ღონისძიებები არ მოიძებნა
@@ -615,7 +804,7 @@ export function TeacherJournalWorkspace() {
           >
             <div className={`h-1.5 w-full rounded-t-2xl ${COLOR_DOT[draft.color]}`} />
 
-            <div className="max-h-[85vh] overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div className="max-h-[85vh] overflow-y-auto p-4 space-y-4 thin-scrollbar">
               <div className="flex items-start gap-2">
                 <input
                   autoFocus
@@ -670,22 +859,20 @@ export function TeacherJournalWorkspace() {
                       />
                     </div>
                   )}
-                  {expanded && (
-                    <div className="flex items-center gap-2 pt-1">
-                      <Repeat className="size-3.5 shrink-0 text-muted" />
-                      <select
-                        value={draft.repeat}
-                        onChange={(e) => updateDraft({ repeat: e.target.value as RepeatOption })}
-                        className="flex-1 rounded-lg border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-bold text-ink outline-none focus:border-navy"
-                      >
-                        {(Object.keys(REPEAT_LABELS) as RepeatOption[]).map((key) => (
-                          <option key={key} value={key}>
-                            {REPEAT_LABELS[key]}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 pt-1">
+                    <Repeat className="size-3.5 shrink-0 text-muted" />
+                    <select
+                      value={draft.repeat}
+                      onChange={(e) => updateDraft({ repeat: e.target.value as RepeatOption })}
+                      className="flex-1 rounded-lg border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-bold text-ink outline-none focus:border-navy"
+                    >
+                      {(Object.keys(REPEAT_LABELS) as RepeatOption[]).map((key) => (
+                        <option key={key} value={key}>
+                          {REPEAT_LABELS[key]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
