@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Maximize, Minimize, Video } from 'lucide-react';
+import { Video } from 'lucide-react';
 import { ClassroomRoomModal } from '@/components/lms/classroom/ClassroomRoomModal';
 
 interface StudentCourseVideoCallButtonProps {
@@ -16,18 +16,30 @@ export function StudentCourseVideoCallButton({
   courseId,
   courseTitle,
   label,
-  showFullscreen = false,
 }: StudentCourseVideoCallButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // კლიენტზე დარენდერების დაფიქსირება პორტალისთვის
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // ბრაუზერის Fullscreen ივენთების კონტროლი (მაგ. Esc-ით გამოსვლისას)
+  // 🌟 მოდალის გახსნისას ბრაუზერის ძირითადი სქროლის სრული დაბლოკვა 🌟
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+      };
+    }
+  }, [isOpen]);
+
+  // Fullscreen ივენთების კონტროლი
   useEffect(() => {
     function handleFullscreenChange() {
       const activeElement =
@@ -103,14 +115,14 @@ export function StudentCourseVideoCallButton({
           className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-4.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-95"
         >
           <Video className="size-5" />
-          <span className='text-[16px]'>{label ?? "გაკვეთილზე შესვლა"}</span>
+          <span className="text-[16px]">{label ?? "გაკვეთილზე შესვლა"}</span>
         </button>
       </div>
 
-      {/* React Portal: მოდალი იხსნება document.body-ში და სცდება HeroPage-ის საზღვრებს */}
+      {/* 🌟 100dvh, w-screen და overflow-hidden სქროლის მოსაცილებლად 🌟 */}
       {isOpen && mounted &&
         createPortal(
-          <div className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen bg-slate-900/90 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen overflow-hidden bg-slate-900/90 backdrop-blur-sm">
             <ClassroomRoomModal
               courseId={courseId}
               courseTitle={courseTitle}
