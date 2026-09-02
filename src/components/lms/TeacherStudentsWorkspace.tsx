@@ -675,131 +675,109 @@ export function TeacherStudentsWorkspace({
     <div className="space-y-6">
       <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[38rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
         {/* მარცხენა სვეტი: კლასები + მართვის ღილაკები */}
-        <aside className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-paper p-4 shadow-sm">
-          <div className="flex items-center gap-2 border-b border-hairline pb-3">
-            <GraduationCap className="size-4 text-brass-strong" />
-            <h3 className="text-sm font-bold text-ink">კლასები</h3>
-            <span className="ml-auto rounded-full bg-paper-deep px-2 py-0.5 text-[10px] font-bold text-muted">
+        <aside className="flex h-full min-h-0 flex-col rounded-3xl border border-hairline bg-paper shadow-sm overflow-hidden">
+          {/* ჰედერი */}
+          <div className="w-full flex shrink-0 items-center justify-between border-b border-hairline bg-surface/50 px-4 py-3.5">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="size-4 text-brass-strong" />
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-ink">კლასები</h3>
+            </div>
+            <span className="rounded-md bg-paper-deep px-2 py-0.5 text-[10px] font-mono font-bold text-muted border border-hairline/60">
               {courses.length}
             </span>
           </div>
 
-          <div className="relative my-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted" />
-            <input
-              type="text"
-              value={classSearchQuery}
-              onChange={(e) => setClassSearchQuery(e.target.value)}
-              placeholder="მოძებნეთ კლასი..."
-              className="w-full rounded-xl border border-hairline bg-surface py-2 pl-9 pr-3 text-xs font-medium text-ink outline-none focus:border-orange-500 transition-colors"
-            />
-          </div>
+          {/* შუა ნაწილი */}
+          <div className="flex flex-1 min-h-0 flex-col p-3 gap-2.5">
+            {/* საძიებო ველი */}
+            <div className="relative shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted" />
+              <input
+                type="text"
+                value={classSearchQuery}
+                onChange={(e) => setClassSearchQuery(e.target.value)}
+                placeholder="მოძებნეთ კლასი..."
+                className="w-full rounded-xl border border-hairline bg-paper-deep/80 py-2 pl-9 pr-3 text-xs font-medium text-ink placeholder:text-muted outline-none focus:border-brass-strong/60 focus:bg-surface transition-all"
+              />
+            </div>
 
-          <div className="flex-1 overflow-y-auto space-y-1.5 pe-0.5 custom-scrollbar">
-            <button
-              type="button"
-              onClick={() => handleCourseChange('all')}
-              className={`group flex w-full items-center justify-between gap-2.5 rounded-2xl p-3 text-left transition-colors border ${
-                activeCourseId === 'all'
-                  ? 'bg-surface border-hairline/80 shadow-inner'
-                  : 'bg-transparent border-transparent hover:bg-surface/50'
-              }`}>
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div
-                  className={`flex size-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition-colors ${
-                    activeCourseId === 'all'
-                      ? 'bg-orange-500/15 text-orange-500'
-                      : 'bg-paper-deep text-brass/70 group-hover:text-orange-400'
-                  }`}>
-                  <Users className="size-4" />
-                </div>
-                <div className="min-w-0">
-                  <p
-                    className={`truncate text-sm font-bold transition-colors ${
-                      activeCourseId === 'all' ? 'text-ink' : 'text-body group-hover:text-ink'
-                    }`}>
-                    ყველა მოსწავლე
-                  </p>
-                </div>
-              </div>
-              <span
-                className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold transition-colors ${
+            {/* ჩაღრმავებული კონტეინერი სიისთვის (მე-5 ვარიანტიდან) */}
+            <div className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-hairline/60 bg-paper-deep/30 p-1.5 space-y-1 custom-scrollbar">
+              {/* ყველა მოსწავლე */}
+              <button
+                type="button"
+                onClick={() => handleCourseChange('all')}
+                className={`group relative flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-all border ${
                   activeCourseId === 'all'
-                    ? 'bg-paper-deep text-ink border border-hairline'
-                    : 'bg-paper-deep/60 text-muted border border-transparent'
+                    ? 'bg-surface border-hairline text-ink shadow-2xs font-bold'
+                    : 'border-transparent text-body hover:bg-surface/50 hover:text-ink'
                 }`}>
-                {students.length}
-              </span>
-            </button>
-
-            {filteredCourses.map((course) => {
-              const active = course.id === activeCourseId;
-              const courseStudents = students.filter((s) => s.courses.some((c) => c.id === course.id));
-              const courseHasUnread = courseStudents.some((s) => unreadStudentIds.has(s.id));
-
-              return (
-                <button
-                  key={course.id}
-                  type="button"
-                  onClick={() => handleCourseChange(course.id)}
-                  className={`group flex w-full items-center justify-between gap-2.5 rounded-2xl p-3 text-left transition-colors border ${
-                    active
-                      ? 'bg-surface border-hairline/80 shadow-inner'
-                      : 'bg-transparent border-transparent hover:bg-surface/50'
+                {/* მარცხენა აქცენტის ზოლი (1-ლი ვარიანტიდან) */}
+                {activeCourseId === 'all' && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-brass-strong" />
+                )}
+                <span className="truncate text-xs">ყველა მოსწავლე</span>
+                <span
+                  className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-mono font-bold ${
+                    activeCourseId === 'all' ? 'bg-paper-deep text-ink' : 'text-muted'
                   }`}>
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div
-                      className={`relative flex size-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition-colors ${
-                        active
-                          ? 'bg-orange-500/15 text-orange-500'
-                          : 'bg-paper-deep text-brass/70 group-hover:text-orange-400'
-                      }`}>
-                      {course.title.charAt(0)}
-                      {courseHasUnread && (
-                        <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-orange-500 ring-2 ring-surface" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p
-                        className={`truncate text-sm font-bold transition-colors ${
-                          active ? 'text-ink' : 'text-body group-hover:text-ink'
-                        }`}>
-                        {course.title}
-                      </p>
-                    </div>
-                  </div>
+                  {students.length}
+                </span>
+              </button>
 
-                  <span
-                    className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold transition-colors ${
+              {/* კურსების სია */}
+              {filteredCourses.map((course) => {
+                const active = course.id === activeCourseId;
+                const courseStudents = students.filter((s) => s.courses.some((c) => c.id === course.id));
+
+                return (
+                  <button
+                    key={course.id}
+                    type="button"
+                    onClick={() => handleCourseChange(course.id)}
+                    className={`group relative flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-all border ${
                       active
-                        ? 'bg-paper-deep text-ink border border-hairline'
-                        : 'bg-paper-deep/60 text-muted border border-transparent'
+                        ? 'bg-surface border-hairline text-ink shadow-2xs font-bold'
+                        : 'border-transparent text-body hover:bg-surface/50 hover:text-ink'
                     }`}>
-                    {courseStudents.length}
-                  </span>
-                </button>
-              );
-            })}
+                    {/* მარცხენა აქცენტის ზოლი (1-ლი ვარიანტიდან) */}
+                    {active && (
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-brass-strong" />
+                    )}
+                    <span className="truncate text-xs">{course.title}</span>
+                    <span
+                      className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-mono font-bold ${
+                        active ? 'bg-paper-deep text-ink' : 'text-muted'
+                      }`}>
+                      {courseStudents.length}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* მარცხენა სვეტის ქვედა ღილაკები */}
-          <div className="border-t border-hairline pt-3 mt-2 flex flex-col gap-2">
+          {/* მუდმივად ქვემოთ მიმაგრებული ღილაკები */}
+          <div className="mt-auto shrink-0 border-t border-hairline bg-paper-deep/30 p-2.5 flex items-center gap-2">
             <button
               type="button"
               onClick={handleStartClassCall}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy px-3 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-navy-strong active:scale-95">
-              <Video className="size-4 shrink-0 text-white/90" />
-              <span className="truncate">
-                ვიდეო გაკვეთილი {selectedCourseObj ? `(${selectedCourseObj.title})` : ''}
-              </span>
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-hairline bg-surface py-2 px-2 text-xs font-bold text-ink hover:border-navy/60 hover:bg-navy-tint/20 hover:text-navy active:scale-98 transition-all cursor-pointer min-w-0 shadow-2xs">
+              <div className="flex size-5 shrink-0 items-center justify-center rounded-lg bg-navy/15 text-navy">
+                <Video className="size-3" />
+              </div>
+              <span className="truncate">გაკვეთილი</span>
             </button>
+
             {activeStudent && (
               <button
                 type="button"
                 onClick={() => setIsAssignModalOpen(true)}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500/15 border border-orange-500/30 px-3 py-2.5 text-xs font-bold text-orange-500 hover:bg-orange-500/25 hover:text-orange-400 transition-colors shadow-inner active:scale-95">
-                <Plus className="size-4 shrink-0" />
-                <span className="truncate">ბარათის მიმაგრება</span>
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-hairline bg-surface py-2 px-2 text-xs font-bold text-ink hover:border-brass/60 hover:bg-brass-tint/30 hover:text-brass-strong active:scale-98 transition-all cursor-pointer min-w-0 shadow-2xs">
+                <div className="flex size-5 shrink-0 items-center justify-center rounded-lg bg-brass-tint text-brass-strong">
+                  <Plus className="size-3" />
+                </div>
+                <span className="truncate">ბარათი</span>
               </button>
             )}
           </div>
@@ -808,7 +786,7 @@ export function TeacherStudentsWorkspace({
         {/* მარჯვენა სვეტი: მოსწავლეების ტაბები + ზედა კალენდარი + სამუშაო დაფა */}
         <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-paper shadow-sm overflow-hidden">
           {/* 🌟 1. ზედა ზოლი: მოსწავლეების ტაბები და კალენდარი */}
-          <div className="bg-surface/40 border-b border-hairline px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="bg-surface border-b border-hairline px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             {/* მოსწავლეების ტაბები */}
             <div className="flex-1 overflow-x-auto flex items-center gap-1.5 custom-scrollbar min-w-0 pb-0.5 sm:pb-0">
               {studentsInActiveCourse.length === 0 ? (
@@ -831,26 +809,9 @@ export function TeacherStudentsWorkspace({
                           ? 'bg-surface border-hairline/90 shadow-inner'
                           : 'bg-transparent border-transparent hover:bg-surface/50 text-body hover:text-ink'
                       }`}>
-                      <div
-                        className={`relative flex size-5 items-center justify-center rounded-full text-[9px] font-bold transition-colors ${
-                          isSelected
-                            ? 'bg-orange-500/20 text-orange-500'
-                            : 'bg-paper-deep text-brass/70 group-hover:text-orange-400'
-                        }`}>
-                        {student.name.charAt(0)}
-                      </div>
                       <span
                         className={`truncate max-w-[120px] sm:max-w-none transition-colors ${isSelected ? 'text-ink' : ''}`}>
                         {student.name}
-                      </span>
-
-                      <span
-                        className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold transition-colors ${
-                          isSelected
-                            ? 'bg-paper-deep text-ink border border-hairline'
-                            : 'bg-paper-deep/50 text-muted border border-transparent'
-                        }`}>
-                        {dateAssignmentsCount}
                       </span>
 
                       {hasUnread && <span className="size-2 rounded-full bg-orange-500 ring-2 ring-surface shrink-0" />}
@@ -863,7 +824,7 @@ export function TeacherStudentsWorkspace({
             {/* ზედა კალენდარი */}
             {activeStudent && (
               <div className="flex items-center justify-between sm:justify-end gap-1 shrink-0 w-full sm:w-auto">
-                <div className="flex items-center justify-between sm:justify-end gap-1 shrink-0 bg-surface px-2 py-1 rounded-xl border border-hairline shadow-inner w-full sm:w-auto">
+                <div className="flex items-center justify-between sm:justify-end gap-1 shrink-0 bg-brass-tint/30 hover:bg-brass-tint/50 px-2.5 py-1.5 rounded-xl border border-brass/25 shadow-inner transition-colors w-full sm:w-auto">
                   <button
                     type="button"
                     onClick={() => handleShiftDate(-1)}
@@ -872,15 +833,20 @@ export function TeacherStudentsWorkspace({
                     <ChevronLeft className="size-4" />
                   </button>
 
-                  <div className="flex items-center justify-center gap-1.5 px-1.5 flex-1 sm:flex-none">
-                    <CalendarIcon className="size-3.5 text-orange-500 shrink-0" />
+                  <div
+                    onClick={(e) => {
+                      const input = e.currentTarget.querySelector('input');
+                      input?.showPicker?.();
+                    }}
+                    className="group flex items-center justify-center gap-1.5 px-2 py-1 rounded-xl hover:bg-surface transition-colors cursor-pointer flex-1 sm:flex-none">
+                    <CalendarIcon className="size-3.5 text-brass-strong group-hover:text-brass shrink-0 transition-colors" />
                     <input
                       type="date"
                       value={selectedDateKey}
                       onChange={(e) => {
                         if (e.target.value) setSelectedDateKey(e.target.value);
                       }}
-                      className="text-xs font-bold text-ink bg-transparent outline-none cursor-pointer text-center [color-scheme:dark]"
+                      className="text-xs font-bold text-ink bg-transparent outline-none cursor-pointer text-center [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:hidden"
                     />
                   </div>
 
@@ -897,7 +863,7 @@ export function TeacherStudentsWorkspace({
           </div>
 
           {/* 🌟 2. ტაბების ზოლი: დავალებები / პასუხები / მასალები */}
-          <div className="bg-surface/30 border-b border-hairline px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="bg-surface/70 border-b border-hairline px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="w-full sm:w-auto p-1 bg-paper-deep/80 rounded-2xl border border-hairline">
               <div className="grid grid-cols-3 sm:flex items-center gap-1">
                 {/* 1. დავალებები */}
@@ -909,11 +875,10 @@ export function TeacherStudentsWorkspace({
                       ? 'bg-surface text-ink shadow-inner border-hairline/80'
                       : 'bg-transparent border-transparent text-body hover:text-ink'
                   }`}>
-                  <BookOpen
-                    className={`size-3.5 shrink-0 transition-colors ${activeTab === 'tasks' ? 'text-orange-500' : 'text-brass/70 group-hover:text-orange-400'}`}
-                  />
                   <span className="truncate">დავალებები</span>
-                  <span className="text-[10px] opacity-70 hidden sm:inline">({tasksCountForDate})</span>
+                  <span className=" text-brass-soft px-1.5 py-0.5 text-[12px] font-bold shrink-0">
+                    {tasksCountForDate}
+                  </span>
                 </button>
 
                 {/* 2. პასუხები */}
@@ -925,12 +890,9 @@ export function TeacherStudentsWorkspace({
                       ? 'bg-surface text-ink shadow-inner border-hairline/80'
                       : 'bg-transparent border-transparent text-body hover:text-ink'
                   }`}>
-                  <CheckCircle2
-                    className={`size-3.5 shrink-0 transition-colors ${activeTab === 'answers' ? 'text-orange-500' : 'text-brass/70 group-hover:text-orange-400'}`}
-                  />
                   <span className="truncate">პასუხები</span>
                   {answersCountForDate > 0 && (
-                    <span className="rounded-full bg-orange-500/15 text-orange-500 border border-orange-500/20 px-1.5 py-0.5 text-[9px] font-bold shrink-0">
+                    <span className=" text-brass-soft px-1.5 py-0.5 text-[12px] font-bold shrink-0">
                       {answersCountForDate}
                     </span>
                   )}
@@ -945,12 +907,9 @@ export function TeacherStudentsWorkspace({
                       ? 'bg-surface text-ink shadow-inner border-hairline/80'
                       : 'bg-transparent border-transparent text-body hover:text-ink'
                   }`}>
-                  <Layers
-                    className={`size-3.5 shrink-0 transition-colors ${activeTab === 'materials' ? 'text-orange-500' : 'text-brass/70 group-hover:text-orange-400'}`}
-                  />
                   <span className="truncate">მასალები</span>
                   {materialsCountForDate > 0 && (
-                    <span className="rounded-full bg-orange-500/15 text-orange-500 border border-orange-500/20 px-1.5 py-0.5 text-[9px] font-bold shrink-0">
+                    <span className=" text-brass-soft px-1.5 py-0.5 text-[12px] font-bold shrink-0">
                       {materialsCountForDate}
                     </span>
                   )}
@@ -963,14 +922,14 @@ export function TeacherStudentsWorkspace({
               <button
                 type="button"
                 onClick={() => setIsMaterialModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/15 text-orange-500 border border-orange-500/30 hover:bg-orange-500/25 hover:text-orange-400 font-bold text-xs shadow-inner active:scale-[0.98] transition-colors">
-                <UploadCloud className="size-3.5" />
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy text-white text-xs font-bold shadow-xs hover:bg-navy-strong active:scale-98 transition-all cursor-pointer">
+                <UploadCloud className="size-3.5 text-white/90" />
                 <span>მასალის ატვირთვა</span>
               </button>
             )}
           </div>
 
-          <div className="flex-1 flex flex-col min-h-0 p-3.5 sm:p-5">
+          <div className="flex-1 flex flex-col bg-navy-tint/20 min-h-0 p-3.5 sm:p-5">
             {/* ბარათების Grid სექცია */}
             <div className="flex-1 overflow-y-auto pt-1 pe-1 custom-scrollbar">
               {!activeStudent ? (
@@ -1046,7 +1005,7 @@ export function TeacherStudentsWorkspace({
                         }}
                         className={`flex flex-col justify-between rounded-2xl border p-3 transition-colors cursor-pointer group min-h-[210px] ${
                           isMaterial
-                            ? 'border-orange-500/30 bg-orange-500/5 hover:border-orange-500/50 hover:bg-orange-500/10'
+                            ? ' bg-surface border-transparent hover:border-brass-extra/40'
                             : isGraded
                               ? 'border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50'
                               : 'border-hairline bg-surface hover:border-orange-500/40 hover:bg-surface/80'
@@ -1054,14 +1013,14 @@ export function TeacherStudentsWorkspace({
                         <div className="flex flex-col gap-2 min-w-0">
                           {/* ზედა ბეიჯები */}
                           <div className="flex items-center justify-between gap-1.5">
-                           
                             {isGraded ? (
                               <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
                                 <CheckCircle2 className="size-3" /> ჩაბარებულია
                               </span>
                             ) : isSubmitted ? (
-                              <span className="flex items-center gap-1 text-[10px] font-bold text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-lg border border-orange-500/20 truncate">
-                                <UploadCloud className="size-3" /> პასუხი მიღებულია
+                              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-win bg-win-tint px-2 py-0.5 rounded-md border border-win/30 truncate">
+                                <span className="size-1.5 rounded-full bg-win" />
+                                პასუხი მიღებულია
                               </span>
                             ) : null}
                           </div>
@@ -1143,185 +1102,118 @@ export function TeacherStudentsWorkspace({
       {/* 2. ბარათის დამატების მოდალი */}
       {isAssignModalOpen && activeStudent && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs animate-in fade-in duration-150"
           onClick={() => !assigning && setIsAssignModalOpen(false)}>
           <div
-            className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-[2rem] bg-paper shadow-2xl border border-hairline animate-in zoom-in-95 duration-200"
+            className="flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-hairline bg-paper shadow-2xl animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-hairline bg-surface px-6 py-4">
+            {/* Header Bar */}
+            <div className="flex items-center justify-between border-b border-hairline bg-surface px-5 py-3.5">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20">
-                  <Send className="size-5" />
+                <div className="flex size-7 items-center justify-center rounded-lg bg-navy/15 text-navy">
+                  <Send className="size-3.5" />
                 </div>
-                <div>
-                  <h3 className="text-base font-bold text-ink leading-tight">დავალების გაგზავნა</h3>
-                  <p className="text-xs text-muted mt-0.5">
-                    მოსწავლე: <span className="font-bold text-body">{activeStudent.name}</span>
-                  </p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-ink">დავალების გადაცემა</h3>
+                  <span className="text-xs text-muted">/ {activeStudent.name}</span>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAssignModalOpen(false)}
-                className="flex size-8 items-center justify-center rounded-xl border border-hairline bg-surface text-muted hover:text-ink hover:bg-paper-deep transition-colors">
-                <X className="size-4" />
+                className="flex size-7 items-center justify-center bg-surface/50 text-muted hover:bg-paper-deep hover:text-ink transition-colors cursor-pointer">
+                <X className="size-3.5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-              {selectedProblemId === 'custom' ? (
-                <>
-                  <div>
-                    <label className="text-xs font-bold text-body block mb-1.5">სურათის მიმაგრება</label>
-                    <input
-                      ref={assignFileRef}
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      className="sr-only"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const base64 = await fileToBase64(file);
-                          setAssignImage(base64);
-                          setAssignImageName(file.name);
-                        }
-                      }}
-                    />
+            {/* 2-Column Grid Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
+              {/* Left Col: Media Dropzone / Cards */}
+              <div className="md:col-span-7 border-b md:border-b-0 md:border-r border-hairline p-5 bg-paper/40 flex flex-col justify-center">
+                <input
+                  ref={assignFileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="sr-only"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const base64 = await fileToBase64(file);
+                      setAssignImage(base64);
+                      setAssignImageName(file.name);
+                    }
+                  }}
+                />
 
-                    {assignImage ? (
-                      <div className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-2.5">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={assignImage}
-                          alt="Attachment"
-                          className="size-14 rounded-lg object-cover border border-hairline bg-paper-deep"
-                        />
-                        <span className="text-xs font-bold text-ink truncate flex-1">{assignImageName}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAssignImage(null);
-                            setAssignImageName(null);
-                          }}
-                          className="flex size-7 items-center justify-center rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors">
-                          <X className="size-4" />
-                        </button>
-                      </div>
-                    ) : (
+                {assignImage ? (
+                  <div className="relative group overflow-hidden rounded-xl border border-hairline bg-surface shadow-inner">
+                    <img src={assignImage} alt="Attachment" className="w-full h-52 object-contain bg-black/20" />
+                    <div className="absolute inset-x-0 bottom-0 bg-surface/90 backdrop-blur-xs border-t border-hairline px-3 py-2 flex items-center justify-between">
+                      <span className="text-xs font-mono font-medium text-ink truncate max-w-[200px]">
+                        {assignImageName}
+                      </span>
                       <button
                         type="button"
-                        onClick={() => assignFileRef.current?.click()}
-                        className="w-full flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-hairline bg-surface py-5 text-xs font-bold text-muted hover:border-orange-500/50 hover:bg-orange-500/5 hover:text-orange-500 transition-colors">
-                        <UploadCloud className="size-5 opacity-70" />
-                        <span>დააწკაპუნეთ სურათის ასარჩევად</span>
+                        onClick={() => {
+                          setAssignImage(null);
+                          setAssignImageName(null);
+                        }}
+                        className="text-rose-500 hover:text-rose-400 p-1 rounded-md transition-colors cursor-pointer">
+                        <X className="size-4" />
                       </button>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-body block mb-1.5">
-                      შენიშვნა / ინსტრუქცია (არასავალდებულო)
-                    </label>
-                    <textarea
-                      value={assignComment}
-                      onChange={(e) => setAssignComment(e.target.value)}
-                      placeholder="ჩაწერეთ მითითებები მოსწავლისთვის..."
-                      className="w-full resize-none rounded-xl border border-hairline bg-paper-deep p-3 text-sm text-ink outline-none focus:border-orange-500 transition-colors"
-                      rows={3}
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted" />
-                    <input
-                      type="text"
-                      value={problemSearchQuery}
-                      onChange={(e) => setProblemSearchQuery(e.target.value)}
-                      placeholder="მოძებნეთ ბარათი..."
-                      className="w-full rounded-xl border border-hairline bg-paper-deep py-2 pl-9 pr-3 text-xs font-semibold text-ink outline-none focus:border-orange-500 transition-colors"
-                    />
-                  </div>
-
-                  <div className="max-h-48 overflow-y-auto space-y-1.5 custom-scrollbar pr-1 border border-hairline rounded-xl p-2 bg-surface">
-                    {filteredSetProblems.map((prob) => {
-                      const isSelected = selectedProblemId === prob.id;
-                      return (
-                        <button
-                          key={prob.id}
-                          type="button"
-                          onClick={() => setSelectedProblemId(prob.id)}
-                          className={`flex w-full items-center justify-between p-2.5 rounded-lg text-left transition-colors border ${
-                            isSelected
-                              ? 'bg-orange-500/15 border-orange-500/30 text-ink shadow-inner'
-                              : 'bg-paper-deep hover:bg-surface border-transparent text-body'
-                          }`}>
-                          <div className="min-w-0 flex-1 pr-2">
-                            <span
-                              className={`text-[9px] font-bold uppercase tracking-wider block ${isSelected ? 'text-orange-500' : 'text-muted'}`}>
-                              {prob.setTitle}
-                            </span>
-                            <p className="text-xs font-bold truncate mt-0.5">{prob.title}</p>
-                          </div>
-                          {isSelected && <Check className="size-4 shrink-0 text-orange-500" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {selectedProblem && (
-                    <div className="rounded-xl border border-hairline bg-surface p-3.5 shadow-inner">
-                      <span className="text-[10px] font-bold uppercase text-muted block mb-1">ამოცანის პირობა:</span>
-                      {loadingProblemDetails ? (
-                        <div className="py-4 flex justify-center">
-                          <Loader2 className="size-4 animate-spin text-orange-500/70" />
-                        </div>
-                      ) : selectedProblemDetails ? (
-                        <KatexPreview tex={selectedProblemDetails.promptTex} className="text-xs text-ink" />
-                      ) : null}
                     </div>
-                  )}
-
-                  <div>
-                    <label className="text-xs font-bold text-body block mb-1.5">დამატებითი მითითება</label>
-                    <textarea
-                      value={assignComment}
-                      onChange={(e) => setAssignComment(e.target.value)}
-                      placeholder="ჩაწერეთ მითითება ამ ამოცანისთვის..."
-                      className="w-full resize-none rounded-xl border border-hairline bg-paper-deep p-3 text-sm text-ink outline-none focus:border-orange-500 transition-colors"
-                      rows={2}
-                    />
                   </div>
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-hairline bg-surface px-6 py-4 flex justify-end gap-2.5">
-              <button
-                type="button"
-                disabled={assigning}
-                onClick={() => setIsAssignModalOpen(false)}
-                className="rounded-xl bg-paper px-4 py-2 text-xs font-bold text-ink border border-hairline hover:bg-paper-deep transition-colors disabled:opacity-50">
-                გაუქმება
-              </button>
-              <button
-                type="button"
-                disabled={isSendDisabled}
-                onClick={handleSendProblemToStudent}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-orange-500/15 border border-orange-500/30 px-5 py-2 text-xs font-bold text-orange-500 hover:bg-orange-500/25 disabled:opacity-50 transition-colors shadow-inner active:scale-95">
-                {assigning ? (
-                  <>
-                    <Loader2 className="size-3.5 animate-spin" />
-                    <span>იგზავნება...</span>
-                  </>
                 ) : (
-                  <>
-                    <Send className="size-3.5" />
-                    <span>გაგზავნა</span>
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => assignFileRef.current?.click()}
+                    className="group flex flex-col items-center justify-center gap-2.5 h-52 rounded-xl border-2 border-dashed border-hairline/80 bg-surface/30 hover:border-navy hover:bg-surface/80 transition-all cursor-pointer">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-paper-deep text-muted group-hover:bg-navy group-hover:text-white transition-all shadow-2xs">
+                      <UploadCloud className="size-5" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-ink group-hover:text-navy transition-colors">
+                        ატვირთეთ დავალების სურათი
+                      </p>
+                      <span className="text-[10px] font-mono text-muted">PNG, JPG, WEBP (მაქს. 10MB)</span>
+                    </div>
+                  </button>
                 )}
-              </button>
+              </div>
+
+              {/* Right Col: Details & Submission */}
+              <div className="md:col-span-5 p-5 flex flex-col justify-between bg-surface/20">
+                <div className="space-y-3">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-brass-strong block">
+                    ინსტრუქცია მოსწავლეს
+                  </span>
+                  <textarea
+                    value={assignComment}
+                    onChange={(e) => setAssignComment(e.target.value)}
+                    placeholder="ჩაწერეთ მითითება ან კითხვა ამოცანის ირგვლივ..."
+                    className="w-full resize-none rounded-xl border border-hairline bg-surface p-3 text-xs text-ink placeholder:text-muted/70 outline-none focus:border-navy transition-colors"
+                    rows={5}
+                  />
+                </div>
+
+                <div className="pt-4 flex flex-col gap-2">
+                  <button
+                    type="button"
+                    disabled={isSendDisabled || assigning}
+                    onClick={handleSendProblemToStudent}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-navy py-2.5 px-4 text-xs font-bold text-white shadow-xs hover:bg-navy-strong disabled:opacity-40 transition-all active:scale-98 cursor-pointer">
+                    {assigning ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-3.5" />}
+                    <span>გაგზავნა დავალებებში</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={assigning}
+                    onClick={() => setIsAssignModalOpen(false)}
+                    className="w-full py-1.5 text-center text-xs font-semibold text-muted hover:text-ink transition-colors cursor-pointer">
+                    გაუქმება
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1330,45 +1222,47 @@ export function TeacherStudentsWorkspace({
       {/* 3. სასწავლო მასალის ატვირთვის მოდალი */}
       {isMaterialModalOpen && activeStudent && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs animate-in fade-in duration-150"
           onClick={() => !uploadingMaterial && setIsMaterialModalOpen(false)}>
           <div
-            className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-[2rem] bg-paper shadow-2xl border border-hairline animate-in zoom-in-95 duration-200"
+            className="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-hairline bg-paper shadow-2xl animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-hairline bg-surface px-6 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500">
-                  <Layers className="size-5" />
+            {/* Header */}
+            <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-surface px-5 py-3.5">
+              <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-navy/15 text-navy">
+                  <Layers className="size-3.5" />
                 </div>
-                <div>
-                  <h3 className="text-base font-bold text-ink leading-tight">სასწავლო მასალის ატვირთვა</h3>
-                  <p className="text-xs text-muted mt-0.5">
-                    მოსწავლე: <span className="font-bold text-body">{activeStudent.name}</span>
-                  </p>
+                <div className="flex items-baseline gap-2 min-w-0">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-ink truncate">მასალის ატვირთვა</h3>
+                  <span className="text-[11px] text-muted shrink-0">/ {activeStudent.name}</span>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMaterialModalOpen(false)}
-                className="flex size-8 items-center justify-center rounded-xl border border-hairline bg-surface text-muted hover:text-ink hover:bg-paper-deep transition-colors">
-                <X className="size-4" />
+                className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-hairline/80 bg-surface/50 text-muted hover:bg-paper-deep hover:text-ink transition-colors cursor-pointer">
+                <X className="size-3.5" />
               </button>
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+            {/* Form Fields */}
+            <div className="p-5 space-y-4 overflow-y-auto custom-scrollbar">
+              {/* სათაურის ველი */}
               <div>
-                <label className="text-xs font-bold text-body block mb-1.5">მასალის სათაური</label>
+                <label className="text-xs font-bold text-ink block mb-1.5">მასალის სათაური</label>
                 <input
                   type="text"
                   value={materialTitle}
                   onChange={(e) => setMaterialTitle(e.target.value)}
                   placeholder="მაგ: თეორიული მასალა (გეომეტრია)"
-                  className="w-full rounded-xl border border-hairline bg-paper-deep px-3.5 py-2.5 text-sm font-semibold text-ink outline-none focus:border-orange-500 transition-colors"
+                  className="w-full rounded-xl border border-hairline bg-surface/60 px-3.5 py-2 text-xs font-medium text-ink placeholder:text-muted outline-none focus:border-navy focus:bg-surface transition-all"
                 />
               </div>
 
+              {/* ფაილის არჩევა */}
               <div>
-                <label className="text-xs font-bold text-body block mb-1.5">ფაილი (სურათი, PDF, Word, TXT)</label>
+                <label className="text-xs font-bold text-ink block mb-1.5">ფაილი</label>
                 <input
                   ref={materialFileInputRef}
                   type="file"
@@ -1387,11 +1281,13 @@ export function TeacherStudentsWorkspace({
                 />
 
                 {materialFileBase64 ? (
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-3">
-                    <FileText className="size-8 text-orange-500 opacity-80 shrink-0" />
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-2.5 shadow-2xs">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy/10 text-navy">
+                      <FileText className="size-4" />
+                    </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold text-ink truncate">{materialFileName}</p>
-                      <span className="text-[10px] text-muted">მზადაა ასატვირთად</span>
+                      <p className="text-xs font-semibold text-ink truncate">{materialFileName}</p>
+                      <span className="text-[10px] font-mono text-win">მზადაა ასატვირთად</span>
                     </div>
                     <button
                       type="button"
@@ -1400,49 +1296,55 @@ export function TeacherStudentsWorkspace({
                         setMaterialFileName(null);
                         setMaterialFileType(null);
                       }}
-                      className="flex size-7 items-center justify-center rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors">
-                      <X className="size-4" />
+                      className="flex size-7 items-center justify-center rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer">
+                      <X className="size-3.5" />
                     </button>
                   </div>
                 ) : (
                   <button
                     type="button"
                     onClick={() => materialFileInputRef.current?.click()}
-                    className="w-full flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-hairline bg-surface py-6 text-xs font-bold text-muted hover:border-orange-500/50 hover:bg-orange-500/5 hover:text-orange-500 transition-colors">
-                    <UploadCloud className="size-6 opacity-70" />
-                    <span>დააწკაპუნეთ ფაილის ასარჩევად</span>
-                    <span className="text-[10px] text-muted/70 font-normal">PDF, DOCX, TXT, PNG, JPG</span>
+                    className="group w-full flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-hairline hover:border-navy bg-surface/40 hover:bg-surface/80 py-6 text-xs transition-all cursor-pointer">
+                    <div className="flex size-8 items-center justify-center rounded-lg bg-paper-deep text-muted group-hover:bg-navy/10 group-hover:text-navy transition-colors">
+                      <UploadCloud className="size-4" />
+                    </div>
+                    <span className="font-semibold text-muted group-hover:text-ink transition-colors">
+                      დააწკაპუნეთ ფაილის ასარჩევად
+                    </span>
+                    <span className="text-[10px] font-mono text-muted/60">PDF, DOCX, TXT, PNG, JPG</span>
                   </button>
                 )}
               </div>
 
+              {/* შენიშვნა */}
               <div>
-                <label className="text-xs font-bold text-body block mb-1.5">
-                  შენიშვნა / კომენტარი (არასავალდებულო)
+                <label className="text-xs font-bold text-ink block mb-1.5">
+                  შენიშვნა / კომენტარი <span className="text-muted font-normal">(არასავალდებულო)</span>
                 </label>
                 <textarea
                   value={materialNote}
                   onChange={(e) => setMaterialNote(e.target.value)}
                   placeholder="ჩაწერეთ მითითება ამ მასალისთვის..."
-                  className="w-full resize-none rounded-xl border border-hairline bg-paper-deep p-3 text-sm text-ink outline-none focus:border-orange-500 transition-colors"
+                  className="w-full resize-none rounded-xl border border-hairline bg-surface/60 p-3 text-xs text-ink placeholder:text-muted outline-none focus:border-navy focus:bg-surface transition-colors"
                   rows={2}
                 />
               </div>
             </div>
 
-            <div className="border-t border-hairline bg-surface px-6 py-4 flex justify-end gap-2.5">
+            {/* Footer */}
+            <div className="border-t border-hairline bg-surface px-5 py-3 flex items-center justify-end gap-2">
               <button
                 type="button"
                 disabled={uploadingMaterial}
                 onClick={() => setIsMaterialModalOpen(false)}
-                className="rounded-xl bg-paper px-4 py-2 text-xs font-bold text-ink border border-hairline hover:bg-paper-deep transition-colors disabled:opacity-50">
+                className="rounded-xl px-3.5 py-1.5 text-xs font-bold text-body hover:text-ink hover:bg-paper-deep transition-colors cursor-pointer disabled:opacity-50">
                 გაუქმება
               </button>
               <button
                 type="button"
                 disabled={uploadingMaterial || !materialFileBase64}
                 onClick={handleUploadMaterial}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-orange-500/15 border border-orange-500/30 px-5 py-2 text-xs font-bold text-orange-500 hover:bg-orange-500/25 disabled:opacity-50 transition-colors shadow-inner active:scale-95">
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-navy-strong disabled:opacity-40 transition-all active:scale-98 cursor-pointer">
                 {uploadingMaterial ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin" />
@@ -1473,57 +1375,53 @@ export function TeacherStudentsWorkspace({
       {/* 5. მასალის ნახვის მოდალი */}
       {previewMaterialModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-xs"
           onClick={() => setPreviewMaterialModal(null)}>
           <div
-            className="flex h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] bg-paper shadow-2xl border border-hairline animate-in zoom-in-95 duration-200"
+            className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-hairline bg-paper shadow-2xl"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-hairline bg-surface px-6 py-4 shrink-0">
-              <div className="flex items-center gap-3 min-w-0 pr-2">
-                <div className="flex size-10 items-center justify-center rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 shrink-0">
-                  <Layers className="size-5" />
-                </div>
-                <div className="min-w-0">
-                  {previewMaterialModal.instructions && previewMaterialModal.instructions !== 'მასალა' && (
-                    <p className="text-xs text-muted mt-0.5 truncate">{previewMaterialModal.instructions}</p>
-                  )}
-                </div>
+            <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-surface px-5 py-3">
+              <div className="flex items-center gap-2.5">
+                <div className="size-2 rounded-full bg-navy" />
+                <h3 className="text-xs font-bold text-ink">{previewMaterialModal.title || 'სასწავლო მასალის დაფა'}</h3>
               </div>
+              <button type="button" onClick={() => setPreviewMaterialModal(null)} className="text-muted hover:text-ink">
+                <X className="size-4" />
+              </button>
+            </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+            <div className="flex-1 bg-[#161512] p-4 flex items-center justify-center overflow-hidden">
+              <div className="rounded-xl border border-[#363431] bg-white p-2 shadow-2xl max-h-full max-w-full flex items-center justify-center">
+                <img
+                  src={previewMaterialModal.url}
+                  alt="Material View"
+                  className="max-h-[70vh] w-auto max-w-full object-contain rounded-lg"
+                />
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center justify-between border-t border-hairline bg-surface px-5 py-2.5">
+              <span className="text-[11px] font-mono text-muted">
+                {previewMaterialModal.instructions && previewMaterialModal.instructions !== 'მასალა'
+                  ? previewMaterialModal.instructions
+                  : 'სრული ზომის გადახედვა'}
+              </span>
+              <div className="flex items-center gap-2">
                 <a
                   href={previewMaterialModal.url}
                   target="_blank"
                   rel="noreferrer"
+                  className="rounded-xl border border-hairline bg-paper-deep px-3 py-1.5 text-xs font-semibold text-ink hover:bg-surface transition-colors">
+                  ახალ ჩანართში გახსნა
+                </a>
+                <a
+                  href={previewMaterialModal.url}
                   download
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-paper px-3 py-1.5 text-xs font-bold text-ink hover:bg-paper-deep transition-colors">
-                  <Download className="size-3.5 text-orange-500" />
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3.5 py-1.5 text-xs font-bold text-white hover:bg-navy-strong shadow-xs transition-all active:scale-98">
+                  <Download className="size-3.5" />
                   <span>გადმოწერა</span>
                 </a>
-                <button
-                  type="button"
-                  onClick={() => setPreviewMaterialModal(null)}
-                  className="flex size-8 items-center justify-center rounded-xl border border-hairline bg-surface text-muted hover:text-ink hover:bg-paper-deep transition-colors">
-                  <X className="size-4" />
-                </button>
               </div>
-            </div>
-
-            <div className="flex-1 bg-black/80 p-2 overflow-hidden flex items-center justify-center">
-              {isImageString(previewMaterialModal.url) ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={previewMaterialModal.url}
-                  alt={previewMaterialModal.title}
-                  className="max-h-full max-w-full object-contain rounded-lg shadow-md"
-                />
-              ) : (
-                <iframe
-                  src={previewMaterialModal.url}
-                  title={previewMaterialModal.title}
-                  className="w-full h-full rounded-lg bg-white border-0"
-                />
-              )}
             </div>
           </div>
         </div>

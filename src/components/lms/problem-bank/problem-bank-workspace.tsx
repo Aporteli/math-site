@@ -1941,8 +1941,8 @@ export function ProblemBankWorkspace({
                     className={[
                       'relative select-none rounded-xl border transition-colors',
                       active
-                        ? 'border-navy/20 bg-navy-tint/70'
-                        : 'border-hairline-soft bg-white hover:border-hairline hover:bg-paper-deep/80',
+                        ? 'border-navy/20 bg-navy-tint/90'
+                        : 'border-navy/20 bg-white hover:border-hairline hover:bg-paper-deep/80',
                     ].join(' ')}>
                     <div className="flex items-start gap-2 px-3.5 py-3 pe-12">
                       {bulkSelectMode ? (

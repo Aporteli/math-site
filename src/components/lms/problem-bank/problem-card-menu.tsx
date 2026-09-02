@@ -279,12 +279,12 @@ export function ProblemCardMenu({
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={menu.open}
-        className="inline-flex size-9 items-center justify-center rounded-lg border border-hairline bg-white text-muted shadow-sm transition-colors hover:border-navy/30 hover:text-navy"
+        className="inline-flex size-9 items-center justify-center rounded-lg border border-ink bg-white text-muted shadow-sm transition-colors hover:border-navy/30 hover:text-navy"
         onClick={(event) => {
           event.stopPropagation();
           setOpen((value) => !value);
         }}>
-        <MoreVertical className="size-4" aria-hidden="true" />
+        <MoreVertical className="size-4 text-ink" aria-hidden="true" />
       </button>
 
       {open && typeof document !== 'undefined'

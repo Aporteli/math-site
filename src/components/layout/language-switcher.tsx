@@ -86,7 +86,7 @@ export function LanguageSwitcher({
         aria-expanded={open}
         aria-label={`${label} — ${localeNames[locale].label}`}
         className={[
-          "group inline-flex shrink-0 items-center gap-1.5 rounded-full py-2 pl-3 pr-2.5 text-sm font-semibold ring-1 transition-colors duration-200",
+          "group inline-flex shrink-0 items-center gap-1.5 rounded-xl py-2 pl-3 pr-2.5 text-sm font-semibold ring-1 transition-colors duration-200",
           open
             ? "bg-navy-tint text-navy ring-navy/30"
             : "bg-white text-ink ring-hairline hover:text-navy hover:ring-navy/30",
