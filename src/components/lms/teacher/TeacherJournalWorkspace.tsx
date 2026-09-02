@@ -633,9 +633,9 @@ export function TeacherJournalWorkspace() {
       {/* 1. თვის ხედი */}
       {view === "month" && (
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-hairline bg-paper/30 shrink-0">
+          <div className="grid grid-cols-7  bg-paper">
             {WEEKDAY_LABELS.map((label) => (
-              <div key={label} className="px-2 py-1.5 text-center text-[11px] font-bold uppercase tracking-wider text-muted">
+              <div key={label} className="px-2 py-1.5 text-center text-[11px] font-bold uppercase tracking-wider text-ink">
                 {label}
               </div>
             ))}
@@ -662,7 +662,7 @@ export function TeacherJournalWorkspace() {
                     !isLast ? "border-r" : ""
                   }`}
                 >
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted block truncate">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink block truncate">
                     {WEEKDAY_LABELS[(date.getDay() + 6) % 7]}
                   </span>
                   <span
@@ -722,7 +722,7 @@ export function TeacherJournalWorkspace() {
                 <div
                   key={hour}
                   style={{ height: `${HOUR_HEIGHT}px` }}
-                  className="relative text-right pr-2.5 text-[11px] font-semibold text-muted -top-2.5"
+                  className="relative text-right pr-2.5 text-[11px] font-semibold text-ink -top-2.5"
                 >
                   {hour !== 0 ? `${pad(hour)}:00` : ""}
                 </div>
