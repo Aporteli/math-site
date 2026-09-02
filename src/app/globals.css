@@ -197,30 +197,30 @@ body {
 .dark {
   color-scheme: dark;
 
-  /* Neutral surfaces */
-  --color-paper: #0b1322;
-  --color-paper-deep: #101a2e;
-  --color-hairline: #263449;
-  --color-hairline-soft: #1b2739;
+  /* Lichess Neutral Surfaces */
+  --color-paper: #161512;          /* Lichess-ის მთავარი ფონი (ღრმა ნახშირისფერი) */
+  --color-paper-deep: #1e1c18;     /* მეორეხარისხოვანი ოდნავ ღია ფონი */
+  --color-hairline: #363431;       /* გრიდის და ბარათების საზღვრის ხაზები */
+  --color-hairline-soft: #262421;  /* მკრთალი გამყოფი ხაზები */
 
-  /* Text */
-  --color-ink: #edf1f7;
-  --color-body: #c2cbd9;
-  --color-muted: #8f9aad;
+  /* Lichess Typography */
+  --color-ink: #bababa;            /* ძირითადი თეთრი/ღია-ნაცრისფერი ტექსტი */
+  --color-body: #9e9c98;           /* მეორეხარისხოვანი ტექსტი */
+  --color-muted: #6b6965;          /* პასიური ტექსტები, ქვესათაურები */
 
-  /* Primary accent */
-  --color-navy: #5b93d1;
-  --color-navy-strong: #86b4e6;
-  --color-navy-tint: #17273f;
+  /* Lichess Primary Accent (ღილაკი "REGISTER" და აქტიური ლინკები) */
+  --color-navy: #3692e7;           /* Lichess-ის ლურჯი */
+  --color-navy-strong: #54a3ee;    /* ჰოვერის ლურჯი */
+  --color-navy-tint: #1c2e42;      /* ბეიჯების მუქი ლურჯი ფონი */
 
-  /* Secondary accent */
-  --color-brass: #d6ae67;
-  --color-brass-strong: #e7c88f;
-  --color-brass-soft: #c49a50;
-  --color-brass-tint: #2c2413;
+  /* Lichess Amber/Gold Accent (Donate, ტაბის აქტიური ხაზი, Trophy) */
+  --color-brass: #d59120;          /* Lichess-ის ნარინჯისფერ-ოქროსფერი აქცენტი */
+  --color-brass-strong: #e59d28;   
+  --color-brass-soft: #b87b18;     
+  --color-brass-tint: #2b2114;     
 
-  /* Card surfaces (white in light mode) */
-  --color-surface: #151f36;
+  /* Lichess Cards/Grid Blocks */
+  --color-surface: #24221f;        /* 1+0, 3+0 ბარათების და პანელების ფონი */
 }
 
 html {

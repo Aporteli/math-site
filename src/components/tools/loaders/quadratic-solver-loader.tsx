@@ -12,7 +12,7 @@ interface QuadraticSolverProps {
 }
 
 const QuadraticSolver = dynamic<QuadraticSolverProps>(
-  () => import('../QuadraticCalculator').then((mod) => mod.QuadraticCalculator),
+  () => import('../quadratic/QuadraticCalculator').then((mod) => mod.QuadraticCalculator),
   {
     ssr: false,
     loading: () => <SolverSkeleton />,

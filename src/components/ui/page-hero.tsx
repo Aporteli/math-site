@@ -22,11 +22,13 @@ export function PageHero({
 }: PageHeroProps) {
   return (
     <section className="relative overflow-hidden rounded-3xl border border-hairline bg-white shadow-sm motion-safe:animate-fade-up">
+      {/* Lichess-ის სტილის მათემატიკური რვეულის ბადე */}
       <div
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--color-hairline-soft)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-hairline-soft)_1px,transparent_1px)] bg-[size:1.5rem_1.5rem] opacity-70"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--color-hairline)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-hairline)_1px,transparent_1px)] bg-[size:1.25rem_1.25rem] opacity-35"
         aria-hidden="true"
       />
-      <div className="absolute inset-x-0 top-0 h-1 bg-brass-soft" aria-hidden="true" />
+      {/* ზედა დამახასიათებელი ნარინჯისფერ-ოქროსფერი აქცენტის ხაზი */}
+      <div className="absolute inset-x-0 top-0 h-1 bg-brass" aria-hidden="true" />
 
       <div
         className={
@@ -37,16 +39,17 @@ export function PageHero({
       >
         <div className="p-6 sm:p-8 lg:p-10">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-navy-tint text-navy">
+            {/* Lichess-ის ანთებული აიკონის ბლოკი */}
+            <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl border border-hairline bg-paper-deep text-brass shadow-inner">
               <Icon className="size-5" aria-hidden="true" />
             </span>
             {eyebrow ? (
-              <p className="text-sm font-semibold tracking-wide text-brass">
+              <p className="text-sm font-bold tracking-wide text-brass">
                 {eyebrow}
               </p>
             ) : null}
             {badge ? (
-              <p className="rounded-full border border-hairline bg-paper px-2.5 py-1 text-xs font-semibold text-navy">
+              <p className="rounded-full border border-hairline bg-paper-deep px-3 py-1 text-xs font-bold text-ink">
                 {badge}
               </p>
             ) : null}
@@ -62,14 +65,14 @@ export function PageHero({
         </div>
 
         {aside ? (
-          <div className="flex flex-col justify-center gap-3 border-t border-hairline bg-paper-deep/70 p-6 sm:p-8 lg:border-t-0 lg:border-l">
+          <div className="flex flex-col justify-center gap-3 border-t border-hairline bg-paper-deep/60 p-6 sm:p-8 lg:border-t-0 lg:border-l">
             {aside}
           </div>
         ) : null}
       </div>
 
       {footer ? (
-        <div className="relative border-t border-hairline bg-paper/80 px-6 py-4 sm:px-8 lg:px-10">
+        <div className="relative border-t border-hairline bg-paper-deep/40 px-6 py-4 sm:px-8 lg:px-10">
           {footer}
         </div>
       ) : null}
@@ -89,7 +92,7 @@ export function SectionHeading({
   return (
     <div className="flex items-start gap-4 border-b border-hairline pb-4">
       <span
-        className="mt-1 hidden h-10 w-1 shrink-0 rounded-full bg-brass-soft sm:block"
+        className="mt-1 hidden h-10 w-1 shrink-0 rounded-full bg-brass sm:block"
         aria-hidden="true"
       />
       <div className="min-w-0 max-w-2xl">
