@@ -97,7 +97,7 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
             formattedSelectedDate={formattedSelectedDate}
           />
 
-          <div className="flex-1 flex flex-col min-h-0 p-3.5 sm:p-5">
+          <div className="flex-1 flex flex-col min-h-0 bg-paper">
             {/* 1. დავალებების ტაბი */}
             {activeTab === 'tasks' && (
               <AssignmentTasksTab

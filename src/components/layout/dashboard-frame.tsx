@@ -14,7 +14,6 @@ import type { Dictionary } from "@/i18n/types";
 import { SIDEBAR_COOKIE } from "@/lib/dashboard";
 import { setCookie } from "@/lib/helpers/cookies";
 
-// Context კალენდრიდან და გვერდებიდან პანელის სამართავად
 interface DashboardContextType {
   sidebarDrawerOpen: boolean;
   toggleSidebarDrawer: () => void;
@@ -178,11 +177,11 @@ export function DashboardFrame(props: DashboardFrameProps) {
         setSidebarActions,
       }}
     >
-      <div className={`bg-paper ${isJournalPage ? "h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen"}`}>
+      <div className={`bg-paper text-ink ${isJournalPage ? "h-[100dvh] overflow-hidden flex flex-col" : "min-h-screen"}`}>
         {!isJournalPage && (
           <aside
             className={[
-              "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-hairline bg-white transition-[width] duration-200 lg:flex",
+              "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-hairline/60 bg-paper-deep/95 backdrop-blur-md transition-[width] duration-200 lg:flex",
               collapsed ? "w-[4.75rem]" : "w-72",
             ].join(" ")}
           >
@@ -203,12 +202,12 @@ export function DashboardFrame(props: DashboardFrameProps) {
           <>
             {journalDrawerOpen && (
               <div
-                className="fixed inset-0 z-40 bg-ink/20 backdrop-blur-[2px] transition-opacity animate-in fade-in duration-200"
+                className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
                 onClick={() => setJournalDrawerOpen(false)}
               />
             )}
             <aside
-              className={`fixed inset-y-0 left-0 z-50 flex w-[4.75rem] flex-col border-r border-hairline bg-white shadow-2xl transition-transform duration-300 ease-out ${
+              className={`fixed inset-y-0 left-0 z-50 flex w-[4.75rem] flex-col border-r border-hairline/60 bg-paper-deep/95 shadow-2xl backdrop-blur-md transition-transform duration-300 ease-out ${
                 journalDrawerOpen ? "translate-x-0" : "-translate-x-full"
               }`}
             >
@@ -231,11 +230,11 @@ export function DashboardFrame(props: DashboardFrameProps) {
           <div className="lg:hidden">
             <button
               type="button"
-              className="fixed inset-0 z-40 bg-ink/25"
+              className="fixed inset-0 z-40 bg-black/65 backdrop-blur-xs"
               aria-label={dict.dashboard.closeNav}
               onClick={() => setMobileOpen(false)}
             />
-            <aside className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-hairline bg-white shadow-lg">
+            <aside className="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-hairline/60 bg-paper-deep shadow-2xl">
               <SidebarChrome
                 locale={locale}
                 dict={dict}
@@ -261,15 +260,15 @@ export function DashboardFrame(props: DashboardFrameProps) {
           {!isJournalPage && (
             <header
               className={[
-                "sticky top-0 z-30 border-b border-hairline bg-paper/80 backdrop-blur-md shrink-0",
+                "sticky top-0 z-30 border-b border-hairline/60 bg-paper/90 backdrop-blur-md shrink-0",
                 "motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out",
                 headerHidden ? "-translate-y-full" : "translate-y-0",
               ].join(" ")}
             >
-              <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
+              <div className="flex items-center gap-3 px-4 py-2.5 sm:px-6">
                 <button
                   type="button"
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-hairline bg-white text-ink transition-colors hover:border-navy/30 hover:text-navy lg:hidden"
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-hairline/60 bg-surface/80 text-muted transition-colors hover:border-brass/40 hover:text-brass lg:hidden"
                   aria-label={dict.dashboard.openNav}
                   aria-expanded={mobileOpen}
                   onClick={() => setMobileOpen(true)}
@@ -279,14 +278,14 @@ export function DashboardFrame(props: DashboardFrameProps) {
                 <div className="min-w-0 flex-1 lg:hidden">
                   <SiteLogo locale={locale} brand={dict.brand} />
                 </div>
-                <p className="hidden min-w-0 flex-1 text-sm font-medium text-muted lg:block">
+                <p className="hidden min-w-0 flex-1 text-xs font-bold uppercase tracking-wider text-muted lg:block">
                   {dict.dashboard.workspace}
                 </p>
                 <LanguageSwitcher locale={locale} label={dict.header.language} />
                 <ThemeToggle label={dict.header.theme} />
                 <Link
                   href={localePath(locale, "/")}
-                  className="hidden rounded-full border border-hairline bg-white px-3 py-2 text-sm font-medium text-body transition-colors hover:border-navy/30 hover:text-navy sm:inline-flex"
+                  className="hidden rounded-xl border border-hairline/60 bg-surface/70 px-3.5 py-1.5 text-xs font-bold text-muted transition-colors hover:border-brass/40 hover:text-brass sm:inline-flex"
                 >
                   {dict.nav.home}
                 </Link>
@@ -298,7 +297,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
             className={
               isJournalPage
                 ? "h-[100dvh] w-full p-2 sm:p-3 overflow-hidden flex flex-col box-border"
-                : "px-4 py-8 sm:px-6 lg:px-8"
+                : "px-4 py-6 sm:px-6 lg:px-8"
             }
           >
             {children}
@@ -338,12 +337,13 @@ function SidebarChrome({
 
   return (
     <>
+      {/* ლოგოს და ჩაკეცვის ზოლი */}
       <div
         className={[
-          "flex border-b border-hairline",
+          "flex border-b border-hairline/60",
           collapsed
             ? "flex-col items-center gap-2 px-2 py-3"
-            : "items-center gap-2 px-3 py-3",
+            : "items-center gap-2 px-3.5 py-3",
         ].join(" ")}
       >
         <SiteLogo
@@ -357,7 +357,7 @@ function SidebarChrome({
           onClick={onToggle}
           aria-label={toggleLabel}
           aria-expanded={closeLabel ? undefined : !collapsed}
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-body transition-colors hover:bg-paper hover:text-navy"
+          className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface hover:text-brass"
         >
           {closeLabel ? (
             <X className="size-4" aria-hidden="true" />
@@ -369,12 +369,13 @@ function SidebarChrome({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden py-3">{nav}</div>
+      {/* ნავიგაციის სექცია */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 thin-scrollbar">{nav}</div>
 
       {sidebarActions && (
         <div
           className={[
-            "border-t border-hairline bg-paper/30 transition-all",
+            "border-t border-hairline/60 bg-paper/40 transition-all",
             collapsed ? "p-2 flex flex-col items-center gap-2" : "p-3 space-y-2",
           ].join(" ")}
         >
@@ -382,10 +383,11 @@ function SidebarChrome({
         </div>
       )}
 
+      {/* მომხმარებლის პროფილი და გამოსვლა */}
       <div
         className={[
-          "border-t border-hairline",
-          collapsed ? "flex flex-col items-center gap-1 p-2" : "p-3",
+          "border-t border-hairline/60 bg-paper/20",
+          collapsed ? "flex flex-col items-center gap-1 p-2" : "p-3.5",
         ].join(" ")}
       >
         {collapsed ? (
@@ -393,14 +395,14 @@ function SidebarChrome({
             {userName}, {roleLabel}
           </p>
         ) : (
-          <>
-            <p className="truncate px-3 text-sm font-semibold text-ink">
+          <div className="mb-2">
+            <p className="truncate text-xs font-bold text-ink">
               {userName}
             </p>
-            <p className="truncate px-3 text-xs text-muted">{roleLabel}</p>
-          </>
+            <p className="truncate text-[11px] text-muted">{roleLabel}</p>
+          </div>
         )}
-        <div className={collapsed ? undefined : "mt-2"}>
+        <div className={collapsed ? undefined : "mt-1.5"}>
           <SignOutButton
             locale={locale}
             label={dict.dashboard.signOut}

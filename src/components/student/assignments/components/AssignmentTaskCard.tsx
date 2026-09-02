@@ -39,49 +39,53 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
   return (
     <div
       onClick={handleClick}
-      className={`flex flex-col justify-between rounded-2xl border p-3 transition-all cursor-pointer group min-h-[210px] ${
+      className={`group flex min-h-[210px] cursor-pointer flex-col justify-between rounded-2xl border p-3.5 transition-colors ${
         isGraded
-          ? 'border-emerald-200 bg-emerald-50/20 shadow-xs'
-          : 'border-hairline bg-white hover:border-navy/40 hover:shadow-md'
+          ? 'border-brass/35 bg-surface/90 hover:border-brass/55'
+          : 'border-hairline bg-surface hover:border-brass/45 hover:bg-surface/85'
       }`}>
-      <div className="flex flex-col gap-2 min-w-0">
+      <div className="flex min-w-0 flex-col gap-2.5">
+        {/* სტატუსის ბეიჯი Lichess-ის ოქროსფერ/ნეიტრალურ ტონებში */}
         <div className="flex items-center justify-between gap-1.5">
           <span
-            className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] ${meta.className}`}>
-            <meta.icon className="size-3" />
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border transition-colors ${
+              isGraded
+                ? 'border-brass/40 bg-brass-tint/60 text-brass'
+                : 'border-hairline/50 bg-paper-deep/70 text-body group-hover:text-ink'
+            }`}>
+            <meta.icon className={`size-3 ${isGraded ? 'text-brass' : 'text-brass/80'}`} />
             <span className="truncate">{meta.label}</span>
           </span>
         </div>
 
+        {/* სურათის ან ფორმულის პრევიუ */}
         {boardImageUrl ? (
-          <div className="w-full h-32 rounded-xl border border-slate-800 bg-slate-950 p-1.5 flex items-center justify-center overflow-hidden shadow-inner">
-            <img
-              src={boardImageUrl}
-              alt="დაფის ჩანაწერი"
-              className="w-full h-full object-contain rounded bg-slate-900/60"
-            />
+          <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl border-hairline bg-paper shadow-inner">
+            <img src={boardImageUrl} alt="დაფის ჩანაწერი" className="h-full w-full rounded-lg object-contain" />
           </div>
         ) : firstProblemTex ? (
-          <div className="w-full h-32 rounded-xl bg-paper-deep p-3 flex items-center justify-center overflow-hidden">
+          <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl border border-hairline/60 bg-paper-deep p-3 shadow-inner">
             <KatexPreview
               tex={firstProblemTex}
-              className="text-xs text-ink line-clamp-3 pointer-events-none leading-relaxed"
+              className="line-clamp-3 pointer-events-none text-xs leading-relaxed text-ink"
             />
           </div>
         ) : null}
 
+        {/* მასწავლებლის შენიშვნა Lichess-ის თბილ ბრინჯაოსფერ ბლოკში */}
         {teacherNote && teacherNote.trim() !== '' && teacherNote.trim() !== 'გთხოვთ ამოხსნათ მოცემული ამოცანა.' && (
-          <div className="rounded-lg bg-amber-50/50 p-2 border border-amber-100/50">
-            <p className="text-[11px] text-amber-900/70 line-clamp-2">
-              <span className="font-bold text-amber-800/80 mr-1">შენიშვნა:</span>
+          <div className="rounded-lg border border-brass/25 bg-brass-tint/60 p-2">
+            <p className="line-clamp-2 text-[11px] leading-snug text-ink/85">
+              <span className="mr-1 font-bold text-brass">შენიშვნა:</span>
               {teacherNote}
             </p>
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-hairline-soft">
-        <span className="text-xs font-bold text-navy group-hover:underline flex items-center gap-1">
+      {/* ქვედა ზოლი */}
+      <div className="flex items-center justify-between border-t border-hairline/60 pt-2.5">
+        <span className="flex items-center gap-1 text-xs font-bold text-muted transition-colors group-hover:text-brass">
           ნახვა <span className="transition-transform group-hover:translate-x-0.5">→</span>
         </span>
       </div>

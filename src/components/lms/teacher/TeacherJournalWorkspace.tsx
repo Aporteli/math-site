@@ -449,7 +449,7 @@ export function TeacherJournalWorkspace() {
               onClick={(e) => handleEventClick(e, ev)}
               className={`relative truncate rounded px-1.5 py-0.5 text-[11px] font-bold leading-tight transition-transform origin-left hover:scale-[1.02] shrink-0 shadow-2xs flex items-center gap-1 ${COLOR_CHIP[ev.color]}`}
             >
-              {ev.repeat !== "none" && <Repeat className="size-2.5 shrink-0 opacity-75" />}
+              {ev.repeat !== "none" && <Repeat className="size-2.5 shrink-0 opacity-75 text-brass-strong" />}
               {!ev.allDay && <span className="opacity-80 font-normal">{ev.startTime}</span>}
               <span className="truncate">{ev.title || "(უსათაურო)"}</span>
             </div>
@@ -505,7 +505,7 @@ export function TeacherJournalWorkspace() {
               className={`absolute inset-x-1 z-10 overflow-hidden rounded-xl border p-1.5 text-xs font-bold leading-tight shadow-md hover:z-30 hover:scale-[1.01] transition-all cursor-pointer ${COLOR_CHIP[ev.color]}`}
             >
               <div className="flex items-center gap-1">
-                {ev.repeat !== "none" && <Repeat className="size-3 shrink-0 opacity-75" />}
+                {ev.repeat !== "none" && <Repeat className=" text-brass-strong size-3 shrink-0 opacity-75" />}
                 <span className="truncate">{ev.title || "(უსათაურო)"}</span>
               </div>
               <div className="text-[10px] opacity-80 font-normal">
@@ -521,7 +521,7 @@ export function TeacherJournalWorkspace() {
   return (
     <div className="flex h-full w-full min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm">
       {/* Toolbar */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-hairline bg-gradient-to-b from-paper/60 to-white px-4 py-2.5">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-hairline bg-surface from-paper/60 to-white px-4 py-2.5">
         <div className="flex items-center gap-2.5">
           <button
             type="button"
@@ -533,7 +533,7 @@ export function TeacherJournalWorkspace() {
           </button>
 
           <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-navy/10 bg-navy-tint text-navy">
-            {loading ? <Loader2 className="size-4 animate-spin" /> : <CalendarIcon className="size-4" />}
+            {loading ? <Loader2 className="size-4 animate-spin text-brass-strong" /> : <CalendarIcon className="size-4 text-brass-strong" />}
           </div>
           <div>
             <h3 className="text-base font-bold text-ink leading-tight">ჟურნალი</h3>
@@ -556,7 +556,7 @@ export function TeacherJournalWorkspace() {
               onClick={goToPrev}
               className="flex size-8 items-center justify-center text-muted hover:bg-paper hover:text-ink transition-colors"
             >
-              <ChevronLeft className="size-4" />
+              <ChevronLeft className="size-4 text-brass-strong" />
             </button>
             <div className="h-4 w-px bg-hairline" />
             <button
@@ -564,7 +564,7 @@ export function TeacherJournalWorkspace() {
               onClick={goToNext}
               className="flex size-8 items-center justify-center text-muted hover:bg-paper hover:text-ink transition-colors"
             >
-              <ChevronRight className="size-4" />
+              <ChevronRight className="size-4 text-brass-strong " />
             </button>
           </div>
 
@@ -581,7 +581,7 @@ export function TeacherJournalWorkspace() {
                 {view === "schedule" && "განრიგი"}
               </span>
               <ChevronDown
-                className={`size-3.5 text-muted transition-transform duration-200 ${
+                className={`size-3.5 text-navy-strong transition-transform duration-200 ${
                   viewMenuOpen ? "rotate-180" : ""
                 }`}
               />
@@ -611,7 +611,7 @@ export function TeacherJournalWorkspace() {
                       {v === "week" && "კვირა"}
                       {v === "month" && "თვე"}
                       {v === "schedule" && "განრიგი"}
-                      {view === v && <Check className="size-3" />}
+                      {view === v && <Check className="size-3 text-brass-strong" />}
                     </button>
                   ))}
                 </div>
@@ -682,7 +682,7 @@ export function TeacherJournalWorkspace() {
                 <div
                   key={hour}
                   style={{ height: `${HOUR_HEIGHT}px` }}
-                  className="relative text-right pr-2 text-[11px] font-semibold text-muted -top-2.5"
+                  className="relative text-right pr-2 text-[11px] font-semibold text-ink -top-2.5"
                 >
                   {hour !== 0 ? `${pad(hour)}:00` : ""}
                 </div>
@@ -764,13 +764,13 @@ export function TeacherJournalWorkspace() {
                           <div className="flex-1">
                             <div className="flex items-center gap-1.5">
                               <h4 className="text-xs font-bold text-ink">{ev.title || "(უსათაურო)"}</h4>
-                              {ev.repeat !== "none" && <Repeat className="size-3 text-muted" />}
+                              {ev.repeat !== "none" && <Repeat className=" text-brass-strong size-3 " />}
                             </div>
                             <div className="flex gap-3 mt-1 text-[11px] text-muted font-medium">
                               {ev.allDay ? (
                                 <span>მთელი დღე</span>
                               ) : (
-                                <span className="flex items-center gap-1"><Clock className="size-3"/> {ev.startTime} - {ev.endTime}</span>
+                                <span className="flex items-center gap-1"><Clock className="size-3 text-brass-strong "/> {ev.startTime} - {ev.endTime}</span>
                               )}
                               {ev.location && <span className="flex items-center gap-1"><MapPin className="size-3"/> {ev.location}</span>}
                             </div>
@@ -823,7 +823,7 @@ export function TeacherJournalWorkspace() {
               </div>
 
               <div className="flex items-start gap-3">
-                <Clock className="mt-2 size-4 shrink-0 text-muted" />
+                <Clock className="mt-2 size-4 shrink-0 text-brass-strong" />
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
                     <input
@@ -860,7 +860,7 @@ export function TeacherJournalWorkspace() {
                     </div>
                   )}
                   <div className="flex items-center gap-2 pt-1">
-                    <Repeat className="size-3.5 shrink-0 text-muted" />
+                    <Repeat className=" size-3.5 shrink-0 text-brass-strong" />
                     <select
                       value={draft.repeat}
                       onChange={(e) => updateDraft({ repeat: e.target.value as RepeatOption })}
@@ -892,7 +892,7 @@ export function TeacherJournalWorkspace() {
               {expanded && (
                 <>
                   <div className="flex items-center gap-3">
-                    <MapPin className="size-4 shrink-0 text-muted" />
+                    <MapPin className="size-4 shrink-0 text-brass-strong" />
                     <input
                       value={draft.location}
                       onChange={(e) => updateDraft({ location: e.target.value })}
@@ -902,7 +902,7 @@ export function TeacherJournalWorkspace() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <Users className="mt-2 size-4 shrink-0 text-muted" />
+                    <Users className="mt-2 size-4 shrink-0 text-brass-strong" />
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
                         <input
@@ -948,7 +948,7 @@ export function TeacherJournalWorkspace() {
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <AlignLeft className="mt-2 size-4 shrink-0 text-muted" />
+                    <AlignLeft className="mt-2 size-4 shrink-0 text-brass-strong" />
                     <textarea
                       value={draft.description}
                       onChange={(e) => updateDraft({ description: e.target.value })}
@@ -959,7 +959,7 @@ export function TeacherJournalWorkspace() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Bell className="size-4 shrink-0 text-muted" />
+                    <Bell className="size-4 shrink-0 text-brass-strong" />
                     <select
                       value={draft.reminder}
                       onChange={(e) => updateDraft({ reminder: e.target.value as ReminderOption })}
@@ -1003,7 +1003,7 @@ export function TeacherJournalWorkspace() {
                   onClick={handleSave}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-navy-strong disabled:opacity-40 transition-all active:scale-95"
                 >
-                  {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
+                  {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5 " />}
                   შენახვა
                 </button>
               </div>

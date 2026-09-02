@@ -18,14 +18,14 @@ export function AssignmentTasksTab({
   onSelectProblem,
 }: AssignmentTasksTabProps) {
   return (
-    <div className="flex-1 overflow-y-auto pt-1 pe-1 custom-scrollbar">
+    <div className="pt-4 px-4 pr-4 flex-1 overflow-y-auto pt-1 pe-1 custom-scrollbar border-hairline bg-paper">
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-2 text-sm font-semibold text-muted">
           <Loader2 className="size-6 animate-spin text-navy" />
           <span>იტვირთება...</span>
         </div>
       ) : taskAssignments.length === 0 ? (
-        <div className="py-16 flex flex-col items-center justify-center text-center text-muted rounded-2xl border border-dashed border-hairline p-6 bg-paper/20">
+        <div className="py-16 flex flex-col items-center justify-center text-center text-muted  bg-paper">
           <BookOpen className="size-9 opacity-30 mb-2" />
           <p className="text-sm font-bold text-ink">ამ თარიღისთვის დავალებები არ არის</p>
           <p className="text-xs max-w-xs mt-1">{formattedSelectedDate}-ს დავალებები არ მოიძებნა.</p>

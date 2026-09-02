@@ -17,36 +17,37 @@ export function StudentAssignmentsHeroAside({
 }: StudentAssignmentsHeroAsideProps) {
   return (
     <div className="flex w-full flex-col gap-2.5">
+      {/* სტატუსის ბლოკი Lichess-ის სტილში */}
       <div
-        className={`rounded-2xl border px-4 py-3 shadow-xs transition-all ${
+        className={`rounded-2xl border px-4 py-3 shadow-inner transition-colors ${
           todayAssignmentsCount === 0
-            ? 'border-slate-200 bg-slate-50/70 text-slate-600'
+            ? 'border-hairline bg-surface text-muted'
             : isGroupAlreadySubmitted
-              ? 'border-emerald-200 bg-emerald-50/70 text-emerald-800'
-              : 'border-amber-200 bg-amber-50/40 text-amber-900'
+              ? 'border-brass/30 bg-brass-tint text-brass'
+              : 'border-brass/40 bg-surface text-ink'
         }`}>
         <div className="mt-1 flex items-center gap-2">
           {todayAssignmentsCount === 0 ? (
             <>
-              <BookOpen className="size-5 text-slate-400 shrink-0" />
-              <span className="text-base font-bold text-slate-600">დავალება არ არის</span>
+              <BookOpen className="size-5 text-muted shrink-0" />
+              <span className="text-base font-bold text-muted">დავალება არ არის</span>
             </>
           ) : isGroupAlreadySubmitted ? (
             <>
-              <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
-              <span className="text-base font-bold text-emerald-700">გაგზავნილია</span>
+              <CheckCircle2 className="size-5 text-brass shrink-0" />
+              <span className="text-base font-bold text-brass">გაგზავნილია</span>
             </>
           ) : (
             <>
-              <Clock className="size-5 text-amber-500 shrink-0" />
-              <span className="text-base font-bold text-slate-800">შესასრულებელი</span>
+              <Clock className="size-5 text-brass shrink-0" />
+              <span className="text-base font-bold text-ink">შესასრულებელი</span>
             </>
           )}
         </div>
       </div>
 
       {courses.length > 0 && (
-        <div className="flex w-full flex-col gap-2 [&>*]:!w-full [&>*]:!flex [&>*]:!items-center [&>*]:!gap-2 [&_button:first-child]:!flex-1 [&_button:first-child]:!justify-center">
+        <div >
           {courses.map((course) => (
             <StudentCourseVideoCallButton
               key={course.id}

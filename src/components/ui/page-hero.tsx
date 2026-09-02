@@ -24,7 +24,7 @@ export function PageHero({
     <section className="relative overflow-hidden rounded-3xl border border-hairline bg-white shadow-sm motion-safe:animate-fade-up">
       {/* Lichess-ის სტილის მათემატიკური რვეულის ბადე */}
       <div
-        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--color-hairline)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-hairline)_1px,transparent_1px)] bg-[size:1.25rem_1.25rem] opacity-35"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--color-hero)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-hero)_1px,transparent_1px)] bg-[size:1.25rem_1.25rem] opacity-35"
         aria-hidden="true"
       />
       {/* ზედა დამახასიათებელი ნარინჯისფერ-ოქროსფერი აქცენტის ხაზი */}

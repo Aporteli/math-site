@@ -12,11 +12,7 @@ interface StudentCourseVideoCallButtonProps {
   showFullscreen?: boolean;
 }
 
-export function StudentCourseVideoCallButton({
-  courseId,
-  courseTitle,
-  label,
-}: StudentCourseVideoCallButtonProps) {
+export function StudentCourseVideoCallButton({ courseId, courseTitle, label }: StudentCourseVideoCallButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -61,7 +57,7 @@ export function StudentCourseVideoCallButton({
     try {
       const isCurrentlyFullscreen = Boolean(
         document.fullscreenElement ||
-        (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement
+        (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement,
       );
 
       const shouldBeFullscreen = targetState ?? !isCurrentlyFullscreen;
@@ -88,13 +84,13 @@ export function StudentCourseVideoCallButton({
         }
       }
     } catch (err) {
-      console.warn("Fullscreen toggle error:", err);
+      console.warn('Fullscreen toggle error:', err);
     }
   }, []);
 
-  function handleOpen(mode: "normal" | "fullscreen") {
+  function handleOpen(mode: 'normal' | 'fullscreen') {
     setIsOpen(true);
-    if (mode === "fullscreen") {
+    if (mode === 'fullscreen') {
       void toggleFullscreen(true);
     }
   }
@@ -108,29 +104,22 @@ export function StudentCourseVideoCallButton({
 
   return (
     <>
-      <div className="inline-flex items-center gap-1.5">
-        <button
-          type="button"
-          onClick={() => handleOpen("normal")}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-4.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-emerald-700 active:scale-95"
-        >
-          <Video className="size-5" />
-          <span className="text-[16px]">{label ?? "გაკვეთილზე შესვლა"}</span>
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => handleOpen('normal')}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-navy px-4 py-4 text-sm font-bold text-white shadow-sm hover:bg-navy-strong transition-all active:scale-[0.99">
+        <Video className="size-5" />
+        <span className="text-[16px]">{label ?? 'გაკვეთილზე შესვლა'}</span>
+      </button>
 
       {/* 🌟 100dvh, w-screen და overflow-hidden სქროლის მოსაცილებლად 🌟 */}
-      {isOpen && mounted &&
+      {isOpen &&
+        mounted &&
         createPortal(
           <div className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen overflow-hidden bg-slate-900/90 backdrop-blur-sm">
-            <ClassroomRoomModal
-              courseId={courseId}
-              courseTitle={courseTitle}
-              onClose={handleClose}
-              isTeacher={false}
-            />
+            <ClassroomRoomModal courseId={courseId} courseTitle={courseTitle} onClose={handleClose} isTeacher={false} />
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );

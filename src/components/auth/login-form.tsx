@@ -76,7 +76,7 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
       <button
         type="button"
         onClick={handleGoogleSignIn}
-        className="flex w-full items-center justify-center gap-3 rounded-full border border-hairline bg-white px-4 py-3 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-navy/15"
+        className="flex w-full items-center justify-center gap-3 rounded-full border border-hairline bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-navy/15"
       >
         <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
           <path
@@ -102,7 +102,7 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
       {/* Divider */}
       <div className="relative flex items-center justify-center">
         <div className="w-full border-t border-hairline" />
-        <span className="absolute bg-[#FBFBFA] px-3 text-xs uppercase text-muted">
+        <span className="absolute bg-surface px-3 text-xs uppercase text-body">
           ან
         </span>
       </div>

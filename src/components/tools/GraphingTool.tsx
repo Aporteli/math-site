@@ -61,10 +61,10 @@ const fieldClass =
   "w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
 
 const panelClass =
-  "rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5";
+  "rounded-3xl border border-hairline/40 bg-surface/30 p-4 shadow-sm sm:p-5";
 
 const iconBtnClass =
-  "inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-hairline bg-white text-body transition-colors hover:border-navy/30 hover:text-navy disabled:opacity-40";
+ "inline-flex items-center rounded-full bg-black/40 border border-hairline/40 px-3.5 py-1.5 text-xs font-semibold text-sky-400 hover:bg-black/60 hover:border-hairline transition-colors";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -196,7 +196,7 @@ export function GraphingTool({
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
           <aside className="space-y-4">
             <section className={panelClass}>
-              <h2 className="text-sm font-semibold text-ink">{copy.presets}</h2>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">{copy.presets}</h2>
               <div className="mt-3 flex flex-wrap gap-2">
                 {(
                   [
@@ -211,7 +211,7 @@ export function GraphingTool({
                     key={id}
                     type="button"
                     onClick={() => applyPreset(id)}
-                    className="rounded-full border border-hairline bg-paper px-3 py-1.5 text-xs font-semibold text-navy transition-colors hover:border-navy/30"
+                    className="inline-flex items-center rounded-full border border-brass/25 bg-brass-tint/40 px-3 py-1 text-xs font-semibold text-ink hover:border-brass/50 hover:bg-brass-tint/70 hover:text-navy transition-colors cursor-pointer shadow-2xs"
                   >
                     {label}
                   </button>

@@ -47,7 +47,7 @@ const ClassroomRoomModal = dynamic(
         <Loader2 className="size-8 animate-spin text-orange-500" />
       </div>
     ),
-  }
+  },
 );
 
 type ContentTab = 'tasks' | 'answers' | 'materials';
@@ -290,7 +290,7 @@ export function TeacherStudentsWorkspace({
     previewMaterialModal ||
     isAssignModalOpen ||
     isMaterialModalOpen ||
-    activeVideoCallCourse
+    activeVideoCallCourse,
   );
 
   useEffect(() => {
@@ -336,12 +336,12 @@ export function TeacherStudentsWorkspace({
 
   const filteredCourses = useMemo(
     () => courses.filter((c) => c.title.toLowerCase().includes(classSearchQuery.toLowerCase())),
-    [courses, classSearchQuery]
+    [courses, classSearchQuery],
   );
 
   const studentsInActiveCourse = useMemo(
     () => students.filter((s) => (activeCourseId === 'all' ? true : s.courses.some((c) => c.id === activeCourseId))),
-    [students, activeCourseId]
+    [students, activeCourseId],
   );
 
   const activeStudent = students.find((s) => s.id === selectedStudentId);
@@ -407,7 +407,7 @@ export function TeacherStudentsWorkspace({
     if (activeTab === 'answers') {
       return assignmentsForSelectedDate.filter(
         (a) =>
-          !isMaterialItem(a) && (Boolean(a.studentAttachmentUrl) || a.status === 'SUBMITTED' || a.status === 'GRADED')
+          !isMaterialItem(a) && (Boolean(a.studentAttachmentUrl) || a.status === 'SUBMITTED' || a.status === 'GRADED'),
       );
     }
     if (activeTab === 'materials') {
@@ -419,7 +419,7 @@ export function TeacherStudentsWorkspace({
   const answersCountForDate = useMemo(() => {
     return assignmentsForSelectedDate.filter(
       (a) =>
-        !isMaterialItem(a) && (Boolean(a.studentAttachmentUrl) || a.status === 'SUBMITTED' || a.status === 'GRADED')
+        !isMaterialItem(a) && (Boolean(a.studentAttachmentUrl) || a.status === 'SUBMITTED' || a.status === 'GRADED'),
     ).length;
   }, [assignmentsForSelectedDate]);
 
@@ -454,9 +454,9 @@ export function TeacherStudentsWorkspace({
       availableSetProblems.filter(
         (p) =>
           p.title.toLowerCase().includes(problemSearchQuery.toLowerCase()) ||
-          p.setTitle.toLowerCase().includes(problemSearchQuery.toLowerCase())
+          p.setTitle.toLowerCase().includes(problemSearchQuery.toLowerCase()),
       ),
-    [availableSetProblems, problemSearchQuery]
+    [availableSetProblems, problemSearchQuery],
   );
 
   const handleCourseChange = (courseId: string) => {
@@ -504,7 +504,7 @@ export function TeacherStudentsWorkspace({
         prev.map((student) => ({
           ...student,
           assignments: student.assignments.filter((a) => a.id !== deletingAssignmentId),
-        }))
+        })),
       );
       setDeletingAssignmentId(null);
     } else {
@@ -578,7 +578,7 @@ export function TeacherStudentsWorkspace({
         };
 
         setStudents((prev) =>
-          prev.map((s) => (s.id === activeStudent.id ? { ...s, assignments: [newAssignment, ...s.assignments] } : s))
+          prev.map((s) => (s.id === activeStudent.id ? { ...s, assignments: [newAssignment, ...s.assignments] } : s)),
         );
         setSelectedDateKey(formatDateToKey(new Date()));
         setIsAssignModalOpen(false);
@@ -645,7 +645,7 @@ export function TeacherStudentsWorkspace({
         };
 
         setStudents((prev) =>
-          prev.map((s) => (s.id === activeStudent.id ? { ...s, assignments: [newMaterial, ...s.assignments] } : s))
+          prev.map((s) => (s.id === activeStudent.id ? { ...s, assignments: [newMaterial, ...s.assignments] } : s)),
         );
         setSelectedDateKey(formatDateToKey(new Date()));
         setIsMaterialModalOpen(false);
@@ -677,7 +677,7 @@ export function TeacherStudentsWorkspace({
         {/* მარცხენა სვეტი: კლასები + მართვის ღილაკები */}
         <aside className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-paper p-4 shadow-sm">
           <div className="flex items-center gap-2 border-b border-hairline pb-3">
-            <GraduationCap className="size-4 text-orange-500" />
+            <GraduationCap className="size-4 text-brass-strong" />
             <h3 className="text-sm font-bold text-ink">კლასები</h3>
             <span className="ml-auto rounded-full bg-paper-deep px-2 py-0.5 text-[10px] font-bold text-muted">
               {courses.length}
@@ -771,8 +771,8 @@ export function TeacherStudentsWorkspace({
 
                   <span
                     className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold transition-colors ${
-                      active 
-                        ? 'bg-paper-deep text-ink border border-hairline' 
+                      active
+                        ? 'bg-paper-deep text-ink border border-hairline'
                         : 'bg-paper-deep/60 text-muted border border-transparent'
                     }`}>
                     {courseStudents.length}
@@ -787,13 +787,12 @@ export function TeacherStudentsWorkspace({
             <button
               type="button"
               onClick={handleStartClassCall}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-2.5 text-xs font-bold text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400 transition-colors shadow-inner active:scale-95">
-              <Video className="size-4 shrink-0" />
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy px-3 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-navy-strong active:scale-95">
+              <Video className="size-4 shrink-0 text-white/90" />
               <span className="truncate">
                 ვიდეო გაკვეთილი {selectedCourseObj ? `(${selectedCourseObj.title})` : ''}
               </span>
             </button>
-
             {activeStudent && (
               <button
                 type="button"
@@ -847,7 +846,9 @@ export function TeacherStudentsWorkspace({
 
                       <span
                         className={`inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold transition-colors ${
-                          isSelected ? 'bg-paper-deep text-ink border border-hairline' : 'bg-paper-deep/50 text-muted border border-transparent'
+                          isSelected
+                            ? 'bg-paper-deep text-ink border border-hairline'
+                            : 'bg-paper-deep/50 text-muted border border-transparent'
                         }`}>
                         {dateAssignmentsCount}
                       </span>
@@ -981,7 +982,7 @@ export function TeacherStudentsWorkspace({
                   </p>
                 </div>
               ) : filteredTabAssignments.length === 0 ? (
-                <div className="py-16 flex flex-col items-center justify-center text-center text-muted rounded-2xl border border-dashed border-hairline/60 p-6 bg-surface/50">
+                <div className="py-16 flex flex-col items-center justify-center text-center text-muted ">
                   {activeTab === 'tasks' ? (
                     <>
                       <BookOpen className="size-9 opacity-50 mb-2 text-brass/50" />
@@ -1005,7 +1006,9 @@ export function TeacherStudentsWorkspace({
                       </button>
                     </>
                   )}
-                  <p className="text-xs max-w-xs mt-1 text-muted">{formattedSelectedDate}-ს ამ სექციაში მონაცემები არ მოიძებნა.</p>
+                  <p className="text-xs max-w-xs mt-1 text-muted">
+                    {formattedSelectedDate}-ს ამ სექციაში მონაცემები არ მოიძებნა.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
@@ -1051,14 +1054,7 @@ export function TeacherStudentsWorkspace({
                         <div className="flex flex-col gap-2 min-w-0">
                           {/* ზედა ბეიჯები */}
                           <div className="flex items-center justify-between gap-1.5">
-                            <span
-                              className={`rounded-lg px-2 py-0.5 text-[10px] font-bold border truncate ${
-                                isMaterial
-                                  ? 'bg-orange-500/10 text-orange-500 border-orange-500/20'
-                                  : 'bg-paper-deep text-brass border-hairline'
-                              }`}>
-                              {isMaterial ? 'მასალა' : assignment.type}
-                            </span>
+                           
                             {isGraded ? (
                               <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
                                 <CheckCircle2 className="size-3" /> ჩაბარებულია
@@ -1084,7 +1080,9 @@ export function TeacherStudentsWorkspace({
                             <div className="w-full h-32 rounded-xl bg-paper-deep border border-hairline p-3 flex flex-col items-center justify-center text-center transition-colors group-hover:border-orange-500/30">
                               <FileText className="size-9 text-orange-500 mb-1.5 opacity-80" />
                               <p className="text-xs font-bold text-ink line-clamp-1">{assignment.title}</p>
-                              <span className="text-[10px] font-semibold text-orange-500 mt-1 opacity-80">ფაილის გახსნა ↗</span>
+                              <span className="text-[10px] font-semibold text-orange-500 mt-1 opacity-80">
+                                ფაილის გახსნა ↗
+                              </span>
                             </div>
                           ) : assignment.promptTex ? (
                             <div className="w-full h-32 rounded-xl bg-paper-deep border border-hairline/50 p-3 flex items-center justify-center overflow-hidden">
@@ -1097,7 +1095,9 @@ export function TeacherStudentsWorkspace({
                             <div className="w-full h-32 rounded-xl bg-paper-deep border border-hairline p-3 flex flex-col items-center justify-center text-center transition-colors group-hover:border-orange-500/30">
                               <Layers className="size-9 text-orange-500 mb-1.5 opacity-80" />
                               <p className="text-xs font-bold text-ink line-clamp-1">{assignment.title}</p>
-                              <span className="text-[10px] font-semibold text-orange-500 mt-1 opacity-80">მასალის გახსნა ↗</span>
+                              <span className="text-[10px] font-semibold text-orange-500 mt-1 opacity-80">
+                                მასალის გახსნა ↗
+                              </span>
                             </div>
                           ) : null}
                         </div>
@@ -1272,9 +1272,7 @@ export function TeacherStudentsWorkspace({
 
                   {selectedProblem && (
                     <div className="rounded-xl border border-hairline bg-surface p-3.5 shadow-inner">
-                      <span className="text-[10px] font-bold uppercase text-muted block mb-1">
-                        ამოცანის პირობა:
-                      </span>
+                      <span className="text-[10px] font-bold uppercase text-muted block mb-1">ამოცანის პირობა:</span>
                       {loadingProblemDetails ? (
                         <div className="py-4 flex justify-center">
                           <Loader2 className="size-4 animate-spin text-orange-500/70" />

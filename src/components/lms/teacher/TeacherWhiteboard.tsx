@@ -89,6 +89,8 @@ type ToolId =
 const STORAGE_KEY_PAGES = 'teacher_whiteboard_permanent_pages_v7';
 const PREFS_KEY = 'teacher_whiteboard_permanent_prefs_v7';
 const DEFAULT_COLOR = '#1e293b';
+const DARK_COLORS = ['#1e293b', '#000000']; // default dark-blue and black
+const LIGHT_COLOR = '#ffffff';
 
 const COLORS = [
   { hex: '#1e293b', label: 'მუქი ლურჯი' },
@@ -594,7 +596,54 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     updateUndoRedoState();
   }, [updateUndoRedoState]);
 
-  // 🌟 Paste მხარდაჭერა 🌟
+  // --- 🌟 Smart theme conversion for existing elements ---
+  useEffect(() => {
+    const darkColors = DARK_COLORS; // ['#1e293b', '#000000']
+    const lightColor = LIGHT_COLOR; // '#ffffff'
+    let updated = false;
+
+    const newPages = pagesRef.current.map((page) =>
+      page.map((el) => {
+        if (isDark) {
+          // In dark mode: convert any dark default colour to white
+          if (darkColors.includes(el.stroke)) {
+            updated = true;
+            return { ...el, stroke: lightColor };
+          }
+        } else {
+          // In light mode: convert white (that came from conversion) back to default
+          if (el.stroke === lightColor) {
+            updated = true;
+            return { ...el, stroke: DEFAULT_COLOR };
+          }
+        }
+        return el;
+      }),
+    );
+
+    if (updated) {
+      setPages(newPages);
+      pagesRef.current = newPages;
+
+      // Update history for the current page
+      const pIndex = currentPageIndexRef.current;
+      let hist = historyMapRef.current.get(pIndex);
+      if (hist) {
+        const nextStates = hist.states.slice(0, hist.index + 1);
+        nextStates.push(newPages[pIndex]);
+        historyMapRef.current.set(pIndex, { states: nextStates, index: nextStates.length - 1 });
+        updateUndoRedoState();
+      }
+
+      // Persist to localStorage
+      if (isHydratedRef.current) {
+        try {
+          localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(newPages));
+        } catch (e) {}
+      }
+    }
+  }, [isDark, updateUndoRedoState]);
+
   const addImage = useCallback(
     (dataUrl: string, pos?: { x: number; y: number }) => {
       const img = new window.Image();
@@ -916,7 +965,9 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const currentShapeObj = SHAPE_TOOLS.find((s) => s.id === activeTool) || SHAPE_TOOLS[2];
   const CurrentShapeIcon = currentShapeObj.icon;
   const isShapeActive = SHAPE_TOOLS.some((s) => s.id === activeTool);
-  const effectiveStroke = isDark && strokeColor === DEFAULT_COLOR ? '#ffffff' : strokeColor;
+  const effectiveStroke = isDark && (strokeColor === DEFAULT_COLOR || strokeColor === '#000000') 
+    ? '#ffffff' 
+    : strokeColor;
 
   return (
     <div className="relative flex h-full w-full min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm">
@@ -938,7 +989,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         }}
       />
 
-      <div className="relative z-30 shrink-0 border-b border-hairline bg-gradient-to-b from-paper/60 to-white overflow-visible">
+      <div className="relative z-30 shrink-0 border-b border-hairline bg-surface overflow-visible">
         <div className="flex w-max min-w-full items-center gap-1.5 px-3 py-2 overflow-visible">
           <button
             type="button"
@@ -1099,9 +1150,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             onClick={() => setAndSaveTool('eraser')}>
             <Eraser className="size-4" />
           </ToolButton>
-          <ToolButton title={copy.tools.delete} onClick={deleteSelected}>
-            <Trash2 className="size-4" />
-          </ToolButton>
+
           <div className="mx-1 h-6 w-px shrink-0 bg-hairline" />
 
           <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
@@ -1116,7 +1165,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               className="flex items-center gap-1.5 h-8 px-2 rounded-xl bg-paper hover:bg-paper-deep transition-colors border border-hairline">
               <span
                 className="size-4 rounded-full border border-black/10 shadow-2xs"
-                style={{ backgroundColor: isDark && strokeColor === DEFAULT_COLOR ? '#ffffff' : strokeColor }}
+                style={{ backgroundColor: effectiveStroke }}
               />
               <ChevronDown
                 className={`size-3 text-muted transition-transform duration-200 ${isColorMenuOpen ? 'rotate-180' : ''}`}
@@ -1185,9 +1234,10 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         </div>
       </div>
 
-      {/* 🌟 ტილო: touch-none დამატებულია 🌟 */}
+      {/* Canvas container – inline style guarantees isolation from global theme */}
       <div
-        className={`relative flex-1 min-h-0 overflow-hidden touch-none select-none ${isDark ? 'bg-[#020617]' : 'bg-white'}`}
+        className="relative flex-1 min-h-0 overflow-hidden touch-none select-none"
+        style={{ backgroundColor: isDark ? '#020617' : '#ffffff' }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -1214,7 +1264,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             savePreferencesImmediately({ zoomScale: s });
           }}
           textPlaceholder={copy.textPlaceholder}
-          onPasteImage={addImage} // 🌟 პასტის ფუნქცია შეერთებულია 🌟
+          onPasteImage={addImage}
         />
       </div>
 
