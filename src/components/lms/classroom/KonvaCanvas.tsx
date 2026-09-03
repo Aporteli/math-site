@@ -59,6 +59,7 @@ interface KonvaCanvasProps {
   stylusOnly?: boolean;
   onTemporaryEraserStart?: () => void;
   onTemporaryEraserEnd?: () => void;
+  onStylusButtonAction?: (buttonIndex: 1 | 2, state: 'down' | 'up') => void;
 }
 
 interface LaserPoint {
@@ -275,6 +276,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     stylusOnly = false,
     onTemporaryEraserStart,
     onTemporaryEraserEnd,
+    onStylusButtonAction,
   },
   ref,
 ) {
@@ -309,6 +311,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   const isTemporaryEraserActiveRef = useRef(false);
 
   const isStylusActiveRef = useRef(false);
+  const activeStylusButtonRef = useRef<1 | 2 | null>(null);
   const activePointerIdRef = useRef<number | null>(null);
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
   const pointerStartPos = useRef<{ x: number; y: number } | null>(null);
@@ -329,6 +332,18 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     const pos = stage.getPointerPosition();
     if (!pos) return null;
     return transform.point(pos);
+  }, []);
+
+  const getStylusButtonIndex = useCallback((evt: PointerEvent): 1 | 2 | null => {
+    if (evt.pointerType !== 'pen') return null;
+
+    const lowerButtonPressed = evt.button === 2 || (evt.buttons & 2) !== 0;
+    const upperButtonPressed = evt.button === 1 || (evt.buttons & 1) !== 0 || (evt.buttons & 32) !== 0;
+
+    if (lowerButtonPressed && upperButtonPressed) return 1;
+    if (lowerButtonPressed) return 1;
+    if (upperButtonPressed) return 2;
+    return null;
   }, []);
 
   useEffect(() => {
@@ -908,10 +923,15 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     if (evt.pointerType === 'touch' && isStylusActiveRef.current) return;
     if (evt.pointerType === 'pen') isStylusActiveRef.current = true;
 
-    const isStylusButtonPressed =
-      evt.pointerType === 'pen' && (evt.button === 2 || (evt.buttons & 2) !== 0 || (evt.buttons & 32) !== 0);
+    const stylusButtonIndex = getStylusButtonIndex(evt);
+    if (stylusButtonIndex !== null) {
+      evt.preventDefault();
+      if (onStylusButtonAction) {
+        activeStylusButtonRef.current = stylusButtonIndex;
+        onStylusButtonAction(stylusButtonIndex, 'down');
+        return;
+      }
 
-    if (isStylusButtonPressed) {
       if (longPressTimeout.current) {
         clearTimeout(longPressTimeout.current);
         longPressTimeout.current = null;
@@ -1256,6 +1276,11 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
   const handlePointerUp = (e: any) => {
     const evt = e.evt as PointerEvent;
+
+    if (evt.pointerType === 'pen' && activeStylusButtonRef.current) {
+      onStylusButtonAction?.(activeStylusButtonRef.current, 'up');
+      activeStylusButtonRef.current = null;
+    }
 
     if (isTemporaryEraserActiveRef.current) {
       isTemporaryEraserActiveRef.current = false;

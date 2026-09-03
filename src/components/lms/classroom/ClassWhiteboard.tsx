@@ -179,6 +179,23 @@ const MAGIC_CHUNK_END = 0x03;
 const DEFAULT_COLOR = '#1e293b';
 const DARK_COLORS = [DEFAULT_COLOR, '#000000'];
 const LIGHT_COLOR = '#ffffff';
+const WHITEBOARD_COLORS = ['#1e293b', '#ef4444', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'] as const;
+
+type StylusAction = 'temporary-eraser' | 'toggle-eraser' | 'cycle-colors' | 'toggle-laser' | 'undo' | 'none';
+
+const STYLUS_ACTION_OPTIONS: Array<{ value: StylusAction; label: string }> = [
+  { value: 'temporary-eraser', label: 'დროებითი მოსაშლელი' },
+  { value: 'toggle-eraser', label: 'მოსაშლელის გადართვა' },
+  { value: 'cycle-colors', label: 'ფერის ციკლი' },
+  { value: 'toggle-laser', label: 'ლაზერის გადართვა' },
+  { value: 'undo', label: 'უკან დაბრუნება' },
+  { value: 'none', label: 'არცერთი' },
+];
+
+const DEFAULT_STYLUS_ACTIONS = {
+  stylusPrimaryAction: 'temporary-eraser' as StylusAction,
+  stylusSecondaryAction: 'toggle-eraser' as StylusAction,
+};
 
 function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
   const out = new Uint8Array(a.length + b.length);
@@ -848,6 +865,85 @@ export function ClassWhiteboard({
     return false;
   });
 
+  const [stylusPrimaryAction, setStylusPrimaryAction] = useState<StylusAction>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(STORAGE_PREFS_KEY) || '{}');
+        return (prefs.stylusPrimaryAction as StylusAction) || DEFAULT_STYLUS_ACTIONS.stylusPrimaryAction;
+      } catch {}
+    }
+    return DEFAULT_STYLUS_ACTIONS.stylusPrimaryAction;
+  });
+
+  const [stylusSecondaryAction, setStylusSecondaryAction] = useState<StylusAction>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(STORAGE_PREFS_KEY) || '{}');
+        return (prefs.stylusSecondaryAction as StylusAction) || DEFAULT_STYLUS_ACTIONS.stylusSecondaryAction;
+      } catch {}
+    }
+    return DEFAULT_STYLUS_ACTIONS.stylusSecondaryAction;
+  });
+
+  const handleStylusButtonAction = useCallback(
+    (buttonIndex: 1 | 2, state: 'down' | 'up') => {
+      const action = buttonIndex === 1 ? stylusPrimaryAction : stylusSecondaryAction;
+      if (action === 'none') return;
+
+      if (action === 'temporary-eraser') {
+        if (state === 'down') handleTemporaryEraserStart();
+        else handleTemporaryEraserEnd();
+        return;
+      }
+
+      if (action === 'toggle-eraser') {
+        if (state !== 'down') return;
+        setActiveTool((current: string) => {
+          if (current === 'eraser') {
+            return previousToolRef.current || 'pen';
+          }
+          previousToolRef.current = current;
+          return 'eraser';
+        });
+        return;
+      }
+
+      if (action === 'cycle-colors') {
+        if (state !== 'down') return;
+        const currentIndex = WHITEBOARD_COLORS.indexOf(strokeColor as (typeof WHITEBOARD_COLORS)[number]);
+        const nextColor = WHITEBOARD_COLORS[(currentIndex + 1) % WHITEBOARD_COLORS.length] || DEFAULT_COLOR;
+        setStrokeColor(nextColor);
+        return;
+      }
+
+      if (action === 'toggle-laser') {
+        if (state !== 'down') return;
+        setActiveTool((current: string) => {
+          if (current === 'laser') {
+            return previousToolRef.current || 'pen';
+          }
+          previousToolRef.current = current;
+          return 'laser';
+        });
+        return;
+      }
+
+      if (action === 'undo') {
+        if (state === 'down' && canUndo) {
+          handleUndo();
+        }
+      }
+    },
+    [
+      canUndo,
+      handleTemporaryEraserEnd,
+      handleTemporaryEraserStart,
+      strokeColor,
+      stylusPrimaryAction,
+      stylusSecondaryAction,
+    ],
+  );
+
   const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
   const [isShapesMenuOpen, setIsShapesMenuOpen] = useState(false);
   const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
@@ -918,14 +1014,16 @@ export function ClassWhiteboard({
     }
   }, [isDark, storageKeyPages, updateUndoRedoState, isTeacher]);
 
-  // Save stylusOnly to prefs
+  // Save stylus prefs to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const prefs = JSON.parse(localStorage.getItem(STORAGE_PREFS_KEY) || '{}');
       prefs.stylusOnly = stylusOnly;
+      prefs.stylusPrimaryAction = stylusPrimaryAction;
+      prefs.stylusSecondaryAction = stylusSecondaryAction;
       localStorage.setItem(STORAGE_PREFS_KEY, JSON.stringify(prefs));
     }
-  }, [stylusOnly]);
+  }, [stylusOnly, stylusPrimaryAction, stylusSecondaryAction]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -985,10 +1083,18 @@ export function ClassWhiteboard({
     if (typeof window !== 'undefined') {
       localStorage.setItem(
         STORAGE_PREFS_KEY,
-        JSON.stringify({ tool: activeTool, color: strokeColor, width: strokeWidth, isDark, stylusOnly }),
+        JSON.stringify({
+          tool: activeTool,
+          color: strokeColor,
+          width: strokeWidth,
+          isDark,
+          stylusOnly,
+          stylusPrimaryAction,
+          stylusSecondaryAction,
+        }),
       );
     }
-  }, [activeTool, strokeColor, strokeWidth, isDark, stylusOnly]);
+  }, [activeTool, strokeColor, strokeWidth, isDark, stylusOnly, stylusPrimaryAction, stylusSecondaryAction]);
 
   const updateParticipantList = useCallback(() => {
     if (!room) return;
@@ -1551,7 +1657,7 @@ export function ClassWhiteboard({
 
   const zoomPercent = Math.round(zoomScale * 100);
 
-  const colorsList = ['#1e293b', '#ef4444', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
+  const colorsList = WHITEBOARD_COLORS;
 
   const effectiveStroke = (() => {
     if (isDark && DARK_COLORS.includes(strokeColor)) return LIGHT_COLOR;
@@ -2081,6 +2187,36 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:border-slate-800 mx-0.5" />
 
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900/70">
+              <label className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
+                <span>სტილუსი</span>
+              </label>
+
+              <select
+                aria-label="სტილუსის ძირითადი ღილაკი"
+                value={stylusPrimaryAction}
+                onChange={(e) => setStylusPrimaryAction(e.target.value as StylusAction)}
+                className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 shadow-sm outline-none transition hover:border-slate-300 focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                {STYLUS_ACTION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                aria-label="სტილუსის მეორე ღილაკი"
+                value={stylusSecondaryAction}
+                onChange={(e) => setStylusSecondaryAction(e.target.value as StylusAction)}
+                className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 shadow-sm outline-none transition hover:border-slate-300 focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                {STYLUS_ACTION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Stylus‑only toggle */}
             <button
               type="button"
@@ -2132,6 +2268,7 @@ export function ClassWhiteboard({
           stylusOnly={stylusOnly}
           onTemporaryEraserStart={handleTemporaryEraserStart}
           onTemporaryEraserEnd={handleTemporaryEraserEnd}
+          onStylusButtonAction={handleStylusButtonAction}
         />
       </div>
 
