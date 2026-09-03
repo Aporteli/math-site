@@ -1,4 +1,4 @@
-import type { Prisma, ProblemFamily as ProblemFamilyRow } from "@/generated/prisma/client";
+import type { Prisma, ProblemFamily as ProblemFamilyRow } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { slugFromTitle, stubFamilyTemplate } from "./family-kind";
 import { parseProblemTemplate, parseTeacherJson } from "./templates/adapt";

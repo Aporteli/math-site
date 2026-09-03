@@ -41,7 +41,6 @@ export const generateProblemsSchema = z.object({
 
 export type GenerateProblemsInput = z.infer<typeof generateProblemsSchema>;
 
-/** Add a topic file and spread it here to grow the library. */
 export const PROBLEM_ALGORITHMS: readonly ProblemAlgorithm[] = [
   ...algebraAlgorithms,
   ...templateAlgorithms,
@@ -172,7 +171,6 @@ function matchingAlgorithms(input: GenerateProblemsInput): ProblemAlgorithm[] {
       if (!listed && !olympiadAsHard) return false;
     }
     
-    // წლის მკაცრი შემოწმება (თუ მითითებულია)
     if (
       input.year &&
       algorithm.years &&
@@ -273,7 +271,6 @@ function emitGenerated(
   };
 }
 
-/** Cycle through every family skeleton. Offset comes from the batch seed. */
 export function batchVariantIndex(
   index: number,
   variantCount: number,
@@ -286,13 +283,10 @@ export function batchVariantIndex(
 
 export type GenerateFromTemplateOptions = {
   variantId?: string;
-  /** Resample one skeleton only (variants of the selected card). */
   pinVariant?: boolean;
-  /** Pin by index when the skeleton has no id. */
   variantIndex?: number;
 };
 
-/** Compile a JSON family in memory and sample `count` problems from it. */
 export function generateFromTemplate(
   rawTemplate: unknown,
   raw: GenerateProblemsInput,

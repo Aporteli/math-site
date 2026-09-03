@@ -1,27 +1,18 @@
-import type { LucideIcon } from "lucide-react";
-import {
-  FileUp,
-  Layers,
-  LineChart,
-  MessageSquare,
-  Printer,
-  Send,
-  Shuffle,
-  Sparkles,
-} from "lucide-react";
-import type { Dictionary } from "@/i18n/types";
+import type { LucideIcon } from 'lucide-react';
+import { FileUp, Layers, LineChart, MessageSquare, Printer, Send, Shuffle, Sparkles } from 'lucide-react';
+import type { Dictionary } from '@/i18n/types';
 import {
   EMPTY_PROBLEM_FILTERS,
   PROBLEM_TOPICS,
   type BankProblem,
   type ProblemFilters,
   type ProblemTopic,
-} from "./types";
+} from './types';
 
-export type ProblemBankCopy = Dictionary["dashboard"]["teacher"]["problemBank"];
-export type ProblemBankToolId = Exclude<keyof ProblemBankCopy["tools"], "label">;
+export type ProblemBankCopy = Dictionary['dashboard']['teacher']['problemBank'];
+export type ProblemBankToolId = Exclude<keyof ProblemBankCopy['tools'], 'label'>;
 
-export type ProblemToolStatus = "ready" | "soon" | "link";
+export type ProblemToolStatus = 'ready' | 'soon' | 'link';
 
 export interface ProblemBankTool {
   id: ProblemBankToolId;
@@ -30,49 +21,23 @@ export interface ProblemBankTool {
   href?: string;
 }
 
-/**
- * Teacher tools that plug into the problem-bank workspace.
- * Add an entry here (and matching i18n keys) when a new tool is ready.
- */
 export const PROBLEM_BANK_TOOLS: ProblemBankTool[] = [
-  { id: "generate", icon: Sparkles, status: "ready" },
-  { id: "chat", icon: MessageSquare, status: "ready" },
-  { id: "import", icon: FileUp, status: "ready" },
-  { id: "families", icon: Layers, status: "ready" },
-  { id: "variants", icon: Shuffle, status: "ready" },
-  {
-    id: "worksheet",
-    icon: Printer,
-    status: "link",
-    href: "/teacher/problems",
-  },
-  { id: "assign", icon: Send, status: "soon" },
-  {
-    id: "graph",
-    icon: LineChart,
-    status: "link",
-    href: "/tools/graphing",
-  },
+  { id: 'chat', icon: MessageSquare, status: 'ready' },
+  { id: 'import', icon: FileUp, status: 'ready' },
 ];
 
-export function topicLabel(
-  topics: ProblemBankCopy["topics"],
-  topic: string,
-) {
+export function topicLabel(topics: ProblemBankCopy['topics'], topic: string) {
   if (Object.hasOwn(topics, topic)) {
     return topics[topic as ProblemTopic];
   }
-  return topic.replaceAll("-", " ");
+  return topic.replaceAll('-', ' ');
 }
 
-export function kindLabel(
-  kinds: ProblemBankCopy["generate"]["kinds"],
-  id: string,
-) {
+export function kindLabel(kinds: ProblemBankCopy['generate']['kinds'], id: string) {
   if (Object.hasOwn(kinds, id)) {
     return kinds[id as keyof typeof kinds];
   }
-  return id.replaceAll("-", " ");
+  return id.replaceAll('-', ' ');
 }
 
 export function topicsInBank(problems: BankProblem[]) {
@@ -101,51 +66,40 @@ export function filterProblems(
   const q = filters.query.trim().toLowerCase();
 
   return problems.filter((problem) => {
-    if (filters.conceptId !== "all") {
+    if (filters.conceptId !== 'all') {
       if (problem.conceptId !== filters.conceptId) return false;
-    } else if (filters.subtopicId !== "all") {
+    } else if (filters.subtopicId !== 'all') {
       if (problem.subtopicId !== filters.subtopicId) return false;
-    } else if (filters.topicNodeId !== "all") {
+    } else if (filters.topicNodeId !== 'all') {
       const slug = taxonomy?.topicSlugById[filters.topicNodeId];
       const matchesNode = problem.topicNodeId === filters.topicNodeId;
       const matchesLegacy = Boolean(slug && problem.topic === slug);
       if (!matchesNode && !matchesLegacy) return false;
-    } else if (filters.branchId !== "all") {
+    } else if (filters.branchId !== 'all') {
       const topicIds = taxonomy?.topicIdsByBranchId[filters.branchId] ?? [];
       const topicSlugs = taxonomy?.topicSlugsByBranchId[filters.branchId] ?? [];
       const matchesBranch = problem.branchId === filters.branchId;
-      const matchesTopicNode = Boolean(
-        problem.topicNodeId && topicIds.includes(problem.topicNodeId),
-      );
+      const matchesTopicNode = Boolean(problem.topicNodeId && topicIds.includes(problem.topicNodeId));
       const matchesLegacy = topicSlugs.includes(problem.topic);
       if (!matchesBranch && !matchesTopicNode && !matchesLegacy) return false;
     }
 
-    if (
-      filters.difficulty !== "all" &&
-      problem.difficulty !== filters.difficulty
-    ) {
+    if (filters.difficulty !== 'all' && problem.difficulty !== filters.difficulty) {
       return false;
     }
-    if (filters.year !== "all" && problem.year !== filters.year) {
+    if (filters.year !== 'all' && problem.year !== filters.year) {
       return false;
     }
-    if (filters.origin === "verified") {
-      if (problem.templateId !== "ai-verified") return false;
-    } else if (filters.origin === "unchecked") {
-      if (problem.templateId !== "ai-plain") return false;
-    } else if (filters.origin === "ai") {
-      if (problem.source !== "ai") return false;
-      if (
-        problem.templateId === "ai-plain" ||
-        problem.templateId === "ai-verified"
-      ) {
+    if (filters.origin === 'verified') {
+      if (problem.templateId !== 'ai-verified') return false;
+    } else if (filters.origin === 'unchecked') {
+      if (problem.templateId !== 'ai-plain') return false;
+    } else if (filters.origin === 'ai') {
+      if (problem.source !== 'ai') return false;
+      if (problem.templateId === 'ai-plain' || problem.templateId === 'ai-verified') {
         return false;
       }
-    } else if (
-      filters.origin !== "all" &&
-      problem.source !== filters.origin
-    ) {
+    } else if (filters.origin !== 'all' && problem.source !== filters.origin) {
       return false;
     }
     if (!q) return true;
@@ -159,16 +113,15 @@ export function filterProblems(
   });
 }
 
-export function replaceCount(template: string, count: number) {
-  return template.replace("{count}", String(count));
+export function replaceCount(template?: string, count: number = 0) {
+  if (!template) return String(count);
+  return template.replace('{count}', String(count));
 }
 
-export function replaceTokens(
-  template: string,
-  tokens: Record<string, string | number>,
-) {
+export function replaceTokens(template?: string, tokens: Record<string, string | number> = {}) {
+  const safeTemplate = template ?? '';
   return Object.entries(tokens).reduce(
     (text, [key, value]) => text.replaceAll(`{${key}}`, String(value)),
-    template,
+    safeTemplate,
   );
 }

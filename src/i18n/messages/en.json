@@ -44,6 +44,7 @@
     "openMenu": "Menu",
     "closeMenu": "Close menu",
     "language": "Change language",
+    "theme": "Change theme",
     "login": "Log in",
     "quickActions": "Quick actions"
   },
@@ -189,6 +190,11 @@
         "title": "Gamification and challenges",
         "subtitle": "Speed arithmetic, fractals, topological puzzles, and interactive math challenges built to engage and test intuition.",
         "filter": "Games"
+      },
+      "animations": {
+        "title": "Animations",
+        "subtitle": "Mathematical animations, visualisations, and interactive experiments that reveal the beauty and movement of mathematics.",
+        "filter": "Animations"
       }
     },
     "items": {
@@ -197,9 +203,9 @@
         "description": "Visualise functions, compare several graphs and watch parameters change in real time.",
         "badge": "Graph"
       },
-      "equations": {
-        "title": "Equation solver",
-        "description": "Step-by-step solutions of linear, quadratic and polynomial equations with every transformation shown.",
+      "quadratic-equations": {
+        "title": "Quadratic equation solver",
+        "description": "Step-by-step solutions of quadratic equations with every transformation shown.",
         "badge": "Step-by-step"
       },
       "fractions": {
@@ -541,6 +547,11 @@
         "title": "Vectors and analytic geometry",
         "description": "Dot and cross products, and equations of a plane and a line in 2D and 3D coordinates.",
         "badge": "Vectors"
+      },
+      "animations": {
+        "title": "Mathematical animations",
+        "description": "Visualise mathematical ideas through dynamic graphs and interactive experiments.",
+        "badge": "Animations"
       }
     }
   },
@@ -868,7 +879,28 @@
       "demoTitle": "Demo accounts",
       "demoTeacher": "Teacher: teacher@mathlab.ge",
       "demoStudent": "Student: student@mathlab.ge",
-      "demoPassword": "Password: mathlab-demo"
+      "demoPassword": "Password: mathlab-demo",
+      "signupLink": "Don't have an account? Sign up"
+    },
+    "signup": {
+      "metaTitle": "Sign up",
+      "metaDescription": "Create a new account on MathLab.",
+      "eyebrow": "New account",
+      "title": "Create an account",
+      "subtitle": "Register and start learning mathematics.",
+      "name": "Name",
+      "namePlaceholder": "Enter your name",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Enter password (min 8 characters)",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Confirm password",
+      "submit": "Sign up",
+      "submitting": "Signing up…",
+      "error": "Registration failed. Please try again.",
+      "emailExists": "An account with this email already exists.",
+      "loginLink": "Already have an account? Log in"
     }
   },
   "dashboard": {
@@ -885,6 +917,7 @@
       "nav": {
         "overview": "Overview",
         "journal": "Classroom journal",
+        "whiteboard": "Whiteboard",
         "homework": "Homework review",
         "problems": "Problem bank",
         "reports": "Reports",
@@ -901,6 +934,10 @@
         "journal": {
           "title": "Classroom journal",
           "subtitle": "Attendance, grades and lesson notes by class."
+        },
+        "whiteboard": {
+          "title": "Classroom whiteboard",
+          "subtitle": "An interactive board for sketches, shapes and lesson visualisation."
         },
         "homework": {
           "title": "Homework review",
@@ -930,6 +967,46 @@
           "title": "Students",
           "subtitle": "Groups, enrolments and each student’s progress."
         }
+      },
+      "whiteboard": {
+        "title": "Classroom whiteboard",
+        "openMenu": "Open menu",
+        "tools": {
+          "select": "Select",
+          "hand": "Pan",
+          "pen": "Pen",
+          "shapes": "Shapes",
+          "line": "Line",
+          "arrow": "Arrow",
+          "rect": "Rectangle",
+          "circle": "Circle",
+          "triangle": "Triangle",
+          "diamond": "Diamond",
+          "star": "Star",
+          "text": "Text",
+          "image": "Image",
+          "eraser": "Eraser",
+          "laser": "Laser",
+          "delete": "Delete selection"
+        },
+        "strokeWidth": "Stroke width",
+        "colors": "Colors",
+        "undo": "Undo",
+        "redo": "Redo",
+        "clear": "Clear board",
+        "clearTitle": "Clear board",
+        "clearMessage": "Are you sure you want to erase the whole board?",
+        "cancel": "Cancel",
+        "confirmClear": "Clear",
+        "export": "Download PNG",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "zoomReset": "Reset zoom",
+        "fitToContent": "Fit to content",
+        "darkMode": "Dark theme",
+        "lightMode": "Light theme",
+        "textPlaceholder": "Double-click to edit",
+        "zoom": "Zoom"
       },
       "admin": {
         "eyebrow": "Administration",
@@ -1452,12 +1529,16 @@
           "graph": {
             "title": "Graph",
             "hint": "Open a function problem in the graphing calculator."
+          },
+          "createCard": {
+            "title": "Create card",
+            "hint": "Make a new problem card in the bank."
           }
         },
         "chat": {
           "title": "Teacher AI chat",
           "hint": "Ephemeral teacher-only chat. Messages stay on this page until refresh.",
-          "launcher": "Ask AI",
+          "launcher": "AI",
           "open": "Open AI chat",
           "close": "Close AI chat",
           "model": "Model",
@@ -1480,6 +1561,10 @@
           "thinking": "Thinking…",
           "inputLabel": "Message",
           "inputPlaceholder": "e.g. Explain how to build 5 harder variants of this geometry task",
+          "addImage": "Add image",
+          "removeImage": "Remove image",
+          "imageHint": "Paste an image (Ctrl+V) or pick a file — the AI reads the math straight from the photo.",
+          "errorImageUnsupported": "Only Gemini models accept images. Pick a Gemini model and try again.",
           "previewLabel": "Math preview",
           "disclaimer": "This chat is not saved. Refreshing the page clears it.",
           "send": "Send",
@@ -1796,7 +1881,7 @@
           "underFamily": "Subtitle of {parent}"
         },
         "importFamily": {
-          "title": "Build from an example",
+          "title": "Screenshot, photo or handwriting",
           "hint": "Type a problem, upload a screenshot or handwriting, or load a JSON family. We validate it, then the engine fills new numbers.",
           "close": "Close import",
           "source": "Source",
@@ -1863,7 +1948,7 @@
           "auditHint": "Fix every issue below, then import again.",
           "auditCount": "{count} issues"
         },
-          "stats": {
+        "stats": {
           "inBank": "In bank",
           "inLab": "In lab",
           "selected": "In set",
@@ -1938,13 +2023,10 @@
     "student": {
       "role": "Student",
       "nav": {
-        "overview": "Overview",
-        "courses": "My courses",
-        "practice": "Daily practice",
-        "assignments": "Active assignments",
-        "flashcards": "Flashcards",
-        "progress": "Progress",
-        "grades": "Grades"
+      
+        "assignments": "Assignments",
+        "flashcards": "Formulas"
+        
       },
       "pages": {
         "overview": {
@@ -1967,6 +2049,10 @@
           "title": "Flashcards",
           "subtitle": "Review formulas and theorems with spaced repetition."
         },
+        "whiteboards": {
+          "title": "Received whiteboards",
+          "subtitle": "Whiteboards your teacher sent that you can keep working on."
+        },
         "progress": {
           "title": "Progress",
           "subtitle": "What you already do well and where you need more practice."
@@ -1975,6 +2061,37 @@
           "title": "Grades",
           "subtitle": "Scores, feedback and assignment history."
         }
+      },
+      "flashcards": {
+        "activeFormulas": "Active formulas",
+        "totalCount": "Total: {count}",
+        "emptyTitle": "No formulas found",
+        "emptyHint": "Your teacher hasn't sent you any study formulas yet.",
+        "cardBadge": "Flashcard",
+        "teacherNote": "Teacher's note",
+        "discussion": "Discussion",
+        "noQuestions": "No questions yet",
+        "noQuestionsHint": "If the card material is unclear, ask a question here.",
+        "teacher": "Teacher",
+        "messagePlaceholder": "Write a message..."
+      },
+      "whiteboards": {
+        "total": "Total boards",
+        "emptyTitle": "No whiteboards yet",
+        "emptyHint": "Your teacher hasn't sent you any whiteboards yet.",
+        "course": "Course",
+        "teacher": "Teacher",
+        "courseFallback": "General course",
+        "teacherFallback": "Teacher",
+        "statusAssigned": "New",
+        "statusInProgress": "In progress",
+        "statusCompleted": "Completed",
+        "back": "Back to whiteboards",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved",
+        "errorFailed": "Could not save",
+        "editorHint": "Keep working and press save."
       }
     }
   },
@@ -2051,6 +2168,23 @@
     "plotError": "The graph could not be drawn.",
     "loading": "Loading graph…"
   },
+  "equations": {
+    "back": "Back to Tools",
+    "eyebrow": "Math Tool",
+    "inputTitle": "Equation Input",
+    "reset": "Reset",
+    "invalidEquation": "Invalid equation. Check the syntax.",
+    "solveButton": "Solve",
+    "syntaxTitle": "Syntax Guide",
+    "resultTitle": "Solution",
+    "emptyResult": "Enter an equation to see the solution here.",
+    "solveFor": "Solve for:",
+    "keyboard": "Keyboard",
+    "history": "Recent solutions",
+    "clearHistory": "Clear",
+    "graphTitle": "Graph visualisation",
+    "liveError": "Syntax is incomplete..."
+  },
   "footer": {
     "contact": {
       "email": "info@mathlab.ge",
@@ -2063,5 +2197,124 @@
       "privacy": "Privacy",
       "terms": "Terms and conditions"
     }
+  },
+  "studentOverview": {
+    "hero": {
+      "eyebrow": "Student dashboard",
+      "title": "Welcome back, {studentName}",
+      "description": "Here's what's on your plate today — pick up a course, clear an assignment, or keep your streak alive."
+    },
+    "stats": {
+      "activeCourses": "Active courses",
+      "dueThisWeek": "Due this week",
+      "averageGrade": "Average grade"
+    },
+    "quickLinks": {
+      "title": "Quick links",
+      "courses": {
+        "title": "Courses",
+        "hint": "Browse your enrolled courses and materials"
+      },
+      "assignments": {
+        "title": "Assignments",
+        "hint": "Track homework and submission deadlines"
+      },
+      "practice": {
+        "title": "Practice",
+        "hint": "Sharpen your skills with guided problem sets"
+      },
+      "flashcards": {
+        "title": "Flashcards",
+        "hint": "Review key concepts with spaced repetition"
+      },
+      "grades": {
+        "title": "Grades",
+        "hint": "See scores and teacher feedback"
+      },
+      "progress": {
+        "title": "Progress",
+        "hint": "Follow your growth across every course"
+      }
+    },
+    "sections": {
+      "continueLearning": "Continue learning",
+      "upcomingAssignments": "Upcoming assignments",
+      "recentGrades": "Recent grades",
+      "recentActivity": "Recent activity",
+      "viewAll": "View all"
+    },
+    "assignmentStatus": {
+      "overdue": "Overdue",
+      "dueSoon": "Due soon",
+      "upcoming": "Upcoming",
+      "done": "Done"
+    },
+    "streak": {
+      "title": "{streakDays} day streak",
+      "subtitle": "Keep it going — study something today."
+    }
+  },
+  "studentAssignments": {
+    "hero": {
+      "eyebrow": "Assignments",
+      "title": "Your assignments",
+      "description": "Every problem your teachers send lands here — work through it, attach your solution, and submit."
+    },
+    "stats": {
+      "open": "Open",
+      "dueSoon": "Due soon",
+      "submitted": "Submitted"
+    },
+    "filters": {
+      "title": "Filters",
+      "searchLabel": "Search assignments",
+      "searchPlaceholder": "Search title or course…",
+      "statusLabel": "Status",
+      "reset": "Reset filters",
+      "statuses": {
+        "all": "All",
+        "notStarted": "Not started",
+        "inProgress": "In progress",
+        "submitted": "Submitted",
+        "graded": "Graded"
+      }
+    },
+    "list": {
+      "countLabel_one": "{count} assignment",
+      "countLabel_other": "{count} assignments",
+      "emptyTitle": "No assignments match your filters",
+      "emptyHint": "Try clearing the search or picking a different status."
+    },
+    "assignmentStatus": {
+      "graded": "Graded",
+      "submitted": "Submitted",
+      "overdue": "Overdue",
+      "inProgress": "In progress",
+      "notStarted": "Not started"
+    },
+    "detail": {
+      "submittedCount": "{done}/{total} submitted",
+      "teacherNote": "Teacher's note:",
+      "empty": "Select an assignment to see its problems.",
+      "submitAll": "Submit all uploaded work",
+      "problem": {
+        "uploadAria": "Upload your work for this problem",
+        "dropLabel": "Drop a photo or PDF of your work, or click to browse",
+        "formats": "PNG, JPG, WEBP, or PDF",
+        "readyToSubmit": "Ready to submit",
+        "removeFile": "Remove file",
+        "submit": "Submit",
+        "submitted": "Submitted",
+        "withdraw": "Withdraw",
+        "feedback": "Feedback:"
+      },
+      "difficulties": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard",
+        "olympiad": "Olympiad"
+      }
+    },
+    "notice": "{title} submitted."
   }
 }

@@ -1,0 +1,245 @@
+"use server";
+
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth/session";
+import { revalidatePath } from "next/cache";
+
+/**
+ * მასწავლებლის მიერ გაგზავნილი დავალების/ბარათის წაშლა
+ */
+export async function deleteTargetedAssignmentAction(assignmentId: string) {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      return { success: false, error: "ავტორიზაცია ვერ მოხერხდა" };
+    }
+
+    const assignment = await prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      include: {
+        course: { select: { teacherId: true } },
+      },
+    });
+
+    if (!assignment) {
+      return { success: false, error: "დავალება ვერ მოიძებნა" };
+    }
+
+    if (assignment.course.teacherId !== session.user.id && session.user.role !== "ADMIN") {
+      return { success: false, error: "არ გაქვთ ამ დავალების წაშლის უფლება" };
+    }
+
+    await prisma.assignment.delete({
+      where: { id: assignmentId },
+    });
+
+    revalidatePath("/[locale]/teacher/students", "page");
+    revalidatePath("/[locale]/teacher/homework", "page");
+    revalidatePath("/[locale]/student/assignments", "page");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete assignment:", error);
+    return { success: false, error: "დავალების წაშლა ვერ მოხერხდა" };
+  }
+}
+
+/**
+ * დავალების ჩაბარებულად მონიშვნა მასწავლებლის მხრიდან (Grade ჩანაწერის შექმნა/განახლება)
+ */
+export async function markAssignmentGradedAction(submissionIdOrAssignmentId: string) {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      return { success: false, error: "ავტორიზაცია ვერ მოხერხდა" };
+    }
+
+    // 1. ჯერ ვეძებთ Submission-ით
+    const submission = await prisma.submission.findUnique({
+      where: { id: submissionIdOrAssignmentId },
+      include: {
+        assignment: {
+          include: {
+            course: { select: { teacherId: true } },
+          },
+        },
+      },
+    });
+
+    if (submission) {
+      if (submission.assignment.course.teacherId !== session.user.id && session.user.role !== "ADMIN") {
+        return { success: false, error: "არ გაქვთ ამ დავალების შეფასების უფლება" };
+      }
+
+      await prisma.submission.update({
+        where: { id: submission.id },
+        data: { status: "RETURNED" },
+      });
+
+      await prisma.grade.upsert({
+        where: { submissionId: submission.id },
+        create: {
+          submissionId: submission.id,
+          graderId: session.user.id,
+          score: 100,
+          maxScore: 100,
+          comment: "ჩაბარებულია",
+        },
+        update: {
+          graderId: session.user.id,
+          score: 100,
+          comment: "ჩაბარებულია",
+        },
+      });
+    } else {
+      // 2. თუ Assignment ID გადმოეცა
+      const assignment = await prisma.assignment.findUnique({
+        where: { id: submissionIdOrAssignmentId },
+        include: {
+          course: { select: { teacherId: true } },
+          submissions: true,
+        },
+      });
+
+      if (!assignment) {
+        return { success: false, error: "ჩანაწერი ვერ მოიძებნა" };
+      }
+
+      if (assignment.course.teacherId !== session.user.id && session.user.role !== "ADMIN") {
+        return { success: false, error: "არ გაქვთ ამ დავალების შეფასების უფლება" };
+      }
+
+      // ვანახლებთ ყველა submission-ს და ვანიჭებთ ჩაბარებულის სტატუსს
+      for (const sub of assignment.submissions) {
+        await prisma.submission.update({
+          where: { id: sub.id },
+          data: { status: "RETURNED" },
+        });
+
+        await prisma.grade.upsert({
+          where: { submissionId: sub.id },
+          create: {
+            submissionId: sub.id,
+            graderId: session.user.id,
+            score: 100,
+            maxScore: 100,
+            comment: "ჩაბარებულია",
+          },
+          update: {
+            graderId: session.user.id,
+            score: 100,
+            comment: "ჩაბარებულია",
+          },
+        });
+      }
+    }
+
+    revalidatePath("/[locale]/teacher/students", "page");
+    revalidatePath("/[locale]/student/assignments", "page");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to mark assignment as graded:", error);
+    return { success: false, error: "სტატუსის განახლება ვერ მოხერხდა" };
+  }
+}
+
+/**
+ * ბარათის (ამოცანის) პირობისა და ამოხსნის ლაზური ჩატვირთვა
+ */
+export async function getProblemDetailsAction(
+  problemId: string,
+): Promise<{ success: boolean; promptTex?: string; solutionTex?: string; error?: string }> {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      return { success: false, error: "ავტორიზაცია ვერ მოხერხდა" };
+    }
+
+    const problem = await prisma.problem.findFirst({
+      where: {
+        id: problemId,
+        ...(session.user.role === "ADMIN" ? {} : { authorId: session.user.id }),
+      },
+      select: { promptTex: true, solutionTex: true },
+    });
+
+    if (!problem) {
+      return { success: false, error: "ბარათი ვერ მოიძებნა" };
+    }
+
+    return {
+      success: true,
+      promptTex: problem.promptTex || "",
+      solutionTex: problem.solutionTex || "",
+    };
+  } catch (error) {
+    console.error("Failed to fetch problem details:", error);
+    return { success: false, error: "ბარათის ჩატვირთვა ვერ მოხერხდა" };
+  }
+}
+
+
+/**
+ * მასწავლებლის კურსებისა და მოსწავლეების სიის წამოღება დაფის მოდალისთვის
+ */
+export async function getTeacherStudentsAction() {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      return { success: false, error: "ავტორიზაცია ვერ მოხერხდა" };
+    }
+
+    const teacherCourses = await prisma.course.findMany({
+      where: session.user.role === "ADMIN" ? {} : { teacherId: session.user.id },
+      include: {
+        enrollments: {
+          where: {
+            user: {
+              role: "STUDENT",
+            },
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const courseGroups = teacherCourses.map((course) => {
+      const studentsMap = new Map<string, { id: string; name: string; email?: string }>();
+
+      course.enrollments.forEach((enrollment) => {
+        const student = enrollment.user;
+        if (student && !studentsMap.has(student.id)) {
+          studentsMap.set(student.id, {
+            id: student.id,
+            name: student.name || "მოსწავლე",
+            email: student.email || undefined,
+          });
+        }
+      });
+
+      return {
+        id: course.id,
+        title: course.title,
+        students: Array.from(studentsMap.values()),
+      };
+    });
+
+    return {
+      success: true,
+      courseGroups,
+    };
+  } catch (error) {
+    console.error("Failed to fetch teacher courses and students:", error);
+    return { success: false, error: "მონაცემების წამოღება ვერ მოხერხდა" };
+  }
+}

@@ -2,6 +2,7 @@ import {
   GEMINI_PLAIN_SCHEMA,
   GEMINI_VERIFIED_SCHEMA,
   type AiCheckMode,
+  type ChatImageInput,
   type DiverseGenerateError,
   type PlainProblemDraft,
   type VerifiedProblemDraft,
@@ -785,6 +786,7 @@ function buildTeacherChatPrompt(
   locale: Locale,
   message: string,
   history: { role: "user" | "assistant"; content: string }[],
+  imageCount = 0,
 ) {
   const language =
     locale === "ka" ? "Georgian" : locale === "ru" ? "Russian" : "English";
@@ -803,7 +805,12 @@ function buildTeacherChatPrompt(
     "Put every formula in LaTeX: inline in $...$ and display equations alone on a line in $$...$$.",
     "Example display line: $$\\log_2(x^2 + y^2 + 2) = 1 + \\log_2(x + y)$$",
     transcript ? `Conversation so far:\n${transcript}` : "",
-    `Latest user message:\n${message.trim()}`,
+    imageCount > 0
+      ? `The user attached ${imageCount} image${imageCount === 1 ? "" : "s"}. Read the mathematics directly from them and answer about what they show.`
+      : "",
+    message.trim()
+      ? `Latest user message:\n${message.trim()}`
+      : "The user sent only image(s) with no text.",
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -864,14 +871,17 @@ export async function completeTeacherChatMessage(options: {
   locale: Locale;
   message: string;
   history: { role: "user" | "assistant"; content: string }[];
+  images?: ChatImageInput[];
 }) {
   const model = getAiModel(options.modelId);
   if (!model) throw new Error("failed");
 
+  const images = options.images ?? [];
   const prompt = buildTeacherChatPrompt(
     options.locale,
     options.message,
     options.history,
+    images.length,
   );
   switch (model.provider) {
     case "gemini": {
@@ -886,17 +896,23 @@ export async function completeTeacherChatMessage(options: {
           includeThoughts: false,
         };
       }
+      const parts: Record<string, unknown>[] = [{ text: prompt }];
+      for (const image of images) {
+        parts.push({
+          inlineData: { mimeType: image.mimeType, data: image.data },
+        });
+      }
       const payload = (await postJson(
         url,
         { "x-goog-api-key": key },
         {
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          contents: [{ role: "user", parts }],
           generationConfig,
           systemInstruction: {
             parts: [{ text: TEACHER_CHAT_SYSTEM }],
           },
         },
-        CHAT_TIMEOUT_MS,
+        images.length ? 90_000 : CHAT_TIMEOUT_MS,
       )) as GeminiResponse;
       const text = normalizeTeacherChatReply(geminiText(payload));
       if (!text.trim()) throw new Error("bad_output");

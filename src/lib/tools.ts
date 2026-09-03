@@ -78,9 +78,30 @@ export interface ToolSection {
 }
 
 /**
- * Catalog configuration. Hrefs, icons and order live here; titles, subtitles
- * and badges live in `@/i18n/messages` under the same ids.
- *
+[{
+	"resource": "/d:/Wep development/React/math-site/src/lib/tools.ts",
+	"owner": "typescript",
+	"code": "2322",
+	"severity": 8,
+	"message": "Type '\"quadratic-equations\"' is not assignable to type '\"graphing\" | \"equations\" | \"fractions\" | \"systemSolver\" | \"polynomials\" | \"inequalities\" | \"logarithms\" | \"triangle\" | \"unitCircle\" | \"geometry\" | \"vectors\" | \"derivatives\" | ... 58 more ... | \"animations\"'.",
+	"source": "ts",
+	"startLineNumber": 98,
+	"startColumn": 9,
+	"endLineNumber": 98,
+	"endColumn": 11,
+	"relatedInformation": [
+		{
+			"startLineNumber": 69,
+			"startColumn": 3,
+			"endLineNumber": 69,
+			"endColumn": 5,
+			"message": "The expected type comes from property 'id' which is declared here on type 'ToolItem'",
+			"resource": "/d:/Wep development/React/math-site/src/lib/tools.ts"
+		}
+	],
+	"modelVersionId": 16,
+	"origin": "extHost1"
+}]*
  * To add a section later: append an entry to `TOOL_SECTIONS` and add matching
  * keys under `toolsPage.sections` / `toolsPage.items` in ka/en/ru.
  */
@@ -95,10 +116,10 @@ export const TOOL_SECTIONS: ToolSection[] = [
         href: "/tools/graphing",
       },
       {
-        id: "equations",
+        id: "quadratic-equations",
         icon: Equal,
         badgeColor: "brass",
-        href: "/tools/equation-solver",
+        href: "/tools/quadratic-equations",
       },
       {
         id: "fractions",
@@ -542,9 +563,19 @@ export const TOOL_SECTIONS: ToolSection[] = [
         icon: Compass,
         badgeColor: "ink",
         href: "/tools/prime-maze",
-      },
+      },  
     ],
   },
+  {
+    id: "animations",
+    tools: [
+      {
+        id: "animations",
+        icon: Zap,
+        badgeColor: "brass",
+        href: "/tools/animations",
+      },
+]}
 ];
 
 export const badgeToneClass: Record<

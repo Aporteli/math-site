@@ -258,6 +258,7 @@ function parseProseProblemBody(body: string): ChatProblemCard | null {
   return {
     promptTex,
     solutionTex: solutionTex || undefined,
+    year: undefined,
   };
 }
 

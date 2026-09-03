@@ -1,38 +1,123 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 /**
- * Base palette: ink navy + brass on warm paper.
+ * Base palette: Lichess-style ink + blue/brass on a warm off-white page.
  * Use these semantic tokens instead of raw Tailwind color scales so the
- * whole platform (public site, LMS, math tools) stays visually consistent.
+ * whole platform (public site, LMS, math tools) stays visually consistent,
+ * and so light/dark stay perfect mirrors of lichess.org's own themes.
  */
 @theme {
-  --font-sans: "Noto Sans Georgian", "BPG Arial", Sylfaen, ui-sans-serif, system-ui,
-    -apple-system, "Segoe UI", sans-serif;
+  --font-sans:
+    'Noto Sans Georgian', 'BPG Arial', Sylfaen, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* =========================================================
+     LIGHT THEME (Lichess Default Warm Paper Palette)
+     ========================================================= */
 
   /* Neutral surfaces */
-  --color-paper: #faf9f6;
-  --color-paper-deep: #f2f0ea;
-  --color-hairline: #e6e3da;
-  --color-hairline-soft: #efece4;
+  --color-paper: #ede6dc;         /* Lichess Light მთავარი თბილი ფონი */
+  --color-paper-deep: #e2ded5;    /* ოდნავ ჩამჯდარი გვერდითი პანელების ფონი */
+  --color-hairline: #d6d0c4;      /* ბარათების საზღვრები */
+  --color-hairline-soft: #e5dfd5; /* თხელი გამყოფები */
+  --color-grid: #000000;
 
-  /* Text */
-  --color-ink: #16233a;
-  --color-body: #515b6b;
-  --color-muted: #7b8494;
+  /* Cards & Elevate Panels */
+  --color-surface: #f7f4ef;       /* ასაწევი ბარათები (უფრო ღია ვიდრე ფონი) */
+  --color-surface-hover: #ffffff; /* ჰოვერისას სუფთა თეთრი ზედაპირი */
 
-  /* Primary accent */
-  --color-navy: #17365d;
-  --color-navy-strong: #0f2544;
-  --color-navy-tint: #e9eef5;
+  /* Chess Board Squares (Classic Wood/Brown Theme) */
+  --color-board-light: #f0d9b5;   /* საჭადრაკო დაფის ღია უჯრა */
+  --color-board-dark: #b58863;    /* საჭადრაკო დაფის მუქი უჯრა */
+  --color-board-move: #cdd26a;    /* სვლის ინდიკატორი */
 
-  /* Secondary accent */
-  --color-brass: #8a621b;
-  --color-brass-strong: #6f4e14;
-  --color-brass-soft: #d3ab61;
-  --color-brass-tint: #f7f0e0;
+  /* Text / Ink */
+  --color-ink: #202020;           /* ძირითადი მუქი ტექსტი */
+  --color-hero: #d3cfcf;
+  --color-body: #4a4a4a;          /* მეორეხარისხოვანი ტექსტი */
+  --color-muted: #827f79;         /* პასიური ტექსტი და ლეიბლები */
+
+  /* Primary Accent (Lichess Action Blue) */
+  --color-navy: #3692e7;          /* მთავარი CTA და ბმულები */
+  --color-navy-strong: #2475bf;   /* ლურჯის ჰოვერი */
+  --color-navy-tint: #e4eefb;     /* ლურჯი ბეიჯების ფონი */
+
+  /* Secondary Accent (Lichess Gold / Amber / Donate) */
+  --color-brass: #d59920;         /* Lichess-ის ოქროსფერი */
+  --color-brass-strong: #b9820f;  /* მუქი ოქროსფერი */
+  --color-brass-soft: #e2b354;
+  --color-brass-extra: #f97316;
+  --color-brass-tint: #faf1de;    /* ოქროსფერი შეფერილობის ფონი */
+
+  /* Game Status Accents */
+  --color-win: #629924;           /* მოგება / სწორი პასუხი (მწვანე) */
+  --color-win-tint: #eef6e6;
+  --color-loss: #cc3333;          /* წაგება / შეცდომა (წითელი) */
+  --color-loss-tint: #fde8e8;
 
   --animate-dropdown: dropdown 140ms ease-out;
   --animate-fade-up: fade-up 600ms ease-out both;
+}
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* =========================================================
+     DARK THEME (Lichess Dark Charcoal & Walnut Palette)
+     ========================================================= */
+
+  /* Neutral surfaces */
+  --color-paper: #161512;         /* Lichess Dark მთავარი ღრმა ნახშირისფერი ფონი */
+  --color-paper-deep: #1e1c18;    /* საიდბარის და მეორე დონის ფონი */
+  --color-hairline: #363431;      /* ბარათების საზღვრები */
+  --color-hairline-soft: #262421; /* მკრთალი გამყოფები */
+  --color-grid: #ffffff;
+
+  /* Cards & Elevate Panels */
+  --color-surface: #262421;       /* სტანდარტული ბარათის ფონი */
+  --color-surface-hover: #2e261f; /* Lichess-ის თბილი ესპრესო ჰოვერზე/აქტიურზე */
+
+  /* Chess Board Squares (Classic Wood/Brown Theme) */
+  --color-board-light: #c2ab87;   /* მუქ თემაში შერბილებული ღია უჯრა */
+  --color-board-dark: #7b583c;    /* მუქ თემაში შერბილებული მუქი უჯრა */
+  --color-board-move: #879038;    /* სვლის ინდიკატორი მუქ რეჟიმში */
+
+  /* Text / Ink */
+  --color-ink: #bababa;           /* ძირითადი თეთრი/ღია-ნაცრისფერი ტექსტი */
+  --color-hero: #585858;
+  --color-body: #9e9c98;          /* მეორეხარისხოვანი ტექსტი */
+  --color-muted: #6b6965;         /* პასიური ტექსტები, ქვესათაურები */
+
+  /* Primary Accent (Lichess Action Blue) */
+  --color-navy: #3692e7;          /* ოფიციალური CTA ლურჯი */
+  --color-navy-strong: #54a3ee;   /* ღია ლურჯი ჰოვერზე */
+  --color-navy-tint: #1b2838;     /* ლურჯი ბეიჯების ფონი */
+
+  /* Secondary Accent (Lichess Gold / Amber) */
+  --color-brass: #d59920;         /* ოქროსფერი აქცენტი */
+  --color-brass-strong: #e5a52c;
+  --color-brass-soft: #b8811b;
+  --color-brass-extra: #f97316;
+  --color-brass-tint: #2b2114;    /* ოქროსფერი შეფერილობის მუქი ფონი */
+
+  /* Game Status Accents */
+  --color-win: #629924;           /* მოგება / სწორი პასუხი */
+  --color-win-tint: #1c2b12;
+  --color-loss: #cc3333;          /* წაგება / შეცდომა */
+  --color-loss-tint: #381a1a;
+}
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 @keyframes dropdown {
@@ -49,18 +134,6 @@
   }
 }
 
-/**
- * Scroll-triggered reveals, driven entirely by the native view() timeline —
- * no observer, no main-thread work.
- *
- * Progressive enhancement: browsers without `animation-timeline` skip the
- * block and render the final state. Because the range sits inside the `entry`
- * phase, anything already on screen at load is past 100% progress and never
- * flashes in; only elements scrolled into view animate.
- *
- * `.reveal` animates one element, `.reveal-group` animates its children with
- * a staggered range so a row of cards cascades instead of landing at once.
- */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .reveal,
@@ -139,4 +212,60 @@ body {
 /* Broken family TeX used to render as bright red KaTeX errors. */
 .katex-error {
   color: inherit !important;
+}
+
+/* თხელი, თანამედროვე სქროლბარი */
+.thin-scrollbar {
+  scrollbar-width: thin; /* Firefox-ისთვის */
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  height: 4px; /* ჰორიზონტალური სქროლის სისქე (სულ რაღაც 4px) */
+  width: 4px; /* ვერტიკალური სქროლის სისქე */
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+/* სრულად უხილავი სქროლბარი (თუ საერთოდ არ გინდათ რომ გამოჩნდეს, მაგრამ ისქროლებოდეს) */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+html {
+  background-color: var(--color-paper);
+}
+
+/* Flip white card surfaces to the dark surface in dark mode. */
+.dark .bg-white {
+  background-color: var(--color-surface);
+}
+.dark .hover\:bg-white:hover {
+  background-color: var(--color-surface);
+}
+.dark .bg-white\/70,
+.dark .hover\:bg-white\/70:hover {
+  background-color: color-mix(in oklab, var(--color-surface) 70%, transparent);
+}
+.dark .bg-white\/80 {
+  background-color: color-mix(in oklab, var(--color-surface) 80%, transparent);
+}
+.dark .bg-white\/95 {
+  background-color: color-mix(in oklab, var(--color-surface) 95%, transparent);
 }

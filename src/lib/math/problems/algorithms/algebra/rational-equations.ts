@@ -9,7 +9,7 @@ import {
 } from "./helpers";
 import { nonzero, pick, randInt } from "../rng";
 
-function dfrac(num: string | number, den: string): string {
+function dfrac(num: string | number, den: string | number): string {
   return `\\dfrac{${num}}{${den}}`;
 }
 

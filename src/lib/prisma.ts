@@ -1,7 +1,7 @@
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
-/** Bump when `schema.prisma` changes so `next dev` does not keep a stale client. */
 const PRISMA_GENERATION = "taxonomy-nodes-v1";
 
 const globalForPrisma = globalThis as unknown as {
@@ -9,22 +9,22 @@ const globalForPrisma = globalThis as unknown as {
   prismaGeneration: string | undefined;
 };
 
-function createPrismaClient() {
+function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL;
   if (!url) {
     throw new Error("DATABASE_URL is not set");
   }
 
-  const adapter = new PrismaMariaDb(url);
+  const pool = new Pool({ connectionString: url });
+  const adapter = new PrismaPg(pool);
+
   return new PrismaClient({ adapter });
 }
 
 function hasCurrentDelegates(client: PrismaClient | undefined) {
   if (!client) return false;
-  const family = (client as { problemFamily?: { findMany?: unknown } })
-    .problemFamily;
+  const family = (client as { problemFamily?: { findMany?: unknown } }).problemFamily;
   if (typeof family?.findMany !== "function") return false;
-  // Detect stale clients that predate Problem.collection / originId.
   const dmmf = (
     client as {
       _runtimeDataModel?: { models?: { Problem?: { fields?: { name: string }[] } } };
