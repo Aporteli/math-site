@@ -16,6 +16,7 @@ import {
 import { useAssignmentSubmissions } from './useAssignmentSubmissions';
 
 export function useStudentAssignments(locale: Locale) {
+  // --- მდგომარეობები (State) ---
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [courses, setCourses] = useState<StudentCourse[]>([]);
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
@@ -24,11 +25,13 @@ export function useStudentAssignments(locale: Locale) {
   const [loading, setLoading] = useState(true);
   const [selectedDateKey, setSelectedDateKey] = useState<string>(() => formatDateToKey(new Date()));
 
+  // ამოცანის დეტალების მოდალის მდგომარეობა
   const [activeProblemModal, setActiveProblemModal] = useState<{
     assignmentId: string;
     problem: AssignmentProblem;
   } | null>(null);
 
+  // მასალის/პასუხის პრევიუს მოდალის მდგომარეობა
   const [previewMaterialModal, setPreviewMaterialModal] = useState<{
     url: string;
     title: string;
@@ -36,9 +39,14 @@ export function useStudentAssignments(locale: Locale) {
     instructions?: string | null;
   } | null>(null);
 
+  // ლოკალიზაციის ლექსიკონი
   const dict = getDictionary(locale);
   const copy = dict.studentAssignments;
 
+  /**
+   * დავალებების ჩატვირთვა სერვერიდან:
+   * რთავს ჩატვირთვის ინდიკატორს, იღებს მონაცემებს და ინახავს სტეიტში.
+   */
   async function loadData() {
     setLoading(true);
     const data = await getStudentAssignmentsAction();
@@ -46,10 +54,18 @@ export function useStudentAssignments(locale: Locale) {
     setLoading(false);
   }
 
+  /**
+   * პირველადი ჩატვირთვა (Mount):
+   * კომპონენტის ჩატვირთვისთანავე უშვებს დავალებების წამოღების ფუნქციას.
+   */
   useEffect(() => {
     void loadData();
   }, []);
 
+  /**
+   * კურსების წამოღება სერვერიდან:
+   * იყენებს active დროშას Race Condition-ისა და unmounted კომპონენტზე სტეიტის შეცვლის თავიდან ასაცილებლად.
+   */
   useEffect(() => {
     let active = true;
     getStudentCoursesAction().then((data) => {
@@ -60,6 +76,10 @@ export function useStudentAssignments(locale: Locale) {
     };
   }, []);
 
+  /**
+   * ხელმისაწვდომი თარიღების გენერირება და დალაგება:
+   * დავალებებიდან იღებს უნიკალურ თარიღებს (Set-ით) და ალაგებს კლებადობით (უახლესიდან უძველესისკენ).
+   */
   const availableDates = useMemo(() => {
     const set = new Set<string>();
     assignments.forEach((a) => {
@@ -68,6 +88,10 @@ export function useStudentAssignments(locale: Locale) {
     return Array.from(set).sort((a, b) => b.localeCompare(a));
   }, [assignments]);
 
+  /**
+   * არჩეული თარიღის ვალიდაცია:
+   * თუ მიმდინარე დღე არ არსებობს დავალებების თარიღებში, ავტომატურად ირჩევს უახლოეს ხელმისაწვდომ თარიღს.
+   */
   useEffect(() => {
     if (availableDates.length > 0) {
       const todayKey = formatDateToKey(new Date());
@@ -77,6 +101,10 @@ export function useStudentAssignments(locale: Locale) {
     }
   }, [availableDates]);
 
+  /**
+   * თარიღის შეცვლა დღეების მიხედვით:
+   * არჩეულ თარიღს უმატებს ან აკლებს გადაცემულ დღეების რაოდენობას (+1, -1 და ა.შ.).
+   */
   const handleShiftDate = (days: number) => {
     const parts = selectedDateKey.split('-');
     const current = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
@@ -84,12 +112,19 @@ export function useStudentAssignments(locale: Locale) {
     setSelectedDateKey(formatDateToKey(current));
   };
 
+  /**
+   * არჩეული თარიღის ქართულ ენაზე ფორმატირება (მაგ. „3 სექტემბერი, 2026“).
+   */
   const formattedSelectedDate = useMemo(() => {
     const parts = selectedDateKey.split('-');
     const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
     return formatGeorgianDateString(d);
   }, [selectedDateKey]);
 
+  /**
+   * არჩეული დღის დავალებების გაფილტვრა:
+   * ტოვებს მხოლოდ არჩეული თარიღის დავალებებს, რომლებიც ემთხვევა სტატუსის ფილტრს (statusFilter).
+   */
   const assignmentsForSelectedDate = useMemo(() => {
     return assignments.filter((assignment) => {
       const { key } = parseAndFormatDate(assignment);
@@ -98,10 +133,18 @@ export function useStudentAssignments(locale: Locale) {
     });
   }, [assignments, selectedDateKey, statusFilter]);
 
+  /**
+   * უშუალოდ შესასრულებელი დავალებების (ტასკების) გამოყოფა:
+   * არჩეული დღის გაფილტრული სიიდან გამორიცხავს სასწავლო მასალებს.
+   */
   const taskAssignments = useMemo(() => {
     return assignmentsForSelectedDate.filter((a) => !isAssignmentMaterial(a));
   }, [assignmentsForSelectedDate]);
 
+  /**
+   * ჩაბარებული პასუხების/სურათების ამოკრება:
+   * აგროვებს ამოცანებზე ატვირთულ ყველა სურათის ბმულს და აწყობს ერთიან მასივად პრევიუსთვის.
+   */
   const submittedAnswersForDate = useMemo(() => {
     const answers: { id: string; url: string; title: string; status: string }[] = [];
     taskAssignments.forEach((a) => {
@@ -122,15 +165,26 @@ export function useStudentAssignments(locale: Locale) {
     return answers;
   }, [taskAssignments]);
 
+  /**
+   * სასწავლო მასალების გამოყოფა:
+   * არჩეული დღის მონაცემებიდან ტოვებს მხოლოდ თეორიულ/დამხმარე რესურსებს.
+   */
   const materialsForDate = useMemo(() => {
     return assignmentsForSelectedDate.filter((a) => isAssignmentMaterial(a));
   }, [assignmentsForSelectedDate]);
 
+  /**
+   * არჩეული დღის ყველა შესასრულებელი დავალება:
+   * ტოვებს მხოლოდ იმ დავალებებს, რომლებიც არ არის მასალა, სტატუსის ფილტრის (statusFilter) გაუთვალისწინებლად.
+   */
   const todayAssignments = useMemo(() => {
     return assignments.filter((a) => parseAndFormatDate(a).key === selectedDateKey && !isAssignmentMaterial(a));
   }, [assignments, selectedDateKey]);
 
-  // საბმიშენის ლოგიკის დაკავშირება
+  /**
+   * დავალების ჩაბარების (Submission) ლოგიკის დაკავშირება:
+   * აბრუნებს ჩაბარებასთან და ფაილის ატვირთვასთან დაკავშირებულ ფუნქციებსა და სტეიტებს.
+   */
   const submissions = useAssignmentSubmissions({
     selectedDateKey,
     taskAssignments,
