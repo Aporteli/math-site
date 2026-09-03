@@ -57,8 +57,7 @@ interface KonvaCanvasProps {
   textPlaceholder?: string;
   onPasteImage?: (dataUrl: string, pos?: { x: number; y: number }) => void;
   stylusOnly?: boolean;
-  onTemporaryEraserStart?: () => void;
-  onTemporaryEraserEnd?: () => void;
+  onStylusButtonAction?: (buttonIndex: 1 | 2, state: 'down' | 'up') => void;
 }
 
 interface LaserPoint {
@@ -95,6 +94,18 @@ function cleanPastedText(raw: string): string {
     .map((paragraph) => paragraph.replace(/\n+/g, ' ').trim())
     .join('\n\n')
     .trim();
+}
+
+function getHeldPenBarrelButtons(evt: PointerEvent): { primary: boolean; secondary: boolean } {
+  if (evt.pointerType !== 'pen') return { primary: false, secondary: false };
+  return {
+    primary: (evt.buttons & 2) !== 0 || (evt.buttons & 32) !== 0,
+    secondary: (evt.buttons & 4) !== 0,
+  };
+}
+
+function isPenBarrelButton(button: number): boolean {
+  return button === 1 || button === 2 || button === 5;
 }
 
 function tryMergeClosedPolygon(allElements: CanvasElement[], newLine: CanvasElement): CanvasElement[] | null {
@@ -273,8 +284,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     textPlaceholder = 'ტექსტი...',
     onPasteImage,
     stylusOnly = false,
-    onTemporaryEraserStart,
-    onTemporaryEraserEnd,
+    onStylusButtonAction,
   },
   ref,
 ) {
@@ -306,9 +316,11 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   const activeShapeIdRef = useRef<string>('');
   const elementsRef = useRef<CanvasElement[]>(elements);
   elementsRef.current = elements;
-  const isTemporaryEraserActiveRef = useRef(false);
-
   const isStylusActiveRef = useRef(false);
+  const stylusPrimaryHeldRef = useRef(false);
+  const stylusSecondaryHeldRef = useRef(false);
+  const onStylusButtonActionRef = useRef(onStylusButtonAction);
+  onStylusButtonActionRef.current = onStylusButtonAction;
   const activePointerIdRef = useRef<number | null>(null);
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
   const pointerStartPos = useRef<{ x: number; y: number } | null>(null);
@@ -331,11 +343,50 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     return transform.point(pos);
   }, []);
 
+  const syncStylusButtons = useCallback((primary: boolean, secondary: boolean) => {
+    if (primary !== stylusPrimaryHeldRef.current) {
+      stylusPrimaryHeldRef.current = primary;
+      onStylusButtonActionRef.current?.(1, primary ? 'down' : 'up');
+    }
+    if (secondary !== stylusSecondaryHeldRef.current) {
+      stylusSecondaryHeldRef.current = secondary;
+      onStylusButtonActionRef.current?.(2, secondary ? 'down' : 'up');
+    }
+  }, []);
+
+  const syncStylusButtonsFromEvent = useCallback(
+    (evt: PointerEvent, phase: 'down' | 'move' | 'up' | 'cancel') => {
+      if (evt.pointerType !== 'pen') return;
+      let { primary, secondary } = getHeldPenBarrelButtons(evt);
+      if (phase === 'down') {
+        if (evt.button === 2 || evt.button === 5) primary = true;
+        if (evt.button === 1) secondary = true;
+      } else if (phase === 'up') {
+        if (evt.button === 2 || evt.button === 5) primary = false;
+        if (evt.button === 1) secondary = false;
+      } else if (phase === 'cancel') {
+        primary = false;
+        secondary = false;
+      }
+      syncStylusButtons(primary, secondary);
+    },
+    [syncStylusButtons],
+  );
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
+      const pointerType = (e as PointerEvent).pointerType;
+      if (
+        pointerType === 'pen' ||
+        stylusPrimaryHeldRef.current ||
+        stylusSecondaryHeldRef.current ||
+        isPenBarrelButton(e.button)
+      ) {
+        return;
+      }
       const rect = container.getBoundingClientRect();
       const stage = stageRef.current;
       let stageX = 0,
@@ -874,21 +925,30 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   );
 
   useEffect(() => {
-    const handleGlobalPointerUp = () => {
-      isErasing.current = false;
-      if (isTemporaryEraserActiveRef.current) {
-        isTemporaryEraserActiveRef.current = false;
-        onTemporaryEraserEnd?.();
+    const handleGlobalPointerUp = (e: PointerEvent) => {
+      if (e.pointerType === 'pen') {
+        syncStylusButtonsFromEvent(e, 'up');
+        if (isPenBarrelButton(e.button) && (e.buttons & 1) !== 0) return;
       }
+      isErasing.current = false;
       if (isLasering.current) {
         isLasering.current = false;
         triggerLaserFade();
         onLaserMove?.(null);
       }
     };
+    const handleGlobalPointerCancel = (e: PointerEvent) => {
+      if (e.pointerType === 'pen') {
+        syncStylusButtonsFromEvent(e, 'cancel');
+      }
+    };
     window.addEventListener('pointerup', handleGlobalPointerUp);
-    return () => window.removeEventListener('pointerup', handleGlobalPointerUp);
-  }, [triggerLaserFade, onLaserMove, onTemporaryEraserEnd]);
+    window.addEventListener('pointercancel', handleGlobalPointerCancel);
+    return () => {
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+      window.removeEventListener('pointercancel', handleGlobalPointerCancel);
+    };
+  }, [triggerLaserFade, onLaserMove, syncStylusButtonsFromEvent]);
 
   const handlePointerDown = (e: any) => {
     if (isPinching.current) return;
@@ -906,18 +966,17 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     if (stylusOnly && evt.pointerType === 'touch') return;
 
     if (evt.pointerType === 'touch' && isStylusActiveRef.current) return;
-    if (evt.pointerType === 'pen') isStylusActiveRef.current = true;
-
-    const isStylusButtonPressed =
-      evt.pointerType === 'pen' && (evt.button === 2 || (evt.buttons & 2) !== 0 || (evt.buttons & 32) !== 0);
-
-    if (isStylusButtonPressed) {
-      if (longPressTimeout.current) {
-        clearTimeout(longPressTimeout.current);
-        longPressTimeout.current = null;
+    if (evt.pointerType === 'pen') {
+      isStylusActiveRef.current = true;
+      syncStylusButtonsFromEvent(evt, 'down');
+      if (isPenBarrelButton(evt.button)) {
+        evt.preventDefault();
+        if (longPressTimeout.current) {
+          clearTimeout(longPressTimeout.current);
+          longPressTimeout.current = null;
+        }
+        return;
       }
-      isTemporaryEraserActiveRef.current = true;
-      onTemporaryEraserStart?.();
     }
 
     const pid = evt.pointerId ?? 1;
@@ -1117,20 +1176,13 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     const evt = e.evt as PointerEvent;
     if (stylusOnly && evt.pointerType === 'touch') return;
 
-    // ჰაერში (hover) ყოფნისას კალმის ღილაკზე დაჭერის/აშვების ამოცნობა
     if (evt.pointerType === 'pen') {
-      const isButtonPressed = (evt.buttons & 2) !== 0 || (evt.buttons & 32) !== 0;
-
-      if (isButtonPressed && !isTemporaryEraserActiveRef.current) {
+      syncStylusButtonsFromEvent(evt, 'move');
+      if (stylusPrimaryHeldRef.current || stylusSecondaryHeldRef.current) {
         if (longPressTimeout.current) {
           clearTimeout(longPressTimeout.current);
           longPressTimeout.current = null;
         }
-        isTemporaryEraserActiveRef.current = true;
-        onTemporaryEraserStart?.();
-      } else if (!isButtonPressed && isTemporaryEraserActiveRef.current && !isDrawing.current) {
-        isTemporaryEraserActiveRef.current = false;
-        onTemporaryEraserEnd?.();
       }
     }
 
@@ -1257,12 +1309,13 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   const handlePointerUp = (e: any) => {
     const evt = e.evt as PointerEvent;
 
-    if (isTemporaryEraserActiveRef.current) {
-      isTemporaryEraserActiveRef.current = false;
-      onTemporaryEraserEnd?.();
+    if (evt.pointerType === 'pen') {
+      syncStylusButtonsFromEvent(evt, 'up');
+      const tipStillDown = (evt.buttons & 1) !== 0;
+      if (isPenBarrelButton(evt.button) && tipStillDown) {
+        return;
+      }
     }
-
-    if (evt.pointerId === activePointerIdRef.current) activePointerIdRef.current = null;
 
     if (evt.pointerId === activePointerIdRef.current) activePointerIdRef.current = null;
     if (evt.pointerType === 'pen')

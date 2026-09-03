@@ -41,6 +41,7 @@ import {
   BookOpen,
   Sparkles,
   PenTool,
+  Settings2,
 } from 'lucide-react';
 import type { CanvasElement, KonvaCanvasHandle } from './KonvaCanvas';
 import { sendProblemToStudentAction } from '@/lib/actions/students';
@@ -179,6 +180,68 @@ const MAGIC_CHUNK_END = 0x03;
 const DEFAULT_COLOR = '#1e293b';
 const DARK_COLORS = [DEFAULT_COLOR, '#000000'];
 const LIGHT_COLOR = '#ffffff';
+const WHITEBOARD_COLORS = ['#1e293b', '#ef4444', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'] as const;
+
+type StylusButtonAction =
+  | 'temporary-eraser'
+  | 'toggle-eraser'
+  | 'cycle-colors'
+  | 'toggle-laser'
+  | 'undo'
+  | 'none';
+
+const STYLUS_BUTTON_ACTIONS: StylusButtonAction[] = [
+  'temporary-eraser',
+  'toggle-eraser',
+  'cycle-colors',
+  'toggle-laser',
+  'undo',
+  'none',
+];
+
+const STYLUS_ACTION_LABELS: Record<StylusButtonAction, string> = {
+  'temporary-eraser': 'დროებითი საშლელი',
+  'toggle-eraser': 'საშლელის გადართვა',
+  'cycle-colors': 'ფერების ციკლი',
+  'toggle-laser': 'ლაზერის გადართვა',
+  undo: 'უკან დაბრუნება',
+  none: 'გამორთული',
+};
+
+function isStylusButtonAction(value: unknown): value is StylusButtonAction {
+  return typeof value === 'string' && (STYLUS_BUTTON_ACTIONS as string[]).includes(value);
+}
+
+function getStylusButtonFromKeyboard(e: KeyboardEvent): 1 | 2 | null {
+  if (e.ctrlKey || e.metaKey || e.altKey) return null;
+  const key = e.key;
+  const code = e.code;
+  const keyCode = e.keyCode || 0;
+
+  if (
+    keyCode === 308 ||
+    key === 'PageDown' ||
+    code === 'PageDown' ||
+    key === 'VolumeDown' ||
+    code === 'AudioVolumeDown' ||
+    key === 'F19' ||
+    code === 'F19'
+  ) {
+    return 1;
+  }
+  if (
+    keyCode === 309 ||
+    key === 'PageUp' ||
+    code === 'PageUp' ||
+    key === 'VolumeUp' ||
+    code === 'AudioVolumeUp' ||
+    key === 'F20' ||
+    code === 'F20'
+  ) {
+    return 2;
+  }
+  return null;
+}
 
 function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
   const out = new Uint8Array(a.length + b.length);
@@ -719,6 +782,7 @@ export function ClassWhiteboard({
   const penMenuRef = useRef<HTMLDivElement>(null);
   const shapesMenuRef = useRef<HTMLDivElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
+  const stylusMenuRef = useRef<HTMLDivElement>(null);
   const pagesTrayRef = useRef<HTMLDivElement>(null);
   const lastLaserSentRef = useRef<number>(0);
   const storageKeyPages = `konva_whiteboard_pages_${courseId}`;
@@ -789,23 +853,12 @@ export function ClassWhiteboard({
     return 'pen';
   });
 
-  const previousToolRef = useRef<any>(activeTool);
+  const previousToolRef = useRef<any>(activeTool === 'eraser' ? 'pen' : activeTool);
   const isTemporaryEraserRef = useRef(false);
-
-  const handleTemporaryEraserStart = useCallback(() => {
-    if (activeTool !== 'eraser' && !isTemporaryEraserRef.current) {
-      previousToolRef.current = activeTool;
-      isTemporaryEraserRef.current = true;
-      setActiveTool('eraser');
-    }
-  }, [activeTool]);
-
-  const handleTemporaryEraserEnd = useCallback(() => {
-    if (isTemporaryEraserRef.current) {
-      setActiveTool(previousToolRef.current);
-      isTemporaryEraserRef.current = false;
-    }
-  }, []);
+  const temporaryEraserHoldersRef = useRef<Set<1 | 2>>(new Set());
+  const stylusButtonHeldRef = useRef({ 1: false, 2: false });
+  const activeToolRef = useRef(activeTool);
+  activeToolRef.current = activeTool;
 
   const [strokeColor, setStrokeColor] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -848,9 +901,37 @@ export function ClassWhiteboard({
     return false;
   });
 
+  const [stylusPrimaryAction, setStylusPrimaryAction] = useState<StylusButtonAction>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(STORAGE_PREFS_KEY) || '{}');
+        if (isStylusButtonAction(prefs.stylusPrimaryAction)) return prefs.stylusPrimaryAction;
+      } catch {}
+    }
+    return 'temporary-eraser';
+  });
+
+  const [stylusSecondaryAction, setStylusSecondaryAction] = useState<StylusButtonAction>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(STORAGE_PREFS_KEY) || '{}');
+        if (isStylusButtonAction(prefs.stylusSecondaryAction)) return prefs.stylusSecondaryAction;
+      } catch {}
+    }
+    return 'none';
+  });
+
+  const stylusPrimaryActionRef = useRef(stylusPrimaryAction);
+  stylusPrimaryActionRef.current = stylusPrimaryAction;
+  const stylusSecondaryActionRef = useRef(stylusSecondaryAction);
+  stylusSecondaryActionRef.current = stylusSecondaryAction;
+  const strokeColorRef = useRef(strokeColor);
+  strokeColorRef.current = strokeColor;
+
   const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
   const [isShapesMenuOpen, setIsShapesMenuOpen] = useState(false);
   const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
+  const [isStylusMenuOpen, setIsStylusMenuOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [students, setStudents] = useState<RemoteParticipant[]>([]);
@@ -956,6 +1037,9 @@ export function ClassWhiteboard({
       if (colorMenuRef.current && !colorMenuRef.current.contains(e.target as Node)) {
         setIsColorMenuOpen(false);
       }
+      if (stylusMenuRef.current && !stylusMenuRef.current.contains(e.target as Node)) {
+        setIsStylusMenuOpen(false);
+      }
       if (pagesTrayRef.current && !pagesTrayRef.current.contains(e.target as Node)) {
         const target = e.target as HTMLElement;
         if (!target.closest('[data-tray-trigger]')) {
@@ -985,10 +1069,18 @@ export function ClassWhiteboard({
     if (typeof window !== 'undefined') {
       localStorage.setItem(
         STORAGE_PREFS_KEY,
-        JSON.stringify({ tool: activeTool, color: strokeColor, width: strokeWidth, isDark, stylusOnly }),
+        JSON.stringify({
+          tool: isTemporaryEraserRef.current ? previousToolRef.current : activeTool,
+          color: strokeColor,
+          width: strokeWidth,
+          isDark,
+          stylusOnly,
+          stylusPrimaryAction,
+          stylusSecondaryAction,
+        }),
       );
     }
-  }, [activeTool, strokeColor, strokeWidth, isDark, stylusOnly]);
+  }, [activeTool, strokeColor, strokeWidth, isDark, stylusOnly, stylusPrimaryAction, stylusSecondaryAction]);
 
   const updateParticipantList = useCallback(() => {
     if (!room) return;
@@ -1218,6 +1310,114 @@ export function ClassWhiteboard({
       window.removeEventListener('whiteboard-redo', onRedoEvent);
     };
   }, [handleUndo, handleRedo]);
+
+  const handleUndoRef = useRef(handleUndo);
+  handleUndoRef.current = handleUndo;
+
+  const applyStylusAction = useCallback((buttonIndex: 1 | 2, state: 'down' | 'up') => {
+    if (state === 'down') {
+      if (stylusButtonHeldRef.current[buttonIndex]) return;
+      stylusButtonHeldRef.current[buttonIndex] = true;
+    } else {
+      if (!stylusButtonHeldRef.current[buttonIndex]) return;
+      stylusButtonHeldRef.current[buttonIndex] = false;
+    }
+
+    const action = buttonIndex === 1 ? stylusPrimaryActionRef.current : stylusSecondaryActionRef.current;
+    if (action === 'none') return;
+
+    if (action === 'temporary-eraser') {
+      if (state === 'down') {
+        temporaryEraserHoldersRef.current.add(buttonIndex);
+        if (!isTemporaryEraserRef.current) {
+          const current = activeToolRef.current;
+          if (current !== 'eraser') previousToolRef.current = current;
+          isTemporaryEraserRef.current = true;
+          setActiveTool('eraser');
+        }
+      } else {
+        temporaryEraserHoldersRef.current.delete(buttonIndex);
+        if (temporaryEraserHoldersRef.current.size === 0 && isTemporaryEraserRef.current) {
+          isTemporaryEraserRef.current = false;
+          setActiveTool(previousToolRef.current || 'pen');
+        }
+      }
+      return;
+    }
+
+    if (state !== 'down') return;
+
+    if (action === 'toggle-eraser') {
+      isTemporaryEraserRef.current = false;
+      temporaryEraserHoldersRef.current.clear();
+      if (activeToolRef.current === 'eraser') {
+        setActiveTool(previousToolRef.current || 'pen');
+      } else {
+        previousToolRef.current = activeToolRef.current;
+        setActiveTool('eraser');
+      }
+      return;
+    }
+
+    if (action === 'toggle-laser') {
+      isTemporaryEraserRef.current = false;
+      temporaryEraserHoldersRef.current.clear();
+      if (activeToolRef.current === 'laser') {
+        setActiveTool(previousToolRef.current || 'pen');
+      } else {
+        previousToolRef.current = activeToolRef.current;
+        setActiveTool('laser');
+      }
+      return;
+    }
+
+    if (action === 'cycle-colors') {
+      const current = strokeColorRef.current;
+      const idx = WHITEBOARD_COLORS.indexOf(current as (typeof WHITEBOARD_COLORS)[number]);
+      setStrokeColor(WHITEBOARD_COLORS[(idx + 1) % WHITEBOARD_COLORS.length]);
+      return;
+    }
+
+    if (action === 'undo') {
+      handleUndoRef.current();
+    }
+  }, []);
+
+  useEffect(() => {
+    const isTypingTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      const tag = target.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      const button = getStylusButtonFromKeyboard(e);
+      if (!button) return;
+      if (isTypingTarget(e.target) && e.keyCode !== 308 && e.keyCode !== 309) return;
+      if (e.repeat) {
+        e.preventDefault();
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      applyStylusAction(button, 'down');
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      const button = getStylusButtonFromKeyboard(e);
+      if (!button) return;
+      e.preventDefault();
+      e.stopPropagation();
+      applyStylusAction(button, 'up');
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    window.addEventListener('keyup', onKeyUp, true);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown, true);
+      window.removeEventListener('keyup', onKeyUp, true);
+    };
+  }, [applyStylusAction]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1551,7 +1751,7 @@ export function ClassWhiteboard({
 
   const zoomPercent = Math.round(zoomScale * 100);
 
-  const colorsList = ['#1e293b', '#ef4444', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
+  const colorsList = WHITEBOARD_COLORS;
 
   const effectiveStroke = (() => {
     if (isDark && DARK_COLORS.includes(strokeColor)) return LIGHT_COLOR;
@@ -2081,18 +2281,76 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:border-slate-800 mx-0.5" />
 
-            {/* Stylus‑only toggle */}
-            <button
-              type="button"
-              onClick={() => setStylusOnly((prev) => !prev)}
-              title={stylusOnly ? 'მხოლოდ სტილუსი (ჩართული)' : 'მხოლოდ სტილუსი (გამორთული)'}
-              className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                stylusOnly
-                  ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-600/30'
-                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}>
-              <PenTool className="size-3.5 sm:size-4" />
-            </button>
+            {/* Stylus‑only toggle + button bindings */}
+            <div ref={stylusMenuRef} className="relative flex shrink-0 items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => setStylusOnly((prev) => !prev)}
+                title={stylusOnly ? 'მხოლოდ სტილუსი (ჩართული)' : 'მხოლოდ სტილუსი (გამორთული)'}
+                className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                  stylusOnly
+                    ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-600/30'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}>
+                <PenTool className="size-3.5 sm:size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsStylusMenuOpen((prev) => !prev);
+                  setIsPenMenuOpen(false);
+                  setIsShapesMenuOpen(false);
+                  setIsColorMenuOpen(false);
+                }}
+                title="სტილუსის ღილაკების პარამეტრები"
+                className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                  isStylusMenuOpen
+                    ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100'
+                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}>
+                <Settings2 className="size-3.5 sm:size-4" />
+              </button>
+
+              {isStylusMenuOpen && (
+                <div className="absolute top-full mt-2 right-0 z-[120] w-64 rounded-2xl bg-white dark:bg-slate-900 p-3 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                    სტილუსის ღილაკები
+                  </p>
+                  <label
+                    htmlFor="stylus-primary-action"
+                    className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    სტილუსის ღილაკი 1 (ქვედა)
+                  </label>
+                  <select
+                    id="stylus-primary-action"
+                    value={stylusPrimaryAction}
+                    onChange={(e) => setStylusPrimaryAction(e.target.value as StylusButtonAction)}
+                    className="mb-3 w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-xs text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500/40">
+                    {STYLUS_BUTTON_ACTIONS.map((action) => (
+                      <option key={action} value={action}>
+                        {STYLUS_ACTION_LABELS[action]}
+                      </option>
+                    ))}
+                  </select>
+                  <label
+                    htmlFor="stylus-secondary-action"
+                    className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    სტილუსის ღილაკი 2 (ზედა)
+                  </label>
+                  <select
+                    id="stylus-secondary-action"
+                    value={stylusSecondaryAction}
+                    onChange={(e) => setStylusSecondaryAction(e.target.value as StylusButtonAction)}
+                    className="w-full h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-xs text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500/40">
+                    {STYLUS_BUTTON_ACTIONS.map((action) => (
+                      <option key={action} value={action}>
+                        {STYLUS_ACTION_LABELS[action]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
 
             <button
               type="button"
@@ -2130,8 +2388,7 @@ export function ClassWhiteboard({
           onLaserMove={handleLaserMove}
           onPasteImage={addImageToCanvas}
           stylusOnly={stylusOnly}
-          onTemporaryEraserStart={handleTemporaryEraserStart}
-          onTemporaryEraserEnd={handleTemporaryEraserEnd}
+          onStylusButtonAction={applyStylusAction}
         />
       </div>
 
