@@ -789,6 +789,24 @@ export function ClassWhiteboard({
     return 'pen';
   });
 
+  const previousToolRef = useRef<any>(activeTool);
+  const isTemporaryEraserRef = useRef(false);
+
+  const handleTemporaryEraserStart = useCallback(() => {
+    if (activeTool !== 'eraser' && !isTemporaryEraserRef.current) {
+      previousToolRef.current = activeTool;
+      isTemporaryEraserRef.current = true;
+      setActiveTool('eraser');
+    }
+  }, [activeTool]);
+
+  const handleTemporaryEraserEnd = useCallback(() => {
+    if (isTemporaryEraserRef.current) {
+      setActiveTool(previousToolRef.current);
+      isTemporaryEraserRef.current = false;
+    }
+  }, []);
+
   const [strokeColor, setStrokeColor] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -2112,6 +2130,8 @@ export function ClassWhiteboard({
           onLaserMove={handleLaserMove}
           onPasteImage={addImageToCanvas}
           stylusOnly={stylusOnly}
+          onTemporaryEraserStart={handleTemporaryEraserStart}
+          onTemporaryEraserEnd={handleTemporaryEraserEnd}
         />
       </div>
 

@@ -57,6 +57,8 @@ interface KonvaCanvasProps {
   textPlaceholder?: string;
   onPasteImage?: (dataUrl: string, pos?: { x: number; y: number }) => void;
   stylusOnly?: boolean;
+  onTemporaryEraserStart?: () => void;
+  onTemporaryEraserEnd?: () => void;
 }
 
 interface LaserPoint {
@@ -271,6 +273,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     textPlaceholder = 'ტექსტი...',
     onPasteImage,
     stylusOnly = false,
+    onTemporaryEraserStart,
+    onTemporaryEraserEnd,
   },
   ref,
 ) {
@@ -302,6 +306,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   const activeShapeIdRef = useRef<string>('');
   const elementsRef = useRef<CanvasElement[]>(elements);
   elementsRef.current = elements;
+  const isTemporaryEraserActiveRef = useRef(false);
 
   const isStylusActiveRef = useRef(false);
   const activePointerIdRef = useRef<number | null>(null);
@@ -871,6 +876,10 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   useEffect(() => {
     const handleGlobalPointerUp = () => {
       isErasing.current = false;
+      if (isTemporaryEraserActiveRef.current) {
+        isTemporaryEraserActiveRef.current = false;
+        onTemporaryEraserEnd?.();
+      }
       if (isLasering.current) {
         isLasering.current = false;
         triggerLaserFade();
@@ -879,7 +888,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     };
     window.addEventListener('pointerup', handleGlobalPointerUp);
     return () => window.removeEventListener('pointerup', handleGlobalPointerUp);
-  }, [triggerLaserFade, onLaserMove]);
+  }, [triggerLaserFade, onLaserMove, onTemporaryEraserEnd]);
 
   const handlePointerDown = (e: any) => {
     if (isPinching.current) return;
@@ -898,6 +907,18 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
     if (evt.pointerType === 'touch' && isStylusActiveRef.current) return;
     if (evt.pointerType === 'pen') isStylusActiveRef.current = true;
+
+    const isStylusButtonPressed =
+      evt.pointerType === 'pen' && (evt.button === 2 || (evt.buttons & 2) !== 0 || (evt.buttons & 32) !== 0);
+
+    if (isStylusButtonPressed) {
+      if (longPressTimeout.current) {
+        clearTimeout(longPressTimeout.current);
+        longPressTimeout.current = null;
+      }
+      isTemporaryEraserActiveRef.current = true;
+      onTemporaryEraserStart?.();
+    }
 
     const pid = evt.pointerId ?? 1;
     if (activePointerIdRef.current !== null && activePointerIdRef.current !== pid) {
@@ -1095,8 +1116,23 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     if (isPinching.current) return;
     const evt = e.evt as PointerEvent;
     if (stylusOnly && evt.pointerType === 'touch') return;
-    // Stylus-only: block touch moves
-    if (stylusOnly && evt.pointerType === 'touch') return;
+
+    // ჰაერში (hover) ყოფნისას კალმის ღილაკზე დაჭერის/აშვების ამოცნობა
+    if (evt.pointerType === 'pen') {
+      const isButtonPressed = (evt.buttons & 2) !== 0 || (evt.buttons & 32) !== 0;
+
+      if (isButtonPressed && !isTemporaryEraserActiveRef.current) {
+        if (longPressTimeout.current) {
+          clearTimeout(longPressTimeout.current);
+          longPressTimeout.current = null;
+        }
+        isTemporaryEraserActiveRef.current = true;
+        onTemporaryEraserStart?.();
+      } else if (!isButtonPressed && isTemporaryEraserActiveRef.current && !isDrawing.current) {
+        isTemporaryEraserActiveRef.current = false;
+        onTemporaryEraserEnd?.();
+      }
+    }
 
     if (evt.pointerType === 'touch' && isStylusActiveRef.current) return;
     if (evt.pointerId !== activePointerIdRef.current) return;
@@ -1220,6 +1256,13 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
   const handlePointerUp = (e: any) => {
     const evt = e.evt as PointerEvent;
+
+    if (isTemporaryEraserActiveRef.current) {
+      isTemporaryEraserActiveRef.current = false;
+      onTemporaryEraserEnd?.();
+    }
+
+    if (evt.pointerId === activePointerIdRef.current) activePointerIdRef.current = null;
 
     if (evt.pointerId === activePointerIdRef.current) activePointerIdRef.current = null;
     if (evt.pointerType === 'pen')
