@@ -1,12 +1,7 @@
-import { z } from "zod";
-import type { Locale } from "@/i18n/config";
+import { z } from 'zod';
+import type { Locale } from '@/i18n/config';
 
-export const TAXONOMY_LEVELS = [
-  "branch",
-  "topic",
-  "subtopic",
-  "concept",
-] as const;
+export const TAXONOMY_LEVELS = ['branch', 'topic', 'subtopic', 'concept'] as const;
 
 export type TaxonomyLevel = (typeof TAXONOMY_LEVELS)[number];
 
@@ -23,27 +18,35 @@ export type TaxonomyNodeDto = {
 
 export const LEVEL_PARENT: Record<TaxonomyLevel, TaxonomyLevel | null> = {
   branch: null,
-  topic: "branch",
-  subtopic: "topic",
-  concept: "subtopic",
+  topic: 'branch',
+  subtopic: 'topic',
+  concept: 'subtopic',
 };
 
 export function taxonomyLabel(node: TaxonomyNodeDto, locale: Locale): string {
-  if (locale === "en") return node.nameEn;
-  if (locale === "ru") return node.nameRu;
+  if (locale === 'en') return node.nameEn;
+  if (locale === 'ru') return node.nameRu;
   return node.nameKa;
 }
 
-export function childrenOf(
-  nodes: TaxonomyNodeDto[],
-  parentId: string | null,
-  level: TaxonomyLevel,
-): TaxonomyNodeDto[] {
+export function taxonomySlugFromName(value: string): string {
+  const base = value
+    .trim()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  return base || 'node';
+}
+
+export function childrenOf(nodes: TaxonomyNodeDto[], parentId: string | null, level: TaxonomyLevel): TaxonomyNodeDto[] {
   return nodes
     .filter((node) => node.level === level && node.parentId === parentId)
-    .sort(
-      (a, b) => a.sortOrder - b.sortOrder || a.nameEn.localeCompare(b.nameEn),
-    );
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.nameEn.localeCompare(b.nameEn));
 }
 
 export const taxonomyUpsertSchema = z.object({
@@ -54,7 +57,7 @@ export const taxonomyUpsertSchema = z.object({
     .trim()
     .min(1)
     .max(64)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/i, "slug"),
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/i, 'slug'),
   nameKa: z.string().trim().min(1).max(120),
   nameEn: z.string().trim().min(1).max(120),
   nameRu: z.string().trim().min(1).max(120),

@@ -1,18 +1,16 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
-import {
-  deleteTaxonomyNodeAction,
-  upsertTaxonomyNodeAction,
-} from "@/lib/math/problems/actions";
+import { useMemo, useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+import { deleteTaxonomyNodeAction, upsertTaxonomyNodeAction } from '@/lib/math/problems/actions';
 import {
   childrenOf,
+  taxonomySlugFromName,
   TAXONOMY_LEVELS,
   type TaxonomyLevel,
   type TaxonomyNodeDto,
-} from "@/lib/math/problems/taxonomy-shared";
-import type { Locale } from "@/i18n/config";
+} from '@/lib/math/problems/taxonomy-shared';
+import type { Locale } from '@/i18n/config';
 
 type TaxonomyCopy = {
   title: string;
@@ -32,11 +30,11 @@ type TaxonomyCopy = {
 };
 
 const fieldClass =
-  "w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
+  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
 function labelFor(node: TaxonomyNodeDto, locale: Locale) {
-  if (locale === "en") return node.nameEn;
-  if (locale === "ru") return node.nameRu;
+  if (locale === 'en') return node.nameEn;
+  if (locale === 'ru') return node.nameRu;
   return node.nameKa;
 }
 
@@ -52,23 +50,16 @@ export function TaxonomyManager({
   embedded?: boolean;
 }) {
   const [nodes, setNodes] = useState(initialNodes);
-  const [level, setLevel] = useState<TaxonomyLevel>("topic");
-  const [parentId, setParentId] = useState("");
-  const [slug, setSlug] = useState("");
-  const [nameKa, setNameKa] = useState("");
-  const [nameEn, setNameEn] = useState("");
-  const [nameRu, setNameRu] = useState("");
+  const [level, setLevel] = useState<TaxonomyLevel>('topic');
+  const [parentId, setParentId] = useState('');
+  const [nameKa, setNameKa] = useState('');
+  const [nameEn, setNameEn] = useState('');
+  const [nameRu, setNameRu] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const parentLevel =
-    level === "branch"
-      ? null
-      : level === "topic"
-        ? "branch"
-        : level === "subtopic"
-          ? "topic"
-          : "subtopic";
+    level === 'branch' ? null : level === 'topic' ? 'branch' : level === 'subtopic' ? 'topic' : 'subtopic';
 
   const parentOptions = useMemo(() => {
     if (!parentLevel) return [];
@@ -76,14 +67,14 @@ export function TaxonomyManager({
   }, [nodes, parentLevel]);
 
   const tree = useMemo(() => {
-    const branches = childrenOf(nodes, null, "branch");
+    const branches = childrenOf(nodes, null, 'branch');
     return branches.map((branch) => ({
       branch,
-      topics: childrenOf(nodes, branch.id, "topic").map((topic) => ({
+      topics: childrenOf(nodes, branch.id, 'topic').map((topic) => ({
         topic,
-        subtopics: childrenOf(nodes, topic.id, "subtopic").map((subtopic) => ({
+        subtopics: childrenOf(nodes, topic.id, 'subtopic').map((subtopic) => ({
           subtopic,
-          concepts: childrenOf(nodes, subtopic.id, "concept"),
+          concepts: childrenOf(nodes, subtopic.id, 'concept'),
         })),
       })),
     }));
@@ -92,9 +83,10 @@ export function TaxonomyManager({
   async function onAdd() {
     setBusy(true);
     setNotice(null);
+    const generatedSlug = taxonomySlugFromName(nameEn || nameKa || nameRu);
     const result = await upsertTaxonomyNodeAction({
       level,
-      slug,
+      slug: generatedSlug,
       nameKa,
       nameEn,
       nameRu,
@@ -106,10 +98,9 @@ export function TaxonomyManager({
       return;
     }
     setNodes((current) => [...current, result.node]);
-    setSlug("");
-    setNameKa("");
-    setNameEn("");
-    setNameRu("");
+    setNameKa('');
+    setNameEn('');
+    setNameRu('');
     setNotice(copy.saved);
   }
 
@@ -128,11 +119,7 @@ export function TaxonomyManager({
       while (growing) {
         growing = false;
         for (const node of current) {
-          if (
-            node.parentId &&
-            remove.has(node.parentId) &&
-            !remove.has(node.id)
-          ) {
+          if (node.parentId && remove.has(node.parentId) && !remove.has(node.id)) {
             remove.add(node.id);
             growing = true;
           }
@@ -146,9 +133,7 @@ export function TaxonomyManager({
     <div className="space-y-6">
       {embedded ? null : (
         <header>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            {copy.title}
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">{copy.title}</h1>
           <p className="mt-1 text-sm text-body">{copy.subtitle}</p>
         </header>
       )}
@@ -162,9 +147,8 @@ export function TaxonomyManager({
               value={level}
               onChange={(event) => {
                 setLevel(event.target.value as TaxonomyLevel);
-                setParentId("");
-              }}
-            >
+                setParentId('');
+              }}>
               {TAXONOMY_LEVELS.map((id) => (
                 <option key={id} value={id}>
                   {copy.levels[id]}
@@ -178,8 +162,7 @@ export function TaxonomyManager({
               <select
                 className={`${fieldClass} mt-1.5`}
                 value={parentId}
-                onChange={(event) => setParentId(event.target.value)}
-              >
+                onChange={(event) => setParentId(event.target.value)}>
                 <option value="">{copy.selectParent}</option>
                 {parentOptions.map((node) => (
                   <option key={node.id} value={node.id}>
@@ -189,15 +172,6 @@ export function TaxonomyManager({
               </select>
             </label>
           ) : null}
-          <label className="block text-sm font-medium text-ink">
-            {copy.slug}
-            <input
-              className={`${fieldClass} mt-1.5`}
-              value={slug}
-              onChange={(event) => setSlug(event.target.value)}
-              placeholder="algebra"
-            />
-          </label>
           <label className="block text-sm font-medium text-ink">
             {copy.nameKa}
             <input
@@ -227,14 +201,11 @@ export function TaxonomyManager({
           type="button"
           disabled={busy}
           onClick={() => void onAdd()}
-          className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60"
-        >
+          className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60">
           <Plus className="size-4" aria-hidden="true" />
           {copy.add}
         </button>
-        {notice ? (
-          <p className="mt-3 text-sm text-brass-strong">{notice}</p>
-        ) : null}
+        {notice ? <p className="mt-3 text-sm text-brass-strong">{notice}</p> : null}
       </section>
 
       <section className="rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5">
@@ -291,15 +262,7 @@ export function TaxonomyManager({
   );
 }
 
-function NodeRow({
-  title,
-  onRemove,
-  removeLabel,
-}: {
-  title: string;
-  onRemove: () => void;
-  removeLabel: string;
-}) {
+function NodeRow({ title, onRemove, removeLabel }: { title: string; onRemove: () => void; removeLabel: string }) {
   return (
     <div className="flex items-center justify-between gap-2 rounded-xl border border-hairline-soft bg-paper px-3 py-2">
       <p className="text-sm font-medium text-ink">{title}</p>
@@ -307,8 +270,7 @@ function NodeRow({
         type="button"
         aria-label={removeLabel}
         onClick={onRemove}
-        className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-white hover:text-ink"
-      >
+        className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-white hover:text-ink">
         <Trash2 className="size-4" aria-hidden="true" />
       </button>
     </div>
