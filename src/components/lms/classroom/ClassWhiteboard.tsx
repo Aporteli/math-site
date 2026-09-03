@@ -724,8 +724,9 @@ export function ClassWhiteboard({
   const storageKeyPages = `konva_whiteboard_pages_${courseId}`;
   const chunkAssemblerRef = useRef<ChunkAssembler>(new ChunkAssembler());
 
+  // --- Initialise pages: load from localStorage ONLY if isTeacher ---
   const [pages, setPages] = useState<CanvasElement[][]>(() => {
-    if (typeof window !== 'undefined') {
+    if (isTeacher && typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem(storageKeyPages);
         if (saved) {
@@ -818,7 +819,7 @@ export function ClassWhiteboard({
     return false;
   });
 
-  // New: stylus‑only mode (default false)
+  // Stylus‑only mode (default false)
   const [stylusOnly, setStylusOnly] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -858,7 +859,7 @@ export function ClassWhiteboard({
     }
   }, []);
 
-  // ---- Theme conversion effect (same as TeacherWhiteboard) ----
+  // ---- Theme conversion effect ----
   useEffect(() => {
     let updated = false;
     const newPages = pagesRef.current.map((page) =>
@@ -891,13 +892,13 @@ export function ClassWhiteboard({
         updateUndoRedoState();
       }
 
-      if (typeof window !== 'undefined') {
+      if (isTeacher && typeof window !== 'undefined') {
         try {
           localStorage.setItem(storageKeyPages, JSON.stringify(newPages));
         } catch (e) {}
       }
     }
-  }, [isDark, storageKeyPages, updateUndoRedoState]);
+  }, [isDark, storageKeyPages, updateUndoRedoState, isTeacher]);
 
   // Save stylusOnly to prefs
   useEffect(() => {
@@ -948,6 +949,7 @@ export function ClassWhiteboard({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Save pages to localStorage only if teacher
   useEffect(() => {
     pagesRef.current = pages;
     currentPageIndexRef.current = currentPageIndex;
@@ -1423,6 +1425,7 @@ export function ClassWhiteboard({
     }
   };
 
+  // --- Data handling: process incoming messages ---
   useEffect(() => {
     if (!room) return;
 
@@ -1432,6 +1435,28 @@ export function ClassWhiteboard({
         if (!fullPayload) return;
 
         const data = JSON.parse(new TextDecoder().decode(fullPayload));
+
+        // --- Handle FULL SYNC (teacher sends all pages) ---
+        if (data.type === 'WHITEBOARD_FULL_SYNC') {
+          if (Array.isArray(data.pages)) {
+            // Student receives full board
+            const newPages = data.pages;
+            const newPageIndex = data.currentPageIndex ?? 0;
+            // Reset history for the student
+            historyMapRef.current = new Map();
+            newPages.forEach((p: CanvasElement[], idx: number) => {
+              historyMapRef.current.set(idx, { states: [p || []], index: 0 });
+            });
+            setPages(newPages);
+            pagesRef.current = newPages;
+            setCurrentPageIndex(newPageIndex);
+            updateUndoRedoState();
+            return; // important: exit after handling full sync
+          }
+          return;
+        }
+
+        // --- Handle incremental sync ---
         if (data.type === 'WHITEBOARD_SYNC' && Array.isArray(data.elements)) {
           isRemoteUpdateRef.current = true;
           const updated = [...pagesRef.current];
@@ -1468,6 +1493,30 @@ export function ClassWhiteboard({
     };
   }, [room, updateUndoRedoState]);
 
+  // --- Teacher: send full sync when a new participant joins ---
+  useEffect(() => {
+    if (!isTeacher || !room) return;
+
+    const handleParticipantConnected = (participant: RemoteParticipant) => {
+      // Send the whole board to the newly connected participant
+      void publishDataSafe(
+        {
+          type: 'WHITEBOARD_FULL_SYNC',
+          pages: pagesRef.current,
+          currentPageIndex: currentPageIndexRef.current,
+        },
+        true,
+      );
+    };
+
+    room.on(RoomEvent.ParticipantConnected, handleParticipantConnected);
+
+    return () => {
+      room.off(RoomEvent.ParticipantConnected, handleParticipantConnected);
+    };
+  }, [isTeacher, room, publishDataSafe]);
+
+  // --- The rest of the component (toolbar, rendering) remains unchanged ---
   const shapeTools = [
     { id: 'line', icon: Minus, title: 'ხაზი' },
     { id: 'arrow', icon: MoveRight, title: 'ისარი' },
@@ -1486,11 +1535,10 @@ export function ClassWhiteboard({
 
   const colorsList = ['#1e293b', '#ef4444', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
 
-  // Live stroke color adaptation for dark mode
   const effectiveStroke = (() => {
-  if (isDark && DARK_COLORS.includes(strokeColor)) return LIGHT_COLOR;
-  return strokeColor;
-})();
+    if (isDark && DARK_COLORS.includes(strokeColor)) return LIGHT_COLOR;
+    return strokeColor;
+  })();
 
   return (
     <div
@@ -1683,7 +1731,7 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* ზედა პანელი */}
+      {/* Toolbars – they still use global dark classes */}
       <div className="absolute top-2 sm:top-3 inset-x-0 z-[100] flex justify-center px-1 sm:px-2 pointer-events-none">
         <div className="pointer-events-auto rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 overflow-visible">
           <div className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 overflow-visible">
@@ -1766,7 +1814,7 @@ export function ClassWhiteboard({
               <Crosshair className="size-3.5 sm:size-4" />
             </button>
 
-            {/* კალმის დროპდაუნი */}
+            {/* Pen menu */}
             <div ref={penMenuRef} className="relative flex shrink-0 items-center">
               <div
                 className={`flex items-center h-7 sm:h-8 rounded-xl transition-all shadow-xs ${
@@ -1850,7 +1898,7 @@ export function ClassWhiteboard({
               )}
             </div>
 
-            {/* ფიგურების დროპდაუნი */}
+            {/* Shapes menu */}
             <div ref={shapesMenuRef} className="relative flex shrink-0 items-center">
               <div
                 className={`flex items-center h-7 sm:h-8 rounded-xl transition-all shadow-xs ${
@@ -1972,7 +2020,7 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:border-slate-800 mx-0.5" />
 
-            {/* ფერების დროპდაუნი */}
+            {/* Color menu */}
             <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
               <button
                 type="button"
@@ -2015,7 +2063,7 @@ export function ClassWhiteboard({
 
             <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:border-slate-800 mx-0.5" />
 
-            {/* Stylus‑only toggle button */}
+            {/* Stylus‑only toggle */}
             <button
               type="button"
               onClick={() => setStylusOnly((prev) => !prev)}
@@ -2047,8 +2095,7 @@ export function ClassWhiteboard({
         </div>
       </div>
 
-      {/* ტილო - now passes stylusOnly to KonvaCanvas */}
-      {/* Canvas container – background forced by local isDark, not global theme */}
+      {/* Canvas – background forced by local isDark */}
       <div
         className="relative flex-1 w-full min-h-0 overflow-hidden"
         style={{ backgroundColor: isDark ? '#020617' : '#ffffff' }}>
@@ -2106,7 +2153,7 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* ქვედა პანელი (unchanged) */}
+      {/* Bottom panel (unchanged) */}
       <div
         className={`relative z-[100] flex flex-col items-center justify-center pt-1 px-1 sm:px-2 pointer-events-auto shrink-0 select-none ${
           isFullscreen ? 'pb-[calc(0.75rem+env(safe-area-inset-bottom))]' : 'pb-3'
