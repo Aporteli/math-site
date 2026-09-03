@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { CatalogToolShell } from '@/components/tools/CatalogToolShell';
 import { GraphingToolLoader } from '@/components/tools/graphing/GraphingLoader';
-import { QuadraticSolverLoader } from '@/components/tools/quadratic/QuadraticLoader';
+import { QuadraticLoader } from '@/components/tools/quadratic/QuadraticLoader';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { catalogToolStaticParams, getCatalogToolByPath } from '@/lib/tools';
@@ -50,7 +50,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
   if (tool.id === 'quadratic-equations') {
     return (
-      <QuadraticSolverLoader locale={locale} copy={dict.equations} title={item.title} description={item.description} />
+      <QuadraticLoader locale={locale} copy={dict.equations} title={item.title} description={item.description} />
     );
   }
 
