@@ -56,6 +56,7 @@ interface KonvaCanvasProps {
   onLaserMove?: (pos: { x: number; y: number } | null) => void;
   textPlaceholder?: string;
   onPasteImage?: (dataUrl: string, pos?: { x: number; y: number }) => void;
+  stylusOnly?: boolean;
 }
 
 interface LaserPoint {
@@ -269,6 +270,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     onLaserMove,
     textPlaceholder = 'ტექსტი...',
     onPasteImage,
+    stylusOnly = false,
   },
   ref,
 ) {
@@ -880,6 +882,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   }, [triggerLaserFade, onLaserMove]);
 
   const handlePointerDown = (e: any) => {
+    const evt = e.evt as PointerEvent;
+    if (stylusOnly && evt.pointerType === 'touch') return;
     if (isPinching.current) return;
     if (contextMenu) setContextMenu(null);
 
@@ -887,8 +891,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
       finishTextEditing();
       return;
     }
-
-    const evt = e.evt as PointerEvent;
 
     if (evt.pointerType === 'touch' && isStylusActiveRef.current) return;
     if (evt.pointerType === 'pen') isStylusActiveRef.current = true;
@@ -1086,8 +1088,9 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   };
 
   const handlePointerMove = (e: any) => {
-    if (isPinching.current) return;
     const evt = e.evt as PointerEvent;
+    if (stylusOnly && evt.pointerType === 'touch') return;
+    if (isPinching.current) return;
 
     if (evt.pointerType === 'touch' && isStylusActiveRef.current) return;
     if (evt.pointerId !== activePointerIdRef.current) return;

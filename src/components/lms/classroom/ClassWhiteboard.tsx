@@ -40,6 +40,7 @@ import {
   Check,
   BookOpen,
   Sparkles,
+  PenTool,
 } from 'lucide-react';
 import type { CanvasElement, KonvaCanvasHandle } from './KonvaCanvas';
 import { sendProblemToStudentAction } from '@/lib/actions/students';
@@ -174,6 +175,10 @@ const CHUNK_HEADER_BYTES = 13;
 const MAGIC_CHUNK_START = 0x01;
 const MAGIC_CHUNK_CONT = 0x02;
 const MAGIC_CHUNK_END = 0x03;
+
+const DEFAULT_COLOR = '#1e293b';
+const DARK_COLORS = [DEFAULT_COLOR, '#000000'];
+const LIGHT_COLOR = '#ffffff';
 
 function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
   const out = new Uint8Array(a.length + b.length);
@@ -385,7 +390,9 @@ function BoardThumbnail({
     ctx.scale(scale, scale);
 
     elements.forEach((el) => {
-      ctx.strokeStyle = isDark && el.stroke === '#1e293b' ? '#ffffff' : el.stroke || '#6366f1';
+      let stroke = el.stroke || '#6366f1';
+      if (isDark && DARK_COLORS.includes(stroke)) stroke = LIGHT_COLOR;
+      ctx.strokeStyle = stroke;
       ctx.lineWidth = Math.max(2, (el.strokeWidth || 2) * 1.5);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -540,7 +547,9 @@ function AssignBoardThumbnail({
     ctx.scale(scale, scale);
 
     elements.forEach((el) => {
-      ctx.strokeStyle = isDark && el.stroke === '#1e293b' ? '#ffffff' : el.stroke || '#6366f1';
+      let stroke = el.stroke || '#6366f1';
+      if (isDark && DARK_COLORS.includes(stroke)) stroke = LIGHT_COLOR;
+      ctx.strokeStyle = stroke;
       ctx.lineWidth = Math.max(2, (el.strokeWidth || 2) * 1.5);
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -661,7 +670,9 @@ function renderElementsToDataUrl(elements: CanvasElement[], isDark: boolean): st
   ctx.scale(scale, scale);
 
   elements.forEach((el) => {
-    ctx.strokeStyle = isDark && el.stroke === '#1e293b' ? '#ffffff' : el.stroke || '#6366f1';
+    let stroke = el.stroke || '#6366f1';
+    if (isDark && DARK_COLORS.includes(stroke)) stroke = LIGHT_COLOR;
+    ctx.strokeStyle = stroke;
     ctx.lineWidth = Math.max(2, (el.strokeWidth || 2) * 1.5);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -781,10 +792,10 @@ export function ClassWhiteboard({
     if (typeof window !== 'undefined') {
       try {
         const prefs = JSON.parse(localStorage.getItem(STORAGE_PREFS_KEY) || '{}');
-        return prefs.color || '#1e293b';
+        return prefs.color || DEFAULT_COLOR;
       } catch {}
     }
-    return '#1e293b';
+    return DEFAULT_COLOR;
   });
 
   const [strokeWidth, setStrokeWidth] = useState<number>(() => {
@@ -802,6 +813,17 @@ export function ClassWhiteboard({
       try {
         const prefs = JSON.parse(localStorage.getItem(STORAGE_PREFS_KEY) || '{}');
         return !!prefs.isDark;
+      } catch {}
+    }
+    return false;
+  });
+
+  // New: stylus‑only mode (default false)
+  const [stylusOnly, setStylusOnly] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(STORAGE_PREFS_KEY) || '{}');
+        return !!prefs.stylusOnly;
       } catch {}
     }
     return false;
@@ -835,6 +857,56 @@ export function ClassWhiteboard({
       setCanRedo(false);
     }
   }, []);
+
+  // ---- Theme conversion effect (same as TeacherWhiteboard) ----
+  useEffect(() => {
+    let updated = false;
+    const newPages = pagesRef.current.map((page) =>
+      page.map((el) => {
+        if (isDark) {
+          if (DARK_COLORS.includes(el.stroke)) {
+            updated = true;
+            return { ...el, stroke: LIGHT_COLOR };
+          }
+        } else {
+          if (el.stroke === LIGHT_COLOR) {
+            updated = true;
+            return { ...el, stroke: DEFAULT_COLOR };
+          }
+        }
+        return el;
+      }),
+    );
+
+    if (updated) {
+      setPages(newPages);
+      pagesRef.current = newPages;
+
+      const pIndex = currentPageIndexRef.current;
+      let hist = historyMapRef.current.get(pIndex);
+      if (hist) {
+        const nextStates = hist.states.slice(0, hist.index + 1);
+        nextStates.push(newPages[pIndex]);
+        historyMapRef.current.set(pIndex, { states: nextStates, index: nextStates.length - 1 });
+        updateUndoRedoState();
+      }
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(storageKeyPages, JSON.stringify(newPages));
+        } catch (e) {}
+      }
+    }
+  }, [isDark, storageKeyPages, updateUndoRedoState]);
+
+  // Save stylusOnly to prefs
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const prefs = JSON.parse(localStorage.getItem(STORAGE_PREFS_KEY) || '{}');
+      prefs.stylusOnly = stylusOnly;
+      localStorage.setItem(STORAGE_PREFS_KEY, JSON.stringify(prefs));
+    }
+  }, [stylusOnly]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -893,10 +965,10 @@ export function ClassWhiteboard({
     if (typeof window !== 'undefined') {
       localStorage.setItem(
         STORAGE_PREFS_KEY,
-        JSON.stringify({ tool: activeTool, color: strokeColor, width: strokeWidth, isDark }),
+        JSON.stringify({ tool: activeTool, color: strokeColor, width: strokeWidth, isDark, stylusOnly }),
       );
     }
-  }, [activeTool, strokeColor, strokeWidth, isDark]);
+  }, [activeTool, strokeColor, strokeWidth, isDark, stylusOnly]);
 
   const updateParticipantList = useCallback(() => {
     if (!room) return;
@@ -1414,6 +1486,12 @@ export function ClassWhiteboard({
 
   const colorsList = ['#1e293b', '#ef4444', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
 
+  // Live stroke color adaptation for dark mode
+  const effectiveStroke = (() => {
+    if (isDark && DARK_COLORS.includes(strokeColor)) return LIGHT_COLOR;
+    return strokeColor;
+  })();
+
   return (
     <div
       ref={containerRef}
@@ -1892,7 +1970,7 @@ export function ClassWhiteboard({
               <Maximize2 className="size-3.5 sm:size-4" />
             </button>
 
-            <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
+            <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:border-slate-800 mx-0.5" />
 
             {/* ფერების დროპდაუნი */}
             <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
@@ -1907,7 +1985,7 @@ export function ClassWhiteboard({
                 className="flex items-center gap-1 h-7 sm:h-8 px-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200/60 dark:border-slate-700/60">
                 <div
                   className="size-4 sm:size-4.5 rounded-full border border-black/10 dark:border-white/20 shadow-2xs"
-                  style={{ backgroundColor: isDark && strokeColor === '#1e293b' ? '#ffffff' : strokeColor }}
+                  style={{ backgroundColor: effectiveStroke }}
                 />
                 <ChevronDown
                   className={`size-2.5 sm:size-3 text-slate-500 transition-transform duration-200 ${isColorMenuOpen ? 'rotate-180' : ''}`}
@@ -1935,7 +2013,20 @@ export function ClassWhiteboard({
               )}
             </div>
 
-            <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:bg-slate-800 mx-0.5" />
+            <div className="h-4 w-[1px] shrink-0 bg-slate-200 dark:border-slate-800 mx-0.5" />
+
+            {/* Stylus‑only toggle button */}
+            <button
+              type="button"
+              onClick={() => setStylusOnly((prev) => !prev)}
+              title={stylusOnly ? 'მხოლოდ სტილუსი (ჩართული)' : 'მხოლოდ სტილუსი (გამორთული)'}
+              className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                stylusOnly
+                  ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-600/30'
+                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
+              }`}>
+              <PenTool className="size-3.5 sm:size-4" />
+            </button>
 
             <button
               type="button"
@@ -1956,20 +2047,21 @@ export function ClassWhiteboard({
         </div>
       </div>
 
-      {/* ტილო */}
+      {/* ტილო - now passes stylusOnly to KonvaCanvas */}
       <div className="relative flex-1 w-full min-h-0 overflow-hidden bg-transparent">
         <KonvaCanvas
           ref={canvasRef}
           elements={pages[currentPageIndex] || []}
           onElementsChange={handleElementsChange}
           activeTool={activeTool}
-          strokeColor={isDark && strokeColor === '#1e293b' ? '#ffffff' : strokeColor}
+          strokeColor={effectiveStroke}
           strokeWidth={strokeWidth}
           isDark={isDark}
           scale={zoomScale}
           onScaleChange={(newScale) => setZoomScale(newScale)}
           onLaserMove={handleLaserMove}
           onPasteImage={addImageToCanvas}
+          stylusOnly={stylusOnly} // new prop
         />
       </div>
 
@@ -2011,7 +2103,7 @@ export function ClassWhiteboard({
         </div>
       )}
 
-      {/* ქვედა პანელი */}
+      {/* ქვედა პანელი (unchanged) */}
       <div
         className={`relative z-[100] flex flex-col items-center justify-center pt-1 px-1 sm:px-2 pointer-events-auto shrink-0 select-none ${
           isFullscreen ? 'pb-[calc(0.75rem+env(safe-area-inset-bottom))]' : 'pb-3'
