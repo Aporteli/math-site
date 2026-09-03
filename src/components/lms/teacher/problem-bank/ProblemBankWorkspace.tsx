@@ -20,8 +20,8 @@ import {
   X,
 } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
-import { PageHero } from '@/components/ui/page-hero';
-import { SelectMenu } from '@/components/ui/select-menu';
+import { PageHero } from '@/components/ui/PageHero';
+import { SelectMenu } from '@/components/ui/SelectMenu';
 import { CopyPromptButton } from './components/CopyPromptButton';
 import { StatRow } from './components/StatRow';
 import { FilterSelect } from './components/FilterSelect';

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
 import { localePath, type Locale } from '@/i18n/config';
 import type { DashboardLink } from '@/lib/dashboard';
-import { PageHero } from '@/components/ui/page-hero';
+import { PageHero } from '@/components/ui/PageHero';
 
 interface WorkspaceScreenProps<Id extends string> {
   locale: Locale;

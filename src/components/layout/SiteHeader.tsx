@@ -1,6 +1,6 @@
-import { AuthEntry } from '@/components/auth/auth-entry';
-import { WorkspaceDock } from '@/components/auth/workspace-dock';
-import { SignOutButton } from '@/components/auth/sign-out-button';
+import { AuthEntry } from '@/components/auth/AuthEntry';
+import { WorkspaceDock } from '@/components/auth/WorkspaceDock';
+import { SignOutButton } from '@/components/auth/SignOutButton';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { MobileMenu } from '@/components/layout/MobileMenu';

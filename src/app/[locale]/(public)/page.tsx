@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { HomeBlogSlider } from '@/components/public/home-blog-slider';
-import { WorkspaceHub } from '@/components/public/workspace-hub';
+import { HomeBlogSlider } from '@/components/public/HomeBlogSlider';
+import { WorkspaceHub } from '@/components/public/WorkspaceHub';
 import { isLocale, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 

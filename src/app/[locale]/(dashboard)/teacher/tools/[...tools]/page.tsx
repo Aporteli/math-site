@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { CatalogToolShell } from '@/components/tools/catalog-tool-shell';
+import { CatalogToolShell } from '@/components/tools/CatalogToolShell';
 import { GraphingToolLoader } from '@/components/tools/graphing/GraphingLoader';
 import { QuadraticLoader } from '@/components/tools/quadratic/QuadraticLoader';
 import { isLocale } from '@/i18n/config';

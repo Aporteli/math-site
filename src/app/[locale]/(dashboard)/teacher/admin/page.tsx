@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { AdminPanel } from '@/components/lms/admin/admin-panel';
+import { AdminPanel } from '@/components/lms/admin/AdminPanel';
 import { teacherPageMetadata } from '@/components/layout/DashboardPage';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';

@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { ArrowRight, BookOpen, Clock, Download, FileArchive, FileText, Search } from 'lucide-react';
 import { localePath, type Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/types';
-import { BlogCover } from '@/components/public/blog-cover';
-import { PageHero, SectionHeading } from '@/components/ui/page-hero';
+import { BlogCover } from '@/components/public/BlogCover';
+import { PageHero, SectionHeading } from '@/components/ui/PageHero';
 import {
   BLOG_FILTERS,
   BLOG_POSTS,

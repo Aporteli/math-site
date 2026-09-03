@@ -1,23 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import Link from "next/link";
-import {
-  ArrowLeft,
-  Copy,
-  Download,
-  LineChart,
-  Minus,
-  Plus,
-  RotateCcw,
-  Trash2,
-} from "lucide-react";
-import type { Chart, FunctionPlotDatum, FunctionPlotDatumScope } from "function-plot";
-import { KatexPreview } from "@/components/math/katex-preview";
-import { PageHero } from "@/components/ui/page-hero";
-import { SelectMenu } from "@/components/ui/select-menu";
-import { localePath, type Locale } from "@/i18n/config";
-import type { Dictionary } from "@/i18n/types";
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, Copy, Download, LineChart, Minus, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import type { Chart, FunctionPlotDatum, FunctionPlotDatumScope } from 'function-plot';
+import { KatexPreview } from '@/components/math/katex-preview';
+import { PageHero } from '@/components/ui/PageHero';
+import { SelectMenu } from '@/components/ui/SelectMenu';
+import { localePath, type Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/types';
 import {
   compileDerivative,
   compileEvaluator,
@@ -33,7 +24,7 @@ import {
   nextCurveColor,
   type GraphFunction,
   type GraphPresetId,
-} from "@/lib/math/graphing";
+} from '@/lib/math/graphing';
 import {
   collectMarkers,
   definiteIntegral,
@@ -45,10 +36,10 @@ import {
   visibleFunctions,
   type GraphMarker,
   type MarkerKind,
-} from "@/lib/math/graphing-analysis";
+} from '@/lib/math/graphing-analysis';
 
-type Copy = Dictionary["graphingTool"];
-type IntegralMode = "single" | "between";
+type Copy = Dictionary['graphingTool'];
+type IntegralMode = 'single' | 'between';
 
 interface GraphingToolProps {
   locale: Locale;
@@ -58,25 +49,17 @@ interface GraphingToolProps {
 }
 
 const fieldClass =
-  "w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
+  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
-const panelClass =
-  "rounded-3xl border border-hairline/40 bg-surface/30 p-4 shadow-sm sm:p-5";
+const panelClass = 'rounded-3xl border border-hairline/40 bg-surface/30 p-4 shadow-sm sm:p-5';
 
 const iconBtnClass =
- "inline-flex items-center rounded-full bg-black/40 border border-hairline/40 px-3.5 py-1.5 text-xs font-semibold text-sky-400 hover:bg-black/60 hover:border-hairline transition-colors";
+  'inline-flex items-center rounded-full bg-black/40 border border-hairline/40 px-3.5 py-1.5 text-xs font-semibold text-sky-400 hover:bg-black/60 hover:border-hairline transition-colors';
 
-const SVG_NS = "http://www.w3.org/2000/svg";
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
-export function GraphingTool({
-  locale,
-  copy,
-  title,
-  description,
-}: GraphingToolProps) {
-  const [functions, setFunctions] = useState(() =>
-    functionsFromExprs(GRAPH_PRESETS.parabola),
-  );
+export function GraphingTool({ locale, copy, title, description }: GraphingToolProps) {
+  const [functions, setFunctions] = useState(() => functionsFromExprs(GRAPH_PRESETS.parabola));
   const [showDerivative, setShowDerivative] = useState(false);
   const [showTangent, setShowTangent] = useState(true);
   const [showMarkers, setShowMarkers] = useState(true);
@@ -84,21 +67,20 @@ export function GraphingTool({
   const [xDomain, setXDomain] = useState<[number, number]>([...DEFAULT_DOMAIN]);
   const [yDomain, setYDomain] = useState<[number, number]>([...DEFAULT_DOMAIN]);
   const [shadeIntegral, setShadeIntegral] = useState(false);
-  const [integralA, setIntegralA] = useState("-2");
-  const [integralB, setIntegralB] = useState("2");
-  const [integralMode, setIntegralMode] = useState<IntegralMode>("single");
-  const [upperId, setUpperId] = useState("");
-  const [lowerId, setLowerId] = useState("");
-  const [tableStart, setTableStart] = useState("-5");
-  const [tableEnd, setTableEnd] = useState("5");
-  const [tableStep, setTableStep] = useState("1");
+  const [integralA, setIntegralA] = useState('-2');
+  const [integralB, setIntegralB] = useState('2');
+  const [integralMode, setIntegralMode] = useState<IntegralMode>('single');
+  const [upperId, setUpperId] = useState('');
+  const [lowerId, setLowerId] = useState('');
+  const [tableStart, setTableStart] = useState('-5');
+  const [tableEnd, setTableEnd] = useState('5');
+  const [tableStep, setTableStep] = useState('1');
   const [copied, setCopied] = useState(false);
 
   const visible = visibleFunctions(functions);
   const upper = visible.find((row) => row.id === upperId) ?? visible[0];
   const lower =
-    visible.find((row) => row.id === lowerId && row.id !== upper?.id) ??
-    visible.find((row) => row.id !== upper?.id);
+    visible.find((row) => row.id === lowerId && row.id !== upper?.id) ?? visible.find((row) => row.id !== upper?.id);
 
   function updateFunction(id: string, patch: Partial<GraphFunction>) {
     setFunctions((rows) =>
@@ -109,11 +91,11 @@ export function GraphingTool({
           try {
             const checked = inspectExpression(patch.expr);
             next.error = !checked.ok;
-            next.tex = checked.ok ? checked.tex : "";
+            next.tex = checked.ok ? checked.tex : '';
             next.params = mergeParams(patch.expr, row.params);
           } catch {
             next.error = true;
-            next.tex = "";
+            next.tex = '';
           }
         }
         if (patch.params) {
@@ -125,10 +107,7 @@ export function GraphingTool({
   }
 
   function addFunction() {
-    setFunctions((rows) => [
-      ...rows,
-      makeGraphFunction("x", nextCurveColor(rows.length)),
-    ]);
+    setFunctions((rows) => [...rows, makeGraphFunction('x', nextCurveColor(rows.length))]);
   }
 
   function removeFunction(id: string) {
@@ -146,7 +125,7 @@ export function GraphingTool({
   let integralValue: number | null = null;
   if (bounds && upper) {
     try {
-      if (integralMode === "between" && lower) {
+      if (integralMode === 'between' && lower) {
         const f = evaluatorFor(upper);
         const g = evaluatorFor(lower);
         integralValue = definiteIntegral(
@@ -167,30 +146,19 @@ export function GraphingTool({
     }
   }
 
-  const tableRows = valueTable(
-    functions,
-    Number(tableStart),
-    Number(tableEnd),
-    Number(tableStep),
-  );
+  const tableRows = valueTable(functions, Number(tableStart), Number(tableEnd), Number(tableStep));
 
   return (
     <div className="bg-paper-deep/60">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <Link
-          href={localePath(locale, "/tools")}
-          className="inline-flex items-center gap-2 text-sm font-medium text-navy hover:text-navy-strong"
-        >
+          href={localePath(locale, '/tools')}
+          className="inline-flex items-center gap-2 text-sm font-medium text-navy hover:text-navy-strong">
           <ArrowLeft className="size-4" aria-hidden="true" />
           {copy.back}
         </Link>
         <div className="mt-5">
-          <PageHero
-            icon={LineChart}
-            eyebrow={copy.eyebrow}
-            title={title}
-            description={description}
-          />
+          <PageHero icon={LineChart} eyebrow={copy.eyebrow} title={title} description={description} />
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
@@ -200,19 +168,18 @@ export function GraphingTool({
               <div className="mt-3 flex flex-wrap gap-2">
                 {(
                   [
-                    ["parabola", copy.presetParabola],
-                    ["trig", copy.presetTrig],
-                    ["hyperbola", copy.presetHyperbola],
-                    ["cubic", copy.presetCubic],
-                    ["params", copy.presetParams],
+                    ['parabola', copy.presetParabola],
+                    ['trig', copy.presetTrig],
+                    ['hyperbola', copy.presetHyperbola],
+                    ['cubic', copy.presetCubic],
+                    ['params', copy.presetParams],
                   ] as const
                 ).map(([id, label]) => (
                   <button
                     key={id}
                     type="button"
                     onClick={() => applyPreset(id)}
-                    className="inline-flex items-center rounded-full border border-brass/25 bg-brass-tint/40 px-3 py-1 text-xs font-semibold text-ink hover:border-brass/50 hover:bg-brass-tint/70 hover:text-navy transition-colors cursor-pointer shadow-2xs"
-                  >
+                    className="inline-flex items-center rounded-full border border-brass/25 bg-brass-tint/40 px-3 py-1 text-xs font-semibold text-ink hover:border-brass/50 hover:bg-brass-tint/70 hover:text-navy transition-colors cursor-pointer shadow-2xs">
                     {label}
                   </button>
                 ))}
@@ -225,8 +192,7 @@ export function GraphingTool({
                 <button
                   type="button"
                   onClick={addFunction}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong"
-                >
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
                   <Plus className="size-3.5" aria-hidden="true" />
                   {copy.addFunction}
                 </button>
@@ -258,8 +224,8 @@ export function GraphingTool({
               onB={setIntegralB}
               mode={integralMode}
               onMode={setIntegralMode}
-              upperId={upper?.id ?? ""}
-              lowerId={lower?.id ?? ""}
+              upperId={upper?.id ?? ''}
+              lowerId={lower?.id ?? ''}
               onUpper={setUpperId}
               onLower={setLowerId}
               value={integralValue}
@@ -267,9 +233,7 @@ export function GraphingTool({
             />
 
             <details className={panelClass}>
-              <summary className="cursor-pointer text-sm font-semibold text-ink">
-                {copy.tableTitle}
-              </summary>
+              <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.tableTitle}</summary>
               <ValuesTable
                 copy={copy}
                 functions={visible}
@@ -286,9 +250,7 @@ export function GraphingTool({
             </details>
 
             <details className={panelClass} open>
-              <summary className="cursor-pointer text-sm font-semibold text-ink">
-                {copy.syntaxTitle}
-              </summary>
+              <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.syntaxTitle}</summary>
               <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-body">
                 <li>{copy.syntaxPowers}</li>
                 <li>{copy.syntaxMult}</li>
@@ -380,11 +342,7 @@ function FunctionRow({
         <span className="text-xs font-semibold text-muted">f{index + 1}(x)</span>
         <label className="relative size-6 shrink-0 overflow-hidden rounded-full border border-hairline">
           <span className="sr-only">{copy.color}</span>
-          <span
-            className="absolute inset-0"
-            style={{ backgroundColor: row.color }}
-            aria-hidden="true"
-          />
+          <span className="absolute inset-0" style={{ backgroundColor: row.color }} aria-hidden="true" />
           <input
             id={colorId}
             type="color"
@@ -403,8 +361,7 @@ function FunctionRow({
               className="size-3.5 rounded-full ring-offset-1 ring-offset-paper"
               style={{
                 backgroundColor: color,
-                outline:
-                  row.color === color ? "2px solid var(--color-navy)" : undefined,
+                outline: row.color === color ? '2px solid var(--color-navy)' : undefined,
               }}
             />
           ))}
@@ -425,8 +382,7 @@ function FunctionRow({
             className={iconBtnClass}
             aria-label={copy.removeFunction}
             disabled={!canRemove}
-            onClick={() => onRemove(row.id)}
-          >
+            onClick={() => onRemove(row.id)}>
             <Trash2 className="size-4" aria-hidden="true" />
           </button>
         </div>
@@ -438,11 +394,7 @@ function FunctionRow({
           onChange={(event) => onChange(row.id, { expr: event.target.value })}
           placeholder={copy.expressionPlaceholder}
           spellCheck={false}
-          className={
-            row.error
-              ? `${fieldClass} border-brass focus:border-brass focus:ring-brass/20`
-              : fieldClass
-          }
+          className={row.error ? `${fieldClass} border-brass focus:border-brass focus:ring-brass/20` : fieldClass}
         />
       </label>
       {row.error ? (
@@ -521,10 +473,7 @@ function IntegralPanel({
   value: number | null;
   bounds: [number, number] | null;
 }) {
-  const body =
-    mode === "between"
-      ? "\\bigl(f_{1}(x)-f_{2}(x)\\bigr)"
-      : "f(x)";
+  const body = mode === 'between' ? '\\bigl(f_{1}(x)-f_{2}(x)\\bigr)' : 'f(x)';
   const tex =
     bounds && value !== null
       ? `\\int_{${formatGraphNumber(bounds[0], 2)}}^{${formatGraphNumber(bounds[1], 2)}} ${body}\\,dx = ${formatGraphNumber(value, 4)}`
@@ -561,8 +510,8 @@ function IntegralPanel({
             <input
               type="radio"
               name="integral-mode"
-              checked={mode === "single"}
-              onChange={() => onMode("single")}
+              checked={mode === 'single'}
+              onChange={() => onMode('single')}
               className="accent-navy"
             />
             {copy.integralSingle}
@@ -571,8 +520,8 @@ function IntegralPanel({
             <input
               type="radio"
               name="integral-mode"
-              checked={mode === "between"}
-              onChange={() => onMode("between")}
+              checked={mode === 'between'}
+              onChange={() => onMode('between')}
               disabled={functions.length < 2}
               className="accent-navy"
             />
@@ -582,11 +531,8 @@ function IntegralPanel({
       </fieldset>
       {functions.length > 0 ? (
         <div className="mt-3">
-          <label
-            htmlFor={upperSelectId}
-            className="block text-xs font-semibold text-muted"
-          >
-            {mode === "between" ? copy.integralUpper : copy.integralFn}
+          <label htmlFor={upperSelectId} className="block text-xs font-semibold text-muted">
+            {mode === 'between' ? copy.integralUpper : copy.integralFn}
           </label>
           <SelectMenu
             id={upperSelectId}
@@ -601,12 +547,9 @@ function IntegralPanel({
           />
         </div>
       ) : null}
-      {mode === "between" && functions.length > 1 ? (
+      {mode === 'between' && functions.length > 1 ? (
         <div className="mt-3">
-          <label
-            htmlFor={lowerSelectId}
-            className="block text-xs font-semibold text-muted"
-          >
+          <label htmlFor={lowerSelectId} className="block text-xs font-semibold text-muted">
             {copy.integralLower}
           </label>
           <SelectMenu
@@ -625,9 +568,7 @@ function IntegralPanel({
         </div>
       ) : null}
       <div className="mt-4 rounded-xl bg-paper-deep px-3 py-3 text-sm text-ink">
-        <p className="text-xs font-semibold tracking-wide text-muted">
-          {copy.integralResult}
-        </p>
+        <p className="text-xs font-semibold tracking-wide text-muted">{copy.integralResult}</p>
         {tex ? (
           <div className="mt-2 overflow-x-auto">
             <KatexPreview tex={tex} />
@@ -668,9 +609,9 @@ function ValuesTable({
   function csv() {
     const header = [copy.tableX, ...functions.map((_, index) => `f${index + 1}`)];
     const body = rows.map((row) =>
-      [formatGraphNumber(row.x, 4), ...row.ys.map((y) => (y === null ? "" : formatGraphNumber(y, 4)))].join(","),
+      [formatGraphNumber(row.x, 4), ...row.ys.map((y) => (y === null ? '' : formatGraphNumber(y, 4)))].join(','),
     );
-    return [header.join(","), ...body].join("\n");
+    return [header.join(','), ...body].join('\n');
   }
 
   async function copyTable() {
@@ -684,11 +625,11 @@ function ValuesTable({
   }
 
   function exportCsv() {
-    const blob = new Blob([csv()], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob([csv()], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = url;
-    link.download = "values.csv";
+    link.download = 'values.csv';
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -713,16 +654,14 @@ function ValuesTable({
         <button
           type="button"
           onClick={() => void copyTable()}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-1.5 text-xs font-semibold text-ink hover:border-navy/30"
-        >
+          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-1.5 text-xs font-semibold text-ink hover:border-navy/30">
           <Copy className="size-3.5" aria-hidden="true" />
           {copied ? copy.tableCopied : copy.tableCopy}
         </button>
         <button
           type="button"
           onClick={exportCsv}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong"
-        >
+          className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
           <Download className="size-3.5" aria-hidden="true" />
           {copy.tableExport}
         </button>
@@ -748,7 +687,7 @@ function ValuesTable({
                   <td className="px-2 py-1.5">{formatGraphNumber(row.x, 4)}</td>
                   {row.ys.map((y, index) => (
                     <td key={`${row.x}-${index}`} className="px-2 py-1.5">
-                      {y === null ? "—" : formatGraphNumber(y, 4)}
+                      {y === null ? '—' : formatGraphNumber(y, 4)}
                     </td>
                   ))}
                 </tr>
@@ -825,9 +764,7 @@ function GraphCanvas({
   const [plotReady, setPlotReady] = useState(false);
   const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null);
   const [activeMarker, setActiveMarker] = useState<GraphMarker | null>(null);
-  const [tangent, setTangent] = useState<{ y0: number; m: number; x0: number } | null>(
-    null,
-  );
+  const [tangent, setTangent] = useState<{ y0: number; m: number; x0: number } | null>(null);
   const [plotError, setPlotError] = useState(false);
   const [xMin, setXMin] = useState(String(xDomain[0]));
   const [xMax, setXMax] = useState(String(xDomain[1]));
@@ -852,8 +789,7 @@ function GraphCanvas({
 
     function overlays(chart: Chart) {
       const config = configRef.current;
-      const domainX = (chart.meta.xScale?.domain() as [number, number] | undefined) ??
-        config.xDomain;
+      const domainX = (chart.meta.xScale?.domain() as [number, number] | undefined) ?? config.xDomain;
       const markers = config.showMarkers ? collectMarkers(config.functions, domainX) : [];
       markersRef.current = markers;
       syncIntegralOverlay(root, chart, config);
@@ -866,7 +802,7 @@ function GraphCanvas({
       const config = configRef.current;
 
       try {
-        const mod = await import("function-plot");
+        const mod = await import('function-plot');
         const functionPlot = mod.default;
         ChartCache = mod.Chart;
         if (disposed) return;
@@ -874,8 +810,8 @@ function GraphCanvas({
         const width = Math.max(320, host.clientWidth);
         const height = Math.max(360, Math.round(width * 0.58));
         const data = buildPlotData(config.functions, config.showDerivative);
-        const xAxis = { domain: [...config.xDomain], position: "sticky" as const };
-        const yAxis = { domain: [...config.yDomain], position: "sticky" as const };
+        const xAxis = { domain: [...config.xDomain], position: 'sticky' as const };
+        const yAxis = { domain: [...config.yDomain], position: 'sticky' as const };
 
         if (!chartRef.current) {
           host.replaceChildren();
@@ -889,7 +825,7 @@ function GraphCanvas({
             tip: { xLine: true, yLine: true },
             data,
           });
-          chart.on("mousemove", (point: { x: number; y: number }) => {
+          chart.on('mousemove', (point: { x: number; y: number }) => {
             setCursor(point);
             const live = configRef.current;
             const primary = visibleFunctions(live.functions)[0];
@@ -903,18 +839,16 @@ function GraphCanvas({
             }
             const xSpan = Math.abs((chart.meta.xScale?.domain()[1] ?? 10) - (chart.meta.xScale?.domain()[0] ?? -10));
             const ySpan = Math.abs((chart.meta.yScale?.domain()[1] ?? 10) - (chart.meta.yScale?.domain()[0] ?? -10));
-            setActiveMarker(
-              nearestMarker(markersRef.current, point.x, point.y, xSpan, ySpan),
-            );
+            setActiveMarker(nearestMarker(markersRef.current, point.x, point.y, xSpan, ySpan));
           });
-          chart.on("mouseout", () => {
+          chart.on('mouseout', () => {
             setCursor(null);
             setTangent(null);
             setActiveMarker(null);
             hideTangent(root);
           });
-          chart.on("all:zoom", () => overlays(chart));
-          chart.on("after:draw", () => overlays(chart));
+          chart.on('all:zoom', () => overlays(chart));
+          chart.on('after:draw', () => overlays(chart));
           chartRef.current = chart;
         } else {
           const chart = chartRef.current;
@@ -949,12 +883,12 @@ function GraphCanvas({
     }
 
     observer.observe(host);
-    window.addEventListener("resize", onWindowResize);
+    window.addEventListener('resize', onWindowResize);
 
     return () => {
       disposed = true;
       observer.disconnect();
-      window.removeEventListener("resize", onWindowResize);
+      window.removeEventListener('resize', onWindowResize);
       const chart = chartRef.current;
       chart?.removeAllListeners();
       if (chart && ChartCache && chart.options.id) {
@@ -1013,9 +947,9 @@ function GraphCanvas({
   }
 
   function exportPng() {
-    const svg = hostRef.current?.querySelector("svg");
+    const svg = hostRef.current?.querySelector('svg');
     if (!svg) return;
-    downloadSvgAsPng(svg, "graph.png");
+    downloadSvgAsPng(svg, 'graph.png');
   }
 
   const markerLabel = activeMarker ? markerKindLabel(copy, activeMarker.kind) : null;
@@ -1027,8 +961,7 @@ function GraphCanvas({
           type="button"
           title={copy.resetView}
           onClick={resetView}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy"
-        >
+          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
           <RotateCcw className="size-3.5" aria-hidden="true" />
           {copy.resetView}
         </button>
@@ -1036,8 +969,7 @@ function GraphCanvas({
           type="button"
           title={copy.zoomIn}
           onClick={() => zoomBy(0.8)}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy"
-        >
+          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
           <Plus className="size-3.5" aria-hidden="true" />
           {copy.zoomIn}
         </button>
@@ -1045,8 +977,7 @@ function GraphCanvas({
           type="button"
           title={copy.zoomOut}
           onClick={() => zoomBy(1.25)}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy"
-        >
+          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
           <Minus className="size-3.5" aria-hidden="true" />
           {copy.zoomOut}
         </button>
@@ -1054,8 +985,7 @@ function GraphCanvas({
           type="button"
           title={copy.exportPng}
           onClick={exportPng}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong"
-        >
+          className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong">
           <Download className="size-3.5" aria-hidden="true" />
           {copy.exportPng}
         </button>
@@ -1065,29 +995,22 @@ function GraphCanvas({
         ref={hostRef}
         className="relative mt-4 min-h-[22rem] overflow-hidden rounded-xl border border-hairline bg-white [&_svg]:block [&_svg]:max-w-full"
       />
-      {plotError ? (
-        <p className="mt-2 text-sm text-brass-strong">{copy.plotError}</p>
-      ) : null}
+      {plotError ? <p className="mt-2 text-sm text-brass-strong">{copy.plotError}</p> : null}
 
       <div className="mt-3 space-y-2 text-sm">
         <p className="font-mono text-body">
-          {copy.cursor}:{" "}
-          {cursor
-            ? `(${formatGraphNumber(cursor.x)}, ${formatGraphNumber(cursor.y)})`
-            : copy.cursorEmpty}
+          {copy.cursor}:{' '}
+          {cursor ? `(${formatGraphNumber(cursor.x)}, ${formatGraphNumber(cursor.y)})` : copy.cursorEmpty}
         </p>
         {activeMarker && markerLabel ? (
           <p className="rounded-xl bg-navy-tint px-3 py-2 text-navy">
             <span className="font-semibold">{markerLabel}</span>
-            {": "}
-            ({formatGraphNumber(activeMarker.x)}, {formatGraphNumber(activeMarker.y)})
+            {': '}({formatGraphNumber(activeMarker.x)}, {formatGraphNumber(activeMarker.y)})
           </p>
         ) : null}
         {showTangent ? (
           <div className="rounded-xl border border-hairline bg-paper px-3 py-2">
-            <p className="text-xs font-semibold tracking-wide text-brass">
-              {copy.tangentTitle}
-            </p>
+            <p className="text-xs font-semibold tracking-wide text-brass">{copy.tangentTitle}</p>
             {tangent ? (
               <div className="mt-1 space-y-1 text-ink">
                 <KatexPreview
@@ -1106,10 +1029,7 @@ function GraphCanvas({
 
       <MarkerLegend copy={copy} />
 
-      <form
-        onSubmit={applyManualDomain}
-        className="mt-4 grid gap-3 sm:grid-cols-2"
-      >
+      <form onSubmit={applyManualDomain} className="mt-4 grid gap-3 sm:grid-cols-2">
         <fieldset className="min-w-0">
           <legend className="text-xs font-semibold text-muted">{copy.domainX}</legend>
           <div className="mt-1.5 grid grid-cols-2 gap-2">
@@ -1146,8 +1066,7 @@ function GraphCanvas({
         </fieldset>
         <button
           type="submit"
-          className="rounded-xl bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong sm:col-span-2"
-        >
+          className="rounded-xl bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong sm:col-span-2">
           {copy.applyDomain}
         </button>
       </form>
@@ -1157,21 +1076,17 @@ function GraphCanvas({
 
 function MarkerLegend({ copy }: { copy: Copy }) {
   const items: [MarkerKind, string, string][] = [
-    ["root", copy.markerRoot, "#17365d"],
-    ["yIntercept", copy.markerYIntercept, "#8a621b"],
-    ["intersection", copy.markerIntersection, "#9333ea"],
-    ["max", copy.markerMax, "#dc2626"],
-    ["min", copy.markerMin, "#16a34a"],
+    ['root', copy.markerRoot, '#17365d'],
+    ['yIntercept', copy.markerYIntercept, '#8a621b'],
+    ['intersection', copy.markerIntersection, '#9333ea'],
+    ['max', copy.markerMax, '#dc2626'],
+    ['min', copy.markerMin, '#16a34a'],
   ];
   return (
     <ul className="mt-3 flex flex-wrap gap-2 text-xs text-body">
       {items.map(([kind, label, color]) => (
         <li key={kind} className="inline-flex items-center gap-1.5">
-          <span
-            className="size-2.5 rounded-full"
-            style={{ backgroundColor: color }}
-            aria-hidden="true"
-          />
+          <span className="size-2.5 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
           {label}
         </li>
       ))}
@@ -1181,38 +1096,35 @@ function MarkerLegend({ copy }: { copy: Copy }) {
 
 function markerKindLabel(copy: Copy, kind: MarkerKind) {
   switch (kind) {
-    case "root":
+    case 'root':
       return copy.markerRoot;
-    case "yIntercept":
+    case 'yIntercept':
       return copy.markerYIntercept;
-    case "intersection":
+    case 'intersection':
       return copy.markerIntersection;
-    case "max":
+    case 'max':
       return copy.markerMax;
-    case "min":
+    case 'min':
       return copy.markerMin;
   }
 }
 
 function markerColor(kind: MarkerKind, fallback: string) {
   switch (kind) {
-    case "yIntercept":
-      return "#8a621b";
-    case "intersection":
-      return "#9333ea";
-    case "max":
-      return "#dc2626";
-    case "min":
-      return "#16a34a";
+    case 'yIntercept':
+      return '#8a621b';
+    case 'intersection':
+      return '#9333ea';
+    case 'max':
+      return '#dc2626';
+    case 'min':
+      return '#16a34a';
     default:
       return fallback;
   }
 }
 
-function buildPlotData(
-  functions: GraphFunction[],
-  showDerivative: boolean,
-): FunctionPlotDatum[] {
+function buildPlotData(functions: GraphFunction[], showDerivative: boolean): FunctionPlotDatum[] {
   const visible = visibleFunctions(functions);
 
   return visible.flatMap((row) => {
@@ -1221,8 +1133,8 @@ function buildPlotData(
       const datum: FunctionPlotDatum = {
         fn: (scope: FunctionPlotDatumScope) => fn(Number(scope.x)) ?? Number.NaN,
         color: row.color,
-        graphType: "polyline",
-        sampler: "builtIn",
+        graphType: 'polyline',
+        sampler: 'builtIn',
         nSamples: 400,
       };
       const extra: FunctionPlotDatum[] = [datum];
@@ -1231,11 +1143,11 @@ function buildPlotData(
         extra.push({
           fn: (scope: FunctionPlotDatumScope) => derived(Number(scope.x)) ?? Number.NaN,
           color: row.color,
-          graphType: "polyline",
-          sampler: "builtIn",
+          graphType: 'polyline',
+          sampler: 'builtIn',
           nSamples: 300,
           skipTip: true,
-          attr: { "stroke-dasharray": "5 4", "stroke-opacity": 0.7 },
+          attr: { 'stroke-dasharray': '5 4', 'stroke-opacity': 0.7 },
         });
       }
       return extra;
@@ -1248,7 +1160,7 @@ function buildPlotData(
 function canvasGroup(host: HTMLElement, chart: Chart): SVGGElement | null {
   const fromChart = chart.content?.node?.();
   if (fromChart instanceof SVGGElement) return fromChart;
-  const fallback = host.querySelector("g.content, g.canvas");
+  const fallback = host.querySelector('g.content, g.canvas');
   return fallback instanceof SVGGElement ? fallback : null;
 }
 
@@ -1263,7 +1175,7 @@ function syncIntegralOverlay(
     lower?: GraphFunction;
   },
 ) {
-  host.querySelector("#integral-fill")?.remove();
+  host.querySelector('#integral-fill')?.remove();
   if (!config.shadeIntegral || !config.integralBounds || !config.upper) return;
   const xScale = chart.meta.xScale;
   const yScale = chart.meta.yScale;
@@ -1272,28 +1184,18 @@ function syncIntegralOverlay(
 
   try {
     const upperFn = evaluatorFor(config.upper);
-    const lowerFn =
-      config.integralMode === "between" && config.lower
-        ? evaluatorFor(config.lower)
-        : null;
-    const samples = sampleFill(
-      upperFn,
-      lowerFn,
-      config.integralBounds[0],
-      config.integralBounds[1],
-    );
+    const lowerFn = config.integralMode === 'between' && config.lower ? evaluatorFor(config.lower) : null;
+    const samples = sampleFill(upperFn, lowerFn, config.integralBounds[0], config.integralBounds[1]);
     if (!samples) return;
 
     const top = samples.upper.map(([x, y]) => `${xScale(x)},${yScale(y)}`);
-    const bottom = [...samples.lower]
-      .reverse()
-      .map(([x, y]) => `${xScale(x)},${yScale(y)}`);
-    const path = document.createElementNS(SVG_NS, "path");
-    path.id = "integral-fill";
-    path.setAttribute("d", `M ${top.join(" L ")} L ${bottom.join(" L ")} Z`);
-    path.setAttribute("fill", "#17365d");
-    path.setAttribute("fill-opacity", "0.16");
-    path.setAttribute("pointer-events", "none");
+    const bottom = [...samples.lower].reverse().map(([x, y]) => `${xScale(x)},${yScale(y)}`);
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.id = 'integral-fill';
+    path.setAttribute('d', `M ${top.join(' L ')} L ${bottom.join(' L ')} Z`);
+    path.setAttribute('fill', '#17365d');
+    path.setAttribute('fill-opacity', '0.16');
+    path.setAttribute('pointer-events', 'none');
     group.insertBefore(path, group.firstChild);
   } catch {
     /* keep the plot even if shading fails */
@@ -1307,7 +1209,7 @@ function syncMarkerOverlay(
   copy: Copy,
   onSelect: (marker: GraphMarker) => void,
 ) {
-  host.querySelectorAll(".graph-marker, .graph-marker-label").forEach((node) => node.remove());
+  host.querySelectorAll('.graph-marker, .graph-marker-label').forEach((node) => node.remove());
   const xScale = chart.meta.xScale;
   const yScale = chart.meta.yScale;
   const group = canvasGroup(host, chart);
@@ -1315,35 +1217,35 @@ function syncMarkerOverlay(
 
   for (const marker of markers) {
     try {
-      const circle = document.createElementNS(SVG_NS, "circle");
-      circle.setAttribute("class", "graph-marker");
-      circle.setAttribute("cx", String(xScale(marker.x)));
-      circle.setAttribute("cy", String(yScale(marker.y)));
-      circle.setAttribute("r", "5");
-      circle.setAttribute("fill", markerColor(marker.kind, marker.color));
-      circle.setAttribute("stroke", "#ffffff");
-      circle.setAttribute("stroke-width", "1.5");
-      circle.style.cursor = "pointer";
-      const title = document.createElementNS(SVG_NS, "title");
+      const circle = document.createElementNS(SVG_NS, 'circle');
+      circle.setAttribute('class', 'graph-marker');
+      circle.setAttribute('cx', String(xScale(marker.x)));
+      circle.setAttribute('cy', String(yScale(marker.y)));
+      circle.setAttribute('r', '5');
+      circle.setAttribute('fill', markerColor(marker.kind, marker.color));
+      circle.setAttribute('stroke', '#ffffff');
+      circle.setAttribute('stroke-width', '1.5');
+      circle.style.cursor = 'pointer';
+      const title = document.createElementNS(SVG_NS, 'title');
       const label = markerKindLabel(copy, marker.kind);
       title.textContent = `${label} (${formatGraphNumber(marker.x)}, ${formatGraphNumber(marker.y)})`;
       circle.appendChild(title);
-      circle.addEventListener("pointerdown", (event) => {
+      circle.addEventListener('pointerdown', (event) => {
         event.stopPropagation();
         onSelect(marker);
       });
       group.appendChild(circle);
 
-      if (marker.kind === "max" || marker.kind === "min") {
-        const text = document.createElementNS(SVG_NS, "text");
-        text.setAttribute("class", "graph-marker-label");
-        text.setAttribute("x", String(xScale(marker.x) + 7));
-        text.setAttribute("y", String(yScale(marker.y) - 8));
-        text.setAttribute("fill", markerColor(marker.kind, marker.color));
-        text.setAttribute("font-size", "11");
-        text.setAttribute("font-weight", "700");
-        text.setAttribute("pointer-events", "none");
-        text.textContent = marker.kind === "max" ? "Max" : "Min";
+      if (marker.kind === 'max' || marker.kind === 'min') {
+        const text = document.createElementNS(SVG_NS, 'text');
+        text.setAttribute('class', 'graph-marker-label');
+        text.setAttribute('x', String(xScale(marker.x) + 7));
+        text.setAttribute('y', String(yScale(marker.y) - 8));
+        text.setAttribute('fill', markerColor(marker.kind, marker.color));
+        text.setAttribute('font-size', '11');
+        text.setAttribute('font-weight', '700');
+        text.setAttribute('pointer-events', 'none');
+        text.textContent = marker.kind === 'max' ? 'Max' : 'Min';
         group.appendChild(text);
       }
     } catch {
@@ -1352,18 +1254,13 @@ function syncMarkerOverlay(
   }
 }
 
-function drawTangent(
-  host: HTMLElement,
-  chart: Chart,
-  row: GraphFunction,
-  x0: number,
-) {
+function drawTangent(host: HTMLElement, chart: Chart, row: GraphFunction, x0: number) {
   const xScale = chart.meta.xScale;
   const yScale = chart.meta.yScale;
   const group = canvasGroup(host, chart);
   if (!xScale || !yScale || !group) return;
   const next = tangentAt(row, x0);
-  let line = host.querySelector("#tangent-line") as SVGLineElement | null;
+  let line = host.querySelector('#tangent-line') as SVGLineElement | null;
   if (!next) {
     line?.remove();
     return;
@@ -1372,22 +1269,22 @@ function drawTangent(
   const y1 = next.y0 + next.m * (domain[0] - x0);
   const y2 = next.y0 + next.m * (domain[1] - x0);
   if (!line) {
-    line = document.createElementNS(SVG_NS, "line");
-    line.id = "tangent-line";
-    line.setAttribute("stroke", "#8a621b");
-    line.setAttribute("stroke-width", "1.75");
-    line.setAttribute("stroke-dasharray", "6 4");
-    line.setAttribute("pointer-events", "none");
+    line = document.createElementNS(SVG_NS, 'line');
+    line.id = 'tangent-line';
+    line.setAttribute('stroke', '#8a621b');
+    line.setAttribute('stroke-width', '1.75');
+    line.setAttribute('stroke-dasharray', '6 4');
+    line.setAttribute('pointer-events', 'none');
     group.appendChild(line);
   }
-  line.setAttribute("x1", String(xScale(domain[0])));
-  line.setAttribute("y1", String(yScale(y1)));
-  line.setAttribute("x2", String(xScale(domain[1])));
-  line.setAttribute("y2", String(yScale(y2)));
+  line.setAttribute('x1', String(xScale(domain[0])));
+  line.setAttribute('y1', String(yScale(y1)));
+  line.setAttribute('x2', String(xScale(domain[1])));
+  line.setAttribute('y2', String(yScale(y2)));
 }
 
 function hideTangent(host: HTMLElement) {
-  host.querySelector("#tangent-line")?.remove();
+  host.querySelector('#tangent-line')?.remove();
 }
 
 function scaleDomain(domain: [number, number], factor: number): [number, number] {
@@ -1404,46 +1301,46 @@ function parseDomain(minRaw: string, maxRaw: string): [number, number] | null {
 }
 
 function normalizeHex(color: string) {
-  return /^#[0-9a-fA-F]{6}$/.test(color) ? color : "#2563eb";
+  return /^#[0-9a-fA-F]{6}$/.test(color) ? color : '#2563eb';
 }
 
 function downloadSvgAsPng(svg: SVGSVGElement, filename: string) {
   const clone = svg.cloneNode(true) as SVGSVGElement;
-  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-  const width = svg.clientWidth || Number(svg.getAttribute("width")) || 800;
-  const height = svg.clientHeight || Number(svg.getAttribute("height")) || 480;
-  clone.setAttribute("width", String(width));
-  clone.setAttribute("height", String(height));
-  clone.setAttribute("viewBox", svg.getAttribute("viewBox") ?? `0 0 ${width} ${height}`);
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  const width = svg.clientWidth || Number(svg.getAttribute('width')) || 800;
+  const height = svg.clientHeight || Number(svg.getAttribute('height')) || 480;
+  clone.setAttribute('width', String(width));
+  clone.setAttribute('height', String(height));
+  clone.setAttribute('viewBox', svg.getAttribute('viewBox') ?? `0 0 ${width} ${height}`);
 
   const serializer = new XMLSerializer();
   const source = serializer.serializeToString(clone);
-  const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+  const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const image = new Image();
 
   image.onload = () => {
-    const canvas = document.createElement("canvas");
+    const canvas = document.createElement('canvas');
     canvas.width = width * 2;
     canvas.height = height * 2;
-    const context = canvas.getContext("2d");
+    const context = canvas.getContext('2d');
     if (!context) {
       URL.revokeObjectURL(url);
       return;
     }
-    context.fillStyle = "#ffffff";
+    context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((png) => {
       URL.revokeObjectURL(url);
       if (!png) return;
       const href = URL.createObjectURL(png);
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = href;
       link.download = filename;
       link.click();
       URL.revokeObjectURL(href);
-    }, "image/png");
+    }, 'image/png');
   };
 
   image.onerror = () => URL.revokeObjectURL(url);

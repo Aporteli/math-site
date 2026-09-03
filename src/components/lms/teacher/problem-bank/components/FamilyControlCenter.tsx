@@ -4,7 +4,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { Check, Copy, Download, FileUp, Plus, Save, Shuffle, Trash2, X } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 import { AuditPanel } from '@/components/lms/teacher/problem-bank/components/AuditPanel';
-import { SelectMenu } from '@/components/ui/select-menu';
+import { SelectMenu } from '@/components/ui/SelectMenu';
 import type { Locale } from '@/i18n/config';
 import {
   deleteFamilyAction,

@@ -2,7 +2,7 @@
 
 import { Calendar as CalendarIcon, ClipboardList } from 'lucide-react';
 import type { Locale } from '@/i18n/config';
-import { PageHero } from '@/components/ui/page-hero';
+import { PageHero } from '@/components/ui/PageHero';
 import { ProblemDetailModal } from '@/components/lms/student/assignments/components/ProblemDetailModal';
 
 // კომპონენტები components/student/assignments/ დირექტორიიდან

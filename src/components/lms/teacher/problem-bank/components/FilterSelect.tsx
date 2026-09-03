@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { SelectMenu } from '@/components/ui/select-menu';
+import { SelectMenu } from '@/components/ui/SelectMenu';
 
 interface FilterSelectProps<T extends string> {
   label: string;

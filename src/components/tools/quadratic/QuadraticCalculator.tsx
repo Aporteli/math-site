@@ -20,7 +20,7 @@ import {
   Table2,
 } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
-import { PageHero } from '@/components/ui/page-hero';
+import { PageHero } from '@/components/ui/PageHero';
 import { localePath, type Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/types';
 import {
@@ -259,10 +259,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
     inputRef.current?.focus();
   };
 
-  const graphExpr =
-    graphMeta && solveFor === 'x'
-      ? `${graphMeta.a}*x^2 + (${graphMeta.b})*x + (${graphMeta.c})`
-      : '';
+  const graphExpr = graphMeta && solveFor === 'x' ? `${graphMeta.a}*x^2 + (${graphMeta.b})*x + (${graphMeta.c})` : '';
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6">
@@ -273,12 +270,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
           <ArrowLeft className="size-4" /> უკან
         </Link>
       </div>
-      <PageHero
-        icon={Calculator}
-        eyebrow="კვადრატული კალკულატორი"
-        title={title}
-        description={description}
-      />
+      <PageHero icon={Calculator} eyebrow="კვადრატული კალკულატორი" title={title} description={description} />
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_1.15fr]">
         {/* ─── Left: input ─── */}
@@ -454,7 +446,11 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                         type="button"
                         onClick={() => copyText(s, `root-${i}`)}
                         className="shrink-0 text-muted hover:text-ink">
-                        {copiedKey === `root-${i}` ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                        {copiedKey === `root-${i}` ? (
+                          <Check className="size-3.5 text-emerald-500" />
+                        ) : (
+                          <Copy className="size-3.5" />
+                        )}
                       </button>
                     </div>
                   ))}
@@ -480,7 +476,11 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                     type="button"
                     onClick={() => copyText(exportPack.summary, 'summary')}
                     className="inline-flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-[11px] hover:bg-paper/50 dark:border-slate-700">
-                    {copiedKey === 'summary' ? <Check className="size-3 text-emerald-500" /> : <Copy className="size-3" />}
+                    {copiedKey === 'summary' ? (
+                      <Check className="size-3 text-emerald-500" />
+                    ) : (
+                      <Copy className="size-3" />
+                    )}
                     კოპირება
                   </button>
                 </div>
@@ -651,9 +651,7 @@ function AnnotatedGraph({
         const span = Math.max(6, Math.abs(vx) + 3, ...meta.roots.map((r) => Math.abs(r) + 2));
         const ySpan = Math.max(6, Math.abs(vy) + 3, Math.abs(meta.yIntercept) + 2);
 
-        const annotations: { x?: number; y?: number; text?: string }[] = [
-          { x: vx, text: 'წვერო' },
-        ];
+        const annotations: { x?: number; y?: number; text?: string }[] = [{ x: vx, text: 'წვერო' }];
         for (const r of meta.roots) {
           annotations.push({ x: r, text: 'ფესვი' });
         }

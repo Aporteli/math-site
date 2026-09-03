@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useId, useState } from "react";
-import { createPortal } from "react-dom";
-import { FlaskConical, PenLine, X } from "lucide-react";
-import { KatexPreview } from "@/components/math/katex-preview";
-import { SelectMenu } from "@/components/ui/select-menu";
-import { handlePlainTextPaste } from "@/lib/helpers/plain-text-paste";
+import { useEffect, useId, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { FlaskConical, PenLine, X } from 'lucide-react';
+import { KatexPreview } from '@/components/math/katex-preview';
+import { SelectMenu } from '@/components/ui/SelectMenu';
+import { handlePlainTextPaste } from '@/lib/helpers/plain-text-paste';
 import {
   PROBLEM_DIFFICULTIES,
   PROBLEM_TOPICS,
@@ -16,12 +16,12 @@ import {
   type ProblemDifficulty,
   type ProblemTopic,
   type ProblemYear,
-} from "@/lib/math/problems";
-import { toKatexFriendlyTex } from "@/lib/math/problems/tex";
-import type { Locale } from "@/i18n/config";
+} from '@/lib/math/problems';
+import { toKatexFriendlyTex } from '@/lib/math/problems/tex';
+import type { Locale } from '@/i18n/config';
 
 const fieldClass =
-  "w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
+  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
 interface CreateCustomCardModalProps {
   locale: Locale;
@@ -38,16 +38,14 @@ function buildSolutionTex(answer: string, explanation: string) {
   if (a && e) return `${a}\n\n${e}`;
   if (a) return a;
   if (e) return e;
-  return "—";
+  return '—';
 }
 
 function MathFieldPreview({ label, tex }: { label: string; tex: string }) {
   if (!tex.trim()) return null;
   return (
     <div className="min-w-0 overflow-x-auto rounded-xl border border-hairline-soft bg-paper px-3 py-3">
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
-        {label}
-      </p>
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</p>
       <KatexPreview
         tex={toKatexFriendlyTex(tex)}
         className="block min-w-0 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink [&_.katex-display]:my-2 [&_.katex]:text-[1.05rem]"
@@ -65,24 +63,24 @@ export function CreateCustomCardModal({
 }: CreateCustomCardModalProps) {
   const card = copy.customCard;
   const titleId = useId();
-  const [prompt, setPrompt] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [explanation, setExplanation] = useState("");
-  const [difficulty, setDifficulty] = useState<ProblemDifficulty>("medium");
-  const [topic, setTopic] = useState<ProblemTopic>("algebra");
-  const [year, setYear] = useState<ProblemYear | "">("");
-  const [busy, setBusy] = useState<"bank" | "lab" | null>(null);
+  const [prompt, setPrompt] = useState('');
+  const [answer, setAnswer] = useState('');
+  const [explanation, setExplanation] = useState('');
+  const [difficulty, setDifficulty] = useState<ProblemDifficulty>('medium');
+  const [topic, setTopic] = useState<ProblemTopic>('algebra');
+  const [year, setYear] = useState<ProblemYear | ''>('');
+  const [busy, setBusy] = useState<'bank' | 'lab' | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === 'Escape') onClose();
     }
-    window.addEventListener("keydown", onKey);
+    window.addEventListener('keydown', onKey);
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = 'hidden';
     return () => {
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener('keydown', onKey);
       document.body.style.overflow = previousOverflow;
     };
   }, [onClose]);
@@ -95,25 +93,25 @@ export function CreateCustomCardModal({
     }
     return {
       id: `custom-${Date.now()}`,
-      templateId: "custom",
+      templateId: 'custom',
       topic,
       difficulty,
       ...(year ? { year } : {}),
-      source: "custom",
-      instructionId: "solve",
+      source: 'custom',
+      instructionId: 'solve',
       promptTex,
       solutionTex: buildSolutionTex(answer, explanation),
     };
   }
 
-  async function onSubmit(target: "bank" | "lab") {
+  async function onSubmit(target: 'bank' | 'lab') {
     const draft = buildDraft();
     if (!draft) return;
 
     setBusy(target);
     setNotice(null);
     try {
-      const save = target === "lab" ? onSaveToLab : onSaveToBank;
+      const save = target === 'lab' ? onSaveToLab : onSaveToBank;
       if (!save) {
         setNotice(card.errorFailed);
         return;
@@ -141,8 +139,7 @@ export function CreateCustomCardModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-lg shadow-navy/10"
-        >
+          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-lg shadow-navy/10">
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
             <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
               {card.title}
@@ -151,8 +148,7 @@ export function CreateCustomCardModal({
               type="button"
               className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
               aria-label={card.close}
-              onClick={onClose}
-            >
+              onClick={onClose}>
               <X className="size-4" aria-hidden="true" />
             </button>
           </div>
@@ -160,10 +156,7 @@ export function CreateCustomCardModal({
           <div className="flex shrink-0 flex-col gap-3 border-b border-hairline px-4 py-3 sm:px-5">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div className="min-w-0">
-                <label
-                  className="block text-xs font-medium text-muted"
-                  htmlFor={`${titleId}-topic`}
-                >
+                <label className="block text-xs font-medium text-muted" htmlFor={`${titleId}-topic`}>
                   {card.topic}
                 </label>
                 <SelectMenu
@@ -178,10 +171,7 @@ export function CreateCustomCardModal({
                 />
               </div>
               <div className="min-w-0">
-                <label
-                  className="block text-xs font-medium text-muted"
-                  htmlFor={`${titleId}-difficulty`}
-                >
+                <label className="block text-xs font-medium text-muted" htmlFor={`${titleId}-difficulty`}>
                   {card.difficulty}
                 </label>
                 <SelectMenu
@@ -196,19 +186,16 @@ export function CreateCustomCardModal({
                 />
               </div>
               <div className="min-w-0">
-                <label
-                  className="block text-xs font-medium text-muted"
-                  htmlFor={`${titleId}-year`}
-                >
+                <label className="block text-xs font-medium text-muted" htmlFor={`${titleId}-year`}>
                   {card.year}
                 </label>
                 <SelectMenu
                   id={`${titleId}-year`}
                   className="mt-1"
                   value={year}
-                  onChange={(value) => setYear(value as ProblemYear | "")}
+                  onChange={(value) => setYear(value as ProblemYear | '')}
                   options={[
-                    { value: "", label: card.noYear },
+                    { value: '', label: card.noYear },
                     ...PROBLEM_YEARS.map((id) => ({
                       value: id,
                       label: copy.years[id],
@@ -236,9 +223,7 @@ export function CreateCustomCardModal({
                 maxLength={4000}
                 placeholder={card.promptPlaceholder}
                 onChange={(event) => setPrompt(event.target.value)}
-                onPaste={(event) =>
-                  handlePlainTextPaste(event, prompt, setPrompt, 4000, "katex")
-                }
+                onPaste={(event) => handlePlainTextPaste(event, prompt, setPrompt, 4000, 'katex')}
               />
             </div>
             <MathFieldPreview label={copy.chat.previewLabel} tex={prompt} />
@@ -254,18 +239,13 @@ export function CreateCustomCardModal({
                 maxLength={2000}
                 placeholder={card.answerPlaceholder}
                 onChange={(event) => setAnswer(event.target.value)}
-                onPaste={(event) =>
-                  handlePlainTextPaste(event, answer, setAnswer, 2000, "katex")
-                }
+                onPaste={(event) => handlePlainTextPaste(event, answer, setAnswer, 2000, 'katex')}
               />
             </div>
             <MathFieldPreview label={card.answerPreviewLabel} tex={answer} />
 
             <div>
-              <label
-                className="block text-sm font-medium text-ink"
-                htmlFor={`${titleId}-explanation`}
-              >
+              <label className="block text-sm font-medium text-ink" htmlFor={`${titleId}-explanation`}>
                 {card.explanationLabel}
               </label>
               <textarea
@@ -275,43 +255,31 @@ export function CreateCustomCardModal({
                 maxLength={8000}
                 placeholder={card.explanationPlaceholder}
                 onChange={(event) => setExplanation(event.target.value)}
-                onPaste={(event) =>
-                  handlePlainTextPaste(
-                    event,
-                    explanation,
-                    setExplanation,
-                    8000,
-                    "katex",
-                  )
-                }
+                onPaste={(event) => handlePlainTextPaste(event, explanation, setExplanation, 8000, 'katex')}
               />
             </div>
             <MathFieldPreview label={card.explanationPreviewLabel} tex={explanation} />
           </div>
 
           <div className="flex shrink-0 flex-col gap-2 border-t border-hairline px-4 py-4 sm:px-5">
-            {notice ? (
-              <p className="text-sm text-brass-strong">{notice}</p>
-            ) : null}
+            {notice ? <p className="text-sm text-brass-strong">{notice}</p> : null}
             <div className="flex flex-nowrap items-center justify-end gap-2 overflow-x-auto hide-scrollbar">
               <button
                 type="button"
                 disabled={busy !== null || !prompt.trim()}
                 className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy transition-colors hover:border-navy/40 hover:bg-navy-tint disabled:opacity-60"
-                onClick={() => void onSubmit("bank")}
-              >
+                onClick={() => void onSubmit('bank')}>
                 <PenLine className="size-4" aria-hidden="true" />
-                {busy === "bank" ? card.saving : card.save}
+                {busy === 'bank' ? card.saving : card.save}
               </button>
               {showSaveToLab && onSaveToLab ? (
                 <button
                   type="button"
                   disabled={busy !== null || !prompt.trim()}
                   className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60"
-                  onClick={() => void onSubmit("lab")}
-                >
+                  onClick={() => void onSubmit('lab')}>
                   <FlaskConical className="size-4" aria-hidden="true" />
-                  {busy === "lab" ? card.savingLab : card.saveToLab}
+                  {busy === 'lab' ? card.savingLab : card.saveToLab}
                 </button>
               ) : null}
             </div>

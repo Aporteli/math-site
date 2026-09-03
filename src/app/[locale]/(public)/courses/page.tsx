@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { CoursesHub } from '@/components/public/courses-hub';
+import { CoursesHub } from '@/components/public/CoursesHub';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 

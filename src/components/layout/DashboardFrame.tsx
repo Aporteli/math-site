@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
-import { SignOutButton } from '@/components/auth/sign-out-button';
+import { SignOutButton } from '@/components/auth/SignOutButton';
 import { DashboardNav } from '@/components/layout/DashboardNav';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';

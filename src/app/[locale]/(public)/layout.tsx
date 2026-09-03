@@ -1,12 +1,12 @@
-import { notFound } from "next/navigation";
-import { WorkspaceDock } from "@/components/auth/workspace-dock";
-import { JoinClassModal } from "@/components/auth/join-class-modal";
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
-import { getSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/prisma";
+import { notFound } from 'next/navigation';
+import { WorkspaceDock } from '@/components/auth/WorkspaceDock';
+import { JoinClassModal } from '@/components/auth/JoinClassModal';
+import { SiteFooter } from '@/components/layout/SiteFooter';
+import { SiteHeader } from '@/components/layout/SiteHeader';
+import { isLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { getSession } from '@/lib/auth/session';
+import { prisma } from '@/lib/prisma';
 
 export default async function PublicLayout({
   children,
@@ -26,23 +26,15 @@ export default async function PublicLayout({
         select: { role: true },
       })
     : null;
-  const user = session?.user
-    ? { role: databaseUser?.role ?? session.user.role }
-    : null;
+  const user = session?.user ? { role: databaseUser?.role ?? session.user.role } : null;
 
   // სამუშაო სივრცის მენიუ (Dock) გამოუჩნდეს მხოლოდ სტუდენტს, მასწავლებელს ან ადმინს
-  const hasWorkspaceAccess =
-    user?.role === "STUDENT" ||
-    user?.role === "TEACHER" ||
-    user?.role === "ADMIN";
+  const hasWorkspaceAccess = user?.role === 'STUDENT' || user?.role === 'TEACHER' || user?.role === 'ADMIN';
 
-  const roleLabel =
-    user?.role === "STUDENT"
-      ? dict.dashboard.student.role
-      : dict.dashboard.teacher.role;
+  const roleLabel = user?.role === 'STUDENT' ? dict.dashboard.student.role : dict.dashboard.teacher.role;
 
   // თუ მომხმარებელი შესულია, მაგრამ აქვს VISITOR როლი, გამოვუჩინოთ კლასის კოდის მოდალი
-  const showJoinModal = user?.role === "VISITOR";
+  const showJoinModal = user?.role === 'VISITOR';
 
   return (
     <div className="flex min-h-screen flex-col bg-paper pb-[calc(4.25rem+env(safe-area-inset-bottom))] min-[500px]:pb-0">

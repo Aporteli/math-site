@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/session';
 import type { Locale } from '@/i18n/config';
-import { PageHero } from '@/components/ui/page-hero';
+import { PageHero } from '@/components/ui/PageHero';
 import { Users } from 'lucide-react';
 import { TeacherStudentsWorkspace } from '@/components/lms/teacher/students-workspace/TeacherStudentsWorkspace';
 type PageProps = {

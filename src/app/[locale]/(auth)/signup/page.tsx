@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { SignupForm } from '@/components/auth/signup-form';
+import { SignupForm } from '@/components/auth/SignupForm';
 import { LOGIN_PATH } from '@/lib/auth/paths';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';

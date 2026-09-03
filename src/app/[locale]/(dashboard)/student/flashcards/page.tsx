@@ -1,31 +1,31 @@
-import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth/session";
-import type { Locale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
-import { PageHero } from "@/components/ui/page-hero";
-import { Sparkles } from "lucide-react";
-import { StudentFlashcardsWorkspace } from "@/components/lms/student/flashcards/StudentFlashcardsWorkspace";
+import type { Metadata } from 'next';
+import { prisma } from '@/lib/prisma';
+import { requireRole } from '@/lib/auth/session';
+import type { Locale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { PageHero } from '@/components/ui/PageHero';
+import { Sparkles } from 'lucide-react';
+import { StudentFlashcardsWorkspace } from '@/components/lms/student/flashcards/StudentFlashcardsWorkspace';
 
 type PageProps = { params: Promise<{ locale: Locale }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return {
-    title: "ფორმულები | MathLab",
-    description: "მასწავლებლის მიერ გამოგზავნილი ფორმულები",
+    title: 'ფორმულები | MathLab',
+    description: 'მასწავლებლის მიერ გამოგზავნილი ფორმულები',
   };
 }
 
 export default async function StudentFlashcardsPage({ params }: PageProps) {
   const { locale } = await params;
-  const session = await requireRole(locale, ["STUDENT"]);
+  const session = await requireRole(locale, ['STUDENT']);
   const dict = getDictionary(locale);
 
   // 1. ვპოულობთ კურსებს, რომლებშიც მოსწავლეა ჩარიცხული
   const enrollments = await prisma.enrollment.findMany({
     where: {
       userId: session.user.id,
-      status: "ACTIVE",
+      status: 'ACTIVE',
     },
     select: { courseId: true },
   });
@@ -35,7 +35,7 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
   // 2. ვიღებთ მხოლოდ FLASHCARD ტიპის დავალებებს
   const rawAssignments = await prisma.assignment.findMany({
     where: {
-      type: "FLASHCARD", // მხოლოდ ფლეშ ბარათები
+      type: 'FLASHCARD', // მხოლოდ ფლეშ ბარათები
       OR: [
         { targetUserId: session.user.id },
         {
@@ -50,10 +50,10 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
         include: {
           author: { select: { name: true, role: true } },
         },
-        orderBy: { createdAt: "asc" },
+        orderBy: { createdAt: 'asc' },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: 'desc' },
   });
 
   const assignments = rawAssignments.map((a) => ({
@@ -63,7 +63,7 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
     instructions: a.instructions,
     customPayload: (a.customPayload as Record<string, unknown>) || {},
     createdAt: a.createdAt.toISOString(),
-    course: { title: a.course?.title || "ზოგადი კურსი" },
+    course: { title: a.course?.title || 'ზოგადი კურსი' },
     comments: a.comments.map((c) => ({
       id: c.id,
       body: c.body,
@@ -83,12 +83,8 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
         description="აქ ინახება მასწავლებლის მიერ გამოგზავნილი ფორმულები."
         aside={
           <div className="rounded-2xl border border-hairline bg-white/80 px-6 py-4 shadow-sm backdrop-blur-md transition-colors hover:border-navy/30 min-w-[160px]">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-muted">
-              სულ ფორმულა
-            </p>
-            <p className="mt-1.5 text-3xl font-black text-navy">
-              {assignments.length}
-            </p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-muted">სულ ფორმულა</p>
+            <p className="mt-1.5 text-3xl font-black text-navy">{assignments.length}</p>
           </div>
         }
       />

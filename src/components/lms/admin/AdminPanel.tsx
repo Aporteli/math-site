@@ -31,7 +31,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { TaxonomyManager } from '@/components/lms/teacher/problem-bank/components/TaxonomyManager';
-import { PageHero } from '@/components/ui/page-hero';
+import { PageHero } from '@/components/ui/PageHero';
 import type { Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/types';
 import type { TaxonomyNodeDto } from '@/lib/math/problems/taxonomy-shared';

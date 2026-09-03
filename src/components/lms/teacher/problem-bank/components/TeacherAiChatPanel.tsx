@@ -28,10 +28,13 @@ import {
   Layers,
   BookOpen,
 } from 'lucide-react';
-import { AdminSlashPromptManager, AdminSlashPromptMenu } from '@/components/lms/teacher/problem-bank/components/AdminSlashPrompts';
+import {
+  AdminSlashPromptManager,
+  AdminSlashPromptMenu,
+} from '@/components/lms/teacher/problem-bank/components/AdminSlashPrompts';
 import { AdminSlashPromptFillModal } from '@/components/lms/teacher/problem-bank/modals/AdminSlashPromptFillModal';
 import { KatexPreview } from '@/components/math/katex-preview';
-import { SelectMenu } from '@/components/ui/select-menu';
+import { SelectMenu } from '@/components/ui/SelectMenu';
 import { defaultLocale, locales, type Locale } from '@/i18n/config';
 import { handlePlainTextPaste } from '@/lib/helpers/plain-text-paste';
 import { fileToChatImage, type ChatImageDraft } from '@/lib/helpers/image-input';

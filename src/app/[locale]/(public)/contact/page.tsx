@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { ContactHub } from '@/components/public/contact-hub';
+import { ContactHub } from '@/components/public/ContactHub';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { parseCourseQuery } from '@/lib/contact';

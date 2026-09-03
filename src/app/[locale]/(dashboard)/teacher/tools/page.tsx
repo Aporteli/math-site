@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ToolsHub } from "@/components/tools/teacher-tools-hub";
+import { ToolsHub } from "@/components/tools/TeacherToolsHub";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 

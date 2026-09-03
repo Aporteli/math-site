@@ -1,20 +1,15 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { ArrowRight, LayoutGrid, Search } from "lucide-react";
-import { localePath, type Locale } from "@/i18n/config";
-import type { Dictionary } from "@/i18n/types";
-import { PageHero, SectionHeading } from "@/components/ui/page-hero";
-import {
-  badgeToneClass,
-  TOOL_SECTIONS,
-  type ToolItem,
-  type ToolSectionId,
-} from "@/lib/teacher-tools";
+import { useState } from 'react';
+import Link from 'next/link';
+import { ArrowRight, LayoutGrid, Search } from 'lucide-react';
+import { localePath, type Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/types';
+import { PageHero, SectionHeading } from '@/components/ui/PageHero';
+import { badgeToneClass, TOOL_SECTIONS, type ToolItem, type ToolSectionId } from '@/lib/tools';
 
-type ToolsCopy = Dictionary["toolsPage"];
-type FilterId = "all" | ToolSectionId;
+type ToolsCopy = Dictionary['toolsPage'];
+type FilterId = 'all' | ToolSectionId;
 
 interface ToolsHubProps {
   locale: Locale;
@@ -25,21 +20,14 @@ function normalize(value: string) {
   return value.trim().toLocaleLowerCase();
 }
 
-function itemMatches(item: ToolsCopy["items"][ToolItem["id"]], query: string) {
+function itemMatches(item: ToolsCopy['items'][ToolItem['id']], query: string) {
   if (!query) return true;
-  return normalize(`${item.title} ${item.description} ${item.badge}`).includes(
-    query,
-  );
+  return normalize(`${item.title} ${item.description} ${item.badge}`).includes(query);
 }
 
-function sectionMatches(
-  section: ToolsCopy["sections"][ToolSectionId],
-  query: string,
-) {
+function sectionMatches(section: ToolsCopy['sections'][ToolSectionId], query: string) {
   if (!query) return false;
-  return normalize(
-    `${section.title} ${section.subtitle} ${section.filter}`,
-  ).includes(query);
+  return normalize(`${section.title} ${section.subtitle} ${section.filter}`).includes(query);
 }
 
 function ToolCard({
@@ -50,7 +38,7 @@ function ToolCard({
 }: {
   locale: Locale;
   tool: ToolItem;
-  item: ToolsCopy["items"][ToolItem["id"]];
+  item: ToolsCopy['items'][ToolItem['id']];
   openLabel: string;
 }) {
   const Icon = tool.icon;
@@ -58,49 +46,28 @@ function ToolCard({
 
   return (
     <article className="group flex h-full min-w-0 flex-col rounded-2xl border border-hairline bg-white shadow-sm transition-all hover:border-navy/30 hover:shadow-md">
-      <Link
-        href={localePath(locale, tool.href)}
-        className="flex h-full min-w-0 flex-1 flex-col p-5 sm:p-6"
-      >
+      <Link href={localePath(locale, tool.href)} className="flex h-full min-w-0 flex-1 flex-col p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
-          <span
-            className={`inline-flex size-10 shrink-0 items-center justify-center rounded-xl ${tone.chip}`}
-          >
+          <span className={`inline-flex size-10 shrink-0 items-center justify-center rounded-xl ${tone.chip}`}>
             <Icon className="size-5" aria-hidden="true" />
           </span>
           <span
-            className={`min-w-0 max-w-[11rem] truncate rounded-full px-2.5 py-1 text-xs font-semibold leading-none ${tone.badge}`}
-          >
+            className={`min-w-0 max-w-[11rem] truncate rounded-full px-2.5 py-1 text-xs font-semibold leading-none ${tone.badge}`}>
             {item.badge}
           </span>
         </div>
-        <h3 className="mt-4 break-words text-lg font-semibold leading-snug text-ink">
-          {item.title}
-        </h3>
-        <p className="mt-2 min-h-0 flex-1 break-words text-sm leading-relaxed text-body">
-          {item.description}
-        </p>
+        <h3 className="mt-4 break-words text-lg font-semibold leading-snug text-ink">{item.title}</h3>
+        <p className="mt-2 min-h-0 flex-1 break-words text-sm leading-relaxed text-body">{item.description}</p>
         <span className="mt-5 inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-xl bg-navy px-3 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors group-hover:bg-navy-strong">
           {openLabel}
-          <ArrowRight
-            className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
+          <ArrowRight className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
       </Link>
     </article>
   );
 }
 
-function FilterPill({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: string;
-}) {
+function FilterPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: string }) {
   return (
     <button
       type="button"
@@ -108,39 +75,31 @@ function FilterPill({
       onClick={onClick}
       className={`max-w-full rounded-full border px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:px-4 ${
         active
-          ? "border-navy bg-navy text-white shadow-sm"
-          : "border-hairline bg-white text-body hover:border-navy/30 hover:text-ink"
-      }`}
-    >
+          ? 'border-navy bg-navy text-white shadow-sm'
+          : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink'
+      }`}>
       {children}
     </button>
   );
 }
 
 export function ToolsHub({ locale, copy }: ToolsHubProps) {
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<FilterId>("all");
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<FilterId>('all');
   const normalizedQuery = normalize(query);
 
-  const visibleSections = TOOL_SECTIONS.filter(
-    (section) => filter === "all" || section.id === filter,
-  )
+  const visibleSections = TOOL_SECTIONS.filter((section) => filter === 'all' || section.id === filter)
     .map((section) => {
       const sectionCopy = copy.sections[section.id];
       const tools = sectionMatches(sectionCopy, normalizedQuery)
         ? section.tools
-        : section.tools.filter((tool) =>
-            itemMatches(copy.items[tool.id], normalizedQuery),
-          );
+        : section.tools.filter((tool) => itemMatches(copy.items[tool.id], normalizedQuery));
 
       return { section, sectionCopy, tools };
     })
     .filter(({ tools }) => tools.length > 0);
 
-  const visibleCount = visibleSections.reduce(
-    (total, { tools }) => total + tools.length,
-    0,
-  );
+  const visibleCount = visibleSections.reduce((total, { tools }) => total + tools.length, 0);
 
   return (
     <div className="overflow-x-clip">
@@ -168,25 +127,18 @@ export function ToolsHub({ locale, copy }: ToolsHubProps) {
                 />
               </label>
               <p className="text-sm text-muted" aria-live="polite">
-                {copy.hero.resultCount.replace("{count}", String(visibleCount))}
+                {copy.hero.resultCount.replace('{count}', String(visibleCount))}
               </p>
             </>
           }
           footer={
             <nav aria-label={copy.filters.aria}>
               <div className="flex flex-wrap gap-2">
-                <FilterPill
-                  active={filter === "all"}
-                  onClick={() => setFilter("all")}
-                >
+                <FilterPill active={filter === 'all'} onClick={() => setFilter('all')}>
                   {copy.filters.all}
                 </FilterPill>
                 {TOOL_SECTIONS.map((section) => (
-                  <FilterPill
-                    key={section.id}
-                    active={filter === section.id}
-                    onClick={() => setFilter(section.id)}
-                  >
+                  <FilterPill key={section.id} active={filter === section.id} onClick={() => setFilter(section.id)}>
                     {copy.sections[section.id].filter}
                   </FilterPill>
                 ))}
@@ -203,11 +155,7 @@ export function ToolsHub({ locale, copy }: ToolsHubProps) {
           ) : (
             <div className="space-y-14 sm:space-y-16">
               {visibleSections.map(({ section, sectionCopy, tools }) => (
-                <section
-                  key={section.id}
-                  id={section.id}
-                  aria-labelledby={`${section.id}-title`}
-                >
+                <section key={section.id} id={section.id} aria-labelledby={`${section.id}-title`}>
                   <SectionHeading
                     id={`${section.id}-title`}
                     title={sectionCopy.title}
@@ -215,24 +163,18 @@ export function ToolsHub({ locale, copy }: ToolsHubProps) {
                   />
                   <ul
                     className={
-                      section.id === "advanced" ||
-                      section.id === "applied" ||
-                      section.id === "exam" ||
-                      section.id === "formulas" ||
-                      section.id === "widgets" ||
-                      section.id === "games"
-                        ? "mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                        : "mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-                    }
-                  >
+                      section.id === 'advanced' ||
+                      section.id === 'applied' ||
+                      section.id === 'exam' ||
+                      section.id === 'formulas' ||
+                      section.id === 'widgets' ||
+                      section.id === 'games'
+                        ? 'mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                        : 'mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'
+                    }>
                     {tools.map((tool) => (
                       <li key={tool.id} className="min-w-0">
-                        <ToolCard
-                          locale={locale}
-                          tool={tool}
-                          item={copy.items[tool.id]}
-                          openLabel={copy.openTool}
-                        />
+                        <ToolCard locale={locale} tool={tool} item={copy.items[tool.id]} openLabel={copy.openTool} />
                       </li>
                     ))}
                   </ul>

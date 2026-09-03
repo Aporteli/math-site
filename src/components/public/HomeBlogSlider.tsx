@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { BlogCover } from '@/components/public/blog-cover';
+import { BlogCover } from '@/components/public/BlogCover';
 import { localePath, type Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/types';
 import { BLOG_POSTS, postPath, type BlogPost } from '@/lib/blog';

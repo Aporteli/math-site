@@ -1,6 +1,6 @@
 "use client";
 
-import { useLockBodyScroll } from "./use-lock-body-scroll";
+import { useLockBodyScroll } from "@/hooks/use-lock-body-scroll";
 import { ReactNode } from "react";
 
 type ModalRootProps = {

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { useId, useState, type FormEvent, type ReactNode } from 'react';
 import {
   ArrowLeftRight,
   CheckCircle2,
@@ -14,10 +14,10 @@ import {
   Phone,
   Send,
   type LucideIcon,
-} from "lucide-react";
-import type { Dictionary } from "@/i18n/types";
-import { PageHero } from "@/components/ui/page-hero";
-import { SelectMenu } from "@/components/ui/select-menu";
+} from 'lucide-react';
+import type { Dictionary } from '@/i18n/types';
+import { PageHero } from '@/components/ui/PageHero';
+import { SelectMenu } from '@/components/ui/SelectMenu';
 import {
   CONTACT_COURSES,
   CONTACT_FORMATS,
@@ -30,17 +30,17 @@ import {
   type ContactFormatId,
   type ContactRoleId,
   type ConsultationInput,
-} from "@/lib/contact";
+} from '@/lib/contact';
 
-type ContactCopy = Dictionary["contactPage"];
-type ContactDetails = Dictionary["footer"]["contact"];
+type ContactCopy = Dictionary['contactPage'];
+type ContactDetails = Dictionary['footer']['contact'];
 type FieldErrors = Partial<Record<keyof ConsultationInput, string>>;
 
 const fieldClass =
-  "w-full min-w-0 appearance-none rounded-xl border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none";
+  'w-full min-w-0 appearance-none rounded-xl border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none';
 
 const fieldErrorClass =
-  "w-full min-w-0 appearance-none rounded-xl border border-brass bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none";
+  'w-full min-w-0 appearance-none rounded-xl border border-brass bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none';
 
 interface ContactHubProps {
   copy: ContactCopy;
@@ -52,12 +52,7 @@ export function ContactHub({ copy, contact, initialCourse }: ContactHubProps) {
   return (
     <div className="overflow-x-clip">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
-        <PageHero
-          icon={Mail}
-          eyebrow={copy.hero.eyebrow}
-          title={copy.hero.title}
-          description={copy.hero.subtitle}
-        />
+        <PageHero icon={Mail} eyebrow={copy.hero.eyebrow} title={copy.hero.title} description={copy.hero.subtitle} />
 
         <div className="mt-12 grid gap-8 lg:grid-cols-12">
           <aside className="space-y-5 lg:col-span-5">
@@ -77,22 +72,13 @@ export function ContactHub({ copy, contact, initialCourse }: ContactHubProps) {
   );
 }
 
-function DirectContactCard({
-  copy,
-  contact,
-}: {
-  copy: ContactCopy;
-  contact: ContactDetails;
-}) {
+function DirectContactCard({ copy, contact }: { copy: ContactCopy; contact: ContactDetails }) {
   return (
     <section className="rounded-2xl border border-hairline bg-white p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold text-ink">{copy.channels.title}</h2>
       <ul className="mt-5 space-y-4">
         <ContactRow icon={Phone} label={copy.channels.phone}>
-          <a
-            href={phoneHref(contact.phone)}
-            className="font-medium text-navy transition-colors hover:text-navy-strong"
-          >
+          <a href={phoneHref(contact.phone)} className="font-medium text-navy transition-colors hover:text-navy-strong">
             {contact.phone}
           </a>
         </ContactRow>
@@ -106,8 +92,7 @@ function DirectContactCard({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={copy.channels.whatsappAria}
-              className="inline-flex items-center rounded-full border border-hairline bg-paper px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-navy/30"
-            >
+              className="inline-flex items-center rounded-full border border-hairline bg-paper px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-navy/30">
               {copy.channels.whatsapp}
             </a>
             <a
@@ -115,8 +100,7 @@ function DirectContactCard({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={copy.channels.telegramAria}
-              className="inline-flex items-center rounded-full border border-hairline bg-paper px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-navy/30"
-            >
+              className="inline-flex items-center rounded-full border border-hairline bg-paper px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-navy/30">
               {copy.channels.telegram}
             </a>
           </div>
@@ -124,8 +108,7 @@ function DirectContactCard({
         <ContactRow icon={Mail} label={copy.channels.email}>
           <a
             href={`mailto:${contact.email}`}
-            className="break-all font-medium text-navy transition-colors hover:text-navy-strong"
-          >
+            className="break-all font-medium text-navy transition-colors hover:text-navy-strong">
             {contact.email}
           </a>
         </ContactRow>
@@ -138,15 +121,7 @@ function DirectContactCard({
   );
 }
 
-function ContactRow({
-  icon: Icon,
-  label,
-  children,
-}: {
-  icon: LucideIcon;
-  label: string;
-  children: ReactNode;
-}) {
+function ContactRow({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
   return (
     <li className="flex gap-3">
       <span className="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy-tint text-navy">
@@ -185,40 +160,32 @@ function AssessmentCard({ copy }: { copy: ContactCopy }) {
         </span>
         <div className="min-w-0">
           <h2 className="font-semibold text-ink">{copy.assessment.title}</h2>
-          <p className="mt-1 text-sm leading-relaxed text-body">
-            {copy.assessment.text}
-          </p>
+          <p className="mt-1 text-sm leading-relaxed text-body">{copy.assessment.text}</p>
         </div>
       </div>
     </aside>
   );
 }
 
-function ConsultationForm({
-  copy,
-  initialCourse,
-}: {
-  copy: ContactCopy;
-  initialCourse?: ContactCourseId;
-}) {
+function ConsultationForm({ copy, initialCourse }: { copy: ContactCopy; initialCourse?: ContactCourseId }) {
   const formId = useId();
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [role, setRole] = useState<ContactRoleId | "">("");
-  const [course, setCourse] = useState<ContactCourseId | "">(initialCourse ?? "");
-  const [format, setFormat] = useState<ContactFormatId | "">("");
-  const [message, setMessage] = useState("");
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [role, setRole] = useState<ContactRoleId | ''>('');
+  const [course, setCourse] = useState<ContactCourseId | ''>(initialCourse ?? '');
+  const [format, setFormat] = useState<ContactFormatId | ''>('');
+  const [message, setMessage] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
   function resetForm() {
-    setName("");
-    setPhone("");
-    setRole("");
-    setCourse(initialCourse ?? "");
-    setFormat("");
-    setMessage("");
+    setName('');
+    setPhone('');
+    setRole('');
+    setCourse(initialCourse ?? '');
+    setFormat('');
+    setMessage('');
     setErrors({});
     setSent(false);
   }
@@ -238,7 +205,7 @@ function ConsultationForm({
       const next: FieldErrors = {};
       for (const issue of parsed.error.issues) {
         const key = issue.path[0];
-        if (key === "name" || key === "phone" || key === "role" || key === "course" || key === "format") {
+        if (key === 'name' || key === 'phone' || key === 'role' || key === 'course' || key === 'format') {
           next[key] = copy.errors[key];
         }
       }
@@ -255,12 +222,8 @@ function ConsultationForm({
 
   return (
     <section className="rounded-2xl border border-hairline bg-white p-5 shadow-sm sm:p-6 lg:p-8">
-      <h2 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">
-        {copy.form.title}
-      </h2>
-      <p className="mt-2 text-sm leading-relaxed text-body sm:text-base">
-        {copy.form.subtitle}
-      </p>
+      <h2 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">{copy.form.title}</h2>
+      <p className="mt-2 text-sm leading-relaxed text-body sm:text-base">{copy.form.subtitle}</p>
 
       {sent ? (
         <div className="mt-8 rounded-xl border border-hairline bg-paper-deep px-5 py-8 text-center">
@@ -270,18 +233,13 @@ function ConsultationForm({
           <button
             type="button"
             onClick={resetForm}
-            className="mt-6 inline-flex items-center justify-center rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong"
-          >
+            className="mt-6 inline-flex items-center justify-center rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong">
             {copy.form.successAgain}
           </button>
         </div>
       ) : (
         <form onSubmit={onSubmit} className="mt-8 space-y-5" noValidate>
-          <Field
-            id={`${formId}-name`}
-            label={copy.form.name}
-            error={errors.name}
-          >
+          <Field id={`${formId}-name`} label={copy.form.name} error={errors.name}>
             <input
               id={`${formId}-name`}
               name="name"
@@ -296,11 +254,7 @@ function ConsultationForm({
             />
           </Field>
 
-          <Field
-            id={`${formId}-phone`}
-            label={copy.form.phone}
-            error={errors.phone}
-          >
+          <Field id={`${formId}-phone`} label={copy.form.phone} error={errors.phone}>
             <input
               id={`${formId}-phone`}
               name="phone"
@@ -320,12 +274,7 @@ function ConsultationForm({
             <legend className="text-sm font-semibold text-ink">{copy.form.role}</legend>
             <div className="mt-2.5 flex flex-wrap gap-2">
               {CONTACT_ROLES.map((id) => (
-                <ChoicePill
-                  key={id}
-                  name="role"
-                  checked={role === id}
-                  onChange={() => setRole(id)}
-                >
+                <ChoicePill key={id} name="role" checked={role === id} onChange={() => setRole(id)}>
                   {copy.roles[id]}
                 </ChoicePill>
               ))}
@@ -337,25 +286,17 @@ function ConsultationForm({
             )}
           </fieldset>
 
-          <Field
-            id={`${formId}-course`}
-            label={copy.form.course}
-            error={errors.course}
-          >
+          <Field id={`${formId}-course`} label={copy.form.course} error={errors.course}>
             <SelectMenu
               id={`${formId}-course`}
               name="course"
               value={course}
               invalid={Boolean(errors.course)}
-              describedBy={
-                errors.course ? `${formId}-course-error` : undefined
-              }
+              describedBy={errors.course ? `${formId}-course-error` : undefined}
               triggerClassName="px-3.5 py-3 text-base"
-              onChange={(value) =>
-                setCourse(value as ContactCourseId | "")
-              }
+              onChange={(value) => setCourse(value as ContactCourseId | '')}
               options={[
-                { value: "", label: copy.form.coursePlaceholder },
+                { value: '', label: copy.form.coursePlaceholder },
                 ...CONTACT_COURSES.map((id) => ({
                   value: id,
                   label: copy.courses[id],
@@ -370,12 +311,7 @@ function ConsultationForm({
               {CONTACT_FORMATS.map((id) => {
                 const Icon = formatIcon[id];
                 return (
-                  <ChoicePill
-                    key={id}
-                    name="format"
-                    checked={format === id}
-                    onChange={() => setFormat(id)}
-                  >
+                  <ChoicePill key={id} name="format" checked={format === id} onChange={() => setFormat(id)}>
                     <Icon className="size-4 shrink-0" aria-hidden="true" />
                     {copy.formats[id]}
                   </ChoicePill>
@@ -389,10 +325,7 @@ function ConsultationForm({
             )}
           </fieldset>
 
-          <Field
-            id={`${formId}-message`}
-            label={`${copy.form.message} ${copy.form.messageOptional}`}
-          >
+          <Field id={`${formId}-message`} label={`${copy.form.message} ${copy.form.messageOptional}`}>
             <textarea
               id={`${formId}-message`}
               name="message"
@@ -407,8 +340,7 @@ function ConsultationForm({
           <button
             type="submit"
             disabled={sending}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-3 text-base font-medium text-white shadow-sm transition-all hover:bg-navy-strong disabled:cursor-wait disabled:opacity-70"
-          >
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-3 text-base font-medium text-white shadow-sm transition-all hover:bg-navy-strong disabled:cursor-wait disabled:opacity-70">
             {sending ? copy.form.sending : copy.form.submit}
             <Send className="size-4 shrink-0" aria-hidden="true" />
           </button>
@@ -424,17 +356,7 @@ const formatIcon: Record<ContactFormatId, LucideIcon> = {
   either: ArrowLeftRight,
 };
 
-function Field({
-  id,
-  label,
-  error,
-  children,
-}: {
-  id: string;
-  label: string;
-  error?: string;
-  children: ReactNode;
-}) {
+function Field({ id, label, error, children }: { id: string; label: string; error?: string; children: ReactNode }) {
   return (
     <div>
       <label htmlFor={id} className="text-sm font-semibold text-ink">
@@ -465,29 +387,16 @@ function ChoicePill({
     <label
       className={`inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
         checked
-          ? "border-navy bg-navy text-white shadow-sm"
-          : "border-hairline bg-white text-body hover:border-navy/30 hover:text-ink"
-      }`}
-    >
-      <input
-        type="radio"
-        name={name}
-        checked={checked}
-        onChange={onChange}
-        className="sr-only"
-      />
+          ? 'border-navy bg-navy text-white shadow-sm'
+          : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink'
+      }`}>
+      <input type="radio" name={name} checked={checked} onChange={onChange} className="sr-only" />
       {children}
     </label>
   );
 }
 
-function MapPlaceholder({
-  copy,
-  address,
-}: {
-  copy: ContactCopy;
-  address: string;
-}) {
+function MapPlaceholder({ copy, address }: { copy: ContactCopy; address: string }) {
   return (
     <section className="mt-12 overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm sm:mt-16">
       <div className="border-b border-hairline px-5 py-4 sm:px-6">
@@ -499,8 +408,7 @@ function MapPlaceholder({
           viewBox="0 0 640 320"
           preserveAspectRatio="xMidYMid slice"
           className="absolute inset-0 size-full text-navy/10"
-          aria-hidden="true"
-        >
+          aria-hidden="true">
           <rect width="640" height="320" fill="#f2f0ea" />
           <g stroke="currentColor" strokeWidth="0.8">
             <path d="M80 0v320M160 0v320M240 0v320M320 0v320M400 0v320M480 0v320M560 0v320" />
