@@ -882,8 +882,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   }, [triggerLaserFade, onLaserMove]);
 
   const handlePointerDown = (e: any) => {
-    const evt = e.evt as PointerEvent;
-    if (stylusOnly && evt.pointerType === 'touch') return;
     if (isPinching.current) return;
     if (contextMenu) setContextMenu(null);
 
@@ -891,6 +889,12 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
       finishTextEditing();
       return;
     }
+
+    const evt = e.evt as PointerEvent;
+    if (stylusOnly && evt.pointerType === 'touch') return;
+
+    // Stylus-only mode: block touch (finger) input
+    if (stylusOnly && evt.pointerType === 'touch') return;
 
     if (evt.pointerType === 'touch' && isStylusActiveRef.current) return;
     if (evt.pointerType === 'pen') isStylusActiveRef.current = true;
@@ -1088,9 +1092,11 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   };
 
   const handlePointerMove = (e: any) => {
+    if (isPinching.current) return;
     const evt = e.evt as PointerEvent;
     if (stylusOnly && evt.pointerType === 'touch') return;
-    if (isPinching.current) return;
+    // Stylus-only: block touch moves
+    if (stylusOnly && evt.pointerType === 'touch') return;
 
     if (evt.pointerType === 'touch' && isStylusActiveRef.current) return;
     if (evt.pointerId !== activePointerIdRef.current) return;

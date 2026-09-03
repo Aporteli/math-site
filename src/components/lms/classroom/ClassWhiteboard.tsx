@@ -1488,9 +1488,9 @@ export function ClassWhiteboard({
 
   // Live stroke color adaptation for dark mode
   const effectiveStroke = (() => {
-    if (isDark && DARK_COLORS.includes(strokeColor)) return LIGHT_COLOR;
-    return strokeColor;
-  })();
+  if (isDark && DARK_COLORS.includes(strokeColor)) return LIGHT_COLOR;
+  return strokeColor;
+})();
 
   return (
     <div
@@ -2048,7 +2048,10 @@ export function ClassWhiteboard({
       </div>
 
       {/* ტილო - now passes stylusOnly to KonvaCanvas */}
-      <div className="relative flex-1 w-full min-h-0 overflow-hidden bg-transparent">
+      {/* Canvas container – background forced by local isDark, not global theme */}
+      <div
+        className="relative flex-1 w-full min-h-0 overflow-hidden"
+        style={{ backgroundColor: isDark ? '#020617' : '#ffffff' }}>
         <KonvaCanvas
           ref={canvasRef}
           elements={pages[currentPageIndex] || []}
@@ -2061,7 +2064,7 @@ export function ClassWhiteboard({
           onScaleChange={(newScale) => setZoomScale(newScale)}
           onLaserMove={handleLaserMove}
           onPasteImage={addImageToCanvas}
-          stylusOnly={stylusOnly} // new prop
+          stylusOnly={stylusOnly}
         />
       </div>
 
