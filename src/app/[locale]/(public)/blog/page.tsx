@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { BlogHub } from '@/hooks/public/blog-hub';
+import { BlogHub } from '@/components/public/blog-hub';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 

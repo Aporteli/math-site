@@ -19,7 +19,7 @@ const QuadraticSolver = dynamic<QuadraticSolverProps>(
   },
 );
 
-export function QuadraticSolverLoader(props: QuadraticSolverProps) {
+export function QuadraticLoader(props: QuadraticSolverProps) {
   return <QuadraticSolver {...props} />;
 }
 
