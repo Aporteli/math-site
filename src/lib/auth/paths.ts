@@ -3,7 +3,7 @@ import type { UserRole } from '@/lib/auth/roles';
 
 export const LOGIN_PATH = '/login';
 export const SIGNUP_PATH = '/signup';
-export const TEACHER_HOME = '/teacher/journal';
+export const TEACHER_HOME = '/teacher/students';
 export const STUDENT_HOME = '/student/assignments';
 export const VISITOR_HOME = '/';
 
