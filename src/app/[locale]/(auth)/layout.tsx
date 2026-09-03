@@ -1,9 +1,9 @@
-import { LanguageSwitcher } from "@/components/layout/language-switcher";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { SiteLogo } from "@/components/layout/site-logo";
-import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
-import { notFound } from "next/navigation";
+import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { SiteLogo } from '@/components/layout/SiteLogo';
+import { isLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { notFound } from 'next/navigation';
 
 export default async function AuthLayout({
   children,
@@ -26,9 +26,7 @@ export default async function AuthLayout({
           <ThemeToggle label={dict.header.theme} />
         </div>
       </header>
-      <main className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6">
-        {children}
-      </main>
+      <main className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6">{children}</main>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import type { Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { PageHero } from "@/components/ui/page-hero";
 import { Sparkles } from "lucide-react";
-import { StudentFlashcardsWorkspace } from "@/components/lms/StudentFlashcardsWorkspace";
+import { StudentFlashcardsWorkspace } from "@/components/lms/student/flashcards/StudentFlashcardsWorkspace";
 
 type PageProps = { params: Promise<{ locale: Locale }> };
 

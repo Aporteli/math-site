@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { DashboardShell } from '@/components/layout/dashboard-shell';
+import { DashboardShell } from '@/components/layout/DashboardShell';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { requireRole } from '@/lib/auth/session';

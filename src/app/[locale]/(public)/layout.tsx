@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { WorkspaceDock } from "@/components/auth/workspace-dock";
 import { JoinClassModal } from "@/components/auth/join-class-modal";
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { getSession } from "@/lib/auth/session";

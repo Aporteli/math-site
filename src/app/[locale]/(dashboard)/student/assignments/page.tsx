@@ -3,21 +3,21 @@
 import { Calendar as CalendarIcon, ClipboardList } from 'lucide-react';
 import type { Locale } from '@/i18n/config';
 import { PageHero } from '@/components/ui/page-hero';
-import { ProblemDetailModal } from '@/components/lms/ProblemDetailModal';
+import { ProblemDetailModal } from '@/components/lms/student/assignments/components/ProblemDetailModal';
 
 // კომპონენტები components/student/assignments/ დირექტორიიდან
-import { AssignmentAnswersTab } from '@/components/student/assignments/components/AssignmentAnswersTab';
-import { AssignmentContentTabsHeader } from '@/components/student/assignments/components/AssignmentContentTabsHeader';
-import { AssignmentDatePickerHeader } from '@/components/student/assignments/components/AssignmentDatePickerHeader';
-import { AssignmentFiltersSidebar } from '@/components/student/assignments/components/AssignmentFiltersSidebar';
-import { AssignmentGroupUploader } from '@/components/student/assignments/components/AssignmentGroupUploader';
-import { AssignmentMaterialsTab } from '@/components/student/assignments/components/AssignmentMaterialsTab';
-import { AssignmentTasksTab } from '@/components/student/assignments/components/AssignmentTasksTab';
-import { MaterialPreviewModal } from '@/components/student/assignments/components/MaterialPreviewModal';
-import { StudentAssignmentsHeroAside } from '@/components/student/assignments/components/StudentAssignmentsHeroAside';
+import { AssignmentAnswersTab } from '@/components/lms/student/assignments/components/AssignmentAnswersTab';
+import { AssignmentContentTabsHeader } from '@/components/lms/student/assignments/components/AssignmentContentTabsHeader';
+import { AssignmentDatePickerHeader } from '@/components/lms/student/assignments/components/AssignmentDatePickerHeader';
+import { AssignmentFiltersSidebar } from '@/components/lms/student/assignments/components/AssignmentFiltersSidebar';
+import { AssignmentGroupUploader } from '@/components/lms/student/assignments/components/AssignmentGroupUploader';
+import { AssignmentMaterialsTab } from '@/components/lms/student/assignments/components/AssignmentMaterialsTab';
+import { AssignmentTasksTab } from '@/components/lms/student/assignments/components/AssignmentTasksTab';
+import { MaterialPreviewModal } from '@/components/lms/student/assignments/components/MaterialPreviewModal';
+import { StudentAssignmentsHeroAside } from '@/components/lms/student/assignments/components/StudentAssignmentsHeroAside';
 
 // ჰუკი components/student/hooks/ დირექტორიიდან
-import { useStudentAssignments } from '@/components/student/assignments/hooks/useStudentAssignments';
+import { useStudentAssignments } from '@/components/lms/student/assignments/hooks/useStudentAssignments';
 
 interface StudentAssignmentsProps {
   locale: Locale;

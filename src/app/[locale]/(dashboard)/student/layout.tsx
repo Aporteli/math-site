@@ -1,12 +1,12 @@
-import { notFound, redirect } from "next/navigation";
-import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { isLocale, localePath } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
-import { getSession } from "@/lib/auth/session";
-import { isLocalDashboardPreview } from "@/lib/auth/paths";
-import { prisma } from "@/lib/prisma";
+import { notFound, redirect } from 'next/navigation';
+import { DashboardShell } from '@/components/layout/DashboardShell';
+import { isLocale, localePath } from '@/i18n/config';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { getSession } from '@/lib/auth/session';
+import { isLocalDashboardPreview } from '@/lib/auth/paths';
+import { prisma } from '@/lib/prisma';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export default async function StudentLayout({
   children,
@@ -20,7 +20,7 @@ export default async function StudentLayout({
 
   const session = await getSession();
   if (!session?.user?.id) {
-    if (!isLocalDashboardPreview()) redirect(localePath(locale, "/login"));
+    if (!isLocalDashboardPreview()) redirect(localePath(locale, '/login'));
     return null;
   }
 
@@ -33,9 +33,9 @@ export default async function StudentLayout({
   const currentRole = dbUser?.role ?? session.user.role;
 
   // თუ ბაზაშიც არ არის STUDENT ან ADMIN, მხოლოდ მაშინ გადავიდეს მთავარზე
-  if (currentRole !== "STUDENT" && currentRole !== "ADMIN") {
+  if (currentRole !== 'STUDENT' && currentRole !== 'ADMIN') {
     if (!isLocalDashboardPreview()) {
-      redirect(localePath(locale, "/"));
+      redirect(localePath(locale, '/'));
     }
   }
 
@@ -49,8 +49,7 @@ export default async function StudentLayout({
       roleLabel={student.role}
       userName={dbUser?.name ?? session.user.name ?? student.role}
       role="student"
-      labels={student.nav}
-    >
+      labels={student.nav}>
       {children}
     </DashboardShell>
   );

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { CatalogToolShell } from '@/components/tools/catalog-tool-shell';
-import { GraphingToolLoader,  } from '@/components/tools/loaders/graphing-tool-loader';
-import { QuadraticSolverLoader } from '@/components/tools/loaders/quadratic-solver-loader';
+import { GraphingToolLoader } from '@/components/tools/graphing/GraphingLoader';
+import { QuadraticSolverLoader } from '@/components/tools/quadratic/QuadraticLoader';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { catalogToolStaticParams, getCatalogToolByPath } from '@/lib/tools';

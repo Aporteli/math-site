@@ -1,25 +1,25 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { AdminPanel } from "@/components/lms/admin-panel";
-import { teacherPageMetadata } from "@/components/lms/dashboard-page";
-import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
-import { requireRole } from "@/lib/auth/session";
-import { ensureDefaultTaxonomy } from "@/lib/math/problems/taxonomy";
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { AdminPanel } from '@/components/lms/admin/admin-panel';
+import { teacherPageMetadata } from '@/components/layout/DashboardPage';
+import { isLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { requireRole } from '@/lib/auth/session';
+import { ensureDefaultTaxonomy } from '@/lib/math/problems/taxonomy';
 
 type PageProps = { params: Promise<{ locale: string }> };
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  return teacherPageMetadata("admin", params);
+  return teacherPageMetadata('admin', params);
 }
 
 export default async function TeacherAdminPage({ params }: PageProps) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  await requireRole(locale, ["TEACHER", "ADMIN"]);
+  await requireRole(locale, ['TEACHER', 'ADMIN']);
   const dict = getDictionary(locale);
   const nodes = await ensureDefaultTaxonomy();
 

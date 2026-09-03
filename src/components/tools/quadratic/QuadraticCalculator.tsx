@@ -29,8 +29,8 @@ import {
   type MethodSolution,
   type SolutionStep,
   type QuadraticSolution,
-} from './';
-import type { AnalysisRow } from './types/quadratic';
+} from '../../../lib/math/tools/quadratic';
+import type { AnalysisRow } from '../../../lib/math/tools/quadratic/types/quadratic';
 
 const fieldClass =
   'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';

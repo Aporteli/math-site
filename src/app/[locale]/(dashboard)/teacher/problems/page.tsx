@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import { notFound } from 'next/navigation';
-import { ProblemBankWorkspace } from '@/components/lms/problem-bank/problem-bank-workspace';
-import { teacherPageMetadata } from '@/components/lms/dashboard-page';
+import { ProblemBankWorkspace } from '@/components/lms/teacher/problem-bank/ProblemBankWorkspace';
+import { teacherPageMetadata } from '@/components/layout/DashboardPage';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { getSession } from '@/lib/auth/session';

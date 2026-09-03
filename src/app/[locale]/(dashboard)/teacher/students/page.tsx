@@ -1,25 +1,24 @@
-import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/auth/session";
-import type { Locale } from "@/i18n/config";
-import { PageHero } from "@/components/ui/page-hero";
-import { Users } from "lucide-react";
-import { TeacherStudentsWorkspace } from "@/components/lms/TeacherStudentsWorkspace";
-
+import type { Metadata } from 'next';
+import { prisma } from '@/lib/prisma';
+import { requireRole } from '@/lib/auth/session';
+import type { Locale } from '@/i18n/config';
+import { PageHero } from '@/components/ui/page-hero';
+import { Users } from 'lucide-react';
+import { TeacherStudentsWorkspace } from '@/components/lms/teacher/students-workspace/TeacherStudentsWorkspace';
 type PageProps = {
   params: Promise<{ locale: Locale }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return {
-    title: "მოსწავლეების მართვა | MathLab",
-    description: "მოსწავლეების მონაცემები, ინდივიდუალური ბარათები და კომუნიკაცია",
+    title: 'მოსწავლეების მართვა | MathLab',
+    description: 'მოსწავლეების მონაცემები, ინდივიდუალური ბარათები და კომუნიკაცია',
   };
 }
 
 export default async function TeacherStudentsPage({ params }: PageProps) {
   const { locale } = await params;
-  const session = await requireRole(locale, ["TEACHER", "ADMIN"]);
+  const session = await requireRole(locale, ['TEACHER', 'ADMIN']);
 
   const teacherCourses = await prisma.course.findMany({
     where: {
@@ -29,7 +28,7 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
       enrollments: {
         where: {
           user: {
-            role: "STUDENT",
+            role: 'STUDENT',
           },
         },
         include: {
@@ -56,14 +55,14 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
                     },
                   },
                 },
-                orderBy: { createdAt: "desc" },
+                orderBy: { createdAt: 'desc' },
               },
             },
           },
         },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: 'desc' },
   });
 
   const problemSets = await prisma.problemSet.findMany({
@@ -79,10 +78,10 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
             },
           },
         },
-        orderBy: { position: "asc" },
+        orderBy: { position: 'asc' },
       },
     },
-    orderBy: { updatedAt: "desc" },
+    orderBy: { updatedAt: 'desc' },
   });
 
   const setProblemsList = problemSets.flatMap((set) =>
@@ -90,12 +89,12 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
       id: item.problem.id,
       setId: set.id,
       setTitle: set.title,
-      title: item.problem.topic || item.problem.kind || "ბარათი",
-    }))
+      title: item.problem.topic || item.problem.kind || 'ბარათი',
+    })),
   );
 
   const availableSetProblems = setProblemsList.filter(
-    (item, index, self) => index === self.findIndex((t) => t.id === item.id)
+    (item, index, self) => index === self.findIndex((t) => t.id === item.id),
   );
 
   const studentsMap = new Map<string, any>();
@@ -121,9 +120,9 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
               instructions: a.instructions,
               status: sub.status || a.status,
               createdAt: a.createdAt.toISOString(),
-              promptTex: String(payload.promptTex || payload.text || a.instructions || ""),
+              promptTex: String(payload.promptTex || payload.text || a.instructions || ''),
               // მასწავლებლის მიერ გაგზავნილი სურათი ან დაფის კადრი
-              problemImageUrl: a.attachmentUrl || (typeof payload.imageUrl === "string" ? payload.imageUrl : null),
+              problemImageUrl: a.attachmentUrl || (typeof payload.imageUrl === 'string' ? payload.imageUrl : null),
               // მოსწავლის მიერ ატვირთული პასუხი
               studentAttachmentUrl: sub.attachmentUrl || null,
               commentCount: a._count?.comments ?? 0,
@@ -155,20 +154,12 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
         aside={
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
             <div className="rounded-xl border border-hairline bg-white px-4 py-3 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                სულ მოსწავლე
-              </p>
-              <p className="mt-1 text-2xl font-bold text-ink">
-                {studentsList.length}
-              </p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">სულ მოსწავლე</p>
+              <p className="mt-1 text-2xl font-bold text-ink">{studentsList.length}</p>
             </div>
             <div className="rounded-xl border border-hairline bg-white px-4 py-3 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-                ხელმისაწვდომი ბარათები
-              </p>
-              <p className="mt-1 text-2xl font-bold text-ink">
-                {availableSetProblems.length}
-              </p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">ხელმისაწვდომი ბარათები</p>
+              <p className="mt-1 text-2xl font-bold text-ink">{availableSetProblems.length}</p>
             </div>
           </div>
         }

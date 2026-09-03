@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { CatalogToolShell } from '@/components/tools/catalog-tool-shell';
-import { GraphingToolLoader } from '@/components/tools/loaders/graphing-tool-loader';
+import { GraphingToolLoader } from '@/components/tools/graphing/GraphingLoader';
 import { QuadraticSolverLoader } from '@/components/tools/loaders/quadratic-solver-loader';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
-import { MathStepSolver } from '@/components/tools/MathStepSolver';
+import { MathStepSolver } from '@/components/tools/math-step-solver/MathStepSolver';
 import { catalogToolStaticParams, getCatalogToolByPath } from '@/lib/tools';
 
 type ToolPageProps = {
