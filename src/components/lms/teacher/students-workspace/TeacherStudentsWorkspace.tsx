@@ -1,9 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Users } from 'lucide-react';
 import { useTeacherStudentsWorkspace } from './hooks/useTeacherStudentsWorkspace';
+import { PageHero } from '@/components/ui/PageHero';
 import { TeacherClassesSidebar } from './components/TeacherClassesSidebar';
+import { TeacherStudentsHeroAside } from './components/TeacherStudentsHeroAside';
 import { TeacherWorkspaceHeader } from './components/TeacherWorkspaceHeader';
 import { TeacherWorkspaceTabs } from './components/TeacherWorkspaceTabs';
 import { TeacherAssignmentsGrid } from './components/TeacherAssignmentsGrid';
@@ -31,8 +33,23 @@ export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
 
   return (
     <div className="space-y-6">
+      <PageHero
+        icon={Users}
+        eyebrow="სასწავლო სივრცე"
+        title="მოსწავლეების მართვა"
+        description="აირჩიეთ მოსწავლე სიიდან, გაუგზავნეთ შენახული ბარათები/ამოცანები და გაუწიეთ უკუკავშირი."
+        aside={
+          <TeacherStudentsHeroAside
+            studentsCount={ws.students.length}
+            cardsCount={props.availableSetProblems.length}
+            canSendCard={Boolean(ws.activeStudent)}
+            onStartClassCall={ws.handleStartClassCall}
+            onOpenAssignModal={() => ws.setIsAssignModalOpen(true)}
+          />
+        }
+      />
+
       <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[38rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
-        {/* 1. მარცხენა სვეტი: კლასები + CTA ღილაკები */}
         <TeacherClassesSidebar
           courses={ws.courses}
           filteredCourses={ws.filteredCourses}
@@ -40,10 +57,6 @@ export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
           classSearchQuery={ws.classSearchQuery}
           setClassSearchQuery={ws.setClassSearchQuery}
           handleCourseChange={ws.handleCourseChange}
-          handleStartClassCall={ws.handleStartClassCall}
-          activeStudent={ws.activeStudent}
-          selectedCourseObj={ws.selectedCourseObj}
-          onOpenAssignModal={() => ws.setIsAssignModalOpen(true)}
           studentsCount={ws.students.length}
           students={ws.students}
         />

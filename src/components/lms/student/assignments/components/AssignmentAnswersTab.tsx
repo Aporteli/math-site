@@ -16,9 +16,9 @@ interface AssignmentAnswersTabProps {
 
 export function AssignmentAnswersTab({ answers, onPreviewAnswer }: AssignmentAnswersTabProps) {
   return (
-    <div className="flex-1 border-hairline bg-paper overflow-y-auto pt-1 pe-1 custom-scrollbar">
+    <div className="flex-1 overflow-y-auto pt-1 pe-1 custom-scrollbar bg-navy-tint/20">
       {answers.length === 0 ? (
-        <div className="py-16 flex flex-col items-center justify-center text-center text-muted">
+        <div className="py-16 flex flex-col items-center justify-center text-center text-muted  ">
           <CheckCircle2 className="size-8 opacity-40 mb-2 text-brass" />
           <p className="text-sm font-bold text-ink">პასუხები ჯერ არ გაგიგზავნიათ</p>
           <p className="text-xs max-w-xs mt-1 text-muted">გამოიყენეთ ქვედა პანელი პასუხის ასატვირთად და გასაგზავნად.</p>

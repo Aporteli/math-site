@@ -1006,7 +1006,21 @@
         "darkMode": "Dark theme",
         "lightMode": "Light theme",
         "textPlaceholder": "Double-click to edit",
-        "zoom": "Zoom"
+        "zoom": "Zoom",
+        "stylusOnlyOn": "Stylus only (on)",
+        "stylusOnlyOff": "Stylus only (off)",
+        "stylusSettings": "Stylus button settings",
+        "stylusButtons": "Stylus buttons",
+        "stylusButton1": "Stylus button 1 (lower)",
+        "stylusButton2": "Stylus button 2 (upper)",
+        "stylusActions": {
+          "temporary-eraser": "Temporary eraser",
+          "toggle-eraser": "Toggle eraser",
+          "cycle-colors": "Cycle colors",
+          "toggle-laser": "Toggle laser",
+          "undo": "Undo",
+          "none": "Disabled"
+        }
       },
       "admin": {
         "eyebrow": "Administration",

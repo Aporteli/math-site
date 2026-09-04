@@ -21,7 +21,7 @@ export function AssignmentContentTabsHeader({
   formattedSelectedDate,
 }: AssignmentContentTabsHeaderProps) {
   return (
-    <div className="bg-paper border-b border-hairline px-3.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+    <div className="bg-paper-deep/80 border-b border-hairline px-3.5 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
       {/* ტაბების კონტეინერი Lichess-ის მუქი ზედაპირით */}
       <div className="w-full sm:w-auto p-1 bg-paper-deep/80 rounded-2xl border border-hairline">
         <div className="grid grid-cols-3 sm:flex items-center gap-1">

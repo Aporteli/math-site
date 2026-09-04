@@ -1006,7 +1006,21 @@
         "darkMode": "Тёмная тема",
         "lightMode": "Светлая тема",
         "textPlaceholder": "Дважды нажмите для редактирования",
-        "zoom": "Масштаб"
+        "zoom": "Масштаб",
+        "stylusOnlyOn": "Только стилус (вкл.)",
+        "stylusOnlyOff": "Только стилус (выкл.)",
+        "stylusSettings": "Настройки кнопок стилуса",
+        "stylusButtons": "Кнопки стилуса",
+        "stylusButton1": "Кнопка стилуса 1 (нижняя)",
+        "stylusButton2": "Кнопка стилуса 2 (верхняя)",
+        "stylusActions": {
+          "temporary-eraser": "Временный ластик",
+          "toggle-eraser": "Переключить ластик",
+          "cycle-colors": "Смена цвета",
+          "toggle-laser": "Переключить лазер",
+          "undo": "Отменить",
+          "none": "Отключено"
+        }
       },
       "admin": {
         "eyebrow": "Администрирование",

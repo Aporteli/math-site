@@ -1006,7 +1006,21 @@
         "darkMode": "მუქი თემა",
         "lightMode": "ღია თემა",
         "textPlaceholder": "დააჭირეთ ორჯერ ჩასასწორებლად",
-        "zoom": "მასშტაბი"
+        "zoom": "მასშტაბი",
+        "stylusOnlyOn": "მხოლოდ სტილუსი (ჩართული)",
+        "stylusOnlyOff": "მხოლოდ სტილუსი (გამორთული)",
+        "stylusSettings": "სტილუსის ღილაკების პარამეტრები",
+        "stylusButtons": "სტილუსის ღილაკები",
+        "stylusButton1": "სტილუსის ღილაკი 1 (ქვედა)",
+        "stylusButton2": "სტილუსის ღილაკი 2 (ზედა)",
+        "stylusActions": {
+          "temporary-eraser": "დროებითი საშლელი",
+          "toggle-eraser": "საშლელის გადართვა",
+          "cycle-colors": "ფერების ციკლი",
+          "toggle-laser": "ლაზერის გადართვა",
+          "undo": "უკან დაბრუნება",
+          "none": "გამორთული"
+        }
       },
       "admin": {
         "eyebrow": "ადმინისტრაცია",

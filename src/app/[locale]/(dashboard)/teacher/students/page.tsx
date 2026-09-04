@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/session';
 import type { Locale } from '@/i18n/config';
-import { PageHero } from '@/components/ui/PageHero';
-import { Users } from 'lucide-react';
 import { TeacherStudentsWorkspace } from '@/components/lms/teacher/students-workspace/TeacherStudentsWorkspace';
 type PageProps = {
   params: Promise<{ locale: Locale }>;
@@ -146,25 +144,6 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
-      <PageHero
-        icon={Users}
-        eyebrow="სასწავლო სივრცე"
-        title="მოსწავლეების მართვა"
-        description="აირჩიეთ მოსწავლე სიიდან, გაუგზავნეთ შენახული ბარათები/ამოცანები და გაუწიეთ უკუკავშირი."
-        aside={
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
-            <div className="rounded-xl border border-hairline bg-white px-4 py-3 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">სულ მოსწავლე</p>
-              <p className="mt-1 text-2xl font-bold text-ink">{studentsList.length}</p>
-            </div>
-            <div className="rounded-xl border border-hairline bg-white px-4 py-3 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">ხელმისაწვდომი ბარათები</p>
-              <p className="mt-1 text-2xl font-bold text-ink">{availableSetProblems.length}</p>
-            </div>
-          </div>
-        }
-      />
-
       <TeacherStudentsWorkspace
         initialStudents={studentsList}
         courses={coursesSimple}

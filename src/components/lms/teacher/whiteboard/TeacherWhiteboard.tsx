@@ -21,9 +21,11 @@ import {
   MoveRight,
   PanelLeftOpen,
   Pencil,
+  PenTool,
   Plus,
   Redo2,
   Send,
+  Settings2,
   Sparkles,
   Square,
   Star,
@@ -114,6 +116,58 @@ const SHAPE_TOOLS: { id: ToolId; icon: typeof Minus; label: string }[] = [
   { id: 'diamond', icon: Diamond, label: 'რომბი' },
   { id: 'star', icon: Star, label: 'ვარსკვლავი' },
 ];
+
+type StylusButtonAction =
+  | 'temporary-eraser'
+  | 'toggle-eraser'
+  | 'cycle-colors'
+  | 'toggle-laser'
+  | 'undo'
+  | 'none';
+
+const STYLUS_BUTTON_ACTIONS: StylusButtonAction[] = [
+  'temporary-eraser',
+  'toggle-eraser',
+  'cycle-colors',
+  'toggle-laser',
+  'undo',
+  'none',
+];
+
+function isStylusButtonAction(value: unknown): value is StylusButtonAction {
+  return typeof value === 'string' && (STYLUS_BUTTON_ACTIONS as string[]).includes(value);
+}
+
+function getStylusButtonFromKeyboard(e: KeyboardEvent): 1 | 2 | null {
+  if (e.ctrlKey || e.metaKey || e.altKey) return null;
+  const key = e.key;
+  const code = e.code;
+  const keyCode = e.keyCode || 0;
+
+  if (
+    keyCode === 308 ||
+    key === 'PageDown' ||
+    code === 'PageDown' ||
+    key === 'VolumeDown' ||
+    code === 'AudioVolumeDown' ||
+    key === 'F19' ||
+    code === 'F19'
+  ) {
+    return 1;
+  }
+  if (
+    keyCode === 309 ||
+    key === 'PageUp' ||
+    code === 'PageUp' ||
+    key === 'VolumeUp' ||
+    code === 'AudioVolumeUp' ||
+    key === 'F20' ||
+    code === 'F20'
+  ) {
+    return 2;
+  }
+  return null;
+}
 
 interface CourseGroup {
   id: string;
@@ -432,6 +486,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const penMenuRef = useRef<HTMLDivElement>(null);
   const shapesMenuRef = useRef<HTMLDivElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
+  const stylusMenuRef = useRef<HTMLDivElement>(null);
   const pagesTrayRef = useRef<HTMLDivElement>(null);
 
   const [pages, setPages] = useState<CanvasElement[][]>([[]]);
@@ -440,6 +495,9 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const [strokeColor, setStrokeColor] = useState<string>(DEFAULT_COLOR);
   const [strokeWidth, setStrokeWidth] = useState<number>(2);
   const [isDark, setIsDark] = useState<boolean>(false);
+  const [stylusOnly, setStylusOnly] = useState(false);
+  const [stylusPrimaryAction, setStylusPrimaryAction] = useState<StylusButtonAction>('temporary-eraser');
+  const [stylusSecondaryAction, setStylusSecondaryAction] = useState<StylusButtonAction>('none');
   const [zoomScale, setZoomScale] = useState<number>(1);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -449,6 +507,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
   const [isShapesMenuOpen, setIsShapesMenuOpen] = useState(false);
   const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
+  const [isStylusMenuOpen, setIsStylusMenuOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [isPagesTrayOpen, setIsPagesTrayOpen] = useState(false);
 
@@ -470,6 +529,18 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const currentPageIndexRef = useRef(currentPageIndex);
   currentPageIndexRef.current = currentPageIndex;
   const historyMapRef = useRef<Map<number, { states: CanvasElement[][]; index: number }>>(new Map());
+  const previousToolRef = useRef<ToolId>(activeTool === 'eraser' ? 'pen' : activeTool);
+  const isTemporaryEraserRef = useRef(false);
+  const temporaryEraserHoldersRef = useRef<Set<1 | 2>>(new Set());
+  const stylusButtonHeldRef = useRef({ 1: false, 2: false });
+  const activeToolRef = useRef(activeTool);
+  activeToolRef.current = activeTool;
+  const strokeColorRef = useRef(strokeColor);
+  strokeColorRef.current = strokeColor;
+  const stylusPrimaryActionRef = useRef(stylusPrimaryAction);
+  stylusPrimaryActionRef.current = stylusPrimaryAction;
+  const stylusSecondaryActionRef = useRef(stylusSecondaryAction);
+  stylusSecondaryActionRef.current = stylusSecondaryAction;
 
   useEffect(() => {
     try {
@@ -480,6 +551,9 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         if (p.color) setStrokeColor(p.color);
         if (typeof p.width === 'number') setStrokeWidth(p.width);
         if (typeof p.isDark === 'boolean') setIsDark(p.isDark);
+        if (typeof p.stylusOnly === 'boolean') setStylusOnly(p.stylusOnly);
+        if (isStylusButtonAction(p.stylusPrimaryAction)) setStylusPrimaryAction(p.stylusPrimaryAction);
+        if (isStylusButtonAction(p.stylusSecondaryAction)) setStylusSecondaryAction(p.stylusSecondaryAction);
         if (typeof p.zoomScale === 'number') setZoomScale(p.zoomScale);
         if (typeof p.currentPageIndex === 'number') setCurrentPageIndex(p.currentPageIndex);
       }
@@ -508,19 +582,25 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         const raw = localStorage.getItem(PREFS_KEY);
         const current = raw ? JSON.parse(raw) : {};
         const next = {
-          tool: updates.tool ?? activeTool,
+          ...current,
+          tool: isTemporaryEraserRef.current
+            ? previousToolRef.current
+            : (updates.tool ?? activeTool),
           color: updates.color ?? strokeColor,
           width: updates.width ?? strokeWidth,
           isDark: updates.isDark ?? isDark,
           zoomScale: updates.zoomScale ?? zoomScale,
           currentPageIndex: updates.pageIdx ?? currentPageIndex,
+          stylusOnly: updates.stylusOnly ?? stylusOnly,
+          stylusPrimaryAction: updates.stylusPrimaryAction ?? stylusPrimaryAction,
+          stylusSecondaryAction: updates.stylusSecondaryAction ?? stylusSecondaryAction,
         };
         localStorage.setItem(PREFS_KEY, JSON.stringify(next));
       } catch (e) {
         console.error(e);
       }
     },
-    [activeTool, strokeColor, strokeWidth, isDark, zoomScale, currentPageIndex],
+    [activeTool, strokeColor, strokeWidth, isDark, zoomScale, currentPageIndex, stylusOnly, stylusPrimaryAction, stylusSecondaryAction],
   );
 
   const updateUndoRedoState = useCallback(() => {
@@ -686,6 +766,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       if (penMenuRef.current && !penMenuRef.current.contains(target)) setIsPenMenuOpen(false);
       if (shapesMenuRef.current && !shapesMenuRef.current.contains(target)) setIsShapesMenuOpen(false);
       if (colorMenuRef.current && !colorMenuRef.current.contains(target)) setIsColorMenuOpen(false);
+      if (stylusMenuRef.current && !stylusMenuRef.current.contains(target)) setIsStylusMenuOpen(false);
       if (pagesTrayRef.current && !pagesTrayRef.current.contains(target)) {
         const el = target as HTMLElement;
         if (!el.closest?.('[data-tray-trigger]')) setIsPagesTrayOpen(false);
@@ -736,7 +817,127 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [undo, redo]);
 
+  const undoRef = useRef(undo);
+  undoRef.current = undo;
+
+  const applyStylusAction = useCallback((buttonIndex: 1 | 2, state: 'down' | 'up') => {
+    if (state === 'down') {
+      if (stylusButtonHeldRef.current[buttonIndex]) return;
+      stylusButtonHeldRef.current[buttonIndex] = true;
+    } else {
+      if (!stylusButtonHeldRef.current[buttonIndex]) return;
+      stylusButtonHeldRef.current[buttonIndex] = false;
+    }
+
+    const action = buttonIndex === 1 ? stylusPrimaryActionRef.current : stylusSecondaryActionRef.current;
+    if (action === 'none') return;
+
+    if (action === 'temporary-eraser') {
+      if (state === 'down') {
+        temporaryEraserHoldersRef.current.add(buttonIndex);
+        if (!isTemporaryEraserRef.current) {
+          const current = activeToolRef.current;
+          if (current !== 'eraser') previousToolRef.current = current;
+          isTemporaryEraserRef.current = true;
+          setActiveTool('eraser');
+        }
+      } else {
+        temporaryEraserHoldersRef.current.delete(buttonIndex);
+        if (temporaryEraserHoldersRef.current.size === 0 && isTemporaryEraserRef.current) {
+          isTemporaryEraserRef.current = false;
+          setActiveTool(previousToolRef.current || 'pen');
+        }
+      }
+      return;
+    }
+
+    if (state !== 'down') return;
+
+    if (action === 'toggle-eraser') {
+      isTemporaryEraserRef.current = false;
+      temporaryEraserHoldersRef.current.clear();
+      if (activeToolRef.current === 'eraser') {
+        const restored = previousToolRef.current || 'pen';
+        setActiveTool(restored);
+        savePreferencesImmediately({ tool: restored });
+      } else {
+        previousToolRef.current = activeToolRef.current;
+        setActiveTool('eraser');
+        savePreferencesImmediately({ tool: 'eraser' });
+      }
+      return;
+    }
+
+    if (action === 'toggle-laser') {
+      isTemporaryEraserRef.current = false;
+      temporaryEraserHoldersRef.current.clear();
+      if (activeToolRef.current === 'laser') {
+        const restored = previousToolRef.current || 'pen';
+        setActiveTool(restored);
+        savePreferencesImmediately({ tool: restored });
+      } else {
+        previousToolRef.current = activeToolRef.current;
+        setActiveTool('laser');
+        savePreferencesImmediately({ tool: 'laser' });
+      }
+      return;
+    }
+
+    if (action === 'cycle-colors') {
+      const palette = COLORS.map((c) => c.hex);
+      const current = strokeColorRef.current;
+      const idx = palette.indexOf(current);
+      const next = palette[(idx + 1) % palette.length];
+      setStrokeColor(next);
+      savePreferencesImmediately({ color: next });
+      return;
+    }
+
+    if (action === 'undo') {
+      undoRef.current();
+    }
+  }, [savePreferencesImmediately]);
+
+  useEffect(() => {
+    const isTypingTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      const tag = target.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      const button = getStylusButtonFromKeyboard(e);
+      if (!button) return;
+      if (isTypingTarget(e.target) && e.keyCode !== 308 && e.keyCode !== 309) return;
+      if (e.repeat) {
+        e.preventDefault();
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      applyStylusAction(button, 'down');
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      const button = getStylusButtonFromKeyboard(e);
+      if (!button) return;
+      e.preventDefault();
+      e.stopPropagation();
+      applyStylusAction(button, 'up');
+    };
+
+    window.addEventListener('keydown', onKeyDown, true);
+    window.addEventListener('keyup', onKeyUp, true);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown, true);
+      window.removeEventListener('keyup', onKeyUp, true);
+    };
+  }, [applyStylusAction]);
+
   const setAndSaveTool = (tool: ToolId) => {
+    isTemporaryEraserRef.current = false;
+    temporaryEraserHoldersRef.current.clear();
+    if (tool !== 'eraser') previousToolRef.current = tool;
     setActiveTool(tool);
     savePreferencesImmediately({ tool });
   };
@@ -969,7 +1170,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     isDark && (strokeColor === DEFAULT_COLOR || strokeColor === '#000000') ? '#ffffff' : strokeColor;
 
   return (
-    <div className="relative flex h-full w-full min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm">
+    <div className="relative flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm">
       <input
         ref={fileInputRef}
         type="file"
@@ -988,8 +1189,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         }}
       />
 
-      <div className="relative z-30 shrink-0 border-b border-hairline bg-surface overflow-visible">
-        <div className="flex w-max min-w-full items-center gap-1.5 px-3 py-2 overflow-visible">
+      <div className="relative z-30 shrink-0 min-w-0 border-b border-hairline bg-surface">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2">
           <button
             type="button"
             onClick={toggleSidebarDrawer}
@@ -998,27 +1199,27 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl border border-hairline bg-white text-ink shadow-sm transition-all hover:border-navy/30 hover:text-navy">
             <PanelLeftOpen className="size-4" />
           </button>
-          <div className="mx-1 h-6 w-px shrink-0 bg-hairline" />
-          <ToolButton title={copy.undo} onClick={undo} disabled={!canUndo}>
-            <Undo2 className="size-4" />
-          </ToolButton>
-          <ToolButton title={copy.redo} onClick={redo} disabled={!canRedo}>
-            <Redo2 className="size-4" />
-          </ToolButton>
-          <div className="mx-1 h-6 w-px shrink-0 bg-hairline" />
-          <ToolButton
-            title={copy.tools.select}
-            active={activeTool === 'select'}
-            onClick={() => setAndSaveTool('select')}>
-            <MousePointer className="size-4" />
-          </ToolButton>
-          <ToolButton title={copy.tools.hand} active={activeTool === 'hand'} onClick={() => setAndSaveTool('hand')}>
-            <Hand className="size-4" />
-          </ToolButton>
-          <ToolButton title={copy.tools.laser} active={activeTool === 'laser'} onClick={() => setAndSaveTool('laser')}>
-            <Crosshair className="size-4" />
-          </ToolButton>
+          <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
+            <ToolButton title={copy.undo} onClick={undo} disabled={!canUndo}>
+              <Undo2 className="size-4" />
+            </ToolButton>
+            <ToolButton title={copy.redo} onClick={redo} disabled={!canRedo}>
+              <Redo2 className="size-4" />
+            </ToolButton>
+          </div>
+          <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
+            <ToolButton
+              title={copy.tools.select}
+              active={activeTool === 'select'}
+              onClick={() => setAndSaveTool('select')}>
+              <MousePointer className="size-4" />
+            </ToolButton>
+            <ToolButton title={copy.tools.hand} active={activeTool === 'hand'} onClick={() => setAndSaveTool('hand')}>
+              <Hand className="size-4" />
+            </ToolButton>
+          </div>
 
+          <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
           <div ref={penMenuRef} className="relative flex shrink-0 items-center">
             <div
               className={`flex items-center h-8 rounded-xl transition-all shadow-xs ${activeTool === 'pen' ? 'bg-navy text-white' : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'}`}>
@@ -1082,6 +1283,52 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             )}
           </div>
 
+          <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsColorMenuOpen((prev) => !prev);
+                setIsPenMenuOpen(false);
+                setIsShapesMenuOpen(false);
+                setIsStylusMenuOpen(false);
+              }}
+              title="ფერის არჩევა"
+              className="flex items-center gap-1.5 h-8 px-2 rounded-xl bg-paper hover:bg-paper-deep transition-colors border border-hairline">
+              <span
+                className="size-4 rounded-full border border-black/10 shadow-2xs"
+                style={{ backgroundColor: effectiveStroke }}
+              />
+              <ChevronDown
+                className={`size-3 text-muted transition-transform duration-200 ${isColorMenuOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+            {isColorMenuOpen && (
+              <div className="absolute top-full mt-2 left-0 z-[120] w-max rounded-2xl bg-white p-2.5 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center gap-2">
+                  {COLORS.map((c) => (
+                    <button
+                      key={c.hex}
+                      type="button"
+                      title={c.label}
+                      onClick={() => setAndSaveColor(c.hex)}
+                      className={`size-7 rounded-full border transition-transform ${strokeColor === c.hex ? 'scale-115 ring-2 ring-navy ring-offset-1' : 'hover:scale-110 border-black/10'}`}
+                      style={{ backgroundColor: c.hex }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <ToolButton
+            title={copy.tools.eraser}
+            active={activeTool === 'eraser'}
+            onClick={() => setAndSaveTool('eraser')}>
+            <Eraser className="size-4" />
+          </ToolButton>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
           <div ref={shapesMenuRef} className="relative flex shrink-0 items-center">
             <div
               className={`flex items-center h-8 rounded-xl transition-all shadow-xs ${isShapeActive ? 'bg-navy text-white' : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'}`}>
@@ -1143,79 +1390,94 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           <ToolButton title={copy.tools.image} onClick={openImagePicker}>
             <ImageIcon className="size-4" />
           </ToolButton>
-          <ToolButton
-            title={copy.tools.eraser}
-            active={activeTool === 'eraser'}
-            onClick={() => setAndSaveTool('eraser')}>
-            <Eraser className="size-4" />
-          </ToolButton>
+          </div>
 
-          <div className="mx-1 h-6 w-px shrink-0 bg-hairline" />
+          <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
+            <ToolButton title={copy.tools.laser} active={activeTool === 'laser'} onClick={() => setAndSaveTool('laser')}>
+              <Crosshair className="size-4" />
+            </ToolButton>
+          </div>
 
-          <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
+          <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
+          <div ref={stylusMenuRef} className="relative flex shrink-0 items-center gap-0.5">
             <button
               type="button"
               onClick={() => {
-                setIsColorMenuOpen((prev) => !prev);
+                const next = !stylusOnly;
+                setStylusOnly(next);
+                savePreferencesImmediately({ stylusOnly: next });
+              }}
+              title={stylusOnly ? copy.stylusOnlyOn : copy.stylusOnlyOff}
+              aria-label={stylusOnly ? copy.stylusOnlyOn : copy.stylusOnlyOff}
+              aria-pressed={stylusOnly}
+              className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                stylusOnly
+                  ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-600/30'
+                  : 'text-body hover:bg-paper hover:text-navy'
+              }`}>
+              <PenTool className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsStylusMenuOpen((prev) => !prev);
                 setIsPenMenuOpen(false);
                 setIsShapesMenuOpen(false);
+                setIsColorMenuOpen(false);
               }}
-              title="ფერის არჩევა"
-              className="flex items-center gap-1.5 h-8 px-2 rounded-xl bg-paper hover:bg-paper-deep transition-colors border border-hairline">
-              <span
-                className="size-4 rounded-full border border-black/10 shadow-2xs"
-                style={{ backgroundColor: effectiveStroke }}
-              />
-              <ChevronDown
-                className={`size-3 text-muted transition-transform duration-200 ${isColorMenuOpen ? 'rotate-180' : ''}`}
-              />
+              title={copy.stylusSettings}
+              aria-label={copy.stylusSettings}
+              aria-expanded={isStylusMenuOpen}
+              className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                isStylusMenuOpen ? 'bg-paper-deep text-navy' : 'text-body hover:bg-paper hover:text-navy'
+              }`}>
+              <Settings2 className="size-4" />
             </button>
-            {isColorMenuOpen && (
-              <div className="absolute top-full mt-2 left-0 z-[120] w-max rounded-2xl bg-white p-2.5 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center gap-2">
-                  {COLORS.map((c) => (
-                    <button
-                      key={c.hex}
-                      type="button"
-                      title={c.label}
-                      onClick={() => setAndSaveColor(c.hex)}
-                      className={`size-7 rounded-full border transition-transform ${strokeColor === c.hex ? 'scale-115 ring-2 ring-navy ring-offset-1' : 'hover:scale-110 border-black/10'}`}
-                      style={{ backgroundColor: c.hex }}
-                    />
+            {isStylusMenuOpen && (
+              <div className="absolute top-full mt-2 right-0 z-[120] w-64 rounded-2xl bg-white p-3 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
+                <p className="text-xs font-semibold text-ink mb-3">{copy.stylusButtons}</p>
+                <label htmlFor="teacher-stylus-primary-action" className="block text-[11px] font-medium text-muted mb-1">
+                  {copy.stylusButton1}
+                </label>
+                <select
+                  id="teacher-stylus-primary-action"
+                  value={stylusPrimaryAction}
+                  onChange={(e) => {
+                    const next = e.target.value as StylusButtonAction;
+                    setStylusPrimaryAction(next);
+                    savePreferencesImmediately({ stylusPrimaryAction: next });
+                  }}
+                  className="mb-3 w-full h-8 rounded-lg border border-hairline bg-white px-2 text-xs text-ink outline-none focus:ring-2 focus:ring-navy/30">
+                  {STYLUS_BUTTON_ACTIONS.map((action) => (
+                    <option key={action} value={action}>
+                      {copy.stylusActions[action]}
+                    </option>
                   ))}
-                </div>
+                </select>
+                <label htmlFor="teacher-stylus-secondary-action" className="block text-[11px] font-medium text-muted mb-1">
+                  {copy.stylusButton2}
+                </label>
+                <select
+                  id="teacher-stylus-secondary-action"
+                  value={stylusSecondaryAction}
+                  onChange={(e) => {
+                    const next = e.target.value as StylusButtonAction;
+                    setStylusSecondaryAction(next);
+                    savePreferencesImmediately({ stylusSecondaryAction: next });
+                  }}
+                  className="w-full h-8 rounded-lg border border-hairline bg-white px-2 text-xs text-ink outline-none focus:ring-2 focus:ring-navy/30">
+                  {STYLUS_BUTTON_ACTIONS.map((action) => (
+                    <option key={action} value={action}>
+                      {copy.stylusActions[action]}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
           </div>
-          <div className="mx-1 h-6 w-px shrink-0 bg-hairline" />
+          </div>
 
-          <ToolButton title={copy.zoomOut} onClick={zoomOut}>
-            <ZoomOut className="size-4" />
-          </ToolButton>
-          <button
-            type="button"
-            onClick={zoomReset}
-            title={copy.zoomReset}
-            className="shrink-0 rounded-lg px-1 text-xs font-semibold tabular-nums text-muted hover:text-navy">
-            {Math.round(zoomScale * 100)}%
-          </button>
-          <ToolButton title={copy.zoomIn} onClick={zoomIn}>
-            <ZoomIn className="size-4" />
-          </ToolButton>
-          <ToolButton title={copy.fitToContent} onClick={fitToContent}>
-            <Maximize2 className="size-4" />
-          </ToolButton>
-          <div className="mx-1 h-6 w-px shrink-0 bg-hairline" />
-
-          <button
-            type="button"
-            onClick={() => setIsAiModalOpen(true)}
-            title="AI ასისტენტი"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:from-indigo-600 hover:to-purple-700 transition-all active:scale-95 shrink-0">
-            <Sparkles className="size-3.5 animate-pulse" />
-            <span>AI</span>
-          </button>
-          <div className="mx-1 h-6 w-px shrink-0 bg-hairline" />
+          <div className="flex shrink-0 items-center gap-0.5">
           <ToolButton title={isDark ? copy.lightMode : copy.darkMode} onClick={toggleAndSaveTheme}>
             {isDark ? <Sun className="size-4 text-amber-400" /> : <Moon className="size-4" />}
           </ToolButton>
@@ -1230,12 +1492,13 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl text-body transition-colors hover:bg-rose-50 hover:text-rose-500">
             <Trash2 className="size-4" />
           </button>
+          </div>
         </div>
       </div>
 
       {/* Canvas container – inline style guarantees isolation from global theme */}
       <div
-        className="relative flex-1 min-h-0 overflow-hidden touch-none select-none"
+        className="relative flex-1 w-full min-h-0 min-w-0 overflow-hidden touch-none select-none"
         style={{ backgroundColor: isDark ? '#020617' : '#ffffff' }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
@@ -1264,14 +1527,16 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           }}
           textPlaceholder={copy.textPlaceholder}
           onPasteImage={addImage}
+          stylusOnly={stylusOnly}
+          onStylusButtonAction={applyStylusAction}
         />
       </div>
 
-      <div className="relative z-20 shrink-0 flex flex-col items-center justify-center p-2 bg-paper/30 border-t border-hairline select-none">
+      <div className="relative z-20 shrink-0 flex w-full min-w-0 flex-col items-center justify-center p-2 bg-paper/30 border-t border-hairline select-none">
         {isPagesTrayOpen && (
           <div
             ref={pagesTrayRef}
-            className="absolute bottom-14 max-w-[94vw] sm:max-w-2xl bg-white/95 backdrop-blur-md p-3 rounded-3xl border border-hairline shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 z-30">
+            className="absolute bottom-14 inset-x-2 sm:inset-x-auto w-auto max-w-[calc(100%-1rem)] sm:max-w-2xl bg-white/95 backdrop-blur-md p-3 rounded-3xl border border-hairline shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 z-30">
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-hairline px-1">
               <div className="flex items-center gap-2">
                 <Layers className="size-4 text-navy" />
@@ -1305,8 +1570,27 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           </div>
         )}
 
-        <div className="max-w-[96vw] overflow-x-auto thin-scrollbar touch-pan-x rounded-2xl border border-hairline bg-white shadow-sm">
+        <div className="w-max max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x thin-scrollbar rounded-2xl border border-hairline bg-white shadow-sm">
           <div className="flex w-max items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5">
+            <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
+              <ToolButton title={copy.zoomOut} onClick={zoomOut}>
+                <ZoomOut className="size-4" />
+              </ToolButton>
+              <button
+                type="button"
+                onClick={zoomReset}
+                title={copy.zoomReset}
+                className="shrink-0 rounded-lg px-1 text-xs font-semibold tabular-nums text-muted hover:text-navy">
+                {Math.round(zoomScale * 100)}%
+              </button>
+              <ToolButton title={copy.zoomIn} onClick={zoomIn}>
+                <ZoomIn className="size-4" />
+              </ToolButton>
+              <ToolButton title={copy.fitToContent} onClick={fitToContent}>
+                <Maximize2 className="size-4" />
+              </ToolButton>
+            </div>
+            <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 border-r border-hairline pr-1.5">
             <button
               type="button"
               onClick={() => handleSwitchPage(currentPageIndex - 1)}
@@ -1339,6 +1623,16 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               <Plus className="size-3.5" />
               <span>ახალი</span>
             </button>
+            </div>
+            <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+            <button
+              type="button"
+              onClick={() => setIsAiModalOpen(true)}
+              title="AI ასისტენტი"
+              className="inline-flex items-center gap-1.5 h-7 sm:h-8 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-2.5 text-xs font-bold text-white shadow-xs hover:from-indigo-600 hover:to-purple-700 transition-all active:scale-95 shrink-0">
+              <Sparkles className="size-3.5 animate-pulse" />
+              <span>AI</span>
+            </button>
             <button
               type="button"
               onClick={handleOpenAssignModal}
@@ -1347,6 +1641,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               <Send className="size-3.5" />
               <span>გაგზავნა</span>
             </button>
+            </div>
           </div>
         </div>
       </div>

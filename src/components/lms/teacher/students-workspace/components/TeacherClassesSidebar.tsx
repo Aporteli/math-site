@@ -1,6 +1,6 @@
 'use client';
 
-import { GraduationCap, Search, Video, Plus } from 'lucide-react';
+import { GraduationCap, Search } from 'lucide-react';
 import type { StudentItem } from '../types/teacher-workspace.types';
 
 interface TeacherClassesSidebarProps {
@@ -10,14 +10,9 @@ interface TeacherClassesSidebarProps {
   classSearchQuery: string;
   setClassSearchQuery: (val: string) => void;
   handleCourseChange: (courseId: string) => void;
-  handleStartClassCall: () => void;
-  activeStudent?: StudentItem;
-  selectedCourseObj?: { id: string; title: string }; // <-- ეს ჩაამატე
-  onOpenAssignModal: () => void;
   studentsCount: number;
   students: StudentItem[];
 }
-
 
 export function TeacherClassesSidebar({
   courses,
@@ -26,9 +21,6 @@ export function TeacherClassesSidebar({
   classSearchQuery,
   setClassSearchQuery,
   handleCourseChange,
-  handleStartClassCall,
-  activeStudent,
-  onOpenAssignModal,
   studentsCount,
   students,
 }: TeacherClassesSidebarProps) {
@@ -58,7 +50,7 @@ export function TeacherClassesSidebar({
           />
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-hairline/60 bg-paper-deep/30 p-1.5 space-y-1 custom-scrollbar">
+        <div className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-hairline/60  p-1.5 space-y-1 custom-scrollbar">
           {/* ყველა მოსწავლე */}
           <button
             type="button"
@@ -109,31 +101,6 @@ export function TeacherClassesSidebar({
             );
           })}
         </div>
-      </div>
-
-      {/* ქვედა ღილაკები */}
-      <div className="mt-auto shrink-0 border-t border-hairline bg-paper-deep/30 p-2.5 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={handleStartClassCall}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-hairline bg-surface py-2 px-2 text-xs font-bold text-ink hover:border-navy/60 hover:bg-navy-tint/20 hover:text-navy active:scale-98 transition-all cursor-pointer min-w-0 shadow-2xs">
-          <div className="flex size-5 shrink-0 items-center justify-center rounded-lg bg-navy/15 text-navy">
-            <Video className="size-3" />
-          </div>
-          <span className="truncate">გაკვეთილი</span>
-        </button>
-
-        {activeStudent && (
-          <button
-            type="button"
-            onClick={onOpenAssignModal}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-hairline bg-surface py-2 px-2 text-xs font-bold text-ink hover:border-brass/60 hover:bg-brass-tint/30 hover:text-brass-strong active:scale-98 transition-all cursor-pointer min-w-0 shadow-2xs">
-            <div className="flex size-5 shrink-0 items-center justify-center rounded-lg bg-brass-tint text-brass-strong">
-              <Plus className="size-3" />
-            </div>
-            <span className="truncate">ბარათი</span>
-          </button>
-        )}
       </div>
     </aside>
   );

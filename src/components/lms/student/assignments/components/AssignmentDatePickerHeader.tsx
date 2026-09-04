@@ -16,7 +16,7 @@ export function AssignmentDatePickerHeader({
   onDateChange,
 }: AssignmentDatePickerHeaderProps) {
   return (
-    <div className="bg-paper border-b border-hairline px-3.5 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+    <div className="bg-surface/20 border-b border-hairline px-3.5 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
       {/* სათაური და რაოდენობის ინდიკატორი */}
       <div className="flex items-center gap-2.5">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted">

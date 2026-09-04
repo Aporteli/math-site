@@ -16,45 +16,49 @@
      LIGHT THEME (Lichess Default Warm Paper Palette)
      ========================================================= */
 
-  /* Neutral surfaces */
-  --color-paper: #ede6dc;         /* Lichess Light მთავარი თბილი ფონი */
-  --color-paper-deep: #e2ded5;    /* ოდნავ ჩამჯდარი გვერდითი პანელების ფონი */
-  --color-hairline: #d6d0c4;      /* ბარათების საზღვრები */
-  --color-hairline-soft: #e5dfd5; /* თხელი გამყოფები */
-  --color-grid: #000000;
+ /* Neutral surfaces — resolved from lichess --c-bg-page etc. (site-hue: 30) */
+--color-paper: #edebe9;         /* c-bg-page */
+--color-paper-deep: #e3e3e3;    /* c-bg-low */
+--color-hairline: #d9d9d9;      /* c-border */
+--color-hairline-soft: #d6d6d6; /* c-shade */
+--color-grid: #000000;
 
-  /* Cards & Elevate Panels */
-  --color-surface: #f7f4ef;       /* ასაწევი ბარათები (უფრო ღია ვიდრე ფონი) */
-  --color-surface-hover: #ffffff; /* ჰოვერისას სუფთა თეთრი ზედაპირი */
+/* Cards & Elevated Panels */
+--color-surface: #ffffff;       /* c-bg / c-bg-popup */
+--color-surface-hover: #fafafa; /* c-metal-top-hover */
 
-  /* Chess Board Squares (Classic Wood/Brown Theme) */
-  --color-board-light: #f0d9b5;   /* საჭადრაკო დაფის ღია უჯრა */
-  --color-board-dark: #b58863;    /* საჭადრაკო დაფის მუქი უჯრა */
-  --color-board-move: #cdd26a;    /* სვლის ინდიკატორი */
+/* Chess Board Squares — unrelated to this palette (board themes are separate in lichess); kept as-is, already accurate */
+--color-board-light: #f0d9b5;
+--color-board-dark: #b58863;
+--color-board-move: #cdd26a;
 
-  /* Text / Ink */
-  --color-ink: #202020;           /* ძირითადი მუქი ტექსტი */
-  --color-hero: #d3cfcf;
-  --color-body: #4a4a4a;          /* მეორეხარისხოვანი ტექსტი */
-  --color-muted: #827f79;         /* პასიური ტექსტი და ლეიბლები */
+/* Text / Ink */
+--color-ink: #1a1a1a;           /* darker than c-font for headings; lichess's c-font-clearer is pure black */
+--color-hero: #5e5e5e;          /* c-font-page */
+--color-body: #4c4c4c;          /* c-font */
+--color-muted: #787878;         /* c-font-dim */
 
-  /* Primary Accent (Lichess Action Blue) */
-  --color-navy: #3692e7;          /* მთავარი CTA და ბმულები */
-  --color-navy-strong: #2475bf;   /* ლურჯის ჰოვერი */
-  --color-navy-tint: #e4eefb;     /* ლურჯი ბეიჯების ფონი */
+/* Primary Accent — c-primary */
+--color-navy: #1b78d0;
+--color-navy-strong: #155f9e;   /* manually darkened, mirrors lichess's --c-link-hover mix */
+--color-navy-tint: #e4f0fb;
 
-  /* Secondary Accent (Lichess Gold / Amber / Donate) */
-  --color-brass: #d59920;         /* Lichess-ის ოქროსფერი */
-  --color-brass-strong: #b9820f;  /* მუქი ოქროსფერი */
-  --color-brass-soft: #e2b354;
-  --color-brass-extra: #f97316;
-  --color-brass-tint: #faf1de;    /* ოქროსფერი შეფერილობის ფონი */
+/* Secondary Accent — c-brag (lichess's own "brass"-equivalent accent) */
+--color-brass: #d57a20;
+--color-brass-strong: #b3630f;
+--color-brass-soft: #e2a462;
+--color-brass-extra: #b27a00;   /* c-mistake, a muted amber, works well as a tertiary warm */
+--color-brass-tint: #faf1de;
 
-  /* Game Status Accents */
-  --color-win: #629924;           /* მოგება / სწორი პასუხი (მწვანე) */
-  --color-win-tint: #eef6e6;
-  --color-loss: #cc3333;          /* წაგება / შეცდომა (წითელი) */
-  --color-loss-tint: #fde8e8;
+/* Game Status Accents — lichess's actual move-quality colors */
+--color-win: #168326;           /* c-brilliant */
+--color-win-tint: #e7f5e8;
+--color-loss: #d62929;          /* c-blunder */
+--color-loss-tint: #fbe6e6;
+
+/* Bonus — lichess also distinguishes these, worth having if you show move analysis */
+--color-inaccuracy: #167bb6;
+--color-mistake: #b27a00;
 
   --animate-dropdown: dropdown 140ms ease-out;
   --animate-fade-up: fade-up 600ms ease-out both;

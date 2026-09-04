@@ -31,9 +31,9 @@ export function AssignmentGroupUploader({
   onRemoveAttachment,
 }: AssignmentGroupUploaderProps) {
   return (
-    <div className="shrink-0 mt-4 border-t border-hairline bg-paper">
+    <div className="shrink-0  border-t border-hairline bg-surface/20">
       {/* Lichess-ის პანელის ბარათი მუქი ზედაპირით და ჩუმი საზღვრით */}
-      <div className=" bg-paper p-4 shadow-inner">
+      <div className=" bg-surface p-4 shadow-inner">
         {isGroupAlreadySubmitted ? (
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-1">
             <div className="flex items-center gap-2 text-brass text-xs font-bold">
