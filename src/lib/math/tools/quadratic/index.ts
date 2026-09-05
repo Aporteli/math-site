@@ -2,19 +2,31 @@
  * აკადემიური კვადრატული კალკულატორი — საჯარო API
  */
 
-import { solveQuadratic, verifyRoot } from './core/solver';
-import { parseQuadraticEquation } from './core/parser';
+import { solveQuadratic, verifyRoot } from "./core/solver";
+import { parseQuadraticEquation } from "./core/parser";
 import {
   generateDiscriminantSteps,
   generateCompleteSquareSteps,
   generateVietaSteps,
   generateFactoringSteps,
   generateAllMethods,
-} from './steps/generator';
-import { buildAnalysisTable, graphData, type AnalysisRow } from './analysis/panel';
-import { exportLaTeX, exportMarkdown, exportPlainSummary } from './export/report';
-import { formatRoot, rootsToLatex } from './utils/formatting';
-import { solveParametric, hasParameters, type ParametricSolution } from './core/parametric';
+} from "./steps/generator";
+import {
+  buildAnalysisTable,
+  graphData,
+  type AnalysisRow,
+} from "./analysis/panel";
+import {
+  exportLaTeX,
+  exportMarkdown,
+  exportPlainSummary,
+} from "./export/report";
+import { formatRoot, rootsToLatex } from "./utils/formatting";
+import {
+  solveParametric,
+  hasParameters,
+  type ParametricSolution,
+} from "./core/parametric";
 
 export {
   solveQuadratic,
@@ -46,11 +58,11 @@ export type {
   MethodId,
   ParabolaAnalysis,
   QuadraticClassification,
-} from './types/quadratic';
+} from "./types/quadratic";
 
 export type SolveResult =
   | {
-      mode: 'numeric';
+      mode: "numeric";
       solution: ReturnType<typeof solveQuadratic>;
       methods: ReturnType<typeof generateAllMethods>;
       analysisRows: AnalysisRow[];
@@ -60,9 +72,14 @@ export type SolveResult =
       summary: string;
     }
   | {
-      mode: 'parametric';
+      mode: "parametric";
       parametric: ParametricSolution;
-      methods: { method: 'discriminant'; title: string; steps: ParametricSolution['steps']; finalRoots: [] }[];
+      methods: {
+        method: "discriminant";
+        title: string;
+        steps: ParametricSolution["steps"];
+        finalRoots: [];
+      }[];
       analysisRows: AnalysisRow[];
       graph: null;
       markdown: string;
@@ -86,25 +103,25 @@ function parametricMarkdown(p: ParametricSolution): string {
 function parametricSummary(p: ParametricSolution): string {
   return [
     `პარამეტრული: ${p.original}`,
-    `პარამეტრები: ${p.params.join(', ') || '—'}`,
+    `პარამეტრები: ${p.params.join(", ") || "—"}`,
     `A = ${p.aLatex}`,
     `B = ${p.bLatex}`,
     `C = ${p.cLatex}`,
     `D = ${p.discLatex}`,
     `${p.variable}1 = ${p.root1Latex}`,
     `${p.variable}2 = ${p.root2Latex}`,
-  ].join('\n');
+  ].join("\n");
 }
 
 /** ერთიანი API: ავტომატურად ირჩევს რიცხვით ან პარამეტრულ რეჟიმს */
-export function solve(input: string, variable = 'x'): SolveResult {
-  let cleaned = input.replace(/\$/g, '').trim();
+export function solve(input: string, variable = "x"): SolveResult {
+  let cleaned = input.replace(/\$/g, "").trim();
   // normalize common latex
-  cleaned = cleaned.replace(/\\sqrt\s*\{([^}]*)\}/g, 'sqrt($1)');
-  cleaned = cleaned.replace(/\\cdot/g, '*').replace(/\\times/g, '*');
+  cleaned = cleaned.replace(/\\sqrt\s*\{([^}]*)\}/g, "sqrt($1)");
+  cleaned = cleaned.replace(/\\cdot/g, "*").replace(/\\times/g, "*");
 
   const lower = cleaned.toLowerCase();
-  for (const fn of ['sqrt', 'abs', 'sin', 'cos', 'tan', 'log', 'ln', 'exp']) {
+  for (const fn of ["sqrt", "abs", "sin", "cos", "tan", "log", "ln", "exp"]) {
     if (lower.includes(fn)) {
       throw new Error(
         `ფუნქცია "${fn}" ამ კალკულატორში არაა მხარდაჭერილი. მხოლოდ კვადრატული პოლინომი: a x^2 + b x + c = 0 (რიცხვები ან პარამეტრები).`,
@@ -115,28 +132,35 @@ export function solve(input: string, variable = 'x'): SolveResult {
   if (hasParameters(cleaned, variable)) {
     const parametric = solveParametric(cleaned, variable);
     const analysisRows: AnalysisRow[] = [
-      { label: 'რეჟიმი', valueLatex: '\\text{პარამეტრული}' },
-      { label: 'პარამეტრები', valueLatex: parametric.params.map((x) => x).join(', ') || '—' },
-      { label: 'A', valueLatex: parametric.aLatex },
-      { label: 'B', valueLatex: parametric.bLatex },
-      { label: 'C', valueLatex: parametric.cLatex },
-      { label: 'დისკრიმინანტი', valueLatex: parametric.discLatex },
-      { label: 'ფესვი 1', valueLatex: parametric.root1Latex },
-      { label: 'ფესვი 2', valueLatex: parametric.root2Latex },
-      { label: 'ჯამი (ვიეტა)', valueLatex: parametric.sumLatex },
-      { label: 'ნამრავლი (ვიეტა)', valueLatex: parametric.prodLatex },
+      { label: "რეჟიმი", valueLatex: "პარამეტრული" },
+      {
+        label: "პარამეტრები",
+        valueLatex: parametric.params.map((x) => x).join(", ") || "—",
+      },
+      { label: "A", valueLatex: parametric.aLatex },
+      { label: "B", valueLatex: parametric.bLatex },
+      { label: "C", valueLatex: parametric.cLatex },
+      { label: "დისკრიმინანტი", valueLatex: parametric.discLatex },
+      { label: "ფესვი 1", valueLatex: parametric.root1Latex },
+      { label: "ფესვი 2", valueLatex: parametric.root2Latex },
+      { label: "ჯამი (ვიეტა)", valueLatex: parametric.sumLatex },
+      { label: "ნამრავლი (ვიეტა)", valueLatex: parametric.prodLatex },
     ];
     if (parametric.analysisNote) {
-      analysisRows.push({ label: 'ბუნება', valueLatex: '\\text{იხ. D-ს ნიშანი}', note: parametric.analysisNote });
+      analysisRows.push({
+        label: "ბუნება",
+        valueLatex: "იხ. $D$-ს ნიშანი",
+        note: parametric.analysisNote,
+      });
     }
     return {
-      mode: 'parametric',
+      mode: "parametric",
       parametric,
       solution: null,
       methods: [
         {
-          method: 'discriminant',
-          title: 'პარამეტრული ამოხსნა',
+          method: "discriminant",
+          title: "პარამეტრული ამოხსნა",
           steps: parametric.steps,
           finalRoots: [],
         },
@@ -154,7 +178,7 @@ export function solve(input: string, variable = 'x'): SolveResult {
   const analysisRows = buildAnalysisTable(sol);
   const graph = graphData(sol);
   return {
-    mode: 'numeric',
+    mode: "numeric",
     solution: sol,
     methods,
     analysisRows,

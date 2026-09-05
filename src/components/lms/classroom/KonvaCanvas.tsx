@@ -79,6 +79,23 @@ function getDistance(p1: { x: number; y: number }, p2: { x: number; y: number })
   return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 }
 
+const DEFAULT_INK_COLOR = '#1e293b';
+const LIGHT_INK_COLOR = '#ffffff';
+const DARK_INK_COLORS = [DEFAULT_INK_COLOR, '#000000'];
+
+function adaptStrokeForTheme(stroke: string | undefined, isDark: boolean): string {
+  const value = stroke || DEFAULT_INK_COLOR;
+  const normalized = value.trim().toLowerCase();
+  const isInkLight =
+    normalized === LIGHT_INK_COLOR ||
+    normalized === '#fff' ||
+    normalized === 'white' ||
+    normalized === 'rgb(255,255,255)';
+  if (isDark && DARK_INK_COLORS.includes(value)) return LIGHT_INK_COLOR;
+  if (!isDark && isInkLight) return DEFAULT_INK_COLOR;
+  return value;
+}
+
 function getCenter(p1: { x: number; y: number }, p2: { x: number; y: number }) {
   return {
     x: (p1.x + p2.x) / 2,
@@ -1604,7 +1621,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
               fontFamily: 'system-ui, -apple-system, sans-serif',
               fontSize: `${Math.max(14, currentFontSize * (scale || 1))}px`,
               lineHeight: '1.4',
-              color: strokeColor === '#1e293b' && isDark ? '#ffffff' : strokeColor,
+              color: adaptStrokeForTheme(strokeColor, isDark),
               width: `${Math.max(300, editingPos.width)}px`,
               minHeight: '85px',
               pointerEvents: 'auto',
@@ -1639,6 +1656,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
           <Layer ref={mainLayerRef}>
             {elements.map((el) => {
               const isListening = activeTool === 'select';
+              const displayStroke = adaptStrokeForTheme(el.stroke, isDark);
 
               if (el.type === 'image' && el.src) {
                 return (
@@ -1664,7 +1682,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     scaleX={el.scaleX || 1}
                     scaleY={el.scaleY || 1}
                     points={el.points}
-                    stroke={el.stroke}
+                    stroke={displayStroke}
                     strokeWidth={el.strokeWidth}
                     tension={0.4}
                     lineCap="round"
@@ -1690,7 +1708,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     scaleX={el.scaleX || 1}
                     scaleY={el.scaleY || 1}
                     points={el.points}
-                    stroke={el.stroke}
+                    stroke={displayStroke}
                     strokeWidth={el.strokeWidth}
                     lineCap="round"
                     perfectDrawEnabled={false}
@@ -1715,8 +1733,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     scaleX={el.scaleX || 1}
                     scaleY={el.scaleY || 1}
                     points={el.points}
-                    stroke={el.stroke}
-                    fill={el.stroke}
+                    stroke={displayStroke}
+                    fill={displayStroke}
                     strokeWidth={el.strokeWidth}
                     pointerLength={Math.max(8, strokeWidth * 3)}
                     pointerWidth={Math.max(8, strokeWidth * 3)}
@@ -1743,7 +1761,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     rotation={el.rotation || 0}
                     scaleX={el.scaleX || 1}
                     scaleY={el.scaleY || 1}
-                    stroke={el.stroke}
+                    stroke={displayStroke}
                     strokeWidth={el.strokeWidth}
                     perfectDrawEnabled={false}
                     strokeScaleEnabled={false}
@@ -1767,7 +1785,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     rotation={el.rotation || 0}
                     scaleX={el.scaleX || 1}
                     scaleY={el.scaleY || 1}
-                    stroke={el.stroke}
+                    stroke={displayStroke}
                     strokeWidth={el.strokeWidth}
                     perfectDrawEnabled={false}
                     strokeScaleEnabled={false}
@@ -1792,7 +1810,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     scaleY={el.scaleY || 1}
                     points={el.points}
                     closed={true}
-                    stroke={el.stroke}
+                    stroke={displayStroke}
                     strokeWidth={el.strokeWidth}
                     lineJoin="round"
                     perfectDrawEnabled={false}
@@ -1818,7 +1836,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     scaleY={el.scaleY || 1}
                     points={el.points}
                     closed={true}
-                    stroke={el.stroke}
+                    stroke={displayStroke}
                     strokeWidth={el.strokeWidth}
                     lineJoin="round"
                     perfectDrawEnabled={false}
@@ -1845,7 +1863,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     rotation={el.rotation || 0}
                     scaleX={el.scaleX || 1}
                     scaleY={el.scaleY || 1}
-                    stroke={el.stroke}
+                    stroke={displayStroke}
                     strokeWidth={el.strokeWidth}
                     perfectDrawEnabled={false}
                     strokeScaleEnabled={false}
@@ -1875,7 +1893,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
                     fontFamily="system-ui, -apple-system, sans-serif"
                     fontStyle="bold"
                     lineHeight={1.4}
-                    fill={el.stroke}
+                    fill={displayStroke}
                     visible={editingTextId !== el.id}
                     listening={isListening}
                     draggable={activeTool === 'select'}

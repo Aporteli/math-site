@@ -209,8 +209,8 @@
         "badge": "По шагам"
       },
       "fractions": {
-        "title": "Дроби и проценты",
-        "description": "Сложение, умножение и сокращение дробей и перевод процентов без вычислительных ошибок.",
+        "title": "Дроби",
+        "description": "Сложение, умножение и сокращение дробей",
         "badge": "База"
       },
       "systemSolver": {
@@ -2196,6 +2196,30 @@
     "clearHistory": "Очистить",
     "graphTitle": "Графическая визуализация",
     "liveError": "Синтаксис не завершен..."
+  },
+  "fractionTool": {
+    "back": "Вернуться к инструментам",
+    "eyebrow": "Калькулятор",
+    "firstFraction": "Первая дробь",
+    "secondFraction": "Вторая дробь",
+    "numerator": "Числитель",
+    "denominator": "Знаменатель",
+    "operation": "Операция",
+    "add": "Сложение",
+    "subtract": "Вычитание",
+    "multiply": "Умножение",
+    "divide": "Деление",
+    "expression": "Выражение",
+    "result": "Результат",
+    "invalid": "Введите корректные дроби. Знаменатель не может быть равен нулю.",
+    "keyboard": "Клавиатура",
+    "keyboardClose": "Закрыть",
+    "backspace": "Стереть",
+    "clear": "Очистить",
+    "nextField": "Следующее поле",
+    "fractionLabel": "Дробь",
+    "addFraction": "Добавить дробь",
+    "removeFraction": "Удалить дробь"
   },
   "footer": {
     "contact": {

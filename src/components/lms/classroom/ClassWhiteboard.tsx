@@ -182,6 +182,25 @@ const DARK_COLORS = [DEFAULT_COLOR, '#000000'];
 const LIGHT_COLOR = '#ffffff';
 const WHITEBOARD_COLORS = ['#1e293b', '#ef4444', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'] as const;
 
+function isLightInk(stroke: string): boolean {
+  const value = stroke.trim().toLowerCase();
+  return value === LIGHT_COLOR || value === '#fff' || value === 'white' || value === 'rgb(255,255,255)';
+}
+
+function adaptStrokeForTheme(stroke: string | undefined, isDark: boolean): string {
+  const value = stroke || DEFAULT_COLOR;
+  if (isDark && DARK_COLORS.includes(value)) return LIGHT_COLOR;
+  if (!isDark && isLightInk(value)) return DEFAULT_COLOR;
+  return value;
+}
+
+function adaptElementsForTheme(elements: CanvasElement[], isDark: boolean): CanvasElement[] {
+  return elements.map((el) => {
+    const next = adaptStrokeForTheme(el.stroke, isDark);
+    return next === el.stroke ? el : { ...el, stroke: next };
+  });
+}
+
 type StylusButtonAction =
   | 'temporary-eraser'
   | 'toggle-eraser'
@@ -453,8 +472,7 @@ function BoardThumbnail({
     ctx.scale(scale, scale);
 
     elements.forEach((el) => {
-      let stroke = el.stroke || '#6366f1';
-      if (isDark && DARK_COLORS.includes(stroke)) stroke = LIGHT_COLOR;
+      let stroke = adaptStrokeForTheme(el.stroke, isDark);
       ctx.strokeStyle = stroke;
       ctx.lineWidth = Math.max(2, (el.strokeWidth || 2) * 1.5);
       ctx.lineCap = 'round';
@@ -610,8 +628,7 @@ function AssignBoardThumbnail({
     ctx.scale(scale, scale);
 
     elements.forEach((el) => {
-      let stroke = el.stroke || '#6366f1';
-      if (isDark && DARK_COLORS.includes(stroke)) stroke = LIGHT_COLOR;
+      let stroke = adaptStrokeForTheme(el.stroke, isDark);
       ctx.strokeStyle = stroke;
       ctx.lineWidth = Math.max(2, (el.strokeWidth || 2) * 1.5);
       ctx.lineCap = 'round';
@@ -733,8 +750,7 @@ function renderElementsToDataUrl(elements: CanvasElement[], isDark: boolean): st
   ctx.scale(scale, scale);
 
   elements.forEach((el) => {
-    let stroke = el.stroke || '#6366f1';
-    if (isDark && DARK_COLORS.includes(stroke)) stroke = LIGHT_COLOR;
+    let stroke = adaptStrokeForTheme(el.stroke, isDark);
     ctx.strokeStyle = stroke;
     ctx.lineWidth = Math.max(2, (el.strokeWidth || 2) * 1.5);
     ctx.lineCap = 'round';
@@ -963,16 +979,10 @@ export function ClassWhiteboard({
     let updated = false;
     const newPages = pagesRef.current.map((page) =>
       page.map((el) => {
-        if (isDark) {
-          if (DARK_COLORS.includes(el.stroke)) {
-            updated = true;
-            return { ...el, stroke: LIGHT_COLOR };
-          }
-        } else {
-          if (el.stroke === LIGHT_COLOR) {
-            updated = true;
-            return { ...el, stroke: DEFAULT_COLOR };
-          }
+        const nextStroke = adaptStrokeForTheme(el.stroke, isDark);
+        if (nextStroke !== el.stroke) {
+          updated = true;
+          return { ...el, stroke: nextStroke };
         }
         return el;
       }),
@@ -1658,7 +1668,9 @@ export function ClassWhiteboard({
         if (data.type === 'WHITEBOARD_FULL_SYNC') {
           if (Array.isArray(data.pages)) {
             // Student receives full board
-            const newPages = data.pages;
+            const newPages = (data.pages as CanvasElement[][]).map((page) =>
+              adaptElementsForTheme(page || [], isDark),
+            );
             const newPageIndex = data.currentPageIndex ?? 0;
             // Reset history for the student
             historyMapRef.current = new Map();
@@ -1677,13 +1689,14 @@ export function ClassWhiteboard({
         // --- Handle incremental sync ---
         if (data.type === 'WHITEBOARD_SYNC' && Array.isArray(data.elements)) {
           isRemoteUpdateRef.current = true;
+          const adaptedElements = adaptElementsForTheme(data.elements, isDark);
           const updated = [...pagesRef.current];
-          updated[data.pageIndex] = data.elements;
+          updated[data.pageIndex] = adaptedElements;
           setPages(updated);
           pagesRef.current = updated;
 
           const pHist = historyMapRef.current.get(data.pageIndex) || { states: [], index: -1 };
-          pHist.states.push(data.elements);
+          pHist.states.push(adaptedElements);
           pHist.index = pHist.states.length - 1;
           historyMapRef.current.set(data.pageIndex, pHist);
           updateUndoRedoState();
@@ -1709,7 +1722,7 @@ export function ClassWhiteboard({
     return () => {
       room.off(RoomEvent.DataReceived, handleData);
     };
-  }, [room, updateUndoRedoState]);
+  }, [room, updateUndoRedoState, isDark]);
 
   // --- Teacher: send full sync when a new participant joins ---
   useEffect(() => {
@@ -1753,10 +1766,7 @@ export function ClassWhiteboard({
 
   const colorsList = WHITEBOARD_COLORS;
 
-  const effectiveStroke = (() => {
-    if (isDark && DARK_COLORS.includes(strokeColor)) return LIGHT_COLOR;
-    return strokeColor;
-  })();
+  const effectiveStroke = adaptStrokeForTheme(strokeColor, isDark);
 
   return (
     <div

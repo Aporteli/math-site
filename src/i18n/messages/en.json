@@ -209,8 +209,8 @@
         "badge": "Step-by-step"
       },
       "fractions": {
-        "title": "Fractions and percentages",
-        "description": "Add, multiply and simplify fractions and convert percentages without arithmetic slips.",
+        "title": "Fractions",
+        "description": "Add, multiply and simplify fractions",
         "badge": "Foundations"
       },
       "systemSolver": {
@@ -2198,6 +2198,30 @@
     "clearHistory": "Clear",
     "graphTitle": "Graph visualisation",
     "liveError": "Syntax is incomplete..."
+  },
+  "fractionTool": {
+    "back": "Back to tools",
+    "eyebrow": "Calculator",
+    "firstFraction": "First fraction",
+    "secondFraction": "Second fraction",
+    "numerator": "Numerator",
+    "denominator": "Denominator",
+    "operation": "Operation",
+    "add": "Add",
+    "subtract": "Subtract",
+    "multiply": "Multiply",
+    "divide": "Divide",
+    "expression": "Expression",
+    "result": "Result",
+    "invalid": "Enter valid fractions. The denominator cannot be zero.",
+    "keyboard": "Keyboard",
+    "keyboardClose": "Close",
+    "backspace": "Backspace",
+    "clear": "Clear",
+    "nextField": "Next field",
+    "fractionLabel": "Fraction",
+    "addFraction": "Add fraction",
+    "removeFraction": "Remove fraction"
   },
   "footer": {
     "contact": {
