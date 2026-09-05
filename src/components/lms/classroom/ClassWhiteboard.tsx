@@ -796,6 +796,7 @@ export function ClassWhiteboard({
   const canvasRef = useRef<KonvaCanvasHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const penMenuRef = useRef<HTMLDivElement>(null);
+  const eraserMenuRef = useRef<HTMLDivElement>(null);
   const shapesMenuRef = useRef<HTMLDivElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
   const stylusMenuRef = useRef<HTMLDivElement>(null);
@@ -896,6 +897,16 @@ export function ClassWhiteboard({
     return 2;
   });
 
+  const [eraserWidth, setEraserWidth] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(STORAGE_PREFS_KEY) || '{}');
+        return typeof prefs.eraserWidth === 'number' ? prefs.eraserWidth : 40;
+      } catch {}
+    }
+    return 40;
+  });
+
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -945,6 +956,7 @@ export function ClassWhiteboard({
   strokeColorRef.current = strokeColor;
 
   const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
+  const [isEraserMenuOpen, setIsEraserMenuOpen] = useState(false);
   const [isShapesMenuOpen, setIsShapesMenuOpen] = useState(false);
   const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
   const [isStylusMenuOpen, setIsStylusMenuOpen] = useState(false);
@@ -1041,6 +1053,9 @@ export function ClassWhiteboard({
       if (penMenuRef.current && !penMenuRef.current.contains(e.target as Node)) {
         setIsPenMenuOpen(false);
       }
+      if (eraserMenuRef.current && !eraserMenuRef.current.contains(e.target as Node)) {
+        setIsEraserMenuOpen(false);
+      }
       if (shapesMenuRef.current && !shapesMenuRef.current.contains(e.target as Node)) {
         setIsShapesMenuOpen(false);
       }
@@ -1083,6 +1098,7 @@ export function ClassWhiteboard({
           tool: isTemporaryEraserRef.current ? previousToolRef.current : activeTool,
           color: strokeColor,
           width: strokeWidth,
+          eraserWidth,
           isDark,
           stylusOnly,
           stylusPrimaryAction,
@@ -1090,7 +1106,7 @@ export function ClassWhiteboard({
         }),
       );
     }
-  }, [activeTool, strokeColor, strokeWidth, isDark, stylusOnly, stylusPrimaryAction, stylusSecondaryAction]);
+  }, [activeTool, strokeColor, strokeWidth, eraserWidth, isDark, stylusOnly, stylusPrimaryAction, stylusSecondaryAction]);
 
   const updateParticipantList = useCallback(() => {
     if (!room) return;
@@ -1142,7 +1158,7 @@ export function ClassWhiteboard({
   );
 
   const handleElementsChange = useCallback(
-    (newElems: CanvasElement[]) => {
+    (newElems: CanvasElement[], options?: { commitHistory?: boolean }) => {
       if (isRemoteUpdateRef.current) return;
       const pIndex = currentPageIndexRef.current;
       const updated = [...pagesRef.current];
@@ -1150,18 +1166,19 @@ export function ClassWhiteboard({
       setPages(updated);
       pagesRef.current = updated;
 
-      let pageHist = historyMapRef.current.get(pIndex);
-      if (!pageHist) {
-        pageHist = { states: [[]], index: 0 };
+      if (options?.commitHistory !== false) {
+        let pageHist = historyMapRef.current.get(pIndex);
+        if (!pageHist) {
+          pageHist = { states: [[]], index: 0 };
+        }
+        const nextStates = pageHist.states.slice(0, pageHist.index + 1);
+        nextStates.push(newElems);
+        historyMapRef.current.set(pIndex, {
+          states: nextStates,
+          index: nextStates.length - 1,
+        });
+        updateUndoRedoState();
       }
-      const nextStates = pageHist.states.slice(0, pageHist.index + 1);
-      nextStates.push(newElems);
-      historyMapRef.current.set(pIndex, {
-        states: nextStates,
-        index: nextStates.length - 1,
-      });
-
-      updateUndoRedoState();
 
       void publishDataSafe({
         type: 'WHITEBOARD_SYNC',
@@ -1777,7 +1794,7 @@ export function ClassWhiteboard({
         isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'
       } ${
         isFullscreen
-          ? 'fixed inset-0 z-[9999] h-[100dvh] w-screen'
+          ? 'h-full w-full'
           : 'h-full w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm'
       }`}>
       <input type="file" ref={fileInputRef} onChange={handleFileInputChange} accept="image/*" className="hidden" />
@@ -2044,6 +2061,7 @@ export function ClassWhiteboard({
                   onClick={() => {
                     setActiveTool('pen');
                     setIsPenMenuOpen(false);
+                    setIsEraserMenuOpen(false);
                     setIsShapesMenuOpen(false);
                     setIsColorMenuOpen(false);
                   }}
@@ -2057,6 +2075,7 @@ export function ClassWhiteboard({
                   title="სისქის მენიუ"
                   onClick={() => {
                     setIsPenMenuOpen((prev) => !prev);
+                    setIsEraserMenuOpen(false);
                     setIsShapesMenuOpen(false);
                     setIsColorMenuOpen(false);
                   }}
@@ -2120,6 +2139,7 @@ export function ClassWhiteboard({
                 onClick={() => {
                   setIsColorMenuOpen((prev) => !prev);
                   setIsPenMenuOpen(false);
+                  setIsEraserMenuOpen(false);
                   setIsShapesMenuOpen(false);
                   setIsStylusMenuOpen(false);
                 }}
@@ -2155,23 +2175,93 @@ export function ClassWhiteboard({
               )}
             </div>
 
-            <button
-              type="button"
-              title="საშლელი"
-              onClick={() => {
-                setActiveTool('eraser');
-                setIsPenMenuOpen(false);
-                setIsShapesMenuOpen(false);
-                setIsColorMenuOpen(false);
-                setIsStylusMenuOpen(false);
-              }}
-              className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                activeTool === 'eraser'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}>
-              <Eraser className="size-3.5 sm:size-4" />
-            </button>
+            <div ref={eraserMenuRef} className="relative flex shrink-0 items-center">
+              <div
+                className={`flex items-center h-7 sm:h-8 rounded-xl transition-all shadow-xs ${
+                  activeTool === 'eraser'
+                    ? 'bg-indigo-600 text-white ring-2 ring-indigo-600/20'
+                    : 'bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'
+                }`}>
+                <button
+                  type="button"
+                  title="საშლელი"
+                  onClick={() => {
+                    setActiveTool('eraser');
+                    setIsEraserMenuOpen(false);
+                    setIsPenMenuOpen(false);
+                    setIsShapesMenuOpen(false);
+                    setIsColorMenuOpen(false);
+                    setIsStylusMenuOpen(false);
+                  }}
+                  className="flex items-center gap-1 h-full px-2 rounded-l-xl focus:outline-none">
+                  <Eraser className="size-3.5 sm:size-4" />
+                  <span className="text-[10px] sm:text-[11px] font-mono font-medium opacity-90">{eraserWidth}px</span>
+                </button>
+
+                <button
+                  type="button"
+                  title="საშლელის სისქე"
+                  onClick={() => {
+                    setActiveTool('eraser');
+                    setIsEraserMenuOpen((prev) => !prev);
+                    setIsPenMenuOpen(false);
+                    setIsShapesMenuOpen(false);
+                    setIsColorMenuOpen(false);
+                    setIsStylusMenuOpen(false);
+                  }}
+                  className={`flex items-center justify-center px-1 h-full rounded-r-xl transition-colors border-l ${
+                    activeTool === 'eraser'
+                      ? 'border-indigo-500/40 hover:bg-indigo-700'
+                      : 'border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600'
+                  }`}>
+                  <ChevronDown
+                    className={`size-2.5 sm:size-3 transition-transform duration-200 ${isEraserMenuOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              </div>
+
+              {isEraserMenuOpen && (
+                <div className="absolute top-full mt-2 left-0 z-[120] w-52 sm:w-56 rounded-2xl bg-white dark:bg-slate-900 p-3 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">საშლელის ზომა</span>
+                    <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                      {eraserWidth}px
+                    </span>
+                  </div>
+
+                  <input
+                    type="range"
+                    min="12"
+                    max="96"
+                    step="2"
+                    value={eraserWidth}
+                    onChange={(e) => setEraserWidth(parseFloat(e.target.value))}
+                    className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+
+                  <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    {[20, 32, 48, 64, 80].map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => {
+                          setEraserWidth(size);
+                        }}
+                        className={`size-6 sm:size-7 flex items-center justify-center rounded-xl transition-colors ${
+                          eraserWidth === size
+                            ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 ring-1 ring-indigo-500'
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'
+                        }`}>
+                        <div
+                          className="rounded-full border-2 border-current"
+                          style={{ width: Math.min(16, 4 + size / 8), height: Math.min(16, 4 + size / 8) }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1.5 dark:border-slate-800">
@@ -2190,6 +2280,7 @@ export function ClassWhiteboard({
                     setActiveTool(currentShapeObj.id);
                     setIsShapesMenuOpen(false);
                     setIsPenMenuOpen(false);
+                    setIsEraserMenuOpen(false);
                     setIsColorMenuOpen(false);
                   }}
                   className="flex items-center justify-center size-7 sm:size-8 rounded-l-xl focus:outline-none">
@@ -2202,6 +2293,7 @@ export function ClassWhiteboard({
                   onClick={() => {
                     setIsShapesMenuOpen((prev) => !prev);
                     setIsPenMenuOpen(false);
+                    setIsEraserMenuOpen(false);
                     setIsColorMenuOpen(false);
                   }}
                   className={`flex items-center justify-center px-1 h-full rounded-r-xl transition-colors border-l ${
@@ -2394,6 +2486,7 @@ export function ClassWhiteboard({
           activeTool={activeTool}
           strokeColor={effectiveStroke}
           strokeWidth={strokeWidth}
+          eraserWidth={eraserWidth}
           isDark={isDark}
           scale={zoomScale}
           onScaleChange={(newScale) => setZoomScale(newScale)}

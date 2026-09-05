@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import {
   LiveKitRoom,
@@ -16,7 +16,7 @@ import {
 import type { Room } from 'livekit-client';
 import { ConnectionState, Track } from 'livekit-client';
 import '@livekit/components-styles';
-import { X, Layout, PenTool, Loader2, MessageSquare, Sparkles, Undo, Redo } from 'lucide-react';
+import { X, Layout, PenTool, Loader2, MessageSquare, Sparkles, Undo, Redo, Maximize2, Minimize2 } from 'lucide-react';
 import { ClassroomAiModal } from './ClassroomAiModal';
 
 const ClassWhiteboard = dynamic(() => import('./ClassWhiteboard').then((mod) => mod.ClassWhiteboard), {
@@ -103,6 +103,8 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
 
   const [activeTab, setActiveTab] = useState<'split' | 'board'>('split');
   const [isBoardFullscreen, setIsBoardFullscreen] = useState(false);
+  const [isChromeOpen, setIsChromeOpen] = useState(false);
+  const classroomRootRef = useRef<HTMLDivElement>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [activeRoom, setActiveRoom] = useState<Room | null>(null);
@@ -114,6 +116,35 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
   const handleRedo = () => {
     window.dispatchEvent(new CustomEvent('whiteboard-redo'));
   };
+
+  const toggleClassroomFullscreen = async () => {
+    const node = classroomRootRef.current;
+    if (!node) return;
+    try {
+      if (!document.fullscreenElement) {
+        await node.requestFullscreen();
+        setIsBoardFullscreen(true);
+        setIsChromeOpen(false);
+      } else {
+        await document.exitFullscreen();
+        setIsBoardFullscreen(false);
+        setIsChromeOpen(false);
+      }
+    } catch {
+      setIsBoardFullscreen((prev) => !prev);
+      setIsChromeOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const active = document.fullscreenElement === classroomRootRef.current;
+      setIsBoardFullscreen(active);
+      if (!active) setIsChromeOpen(false);
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('hide-ai-widget'));
@@ -179,7 +210,13 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex h-[100dvh] w-screen flex-col overflow-hidden bg-slate-950 pt-2 pr-2 pl-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:pt-3 sm:pr-3 sm:pl-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+    <div
+      ref={classroomRootRef}
+      className={`fixed inset-0 z-50 flex h-[100dvh] w-screen flex-col overflow-hidden bg-slate-950 ${
+        isBoardFullscreen
+          ? 'p-0'
+          : 'pt-2 pr-2 pl-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:pt-3 sm:pr-3 sm:pl-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))]'
+      }`}>
       {isTeacher && (
         <ClassroomAiModal
           isOpen={isAiModalOpen}
@@ -187,7 +224,23 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
         />
       )}
 
-      <header className="relative z-40 flex h-12 shrink-0 items-center justify-between px-3 text-white bg-slate-900 rounded-xl border border-white/10 mb-2 gap-2">
+      {isBoardFullscreen && (
+        <div
+          className="absolute inset-x-0 top-0 z-[1100] h-3"
+          onMouseEnter={() => setIsChromeOpen(true)}
+        />
+      )}
+
+      <header
+        onMouseEnter={() => isBoardFullscreen && setIsChromeOpen(true)}
+        onMouseLeave={() => isBoardFullscreen && setIsChromeOpen(false)}
+        className={`flex h-12 shrink-0 items-center justify-between px-3 text-white bg-slate-900 border-white/10 gap-2 ${
+          isBoardFullscreen
+            ? `absolute inset-x-0 top-0 z-[1100] rounded-none border-b transition-transform duration-200 ${
+                isChromeOpen ? 'translate-y-0' : '-translate-y-full'
+              }`
+            : 'relative z-40 rounded-xl border mb-2'
+        }`}>
         <div className="flex items-center gap-3 min-w-0">
           <h2 className="text-sm sm:text-base font-bold truncate">{courseTitle} — გაკვეთილი</h2>
         </div>
@@ -235,6 +288,14 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void toggleClassroomFullscreen()}
+            title={isBoardFullscreen ? 'სრული ეკრანიდან გამოსვლა' : 'სრული ეკრანი'}
+            className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
+            {isBoardFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+          </button>
+
           {isTeacher && (
             <button
               type="button"
@@ -256,8 +317,14 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
         </div>
       </header>
 
-      <main className="relative flex flex-1 min-h-0 w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-900">
-        <div className="flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row gap-2.5 p-2">
+      <main
+        className={`relative flex flex-1 min-h-0 w-full overflow-hidden bg-slate-900 ${
+          isBoardFullscreen ? '' : 'rounded-2xl border border-white/10'
+        }`}>
+        <div
+          className={`flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row ${
+            isBoardFullscreen ? 'gap-0 p-0' : 'gap-2.5 p-2'
+          }`}>
           <div
             className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-slate-950/80 border border-white/5 transition-all ${
               activeTab === 'board' ? 'hidden' : 'w-full lg:w-[340px] xl:w-[400px] shrink-0'

@@ -46,10 +46,11 @@ export interface KonvaCanvasHandle {
 
 interface KonvaCanvasProps {
   elements: CanvasElement[];
-  onElementsChange: (elements: CanvasElement[]) => void;
+  onElementsChange: (elements: CanvasElement[], options?: { commitHistory?: boolean }) => void;
   activeTool: string;
   strokeColor: string;
   strokeWidth: number;
+  eraserWidth?: number;
   isDark: boolean;
   scale?: number;
   onScaleChange?: (newScale: number) => void;
@@ -294,6 +295,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     activeTool,
     strokeColor,
     strokeWidth,
+    eraserWidth = 40,
     isDark,
     scale = 1,
     onScaleChange,
@@ -317,6 +319,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     width: 550,
   });
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; stageX: number; stageY: number } | null>(null);
+  const [eraserCursorPos, setEraserCursorPos] = useState<{ x: number; y: number } | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
@@ -328,6 +331,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
   const isDrawing = useRef(false);
   const isErasing = useRef(false);
+  const eraseStrokeDirtyRef = useRef(false);
   const isLasering = useRef(false);
   const activeShapeRef = useRef<any>(null);
   const activeShapeIdRef = useRef<string>('');
@@ -875,9 +879,13 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     }
   }, [selectedId]);
 
+  useEffect(() => {
+    if (activeTool !== 'eraser') setEraserCursorPos(null);
+  }, [activeTool]);
+
   const eraseAtPosition = useCallback(
     (pos: { x: number; y: number }) => {
-      const threshold = 26;
+      const threshold = Math.max(6, eraserWidth / 2);
       const thresholdSq = threshold * threshold;
       let hasChanges = false;
 
@@ -932,13 +940,14 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
       if (hasChanges) {
         elementsRef.current = remaining;
-        onElementsChange(remaining);
+        eraseStrokeDirtyRef.current = true;
+        onElementsChange(remaining, { commitHistory: false });
         if (selectedId && !remaining.find((el) => el.id === selectedId)) {
           setSelectedId(null);
         }
       }
     },
-    [onElementsChange, selectedId],
+    [onElementsChange, selectedId, eraserWidth],
   );
 
   useEffect(() => {
@@ -948,6 +957,10 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
         if (isPenBarrelButton(e.button) && (e.buttons & 1) !== 0) return;
       }
       isErasing.current = false;
+      if (eraseStrokeDirtyRef.current) {
+        eraseStrokeDirtyRef.current = false;
+        onElementsChange(elementsRef.current);
+      }
       if (isLasering.current) {
         isLasering.current = false;
         triggerLaserFade();
@@ -965,7 +978,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
       window.removeEventListener('pointerup', handleGlobalPointerUp);
       window.removeEventListener('pointercancel', handleGlobalPointerCancel);
     };
-  }, [triggerLaserFade, onLaserMove, syncStylusButtonsFromEvent]);
+  }, [triggerLaserFade, onLaserMove, syncStylusButtonsFromEvent, onElementsChange]);
 
   const handlePointerDown = (e: any) => {
     if (isPinching.current) return;
@@ -1035,6 +1048,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
     if (activeTool === 'eraser') {
       isErasing.current = true;
+      eraseStrokeDirtyRef.current = false;
+      setEraserCursorPos(pos);
       eraseAtPosition(pos);
       return;
     }
@@ -1204,6 +1219,14 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     }
 
     if (evt.pointerType === 'touch' && isStylusActiveRef.current) return;
+
+    if (activeTool === 'eraser') {
+      const hoverPos = getRelativePointerPosition();
+      if (hoverPos) setEraserCursorPos(hoverPos);
+    } else if (eraserCursorPos) {
+      setEraserCursorPos(null);
+    }
+
     if (evt.pointerId !== activePointerIdRef.current) return;
 
     const clientX = evt.clientX ?? (evt as any).touches?.[0]?.clientX;
@@ -1242,10 +1265,15 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     const pos = getRelativePointerPosition();
     if (!pos) return;
 
-    if (activeTool === 'eraser' && (isErasing.current || nativeEvt.buttons === 1)) {
-      eraseAtPosition(pos);
+    if (activeTool === 'eraser') {
+      setEraserCursorPos(pos);
+      if (isErasing.current || nativeEvt.buttons === 1) {
+        eraseAtPosition(pos);
+      }
       return;
     }
+
+    if (eraserCursorPos) setEraserCursorPos(null);
 
     if (!isDrawing.current || !activeShapeRef.current) return;
 
@@ -1353,6 +1381,10 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
     if (activeTool === 'eraser') {
       isErasing.current = false;
+      if (eraseStrokeDirtyRef.current) {
+        eraseStrokeDirtyRef.current = false;
+        onElementsChange(elementsRef.current);
+      }
       return;
     }
     if (!isDrawing.current) return;
@@ -1506,9 +1538,11 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
       className={`w-full h-full relative inset-0 overflow-hidden select-none touch-none ${
         activeTool === 'hand'
           ? 'cursor-grab active:cursor-grabbing'
-          : activeTool === 'laser'
-            ? 'cursor-crosshair active:cursor-none'
-            : 'cursor-crosshair'
+          : activeTool === 'eraser'
+            ? 'cursor-none'
+            : activeTool === 'laser'
+              ? 'cursor-crosshair active:cursor-none'
+              : 'cursor-crosshair'
       }`}>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Kalam:wght@700&display=swap');
@@ -1652,6 +1686,9 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerLeave={() => {
+            if (!isErasing.current) setEraserCursorPos(null);
+          }}
           pixelRatio={typeof window !== 'undefined' ? window.devicePixelRatio || 2 : 2}>
           <Layer ref={mainLayerRef}>
             {elements.map((el) => {
@@ -1988,6 +2025,19 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
               )}
           </Layer>
           <Layer ref={drawLayerRef} />
+          <Layer listening={false}>
+            {activeTool === 'eraser' && eraserCursorPos && (
+              <Circle
+                x={eraserCursorPos.x}
+                y={eraserCursorPos.y}
+                radius={Math.max(6, eraserWidth / 2)}
+                fill={isDark ? 'rgba(248,250,252,0.18)' : 'rgba(15,23,42,0.12)'}
+                stroke={isDark ? '#f8fafc' : '#0f172a'}
+                strokeWidth={1.5}
+                dash={[6, 4]}
+              />
+            )}
+          </Layer>
           <Layer ref={laserLayerRef} listening={false} />
         </Stage>
       )}
