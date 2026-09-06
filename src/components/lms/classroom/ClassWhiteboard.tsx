@@ -44,7 +44,7 @@ import {
   Settings2,
 } from 'lucide-react';
 import type { CanvasElement, KonvaCanvasHandle } from './KonvaCanvas';
-import { sendProblemToStudentAction } from '@/lib/actions/students';
+import { getEnrolledCourseStudentsAction, sendProblemToStudentAction } from '@/lib/actions/students';
 import { uploadImageToStorageAction } from '@/lib/actions/upload';
 import { TeacherAiChatPanel } from '@/components/lms/teacher/problem-bank/components/TeacherAiChatPanel';
 import { loadAiModelStatusAction } from '@/lib/math/problems/actions';
@@ -962,7 +962,7 @@ export function ClassWhiteboard({
   const [isStylusMenuOpen, setIsStylusMenuOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
-  const [students, setStudents] = useState<RemoteParticipant[]>([]);
+  const [students, setStudents] = useState<{ identity: string; name: string }[]>([]);
   const [assignedStatus, setAssignedStatus] = useState<string | null>(null);
   const [assignPending, setAssignPending] = useState(false);
   const [assignTargetType, setAssignTargetType] = useState<'task' | 'material' | null>(null);
@@ -1108,21 +1108,17 @@ export function ClassWhiteboard({
     }
   }, [activeTool, strokeColor, strokeWidth, eraserWidth, isDark, stylusOnly, stylusPrimaryAction, stylusSecondaryAction]);
 
-  const updateParticipantList = useCallback(() => {
-    if (!room) return;
-    setStudents(Array.from(room.remoteParticipants.values()));
-  }, [room]);
-
   useEffect(() => {
-    if (!room) return;
-    updateParticipantList();
-    room.on(RoomEvent.ParticipantConnected, updateParticipantList);
-    room.on(RoomEvent.ParticipantDisconnected, updateParticipantList);
+    if (!isTeacher) return;
+    let cancelled = false;
+    void getEnrolledCourseStudentsAction(courseId).then((list) => {
+      if (cancelled) return;
+      setStudents(list.map((s) => ({ identity: s.id, name: s.name })));
+    });
     return () => {
-      room.off(RoomEvent.ParticipantConnected, updateParticipantList);
-      room.off(RoomEvent.ParticipantDisconnected, updateParticipantList);
+      cancelled = true;
     };
-  }, [room, updateParticipantList]);
+  }, [isTeacher, courseId]);
 
   const publishDataSafe = useCallback(
     async (payload: any, reliable = true) => {
@@ -1905,7 +1901,7 @@ export function ClassWhiteboard({
                 <span>{assignError}</span>
               </div>
             ) : students.length === 0 ? (
-              <p className="text-center text-xs text-slate-500 py-3">ქოლში სხვა მოსწავლეები არ არიან</p>
+              <p className="text-center text-xs text-slate-500 py-3">კურსზე მოსწავლეები არ არიან</p>
             ) : (
               <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto p-1 custom-scrollbar">
                 {students.map((student) => {
@@ -2698,7 +2694,6 @@ export function ClassWhiteboard({
                       setSelectedStudentIdentities([students[0].identity]);
                     }
                     setIsAssignModalOpen(true);
-                    updateParticipantList();
                   }}
                   title="დაფის სურათის გაგზავნა მოსწავლესთან"
                   className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors shadow-xs shrink-0">

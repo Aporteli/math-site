@@ -69,6 +69,37 @@ export async function getStudentsAction(): Promise<StudentData[]> {
   }
 }
 
+export async function getEnrolledCourseStudentsAction(courseId: string): Promise<StudentData[]> {
+  try {
+    await assertTeacherSession();
+
+    const enrollments = await prisma.enrollment.findMany({
+      where: {
+        courseId,
+        status: "ACTIVE",
+        user: { role: "STUDENT" },
+      },
+      select: {
+        user: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { user: { name: "asc" } },
+    });
+
+    return enrollments
+      .filter((e) => e.user)
+      .map((e) => ({
+        id: e.user.id,
+        name: e.user.name || "სახელის გარეშე",
+        grade: "მოსწავლე",
+      }));
+  } catch (error) {
+    console.error("Failed to fetch enrolled course students:", error);
+    return [];
+  }
+}
+
 /**
  * 2. მასწავლებლის კლასების (კურსების) სიის წამოღება
  */

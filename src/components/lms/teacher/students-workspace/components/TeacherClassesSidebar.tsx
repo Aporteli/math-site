@@ -52,7 +52,7 @@ export function TeacherClassesSidebar({
 
         <div className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-hairline/60  p-1.5 space-y-1 custom-scrollbar">
           {/* ყველა მოსწავლე */}
-          <button
+          {/* <button
             type="button"
             onClick={() => handleCourseChange('all')}
             className={`group relative flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-all border cursor-pointer ${
@@ -70,7 +70,7 @@ export function TeacherClassesSidebar({
               }`}>
               {studentsCount}
             </span>
-          </button>
+          </button> */}
 
           {/* კურსების სია */}
           {filteredCourses.map((course) => {

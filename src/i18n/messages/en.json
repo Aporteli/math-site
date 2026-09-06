@@ -2037,10 +2037,8 @@
     "student": {
       "role": "Student",
       "nav": {
-      
         "assignments": "Assignments",
         "flashcards": "Formulas"
-        
       },
       "pages": {
         "overview": {
@@ -2202,10 +2200,9 @@
   "fractionTool": {
     "back": "Back to tools",
     "eyebrow": "Calculator",
-    "firstFraction": "First fraction",
-    "secondFraction": "Second fraction",
     "numerator": "Numerator",
     "denominator": "Denominator",
+    "whole": "Whole",
     "operation": "Operation",
     "add": "Add",
     "subtract": "Subtract",
@@ -2213,15 +2210,36 @@
     "divide": "Divide",
     "expression": "Expression",
     "result": "Result",
-    "invalid": "Enter valid fractions. The denominator cannot be zero.",
+    "mixedResult": "Mixed",
+    "decimalResult": "Decimal",
+    "invalid": "Enter valid fractions.",
     "keyboard": "Keyboard",
     "keyboardClose": "Close",
     "backspace": "Backspace",
     "clear": "Clear",
+    "reset": "Reset",
+    "undo": "Undo",
+    "copyLatex": "Copy LaTeX",
+    "copyText": "Copy text",
+    "copied": "Copied",
     "nextField": "Next field",
     "fractionLabel": "Fraction",
     "addFraction": "Add fraction",
-    "removeFraction": "Remove fraction"
+    "removeFraction": "Remove fraction",
+    "kindWhole": "Whole",
+    "kindFraction": "Fraction",
+    "kindMixed": "Mixed",
+    "examples": "Examples",
+    "history": "History",
+    "maxTerms": "Maximum {max} fractions",
+    "errors": {
+      "EMPTY": "Fill in every required part of the fraction.",
+      "INVALID_NUMBER": "That is not a valid number.",
+      "ZERO_DENOMINATOR": "The denominator cannot be zero.",
+      "DIVISION_BY_ZERO": "Cannot divide by zero.",
+      "MISMATCHED_OPS": "The expression is incomplete.",
+      "EMPTY_EXPRESSION": "Add at least one fraction."
+    }
   },
   "footer": {
     "contact": {
