@@ -328,6 +328,11 @@
         "description": "Visualise vector fields and compute divergence, curl, and line/surface integrals.",
         "badge": "Vectors"
       },
+      "vectorFunction": {
+        "title": "Vector functions",
+        "description": "Space-curve calculator: position, velocity, acceleration, tangent and curvature with an interactive 3D graph.",
+        "badge": "Vectors"
+      },
       "complexAnalysis": {
         "title": "Complex numbers and the Argand plane",
         "description": "Algebraic and trigonometric forms, Euler's formula, roots, and visualisation of complex functions.",
@@ -2179,6 +2184,66 @@
     "syntaxConst": "Constants and roots: sqrt(x), PI, E, abs(x), log(x)",
     "plotError": "The graph could not be drawn.",
     "loading": "Loading graph…"
+  },
+  "vectorFunctionTool": {
+    "meta": {
+      "title": "Vector functions — space curves",
+      "description": "Compute r(t) = ⟨x(t), y(t), z(t)⟩-type vector functions with an interactive 3D graph."
+    },
+    "back": "Back to Tools",
+    "eyebrow": "Calculator",
+    "badge": "Vectors",
+    "inputTitle": "Vector function r(t)",
+    "xComponent": "x(t) =",
+    "yComponent": "y(t) =",
+    "zComponent": "z(t) — optional",
+    "exprPlaceholder": "e.g. t - 2, sin(t)",
+    "zPlaceholder": "empty = plane (2D) curve",
+    "paramTitle": "Parameter",
+    "paramAt": "t₀ =",
+    "intervalTitle": "Parameter interval",
+    "fromLabel": "Min.",
+    "toLabel": "Max.",
+    "presetsTitle": "Examples",
+    "presetItems": {
+      "problem": "Given problem",
+      "circle": "Circle (2D)",
+      "helix": "Helix",
+      "line": "Line (3D)",
+      "lissajous": "Lissajous curve"
+    },
+    "play": "Animate",
+    "pause": "Pause",
+    "resultsTitle": "Calculations",
+    "position": "Position r(t₀)",
+    "velocity": "Velocity vector r′(t)",
+    "speed": "Speed |r′(t₀)|",
+    "acceleration": "Acceleration vector r″(t)",
+    "unitTangent": "Unit tangent T",
+    "unitNormal": "Unit normal N",
+    "binormal": "Binormal B",
+    "curvature": "Curvature κ",
+    "tangentLine": "Tangent line ℓ(s)",
+    "arcLength": "Curve length",
+    "plotTitle": "3D visualisation",
+    "plotHint": "Interactive: drag to rotate, scroll to zoom.",
+    "legendCurve": "Curve r(t)",
+    "legendPosition": "Point r(t₀)",
+    "legendVelocity": "Velocity r′(t₀)",
+    "legendTangent": "Tangent",
+    "legendAcceleration": "Acceleration r″(t₀)",
+    "planTitle": "XY view (2D)",
+    "resetView": "Reset camera",
+    "invalid": "Could not parse the expression. Check the syntax.",
+    "empty": "Could not draw the graph.",
+    "syntaxTitle": "Syntax",
+    "syntax": [
+      "Powers: t^2, t^(1/2)",
+      "Multiplication: 3*cos(t), (t-1)*(t+2)",
+      "Trigonometry: sin(t), cos(t), tan(t)",
+      "Constants and roots: pi, e, sqrt(t), abs(t), log(t)",
+      "Empty z(t) → plane (2D) curve"
+    ]
   },
   "equations": {
     "back": "Back to Tools",

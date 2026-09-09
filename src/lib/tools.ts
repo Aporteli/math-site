@@ -259,6 +259,12 @@ export const TOOL_SECTIONS: ToolSection[] = [
         href: "/tools/vector-calculus",
       },
       {
+        id: "vectorFunction",
+        icon: Spline,
+        badgeColor: "navy",
+        href: "/tools/vector-function",
+      },
+      {
         id: "complexAnalysis",
         icon: CircleDot,
         badgeColor: "brass",

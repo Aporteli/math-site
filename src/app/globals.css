@@ -273,3 +273,82 @@ html {
 .dark .bg-white\/95 {
   background-color: color-mix(in oklab, var(--color-surface) 95%, transparent);
 }
+
+
+/* Vector Function Tool */
+
+/* @theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Newsreader", "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --color-paper: #f3efe6;
+  --color-paper-deep: #e8e1d4;
+  --color-surface: #fffdf8;
+  --color-ink: #172033;
+  --color-body: #3a4454;
+  --color-muted: #6b7380;
+  --color-navy: #1f3d63;
+  --color-navy-strong: #152a45;
+  --color-navy-tint: #e4ebf4;
+  --color-brass: #8a621b;
+  --color-coral: #c2410c;
+  --color-violet-acc: #7c3aed;
+  --color-hairline: #d8d0c4;
+  --color-hairline-soft: #e6dfd4;
+  --color-stage: #e7ebf1;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+.katex {
+  font-size: 1.05em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+} */

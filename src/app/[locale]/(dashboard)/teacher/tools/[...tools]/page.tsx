@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { CatalogToolShell } from '@/components/tools/CatalogToolShell';
 import { GraphingToolLoader } from '@/components/tools/graphing/GraphingLoader';
 import { QuadraticLoader } from '@/components/tools/quadratic/QuadraticLoader';
+import { VectorFunctionLoader } from '@/components/tools/vector-function/VectorFunctionLoader';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { MathStepSolver } from '@/components/tools/math-step-solver/MathStepSolver';
@@ -63,6 +64,12 @@ export default async function ToolPage({ params }: ToolPageProps) {
       // title={item.title}
       // description={item.description}
       />
+    );
+  }
+
+  if (tool.id === 'vectorFunction') {
+    return (
+      <VectorFunctionLoader locale={locale} copy={dict.vectorFunctionTool} title={item.title} description={item.description} />
     );
   }
 
