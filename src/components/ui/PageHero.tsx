@@ -52,9 +52,12 @@ export function PageHero({ icon: Icon, eyebrow, badge, title, description, aside
       </div>
 
       {footer ? (
-        <div className="relative border-t border-hairline bg-paper-deep/40 px-6 py-4 sm:px-8 lg:px-10">{footer}</div>
+        <div className="relative border-t-2 border-brass bg-gradient-to-r from-brass-tint/95 via-paper/80 to-brass-tint/95 px-6 py-4 sm:px-8 lg:px-10 shadow-inner">
+          <div className="font-semibold text-navy-strong drop-shadow-sm">{footer}</div>
+        </div>
       ) : null}
     </section>
+ 
   );
 }
 

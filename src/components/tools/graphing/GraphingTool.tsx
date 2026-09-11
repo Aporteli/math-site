@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Copy, Download, LineChart, Minus, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import type { Chart, FunctionPlotDatum, FunctionPlotDatumScope } from 'function-plot';
 import { KatexPreview } from '@/components/math/katex-preview';
-import { PageHero } from '@/components/ui/PageHero';
+import { ToolHeader } from '@/components/ui/ToolHeader';
 import { SelectMenu } from '@/components/ui/SelectMenu';
 import { localePath, type Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/types';
@@ -158,7 +158,7 @@ export function GraphingTool({ locale, copy, title, description }: GraphingToolP
           {copy.back}
         </Link>
         <div className="mt-5">
-          <PageHero icon={LineChart} eyebrow={copy.eyebrow} title={title} description={description} />
+          <ToolHeader title={title} description={description} icon={<LineChart className="size-4" />} />
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">

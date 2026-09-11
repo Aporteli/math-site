@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Video, Loader2 } from 'lucide-react';
-import { ClassroomRoomModal } from '@/components/lms/classroom/ClassroomRoomModal';
+import { ClassroomRoomModal } from '@/components/lms/classroom/ClassroomRoomModal/components/ClassroomRoomModal';
 import { checkTeacherInRoom } from '@/lib/actions/room';
 
 interface StudentCourseVideoCallButtonProps {

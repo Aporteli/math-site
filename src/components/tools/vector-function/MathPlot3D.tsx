@@ -291,7 +291,7 @@ export function MathPlot3D({ data }: MathPlot3DProps) {
       title: { text: "" },
       range: [-range, range] as [number, number],
       showticklabels: false,
-      ticks: "",
+      ticks: "" as const,
       showgrid: true,
       gridcolor: COLORS.grid,
       gridwidth: 1,
@@ -366,7 +366,7 @@ export function MathPlot3D({ data }: MathPlot3DProps) {
       {
         "line.width": width,
         "line.color": color,
-      },
+      }as any,
       [getAxisIndex(axis)]
     );
   };

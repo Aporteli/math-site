@@ -44,13 +44,13 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { useDashboardFrame } from '@/components/layout/DashboardFrame';
-import type { CanvasElement, KonvaCanvasHandle } from '@/components/lms/classroom/KonvaCanvas';
+import type { CanvasElement, KonvaCanvasHandle } from '@/components/lms/classroom/KonvaCanvas/utils/types';
 import type { Dictionary } from '@/i18n/types';
 import { sendProblemToStudentAction } from '@/lib/actions/students';
 import { uploadImageToStorageAction } from '@/lib/actions/upload';
 import { getTeacherStudentsAction } from '@/lib/actions/teacher-students';
 
-const KonvaCanvas = dynamic(() => import('@/components/lms/classroom/KonvaCanvas'), {
+const KonvaCanvas = dynamic(() => import('@/components/lms/classroom/KonvaCanvas/KonvaCanvas'), {
   ssr: false,
   loading: () => (
     <div className="flex h-full w-full items-center justify-center bg-paper">

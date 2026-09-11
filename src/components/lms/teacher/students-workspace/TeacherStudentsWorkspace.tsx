@@ -17,7 +17,7 @@ import { TeacherViewProblemModal } from './modals/TeacherViewProblemModal';
 import type { TeacherStudentsWorkspaceProps } from './types/teacher-workspace.types';
 
 const ClassroomRoomModal = dynamic(
-  () => import('@/components/lms/classroom/ClassroomRoomModal').then((m) => m.ClassroomRoomModal),
+  () => import('@/components/lms/classroom/ClassroomRoomModal/components/ClassroomRoomModal').then((m) => m.ClassroomRoomModal),
   {
     ssr: false,
     loading: () => (

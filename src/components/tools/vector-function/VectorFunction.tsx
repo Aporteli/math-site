@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import { MathPlot3D } from '@/components/tools/vector-function/MathPlot3D';
 import type { VectorFunctionLoaderProps } from './VectorFunctionLoader';
+import { ToolHeader } from '@/components/ui/ToolHeader';
+// ვექტორული ფუნქციებისთვის შესაფერისი აიკონი
+import { ArrowUpRight } from 'lucide-react';
+import { BackButton } from '@/components/ui/BackButton';
 
 // მზა პრეფორმულირებული მაგალითები
 const PRESETS = [
@@ -77,20 +81,16 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
       {/* Header & Main Control Panel */}
+      <BackButton href="/ka/tools" />
+      <ToolHeader
+        title="3D ვექტორული წირის დახაზვა"
+        description="ვექტორული გამოსახულების დახაზვა 3D გრაფიკზე"
+        category=""
+        icon={<ArrowUpRight className="size-4" />}
+      />
       <div className="rounded-3xl border border-hairline bg-surface p-6 shadow-sm sm:p-8 space-y-6">
-        <div className="space-y-1.5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-navy">
-            {copy?.eyebrow || 'Interactive Vector Calculus'}
-          </p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-            {title || '3D Vector Parametric Curve Visualizer'}
-          </h1>
-          {description && <p className="text-sm leading-relaxed text-body max-w-3xl">{description}</p>}
-        </div>
-
         {/* Presets Selection */}
         <div className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-body">მზა შაბლონები (Presets):</label>
           <div className="flex flex-wrap gap-2">
             {PRESETS.map((p, idx) => (
               <button
