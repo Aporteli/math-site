@@ -41,3 +41,21 @@ export async function checkTeacherInRoom(courseId: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function getCourseTeacherId(courseId: string): Promise<string> {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    throw new Error('Unauthorized');
+  }
+
+  const course = await prisma.course.findUnique({
+    where: { id: courseId },
+    select: { teacherId: true },
+  });
+
+  if (!course) {
+    throw new Error('Course not found');
+  }
+
+  return course.teacherId;
+}

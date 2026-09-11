@@ -1,3 +1,5 @@
+//CUT 
+
 "use client";
 
 import { useEffect } from "react";
@@ -10,16 +12,6 @@ interface AudioIsolationListenerProps {
   isTeacher: boolean;
 }
 
-/**
- * Listens for audio-isolation data messages and applies the change locally.
- *
- * This is the client-side fallback described in the task:
- *  - the isolated student unsubscribes from every remote audio track;
- *  - every other student unsubscribes specifically from the isolated student's
- *    audio track;
- *  - the teacher's subscriptions are left untouched (listener is disabled for
- *    the teacher).
- */
 export function AudioIsolationListener({ isTeacher }: AudioIsolationListenerProps) {
   const room = useRoomContext();
 
@@ -64,7 +56,6 @@ function applyIsolationLocally(room: Room, studentIdentity: string, isolate: boo
   const localIdentity = room.localParticipant.identity;
 
   if (localIdentity === studentIdentity) {
-    // Isolated student: mute/unmute everyone else's audio locally.
     for (const participant of room.remoteParticipants.values()) {
       for (const publication of participant.audioTrackPublications.values()) {
         publication.setSubscribed(!isolate);
@@ -72,8 +63,6 @@ function applyIsolationLocally(room: Room, studentIdentity: string, isolate: boo
     }
     return;
   }
-
-  // Other student: mute/unmute only the isolated student's audio locally.
   const isolatedParticipant = room.remoteParticipants.get(studentIdentity);
   if (!isolatedParticipant) return;
 

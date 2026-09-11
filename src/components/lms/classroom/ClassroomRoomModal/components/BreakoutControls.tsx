@@ -1,23 +1,17 @@
-"use client";
+//CUT
 
-import { useCallback, useState } from "react";
-import { useRemoteParticipants } from "@livekit/components-react";
-import { Loader2, Volume2, VolumeX } from "lucide-react";
-import { useAudioIsolation } from "../hooks/useAudioIsolation";
+
+'use client';
+
+import { useCallback, useState } from 'react';
+import { useRemoteParticipants } from '@livekit/components-react';
+import { Loader2, Volume2, VolumeX } from 'lucide-react';
+import { useAudioIsolation } from '../hooks/useAudioIsolation';
 
 interface BreakoutControlsProps {
   courseId: string;
 }
 
-/**
- * Teacher-only control for targeted audio isolation.
- *
- * Lists every remote participant and lets the teacher isolate a single student.
- * Isolating a student:
- *  - keeps their microphone publishing,
- *  - mutes everyone else for them,
- *  - and mutes their audio for all other students (the teacher keeps hearing them).
- */
 export function BreakoutControls({ courseId }: BreakoutControlsProps) {
   const participants = useRemoteParticipants();
   const { setStudentIsolation } = useAudioIsolation(courseId);
@@ -34,15 +28,13 @@ export function BreakoutControls({ courseId }: BreakoutControlsProps) {
       setPendingIdentity(identity);
       setError(null);
       try {
-        // Only one student can be isolated at a time. Releasing the previous one
-        // first keeps the server state consistent with this UI.
         if (previous && previous !== identity) {
           await setStudentIsolation(previous, false);
         }
         await setStudentIsolation(identity, willIsolate);
         setIsolatedIdentity(willIsolate ? identity : null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "აუდიო იზოლაცია ვერ შესრულდა");
+        setError(err instanceof Error ? err.message : 'აუდიო იზოლაცია ვერ შესრულდა');
       } finally {
         setPendingIdentity(null);
       }
@@ -58,10 +50,9 @@ export function BreakoutControls({ courseId }: BreakoutControlsProps) {
         title="აუდიო იზოლაცია (Breakout mode)"
         className={`flex h-9 items-center justify-center gap-1.5 rounded-xl border px-2.5 transition-all ${
           isOpen || isolatedIdentity
-            ? "border-amber-500/60 bg-amber-500/20 text-amber-300"
-            : "border-white/10 bg-white/5 text-white/80 hover:bg-white/15 hover:text-white"
-        }`}
-      >
+            ? 'border-amber-500/60 bg-amber-500/20 text-amber-300'
+            : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/15 hover:text-white'
+        }`}>
         {isolatedIdentity ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
         <span className="hidden text-xs font-semibold sm:inline">Breakout</span>
       </button>
@@ -81,16 +72,13 @@ export function BreakoutControls({ courseId }: BreakoutControlsProps) {
                 type="button"
                 onClick={() => setIsOpen(false)}
                 className="text-white/50 transition-colors hover:text-white"
-                aria-label="დახურვა"
-              >
+                aria-label="დახურვა">
                 <span className="text-sm leading-none">×</span>
               </button>
             </div>
 
             {participants.length === 0 ? (
-              <p className="px-3 py-4 text-center text-xs text-white/50">
-                ოთახში სხვა მონაწილეები არ არიან
-              </p>
+              <p className="px-3 py-4 text-center text-xs text-white/50">ოთახში სხვა მონაწილეები არ არიან</p>
             ) : (
               <ul className="max-h-56 overflow-y-auto p-1.5">
                 {participants.map((participant) => {
@@ -106,24 +94,18 @@ export function BreakoutControls({ courseId }: BreakoutControlsProps) {
                         disabled={pendingIdentity !== null}
                         className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left transition-colors ${
                           isIsolated
-                            ? "bg-amber-500/20 text-amber-300"
-                            : "text-white/80 hover:bg-white/10 hover:text-white"
-                        } ${isPending ? "opacity-60" : ""}`}
-                      >
-                        <span className="truncate text-xs font-medium">
-                          {participant.name || identity}
-                        </span>
+                            ? 'bg-amber-500/20 text-amber-300'
+                            : 'text-white/80 hover:bg-white/10 hover:text-white'
+                        } ${isPending ? 'opacity-60' : ''}`}>
+                        <span className="truncate text-xs font-medium">{participant.name || identity}</span>
                         {isPending ? (
                           <Loader2 className="size-3.5 shrink-0 animate-spin" />
                         ) : (
                           <span
                             className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
-                              isIsolated
-                                ? "bg-amber-400 text-slate-950"
-                                : "bg-white/10 text-white/60"
-                            }`}
-                          >
-                            {isIsolated ? "გამოშვება" : "იზოლაცია"}
+                              isIsolated ? 'bg-amber-400 text-slate-950' : 'bg-white/10 text-white/60'
+                            }`}>
+                            {isIsolated ? 'გამოშვება' : 'იზოლაცია'}
                           </span>
                         )}
                       </button>

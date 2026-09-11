@@ -1,6 +1,8 @@
+//CUT
+
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Video, Loader2 } from 'lucide-react';
 import { ClassroomRoomModal } from '@/components/lms/classroom/ClassroomRoomModal/components/ClassroomRoomModal';
@@ -23,16 +25,15 @@ export function StudentCourseVideoCallButton({
   const [mounted, setMounted] = useState(false);
   const [isTeacherPresent, setIsTeacherPresent] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(true);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Check teacher presence on mount, then poll every 10 seconds
+  // Check teacher presence on mount, then keep polling so the button always
+  // reflects whether the teacher is currently in the room (even after they leave).
   useEffect(() => {
     let cancelled = false;
-    let timeoutId: NodeJS.Timeout | null = null;
 
     async function check() {
       if (cancelled) return;
@@ -41,14 +42,6 @@ export function StudentCourseVideoCallButton({
         if (!cancelled) {
           setIsTeacherPresent(present);
           setChecking(false);
-          // If teacher is present, stop polling
-          if (present) {
-            if (intervalRef.current) {
-              clearInterval(intervalRef.current);
-              intervalRef.current = null;
-            }
-            return;
-          }
         }
       } catch (error) {
         console.error('Failed to check teacher presence:', error);
@@ -59,23 +52,17 @@ export function StudentCourseVideoCallButton({
       }
     }
 
-    // Initial check
     if (courseId) {
-      check();
+      void check();
     }
 
-    // Set up polling every 10 seconds
-    intervalRef.current = setInterval(() => {
-      check();
-    }, 10000);
+    const intervalId = setInterval(() => {
+      void check();
+    }, 4000);
 
     return () => {
       cancelled = true;
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      if (timeoutId) clearTimeout(timeoutId);
+      clearInterval(intervalId);
     };
   }, [courseId]);
 
@@ -161,6 +148,24 @@ export function StudentCourseVideoCallButton({
     setIsOpen(false);
   }
 
+  // When the teacher leaves the room while the student is inside, immediately
+  // close the modal (which disconnects the student) and mark the button inactive.
+  const handleTeacherLeft = useCallback(() => {
+    setIsTeacherPresent(false);
+    setIsOpen(false);
+    if (isFullscreen) {
+      void toggleFullscreen(false);
+    }
+  }, [isFullscreen, toggleFullscreen]);
+
+  // Safety net: if polling detects the teacher is no longer in the room while
+  // the modal is open (e.g. a real-time event was missed), kick the student out.
+  useEffect(() => {
+    if (isOpen && isTeacherPresent === false) {
+      handleTeacherLeft();
+    }
+  }, [isOpen, isTeacherPresent, handleTeacherLeft]);
+
   // Button disabled if still checking, or teacher not present
   const disabled = checking || isTeacherPresent === false;
 
@@ -191,7 +196,13 @@ export function StudentCourseVideoCallButton({
       {isOpen && mounted &&
         createPortal(
           <div className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen overflow-hidden bg-slate-900/90 backdrop-blur-sm">
-            <ClassroomRoomModal courseId={courseId} courseTitle={courseTitle} onClose={handleClose} isTeacher={false} />
+            <ClassroomRoomModal
+              courseId={courseId}
+              courseTitle={courseTitle}
+              onClose={handleClose}
+              onTeacherLeft={handleTeacherLeft}
+              isTeacher={false}
+            />
           </div>,
           document.body,
         )}

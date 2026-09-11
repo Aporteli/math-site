@@ -10,17 +10,6 @@ interface IsolationRequestBody {
   isolate?: boolean;
 }
 
-/**
- * Targeted audio isolation (Breakout/Private mode).
- *
- * When `isolate` is true:
- *  - The isolated student keeps publishing (their microphone stays active),
- *    but is unsubscribed from every other participant's audio tracks.
- *  - Every other student is unsubscribed from the isolated student's audio.
- *  - The teacher's subscriptions are left untouched.
- *
- * When `isolate` is false, the subscriptions above are restored.
- */
 export async function POST(req: NextRequest) {
   try {
     let body: IsolationRequestBody;
@@ -41,8 +30,6 @@ export async function POST(req: NextRequest) {
     if (typeof isolate !== 'boolean') {
       return new NextResponse('isolate (boolean) is required', { status: 400 });
     }
-
-    // 1. Auth + course access
     const session = await getSession();
     const userId = session?.user?.id;
     const userRole = (session?.user as any)?.role;
@@ -70,8 +57,6 @@ export async function POST(req: NextRequest) {
     if (studentIdentity === course.teacherId) {
       return new NextResponse('The teacher cannot be isolated', { status: 400 });
     }
-
-    // 2. LiveKit config
     const apiKey = process.env.LIVEKIT_API_KEY;
     const apiSecret = process.env.LIVEKIT_API_SECRET;
     const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
@@ -100,13 +85,8 @@ export async function POST(req: NextRequest) {
         .filter((track) => track.type === TrackType.AUDIO)
         .map((track) => track.sid);
 
-    // Track sids the isolated student must stop/start hearing (everyone else's audio).
     const otherAudioSids = otherParticipants.flatMap(audioTrackSids);
-    // Track sids other students must stop/start hearing (the isolated student's audio).
     const targetAudioSids = audioTrackSids(target);
-
-    // 4. Apply subscription updates. `updateSubscriptions` is per-participant and
-    //    only touches the supplied track sids, so publishing stays untouched.
     const failures: string[] = [];
 
     const applySubscriptions = async (identity: string, trackSids: string[]) => {
@@ -118,11 +98,7 @@ export async function POST(req: NextRequest) {
         console.error(`Failed to update subscriptions for ${identity}:`, error);
       }
     };
-
-    // Isolated student <-> everyone else
     await applySubscriptions(studentIdentity, otherAudioSids);
-
-    // Every other student <-> the isolated student's audio
     for (const student of otherStudents) {
       await applySubscriptions(student.identity, targetAudioSids);
     }

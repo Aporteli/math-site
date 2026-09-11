@@ -1,3 +1,5 @@
+//CUT
+
 'use client';
 
 import { useRef, useState } from 'react';
@@ -11,24 +13,37 @@ import { ClassroomError } from './ClassroomError';
 import { useLiveKitToken } from '../hooks/useLiveKitToken';
 import { useClassroomFullscreen } from '../hooks/useClassroomFullscreen';
 import { useHideAiWidget } from '../hooks/useHideAiWidget';
+import { useTeacherKick } from '../hooks/useTeacherKick';
 
 interface ClassroomRoomModalProps {
   courseId: string;
   courseTitle: string;
   onClose: () => void;
   isTeacher?: boolean;
+  onTeacherLeft?: () => void;
 }
 
-export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher = false }: ClassroomRoomModalProps) {
+export function ClassroomRoomModal({
+  courseId,
+  courseTitle,
+  onClose,
+  isTeacher = false,
+  onTeacherLeft,
+}: ClassroomRoomModalProps) {
   const classroomRootRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'split' | 'board'>('split');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [activeRoom, setActiveRoom] = useState<Room | null>(null);
 
+  // ვიდეო პანელის ჩაკეცვის/გაშლის სტატუსი
+  const [isVideoCollapsed, setIsVideoCollapsed] = useState(false);
+
   const { token, loading, error } = useLiveKitToken(courseId);
   const { isBoardFullscreen, isChromeOpen, setIsChromeOpen, toggleClassroomFullscreen } =
     useClassroomFullscreen(classroomRootRef);
+
   useHideAiWidget();
+  useTeacherKick(courseId, activeRoom, isTeacher, onTeacherLeft);
 
   const handleUndo = () => {
     window.dispatchEvent(new CustomEvent('whiteboard-undo'));
@@ -82,10 +97,36 @@ export function ClassroomRoomModal({ courseId, courseTitle, onClose, isTeacher =
           className={`flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row ${
             isBoardFullscreen ? 'gap-0 p-0' : 'gap-2.5 p-2'
           }`}>
+          {/* ვიდეო პანელის კონტეინერი დინამიური ზომით */}
           <div
-            className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-slate-950/80 border border-white/5 transition-all ${
-              activeTab === 'board' ? 'hidden' : 'w-full lg:w-[340px] xl:w-[400px] shrink-0'
+            className={`relative flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-slate-950/80 border border-white/5 transition-all duration-300 ease-in-out ${
+              activeTab === 'board'
+                ? 'hidden'
+                : isVideoCollapsed
+                  ? 'w-full lg:w-[140px] shrink-0' // ჩაკეცილი მდგომარეობა (ვიწრო ზოლი)
+                  : 'w-full lg:w-[260px] xl:w-[300px] shrink-0' // დავიწროებული სტანდარტული ზომა
             }`}>
+            {/* ჩაკეცვის / გაშლის დინამიური ღილაკი */}
+            <button
+              onClick={() => setIsVideoCollapsed(!isVideoCollapsed)}
+              title={isVideoCollapsed ? 'პანელის გაშლა' : 'პანელის ჩაკეცვა'}
+              className="absolute top-2 right-2 z-20 flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 text-white/80 backdrop-blur-md transition hover:bg-white/20 hover:text-white">
+              {isVideoCollapsed ? (
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                </svg>
+              ) : (
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 19l-7-7 7-7M19 19l-7-7 7-7"
+                  />
+                </svg>
+              )}
+            </button>
+
             <ClassroomVideoPanel
               token={token}
               courseId={courseId}

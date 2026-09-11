@@ -10,7 +10,6 @@ export function ConnectionStatusBadge() {
     return (
       <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
         <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-        <span>დაკავშირებულია</span>
       </div>
     );
   }
