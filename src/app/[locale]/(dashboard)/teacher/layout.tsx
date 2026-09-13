@@ -1,10 +1,10 @@
-import { notFound } from "next/navigation";
-import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
-import { requireRole } from "@/lib/auth/session";
+import { notFound } from 'next/navigation';
+import { DashboardShell } from '@/components/layout/DashboardShell';
+import { isLocale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/get-dictionary';
+import { requireRole } from '@/lib/auth/session';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export default async function TeacherLayout({
   children,
@@ -16,7 +16,8 @@ export default async function TeacherLayout({
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  const session = await requireRole(locale, ["TEACHER", "ADMIN"]);
+  // მკაცრი დაცვა: უშვებს მხოლოდ TEACHER და ADMIN როლებს. VISITOR და STUDENT ავტომატურად იბლოკებიან.
+  const session = await requireRole(locale, ['TEACHER', 'ADMIN']);
   const dict = getDictionary(locale);
   const teacher = dict.dashboard.teacher;
 
@@ -27,8 +28,7 @@ export default async function TeacherLayout({
       roleLabel={teacher.role}
       userName={session.user.name ?? session.user.email ?? teacher.role}
       role="teacher"
-      labels={teacher.nav}
-    >
+      labels={teacher.nav}>
       {children}
     </DashboardShell>
   );

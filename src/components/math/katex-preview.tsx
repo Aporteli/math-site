@@ -93,7 +93,9 @@ export function KatexPreview({
     const node = ref.current;
     if (!node) return;
     node.replaceChildren();
-    const prepared = polishStudentTex(tex);
+    const prepared = polishStudentTex(tex).replace(/\\text\{([^{}]*)\}/g, '$1')
+    .replace(/\\mathrm\{([^{}]*)\}/g, '$1');
+    
 
     if (!looksLikeProse(prepared)) {
       renderKatex(prepared, node, displayMode);

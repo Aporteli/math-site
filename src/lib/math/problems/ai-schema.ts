@@ -31,14 +31,26 @@ export const aiChatTurnSchema = z.object({
   content: z.string().trim().min(1).max(10000),
 });
 
-export const teacherAiChatSchema = z.object({
-  model: z.enum(AI_MODEL_IDS).default(DEFAULT_AI_MODEL),
-  locale: z.enum(locales),
-  message: z.string().trim().min(1).max(10000),
-  history: z.array(aiChatTurnSchema).max(20).default([]),
+export const chatImageSchema = z.object({
+  mimeType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  data: z.string().trim().min(32).max(1_200_000),
 });
 
+export const teacherAiChatSchema = z
+  .object({
+    model: z.enum(AI_MODEL_IDS).default(DEFAULT_AI_MODEL),
+    locale: z.enum(locales),
+    message: z.string().trim().max(10000),
+    history: z.array(aiChatTurnSchema).max(20).default([]),
+    images: z.array(chatImageSchema).max(4).default([]),
+  })
+  .refine((value) => value.message.length > 0 || value.images.length > 0, {
+    message: "message_or_image_required",
+    path: ["message"],
+  });
+
 export type AiChatTurn = z.infer<typeof aiChatTurnSchema>;
+export type ChatImageInput = z.infer<typeof chatImageSchema>;
 export type TeacherAiChatInput = z.infer<typeof teacherAiChatSchema>;
 
 const variablesSchema = z
@@ -172,4 +184,6 @@ export type DiverseGenerateError =
   | "timeout"
   | "bad_output";
 
-export type TeacherAiChatError = Exclude<DiverseGenerateError, "none_verified">;
+export type TeacherAiChatError =
+  | Exclude<DiverseGenerateError, "none_verified">
+  | "image_unsupported";

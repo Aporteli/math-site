@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
 import {
   AI_MODELS,
   dailyLimitFor,
@@ -9,7 +10,12 @@ import {
 } from "./ai-models";
 import { listProviderWallets, type ModelWallet } from "./ai-billing";
 
-const STORE = path.join(process.cwd(), "data", "ai-usage.json");
+// Vercel Serverless (Read-Only) გარემოში იყენებს /tmp დირექტორიას, ლოკალზე process.cwd()/data-ს
+const DATA_DIR = process.env.VERCEL
+  ? path.join(os.tmpdir(), "data")
+  : path.join(process.cwd(), "data");
+
+const STORE = path.join(DATA_DIR, "ai-usage.json");
 
 type UsageFile = {
   day: string;
@@ -39,14 +45,18 @@ async function readStore(): Promise<UsageFile> {
       return parsed;
     }
   } catch {
-    // Missing or stale file starts a new day.
+    // ფაილის არარსებობისას იწყებს ახალ დღეს
   }
   return { day, used: {} };
 }
 
 async function writeStore(store: UsageFile) {
-  await mkdir(path.dirname(STORE), { recursive: true });
-  await writeFile(STORE, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+  try {
+    await mkdir(path.dirname(STORE), { recursive: true });
+    await writeFile(STORE, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+  } catch (error) {
+    console.error("AI_USAGE_WRITE_ERROR:", error);
+  }
 }
 
 export async function listAiModelStatus(): Promise<AiModelStatus[]> {

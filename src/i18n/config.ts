@@ -16,7 +16,6 @@ export function isLocale(value: string): value is Locale {
   return locales.includes(value as Locale);
 }
 
-/** Prefixes an app-relative path with the active locale: `/tools` -> `/en/tools`. */
 export function localePath(locale: Locale, path: string) {
   return path === "/" ? `/${locale}` : `/${locale}${path}`;
 }
