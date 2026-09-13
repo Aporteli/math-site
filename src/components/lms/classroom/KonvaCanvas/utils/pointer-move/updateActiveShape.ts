@@ -2,37 +2,53 @@ import type { MutableRefObject, RefObject } from 'react';
 import Konva from 'konva';
 import type { CanvasElement } from '../types';
 import { findSnapPoint } from '../snapping';
+import { findNearbyEndpoint } from '../snapping/endpoints';
 
 export interface UpdateActiveShapeContext {
   activeTool: string;
   elementsRef: MutableRefObject<CanvasElement[]>;
   activeShapeRef: MutableRefObject<any>;
   drawLayerRef: RefObject<Konva.Layer>;
-  /** True while the Shift key is held — constrains freehand to a straight line. */
+  scale: number;
   shiftHeld?: boolean;
 }
 
-/**
- * Grows/snaps the in-flight shape that was created on pointer-down. One branch
- * per tool. Always ends by calling `batchDraw` on the draw layer.
- */
-export function updateActiveShape(ctx: UpdateActiveShapeContext, pos: { x: number; y: number }): void {
+export function updateActiveShape(
+  ctx: UpdateActiveShapeContext,
+  pos: { x: number; y: number },
+): void {
   const shape = ctx.activeShapeRef.current;
   if (!shape) return;
 
   const snap = findSnapPoint(pos, ctx.elementsRef.current, ctx.activeTool);
-  const snapX = snap.x;
-  const snapY = snap.y;
+  let snapX = snap.x;
+  let snapY = snap.y;
+
+  // Snap the cursor to any nearby vertex (endpoint OR interior junction)
+  // for the tools where the endpoint is meaningful.
+  const isEndpointTool =
+    ctx.activeTool === 'line' ||
+    ctx.activeTool === 'arrow' ||
+    ctx.activeTool === 'pen';
+
+  if (isEndpointTool) {
+    const hit = findNearbyEndpoint(
+      { x: snapX, y: snapY },
+      ctx.elementsRef.current,
+      ctx.scale,
+    );
+    if (hit) {
+      snapX = hit.x;
+      snapY = hit.y;
+    }
+  }
 
   if (ctx.activeTool === 'pen') {
     if (ctx.shiftHeld) {
-      // Straight-line preview: keep the anchor, let the endpoint follow the
-      // cursor freely in any direction. Overwriting (instead of appending)
-      // is what makes the stroke perfectly straight regardless of hand jitter.
       const pts = shape.points();
       const startX = pts[0];
       const startY = pts[1];
-      shape.points([startX, startY, pos.x, pos.y]);
+      shape.points([startX, startY, snapX, snapY]);
     } else {
       const currentPts = shape.points();
       const len = currentPts.length;

@@ -1,16 +1,8 @@
 import Link from 'next/link';
 import { LogIn } from 'lucide-react';
 import { SignOutButton } from '@/components/auth/SignOutButton';
-import { localePath, type Locale } from '@/i18n/config';
-import type { UserRole } from '@/lib/auth/roles';
-
-interface AuthEntryProps {
-  locale: Locale;
-  loginLabel: string;
-  signOutLabel: string;
-  session: { role: UserRole } | null;
-  withText?: boolean;
-}
+import { localePath } from '@/i18n/config';
+import type { AuthEntryProps } from './types';
 
 export function AuthEntry({ locale, loginLabel, signOutLabel, session, withText = false }: AuthEntryProps) {
   if (session) {

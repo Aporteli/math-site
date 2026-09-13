@@ -2,18 +2,10 @@
 
 import Link from "next/link";
 import { ArrowUpRight, LayoutDashboard, UserPlus } from "lucide-react";
-import { localePath, type Locale } from "@/i18n/config";
+import { localePath } from "@/i18n/config";
 import { dashboardHomeForRole } from "@/lib/auth/paths";
-import type { UserRole } from "@/lib/auth/roles";
+import type { WorkspaceDockProps } from './types';
 
-interface WorkspaceDockProps {
-  locale: Locale;
-  role: UserRole;
-  roleLabel: string;
-  label: string;
-  hint: string;
-  variant?: "floating" | "bar";
-}
 
 export function WorkspaceDock({
   locale,

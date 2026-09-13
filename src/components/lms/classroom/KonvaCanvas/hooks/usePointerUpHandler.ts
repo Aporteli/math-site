@@ -67,37 +67,50 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
 
       if (!newElem) return;
 
-      // Endpoint snap: pin both ends of the new pen stroke onto nearby existing
-      // endpoints so the strokes visually meet exactly, point on point.
-      if (newElem.type === 'freedraw' && newElem.points && newElem.points.length >= 4) {
+      const isLineDrawMode =
+        (activeTool === 'pen' && evt.shiftKey) || activeTool === 'line';
+
+      if (isLineDrawMode && newElem.points && newElem.points.length >= 4) {
         const pts = newElem.points.slice();
         const n = pts.length;
 
-        const startHit = findNearbyEndpoint({ x: pts[0], y: pts[1] }, elementsRef.current);
+        // Snap start (both endpoints + interior vertices now considered)
+        const startHit = findNearbyEndpoint(
+          { x: pts[0], y: pts[1] },
+          elementsRef.current,
+          scale,
+        );
         if (startHit) {
           pts[0] = startHit.x;
           pts[1] = startHit.y;
         }
 
-        const endHit = findNearbyEndpoint({ x: pts[n - 2], y: pts[n - 1] }, elementsRef.current);
+        // Snap end
+        const endHit = findNearbyEndpoint(
+          { x: pts[n - 2], y: pts[n - 1] },
+          elementsRef.current,
+          scale,
+        );
         if (endHit) {
           pts[n - 2] = endHit.x;
           pts[n - 1] = endHit.y;
         }
 
         newElem.points = pts;
+
+        const cand = findMergeCandidate(newElem, elementsRef.current, scale);
+        if (cand) {
+          const merged = mergeStrokes(cand.target, newElem, cand.mode);
+          onElementsChange(
+            elementsRef.current.map((el) =>
+              el.id === cand.target.id ? merged : el,
+            ),
+          );
+          return;
+        }
       }
 
-      // Then try to graft it onto a nearby stroke (continue-drawing case).
-      const cand = findMergeCandidate(newElem, elementsRef.current);
-      if (cand) {
-        const merged = mergeStrokes(cand.target, newElem, cand.prepend);
-        onElementsChange(
-          elementsRef.current.map((el) => (el.id === cand.target.id ? merged : el)),
-        );
-      } else {
-        commitShape({ elementsRef, onElementsChange }, newElem);
-      }
+      commitShape({ elementsRef, onElementsChange }, newElem);
     },
     [
       syncStylusButtonsFromEvent,

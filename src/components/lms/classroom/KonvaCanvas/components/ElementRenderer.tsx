@@ -179,9 +179,6 @@ export function ElementRenderer({
           );
         }
         if (el.type === 'triangle' && el.points) {
-          // Multi-colored polygon: render each edge separately inside a
-          // Group so the whole shape still behaves as one selectable,
-          // draggable, transformable element.
           if (el.edgeColors && el.edgeColors.length > 0) {
             const pts = el.points;
             const edgeCount = Math.floor(pts.length / 2);
@@ -231,7 +228,6 @@ export function ElementRenderer({
             );
           }
 
-          // Single-color polygon: unchanged path.
           return (
             <Line
               key={el.id}

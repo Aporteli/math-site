@@ -1,112 +1,14 @@
-import type { ProcessorOptions, Track, TrackProcessor } from 'livekit-client';
+import type { Track, TrackProcessor } from 'livekit-client';
 import * as vision from '@mediapipe/tasks-vision';
-import { SELFIE_SEGMENTER_MODEL } from './background';
 
-const TASKS_VISION_WASM =
-  'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm';
-
-/* -------------------------------------------------------------------------- */
-/* Runtime-tunable settings                                                    */
-/* -------------------------------------------------------------------------- */
-
-export interface TemporalBackgroundSettings {
-  /** Pixels below this person-ness are dropped to background. */
-  personLow: number;
-  /** Pixels above this are full person. Must be > personLow. */
-  personHigh: number;
-  /** EMA weight applied on top of the multi-frame average (0–1). */
-  smoothing: number;
-  /** Number of previous frames to average (2–5 recommended). */
-  historyLength: number;
-  /** Spatial blur radius in mask pixels (0 = off, 1–2 is usually enough). */
-  blurRadius: number;
-}
-
-export const DEFAULT_TEMPORAL_BG_SETTINGS: TemporalBackgroundSettings = {
-  personLow: 0.42,
-  personHigh: 0.75,
-  smoothing: 0.45,
-  historyLength: 3,
-  blurRadius: 1.5,
-};
-
-/**
- * Mutable, module-level settings. The compositor reads these every frame, so
- * changing them from a UI takes effect on the next rendered frame without
- * recreating the processor.
- */
-export const temporalBackgroundSettings: TemporalBackgroundSettings = {
-  ...DEFAULT_TEMPORAL_BG_SETTINGS,
-};
-
-const LS_KEY = 'temporal-bg-settings-v1';
-
-export function loadTemporalBackgroundSettings(): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const raw = window.localStorage.getItem(LS_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw) as Partial<TemporalBackgroundSettings>;
-    if (typeof parsed.personLow === 'number') {
-      temporalBackgroundSettings.personLow = clamp01(parsed.personLow);
-    }
-    if (typeof parsed.personHigh === 'number') {
-      temporalBackgroundSettings.personHigh = clamp01(parsed.personHigh);
-    }
-    if (typeof parsed.smoothing === 'number') {
-      temporalBackgroundSettings.smoothing = clamp01(parsed.smoothing);
-    }
-    if (typeof parsed.historyLength === 'number') {
-      temporalBackgroundSettings.historyLength = Math.max(
-        1,
-        Math.min(5, Math.round(parsed.historyLength)),
-      );
-    }
-    if (typeof parsed.blurRadius === 'number') {
-      temporalBackgroundSettings.blurRadius = Math.max(0, parsed.blurRadius);
-    }
-  } catch {
-    /* ignore */
-  }
-}
-
-export function saveTemporalBackgroundSettings(): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(
-      LS_KEY,
-      JSON.stringify(temporalBackgroundSettings),
-    );
-  } catch {
-    /* ignore */
-  }
-}
-
-export function resetTemporalBackgroundSettings(): void {
-  Object.assign(temporalBackgroundSettings, DEFAULT_TEMPORAL_BG_SETTINGS);
-  saveTemporalBackgroundSettings();
-}
-
-function clamp01(v: number): number {
-  return v < 0 ? 0 : v > 1 ? 1 : v;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Fixed (model-specific) constants — not exposed to the tuner                 */
-/* -------------------------------------------------------------------------- */
-
-const PERSON_CLASS_INDEX = 1; // confidenceMasks[1] = person
-const INVERT_CATEGORY_MASK = true; // category mask labels background=1
-
-/* -------------------------------------------------------------------------- */
-
-export interface TemporalBackgroundOptions {
-  imagePath: string;
-  /** Deprecated: kept for API compatibility; runtime settings take priority. */
-  smoothingFactor?: number;
-}
-
-type VideoOpts = ProcessorOptions<Track.Kind.Video>;
+import { TASKS_VISION_WASM, PERSON_CLASS_INDEX, INVERT_CATEGORY_MASK } from './constants';
+import { temporalBackgroundSettings } from './index';
+import type { TemporalBackgroundOptions, VideoOpts } from './types';
+import { createSegmenter } from './utils/createSegmenter';
+import { waitForVideoDimensions } from './utils/waitForVideoDimensions';
+import { loadImageBitmap } from './utils/loadImageBitmap';
+import { drawImageCover } from './utils/drawImageCover';
+import { blurConfidence } from './utils/blurConfidence';
 
 export class TemporalBackgroundProcessor
   implements TrackProcessor<Track.Kind.Video>
@@ -397,7 +299,7 @@ export class TemporalBackgroundProcessor
         this.blurredConfidence = new Float32Array(raw.length);
       }
       this.blurredConfidence.set(this.smoothedConfidence);
-      this.blurConfidence(this.blurredConfidence, mw, mh, blurR);
+      blurConfidence(this.blurredConfidence, mw, mh, blurR);
       shapedSource = this.blurredConfidence;
     }
 
@@ -408,7 +310,6 @@ export class TemporalBackgroundProcessor
 
     // Steep sigmoid centered between lo/hi. Higher k = sharper edge.
     const k = 14; // 8–10 for softer edges, 14–18 for crisper
-    const mid = (lo + hi) * 0.5; // (mid kept for reference; t already encodes lo/hi)
 
     for (let i = 0; i < smoothed.length; i++) {
       const p = smoothed[i];
@@ -462,143 +363,4 @@ export class TemporalBackgroundProcessor
       });
     }
   }
-
-  /** Cheap separable box blur on a Float32Array confidence map. */
-  private blurConfidence(
-    data: Float32Array,
-    w: number,
-    h: number,
-    radius: number,
-  ): void {
-    const r = Math.max(1, Math.round(radius));
-    const tmp = new Float32Array(data.length);
-
-    // Horizontal pass
-    for (let y = 0; y < h; y++) {
-      const row = y * w;
-      for (let x = 0; x < w; x++) {
-        let sum = 0;
-        let count = 0;
-        const x0 = Math.max(0, x - r);
-        const x1 = Math.min(w - 1, x + r);
-        for (let i = x0; i <= x1; i++) {
-          sum += data[row + i];
-          count++;
-        }
-        tmp[row + x] = sum / count;
-      }
-    }
-
-    // Vertical pass
-    for (let x = 0; x < w; x++) {
-      for (let y = 0; y < h; y++) {
-        let sum = 0;
-        let count = 0;
-        const y0 = Math.max(0, y - r);
-        const y1 = Math.min(h - 1, y + r);
-        for (let j = y0; j <= y1; j++) {
-          sum += tmp[j * w + x];
-          count++;
-        }
-        data[y * w + x] = sum / count;
-      }
-    }
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/* Helpers                                                                    */
-/* -------------------------------------------------------------------------- */
-
-type CreateSegmenterOptionsArg = Parameters<
-  typeof vision.ImageSegmenter.createFromOptions
->;
-type WasmFilesetArg = CreateSegmenterOptionsArg[0];
-type ImageSegmenterOptionsArg = CreateSegmenterOptionsArg[1];
-
-async function createSegmenter(
-  fileset: vision.FilesetResolver,
-): Promise<vision.ImageSegmenter> {
-  const wasmFileset = fileset as unknown as WasmFilesetArg;
-  const baseOptions = { modelAssetPath: SELFIE_SEGMENTER_MODEL };
-  const options: ImageSegmenterOptionsArg = {
-    runningMode: 'VIDEO',
-    outputCategoryMask: false,
-    outputConfidenceMasks: true,
-  };
-
-  try {
-    return await vision.ImageSegmenter.createFromOptions(wasmFileset, {
-      ...options,
-      baseOptions: { ...baseOptions, delegate: 'GPU' },
-    });
-  } catch (err) {
-    console.warn('[TemporalBG] GPU delegate failed, falling back to CPU:', err);
-    return await vision.ImageSegmenter.createFromOptions(wasmFileset, {
-      ...options,
-      baseOptions: { ...baseOptions, delegate: 'CPU' },
-    });
-  }
-}
-
-function waitForVideoDimensions(video: HTMLVideoElement): Promise<void> {
-  return new Promise((resolve) => {
-    const isReady = () => video.videoWidth > 0 && video.videoHeight > 0;
-    if (isReady()) {
-      resolve();
-      return;
-    }
-
-    let done = false;
-    const finish = () => {
-      if (done) return;
-      done = true;
-      clearInterval(intervalId);
-      clearTimeout(timeoutId);
-      video.removeEventListener('loadeddata', onReady);
-      video.removeEventListener('loadedmetadata', onReady);
-      resolve();
-    };
-    const onReady = () => {
-      if (isReady()) finish();
-    };
-
-    const intervalId = setInterval(onReady, 50);
-    const timeoutId = setTimeout(() => {
-      if (!isReady()) {
-        console.warn('[TemporalBG] video dimensions never became available');
-      }
-      finish();
-    }, 5000);
-
-    video.addEventListener('loadeddata', onReady);
-    video.addEventListener('loadedmetadata', onReady);
-  });
-}
-
-async function loadImageBitmap(src: string): Promise<ImageBitmap> {
-  const img = new Image();
-  if (!src.startsWith('blob:') && !src.startsWith('data:')) {
-    img.crossOrigin = 'anonymous';
-  }
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error('Failed to load background image'));
-    img.src = src;
-  });
-  return createImageBitmap(img);
-}
-
-function drawImageCover(
-  ctx: CanvasRenderingContext2D,
-  image: ImageBitmap,
-  width: number,
-  height: number,
-): void {
-  const iw = image.width;
-  const ih = image.height;
-  const scale = Math.max(width / iw, height / ih);
-  const dw = iw * scale;
-  const dh = ih * scale;
-  ctx.drawImage(image, (width - dw) / 2, (height - dh) / 2, dw, dh);
 }

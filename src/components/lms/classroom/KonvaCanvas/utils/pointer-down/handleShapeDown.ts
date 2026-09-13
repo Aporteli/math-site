@@ -14,6 +14,8 @@ export interface HandleShapeDownContext {
   drawLayerRef: RefObject<Konva.Layer>;
   strokeColor: string;
   strokeWidth: number;
+  scale: number;
+  shiftKey: boolean;
 }
 
 export function handleShapeDown(
@@ -23,12 +25,17 @@ export function handleShapeDown(
   const id = `el_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
   const snap = findSnapPoint(pos, ctx.elementsRef.current, ctx.activeTool);
 
-  // Endpoint snap runs *after* grid/element snap, so a nearby stroke endpoint
-  // takes priority over a grid line. Only for pen — other tools don't need it.
+  const isLineDrawMode =
+    (ctx.activeTool === 'pen' && ctx.shiftKey) || ctx.activeTool === 'line';
+
   let sx = snap.x;
   let sy = snap.y;
-  if (ctx.activeTool === 'pen') {
-    const hit = findNearbyEndpoint({ x: sx, y: sy }, ctx.elementsRef.current);
+  if (isLineDrawMode) {
+    const hit = findNearbyEndpoint(
+      { x: sx, y: sy },
+      ctx.elementsRef.current,
+      ctx.scale,
+    );
     if (hit) {
       sx = hit.x;
       sy = hit.y;
@@ -38,7 +45,13 @@ export function handleShapeDown(
   ctx.isDrawing.current = true;
   ctx.activeShapeIdRef.current = id;
 
-  const shapeNode = createShapeNode(ctx.activeTool, sx, sy, ctx.strokeColor, ctx.strokeWidth);
+  const shapeNode = createShapeNode(
+    ctx.activeTool,
+    sx,
+    sy,
+    ctx.strokeColor,
+    ctx.strokeWidth,
+  );
   ctx.activeShapeRef.current = shapeNode;
 
   if (shapeNode && ctx.drawLayerRef.current) {

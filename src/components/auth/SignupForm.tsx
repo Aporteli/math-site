@@ -10,18 +10,10 @@ import {
   sendSignupOtpAction,
   verifyAndCreateUserAction,
 } from '@/app/[locale]/(auth)/signup/actions';
-import type { Locale } from '@/i18n/config';
-import type { Dictionary } from '@/i18n/types';
-
-type SignupCopy = Dictionary['auth']['signup'];
+import type { SignupFormProps } from './types';
 
 const fieldClass =
   'w-full min-w-0 rounded-xl border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
-
-interface SignupFormProps {
-  locale: Locale;
-  copy: SignupCopy;
-}
 
 export function SignupForm({ locale, copy }: SignupFormProps) {
   const router = useRouter();

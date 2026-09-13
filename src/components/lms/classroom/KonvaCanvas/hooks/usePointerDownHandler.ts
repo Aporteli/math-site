@@ -101,6 +101,8 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
           drawLayerRef,
           strokeColor,
           strokeWidth,
+          shiftKey: e.shiftKey,
+          scale: e.scale,
         },
         pos,
       );

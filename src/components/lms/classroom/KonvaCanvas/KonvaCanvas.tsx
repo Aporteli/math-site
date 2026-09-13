@@ -4,6 +4,7 @@ import React, { useRef, useState, forwardRef, RefObject, useCallback, useEffect 
 import Konva from 'konva';
 import { Stage, Layer } from 'react-konva';
 import type { CanvasElement, KonvaCanvasHandle, KonvaCanvasProps } from './utils/types';
+import { findConnectedIds } from './utils/connectivity';
 import { TextEditorOverlay } from './components/TextEditorOverlay';
 import { ElementRenderer } from './components/ElementRenderer';
 import { SelectionOverlay } from './components/SelectionOverlay';
@@ -29,6 +30,12 @@ import { useDrawLayerCleanup } from './hooks/useDrawLayerCleanup';
 import { useElementClickHandler } from './hooks/useElementClickHandler';
 import { useMarqueeSelection } from './hooks/useMarqueeSelection';
 import { useInlineCrop } from './hooks/useInlineCrop';
+
+interface DragSnapshot {
+  points?: number[];
+  x: number;
+  y: number;
+}
 
 const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function KonvaCanvas(
   {
@@ -80,6 +87,10 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   elementsRef.current = elements;
   const isStylusActiveRef = useRef(false);
   const activePointerIdRef = useRef<number | null>(null);
+
+  // ---- Connected-group drag bookkeeping ----
+  const dragSiblingsRef = useRef<Map<string, DragSnapshot>>(new Map());
+  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // ---- Stage size ----
   const stageSize = useStageSize(containerRef as RefObject<HTMLDivElement>);
@@ -189,7 +200,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   // ---- Pointer handlers (draw / erase / laser / marquee) ----
   const { handlePointerDown, handlePointerMove, handlePointerUp } = usePointerHandlers({
     activeTool,
-    scale,        
+    scale,
     strokeColor,
     strokeWidth,
     stylusOnly,
@@ -242,22 +253,116 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   // ---- Drag tracking for toolbar visibility ----
   const [isDraggingImage, setIsDraggingImage] = useState(false);
 
+  /**
+   * Drag start: snapshot every element in the connected group so we can move
+   * siblings live during the drag and commit all of them on release.
+   */
   const handleDragStartWrapped = useCallback(
     (id: string, e: any) => {
       if (id === selectedImage?.id) setIsDraggingImage(true);
+
+      const connected = findConnectedIds(id, elementsRef.current);
+      const snaps = new Map<string, DragSnapshot>();
+      for (const el of elementsRef.current) {
+        if (!connected.has(el.id)) continue;
+        snaps.set(el.id, {
+          points: el.points ? el.points.slice() : undefined,
+          x: (el as any).x ?? 0,
+          y: (el as any).y ?? 0,
+        });
+      }
+      dragSiblingsRef.current = snaps;
+      dragStartRef.current = { x: e.target.x(), y: e.target.y() };
+
       handleDragStart(id, e);
     },
     [handleDragStart, selectedImage?.id],
   );
 
+  /**
+   * Drag move: translate every sibling's Konva node by the same delta so the
+   * connected figure moves as one rigid body during the drag. The dragged
+   * node itself is moved by Konva.
+   */
+  const handleDragMoveWrapped = useCallback(
+    (id: string, e: any) => {
+      const snaps = dragSiblingsRef.current;
+      const dx = e.target.x() - dragStartRef.current.x;
+      const dy = e.target.y() - dragStartRef.current.y;
+
+      if (snaps.size > 1 && (dx !== 0 || dy !== 0)) {
+        const stage = stageRef.current;
+        if (stage) {
+          for (const [otherId, snap] of snaps) {
+            if (otherId === id) continue;
+            const node = stage.findOne('#' + otherId) as any;
+            if (!node) continue;
+
+            if (snap.points) {
+              // Line-like element: mutate points in place, keep transform identity.
+              node.points(
+                snap.points.map((v, i) => (i % 2 === 0 ? v + dx : v + dy)),
+              );
+              node.x(0);
+              node.y(0);
+            } else {
+              node.x(snap.x + dx);
+              node.y(snap.y + dy);
+            }
+          }
+          stage.batchDraw();
+        }
+      }
+
+      handleDragMove(id, e);
+    },
+    [handleDragMove],
+  );
+
+  /**
+   * Drag end: commit new absolute positions for every sibling, then let the
+   * base handler commit the dragged element (it reads e.target.x/y and bakes
+   * the delta into that element's points).
+   */
   const handleDragEndWrapped = useCallback(
     (id: string, e: any) => {
+      const snaps = dragSiblingsRef.current;
+      const dx = e.target.x() - dragStartRef.current.x;
+      const dy = e.target.y() - dragStartRef.current.y;
+
+      if (snaps.size > 1 && (dx !== 0 || dy !== 0)) {
+        const updates = new Map<string, Partial<CanvasElement>>();
+        for (const [otherId, snap] of snaps) {
+          if (otherId === id) continue;
+          if (snap.points) {
+            updates.set(otherId, {
+              points: snap.points.map((v, i) => (i % 2 === 0 ? v + dx : v + dy)),
+              x: 0,
+              y: 0,
+            } as Partial<CanvasElement>);
+          } else {
+            updates.set(otherId, {
+              x: snap.x + dx,
+              y: snap.y + dy,
+            } as Partial<CanvasElement>);
+          }
+        }
+
+        if (updates.size > 0) {
+          const next = elementsRef.current.map((el) => {
+            const upd = updates.get(el.id);
+            return upd ? ({ ...el, ...upd } as CanvasElement) : el;
+          });
+          onElementsChange(next);
+        }
+      }
+
+      dragSiblingsRef.current = new Map();
+
       handleDragEnd(id, e);
-      // Clear on the next frame so the toolbar position effect re-runs
-      // against the updated element positions from the dragend commit.
       requestAnimationFrame(() => setIsDraggingImage(false));
     },
-    [handleDragEnd],
+    [handleDragEnd, onElementsChange],
   );
 
   // ---- Fit to content ----
@@ -407,7 +512,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
               editingTextId={editingTextId}
               onElementClick={handleElementClick}
               onDragStart={handleDragStartWrapped}
-              onDragMove={handleDragMove}
+              onDragMove={handleDragMoveWrapped}
               onDragEnd={handleDragEndWrapped}
             />
             {!isCropping && (
