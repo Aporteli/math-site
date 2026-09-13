@@ -1,16 +1,13 @@
-# ბიბლიოთეკები და ბილდები
 node_modules/
 .next/
 dist/
 out/
 build/
 
-# ლოკები და მძიმე ფაილები
 package-lock.json
 *.lock
 *.log
 
-# მედია და სტატიკა
 public/
 *.png
 *.jpg
