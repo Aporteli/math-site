@@ -1,3 +1,5 @@
+//CUT
+
 'use client';
 
 import {
@@ -27,6 +29,7 @@ import {
   X,
   Layers,
   BookOpen,
+  CheckSquare,
 } from 'lucide-react';
 import {
   AdminSlashPromptManager,
@@ -679,6 +682,9 @@ export function TeacherAiChatPanel({
               }
 
               const selectedInBlock = bankProblems.filter((p) => selectedProblemIds.includes(p.id));
+              const allInBlockSelected =
+                bankProblems.length > 0 && bankProblems.every((p) => selectedProblemIds.includes(p.id));
+              const someInBlockSelected = selectedInBlock.length > 0 && !allInBlockSelected;
 
               return (
                 <li key={`assistant-${index}`} className="flex justify-start">
@@ -715,6 +721,29 @@ export function TeacherAiChatPanel({
                                 }>
                                 <Send className="size-3.5" aria-hidden="true" />
                                 <span>მონიშნულების გაგზავნა ({selectedInBlock.length})</span>
+                              </button>
+                            )}
+                            {selectedInBlock.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (allInBlockSelected) {
+                                    const blockIds = new Set(bankProblems.map((p) => p.id));
+                                    setSelectedProblemIds((prev) => prev.filter((id) => !blockIds.has(id)));
+                                  } else {
+                                    const blockIds = bankProblems.map((p) => p.id);
+                                    setSelectedProblemIds((prev) => Array.from(new Set([...prev, ...blockIds])));
+                                  }
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint">
+                                <CheckSquare className="size-3.5" aria-hidden="true" />
+                                <span>
+                                  {allInBlockSelected
+                                    ? 'მონიშვნის მოხსნა'
+                                    : someInBlockSelected
+                                      ? `ყველას მონიშვნა (+${bankProblems.length - selectedInBlock.length})`
+                                      : `ყველას მონიშვნა (${bankProblems.length})`}
+                                </span>
                               </button>
                             )}
                             <button

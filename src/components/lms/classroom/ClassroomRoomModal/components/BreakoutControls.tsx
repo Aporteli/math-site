@@ -10,37 +10,46 @@ import { useAudioIsolation } from '../hooks/useAudioIsolation';
 
 interface BreakoutControlsProps {
   courseId: string;
+  isolatedIdentities: string[];
+  onIsolationChange: (isolatedIdentities: string[]) => void;
 }
 
-export function BreakoutControls({ courseId }: BreakoutControlsProps) {
+export function BreakoutControls({
+  courseId,
+  isolatedIdentities,
+  onIsolationChange,
+}: BreakoutControlsProps) {
   const participants = useRemoteParticipants();
-  const { setStudentIsolation } = useAudioIsolation(courseId);
+  const { applyIsolation } = useAudioIsolation(courseId);
   const [isOpen, setIsOpen] = useState(false);
-  const [isolatedIdentity, setIsolatedIdentity] = useState<string | null>(null);
   const [pendingIdentity, setPendingIdentity] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const toggleIsolation = useCallback(
     async (identity: string) => {
-      const previous = isolatedIdentity;
-      const willIsolate = previous !== identity;
+      const nextSet = new Set(isolatedIdentities);
+      if (nextSet.has(identity)) {
+        nextSet.delete(identity);
+      } else {
+        nextSet.add(identity);
+      }
+      const next = Array.from(nextSet);
 
       setPendingIdentity(identity);
       setError(null);
       try {
-        if (previous && previous !== identity) {
-          await setStudentIsolation(previous, false);
-        }
-        await setStudentIsolation(identity, willIsolate);
-        setIsolatedIdentity(willIsolate ? identity : null);
+        await applyIsolation(next);
+        onIsolationChange(next);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'აუდიო იზოლაცია ვერ შესრულდა');
       } finally {
         setPendingIdentity(null);
       }
     },
-    [isolatedIdentity, setStudentIsolation],
+    [applyIsolation, isolatedIdentities, onIsolationChange],
   );
+
+  const hasIsolated = isolatedIdentities.length > 0;
 
   return (
     <div className="relative">
@@ -49,11 +58,11 @@ export function BreakoutControls({ courseId }: BreakoutControlsProps) {
         onClick={() => setIsOpen((prev) => !prev)}
         title="აუდიო იზოლაცია (Breakout mode)"
         className={`flex h-9 items-center justify-center gap-1.5 rounded-xl border px-2.5 transition-all ${
-          isOpen || isolatedIdentity
+          isOpen || hasIsolated
             ? 'border-amber-500/60 bg-amber-500/20 text-amber-300'
             : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/15 hover:text-white'
         }`}>
-        {isolatedIdentity ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+        {hasIsolated ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
         <span className="hidden text-xs font-semibold sm:inline">Breakout</span>
       </button>
 
@@ -67,7 +76,7 @@ export function BreakoutControls({ courseId }: BreakoutControlsProps) {
           />
           <div className="absolute bottom-full right-0 z-50 mb-2 w-60 overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
-              <span className="text-xs font-bold text-white">მოსწავლის იზოლაცია</span>
+              <span className="text-xs font-bold text-white">მოსწავლეების იზოლაცია</span>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
@@ -83,7 +92,7 @@ export function BreakoutControls({ courseId }: BreakoutControlsProps) {
               <ul className="max-h-56 overflow-y-auto p-1.5">
                 {participants.map((participant) => {
                   const identity = participant.identity;
-                  const isIsolated = isolatedIdentity === identity;
+                  const isIsolated = isolatedIdentities.includes(identity);
                   const isPending = pendingIdentity === identity;
 
                   return (

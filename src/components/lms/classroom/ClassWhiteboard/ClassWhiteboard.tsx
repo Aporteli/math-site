@@ -2,16 +2,16 @@
 
 'use client';
 
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { Room } from 'livekit-client';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import type { KonvaCanvasHandle } from '../KonvaCanvas/utils/types';
+import type { BoardView, Student } from './utils/types';
 import { ChunkAssembler } from './utils/chunk';
 import { adaptStrokeForTheme } from './utils/theme';
 
 import { useZoom } from './hooks/use-zoom';
-import { useEnrolledStudents } from './hooks/useEnrolledStudents';
 import { useClickOutsideMenus } from './hooks/useClickOutsideMenus';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useStylusActions } from './hooks/useStylusActions';
@@ -27,10 +27,11 @@ import { useWhiteboardDataChannel } from './hooks/useWhiteboardDataChannel';
 import { useWhiteboardState } from './hooks/useWhiteboardState';
 import { useAssign } from './hooks/useAssign';
 import { useAskAI } from './hooks/useAskAI';
+import { useBoardViewStream } from './hooks/useBoardViewStream';
+import { useBoardControlContext } from '../ClassroomRoomModal/components/BoardControlContext';
 
 import { ClearConfirmDialog } from './components/ClearConfirmDialog';
 import { ConfirmDialog } from './components/ConfirmDialog';
-import { ImageCropModal } from './components/ImageCropModal';
 import { AssignModal } from './components/AssignModal';
 import { AiChatModal } from './components/AiChatModal';
 import { PagesTray } from './components/PagesTray';
@@ -53,10 +54,21 @@ interface ClassWhiteboardProps {
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   isTeacher?: boolean;
+  students: Student[];
+  enableSlashPrompts?: boolean;
+  slashPromptsUserId?: string;
 }
 
 export function ClassWhiteboard({
-  room, courseId, courseTitle, isFullscreen, onToggleFullscreen, isTeacher = false,
+  room,
+  courseId,
+  courseTitle,
+  isFullscreen,
+  onToggleFullscreen,
+  isTeacher = false,
+  students,
+  enableSlashPrompts = false,
+  slashPromptsUserId = '',
 }: ClassWhiteboardProps) {
   // --- Refs ---
   const containerRef = useRef<HTMLDivElement>(null);
@@ -74,14 +86,22 @@ export function ClassWhiteboard({
   // --- Prefs ---
   const prefs = useWhiteboardPrefs();
   const {
-    activeTool, setActiveTool,
-    strokeColor, setStrokeColor,
-    strokeWidth, setStrokeWidth,
-    eraserWidth, setEraserWidth,
-    isDark, setIsDark,
-    stylusOnly, setStylusOnly,
-    stylusPrimaryAction, setStylusPrimaryAction,
-    stylusSecondaryAction, setStylusSecondaryAction,
+    activeTool,
+    setActiveTool,
+    strokeColor,
+    setStrokeColor,
+    strokeWidth,
+    setStrokeWidth,
+    eraserWidth,
+    setEraserWidth,
+    isDark,
+    setIsDark,
+    stylusOnly,
+    setStylusOnly,
+    stylusPrimaryAction,
+    setStylusPrimaryAction,
+    stylusSecondaryAction,
+    setStylusSecondaryAction,
   } = prefs;
 
   // --- Publish data ---
@@ -90,62 +110,135 @@ export function ClassWhiteboard({
   // --- Whiteboard pages & history ---
   const wb = useWhiteboardState({ courseId, isTeacher, isDark, publishDataSafe });
   const {
-    pages, setPages, pagesRef,
-    currentPageIndex, setCurrentPageIndex, currentPageIndexRef,
-    selectedPages, setSelectedPages,
-    isPagesTrayOpen, setIsPagesTrayOpen,
-    historyMapRef, isRemoteUpdateRef,
-    canUndo, canRedo, updateUndoRedoState,
-    handleElementsChange, handleUndo, handleRedo,
-    handleClearPage, handleAddNewPage, handleDeletePages,
-    handleSwitchPage, togglePageSelect, selectAllPages,
+    pages,
+    setPages,
+    pagesRef,
+    currentPageIndex,
+    setCurrentPageIndex,
+    currentPageIndexRef,
+    selectedPages,
+    setSelectedPages,
+    isPagesTrayOpen,
+    setIsPagesTrayOpen,
+    historyMapRef,
+    isRemoteUpdateRef,
+    hasAppliedLiveSyncRef,
+    canUndo,
+    canRedo,
+    updateUndoRedoState,
+    handleElementsChange,
+    handleUndo,
+    handleRedo,
+    handleClearPage,
+    handleAddNewPage,
+    handleDeletePages,
+    handleSwitchPage,
+    togglePageSelect,
+    selectAllPages,
   } = wb;
 
   // --- Stylus actions ---
   const { applyStylusAction, previousToolRef, isTemporaryEraserRef } = useStylusActions({
-    activeTool, setActiveTool,
-    strokeColor, setStrokeColor,
-    stylusPrimaryAction, stylusSecondaryAction,
+    activeTool,
+    setActiveTool,
+    strokeColor,
+    setStrokeColor,
+    stylusPrimaryAction,
+    stylusSecondaryAction,
     handleUndo,
   });
 
   // --- Prefs persistence (needs stylus refs) ---
   usePersistPrefs({
-    isTemporaryEraserRef, previousToolRef,
-    activeTool, strokeColor, strokeWidth, eraserWidth, isDark,
-    stylusOnly, stylusPrimaryAction, stylusSecondaryAction,
+    isTemporaryEraserRef,
+    previousToolRef,
+    activeTool,
+    strokeColor,
+    strokeWidth,
+    eraserWidth,
+    isDark,
+    stylusOnly,
+    stylusPrimaryAction,
+    stylusSecondaryAction,
   });
 
   // --- Zoom ---
   const { zoomScale, setZoomScale, handleZoomIn, handleZoomOut, handleZoomReset, zoomPercent } = useZoom();
 
+  // --- Board view (pan position is lifted here so it can be synced between teacher/student) ---
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+  // Student-side: true while the teacher has locked this board to their view.
+  const [isLocked, setIsLocked] = useState(false);
+
+  const applyBoardView = useCallback(
+    (view: BoardView) => {
+      setZoomScale(view.scale);
+      setStagePos({ x: view.x, y: view.y });
+      if (Number.isInteger(view.pageIndex) && view.pageIndex >= 0 && view.pageIndex < pagesRef.current.length) {
+        setCurrentPageIndex(view.pageIndex);
+      }
+    },
+    [setZoomScale, setCurrentPageIndex, pagesRef],
+  );
+
+  // When the board gets locked, drop out of pan mode so the student can't sit on 'hand'.
+  useEffect(() => {
+    if (isLocked && activeTool === 'hand') setActiveTool('pen');
+  }, [isLocked, activeTool, setActiveTool]);
+
   // --- Laser pointer ---
   const handleLaserMove = useLaserPointer({ publishDataSafe, currentPageIndexRef });
 
-  // --- Enrolled students ---
-  const { students } = useEnrolledStudents(courseId, isTeacher);
+  // --- Board lock/sync control (teacher side) ---
+  const { presentStudents, lockedStudentIds, toggleStudentLock } = useBoardControlContext();
+
+  useBoardViewStream({
+    room,
+    isTeacher,
+    lockedStudentIds,
+    publishDataSafe,
+    zoomScale,
+    stagePos,
+    currentPageIndex,
+  });
 
   // --- Assign ---
   const {
-    isAssignModalOpen, setIsAssignModalOpen,
-    selectedPagesForAssign, setSelectedPagesForAssign,
-    selectedStudentIdentities, setSelectedStudentIdentities,
-    assignedStatus, assignPending, assignTargetType, assignError,
-    togglePageSelectionForAssign, toggleStudentSelection, selectAllStudents,
+    isAssignModalOpen,
+    setIsAssignModalOpen,
+    selectedPagesForAssign,
+    setSelectedPagesForAssign,
+    selectedStudentIdentities,
+    setSelectedStudentIdentities,
+    assignedStatus,
+    assignPending,
+    assignTargetType,
+    assignError,
+    togglePageSelectionForAssign,
+    toggleStudentSelection,
+    selectAllStudents,
     handleAssignSelectedBoards,
   } = useAssign({ courseTitle, isDark, pagesRef, currentPageIndexRef, canvasRef, students });
 
   // --- Ask AI ---
   const {
-    isAiModalOpen, setIsAiModalOpen,
-    aiModel, setAiModel, aiModelStatus,
-    aiInitialImages, setAiInitialImages,
+    isAiModalOpen,
+    setIsAiModalOpen,
+    aiModel,
+    setAiModel,
+    aiModelStatus,
+    aiInitialImages,
+    setAiInitialImages,
     handleAskAIAboutBoard,
   } = useAskAI({ isTeacher, isDark, pagesRef, currentPageIndexRef, canvasRef });
 
   // --- Image input ---
-  const { pasteImageFromClipboard, openCropForElement, pendingImage, cancelCrop, confirmCrop, handleDrop, handleFileInputChange } = useImageInput({
-    pagesRef, currentPageIndexRef, handleElementsChange, setActiveTool,
+  const { pasteImageFromClipboard, handleDrop, handleFileInputChange } = useImageInput({
+    pagesRef,
+    currentPageIndexRef,
+    handleElementsChange,
+    setActiveTool,
+    selectElement: (id) => canvasRef.current?.selectElement(id),
   });
 
   // --- Clear confirm state ---
@@ -163,7 +256,13 @@ export function ClassWhiteboard({
   // --- Global hooks ---
   useScrollLock(containerRef);
   useClickOutsideMenus({
-    penMenuRef, eraserMenuRef, shapesMenuRef, colorMenuRef, stylusMenuRef, imageMenuRef, pagesTrayRef,
+    penMenuRef,
+    eraserMenuRef,
+    shapesMenuRef,
+    colorMenuRef,
+    stylusMenuRef,
+    imageMenuRef,
+    pagesTrayRef,
     closePenMenu: () => setIsPenMenuOpen(false),
     closeEraserMenu: () => setIsEraserMenuOpen(false),
     closeShapesMenu: () => setIsShapesMenuOpen(false),
@@ -173,13 +272,25 @@ export function ClassWhiteboard({
     closePagesTray: () => setIsPagesTrayOpen(false),
   });
   useUndoRedoEvents(handleUndo, handleRedo);
-  useKeyboardShortcuts({ handleUndo, handleRedo, handleZoomIn, handleZoomOut, handleZoomReset });
+  useKeyboardShortcuts({ handleUndo, handleRedo, handleZoomIn, handleZoomOut, handleZoomReset, isLocked });
   useFullSyncOnJoin(isTeacher, room, publishDataSafe, pagesRef, currentPageIndexRef);
   useWhiteboardDataChannel({
-    room, isDark, updateUndoRedoState, canvasRef,
-    pagesRef, currentPageIndexRef, historyMapRef,
-    isRemoteUpdateRef, chunkAssemblerRef,
-    setPages, setCurrentPageIndex,
+    room,
+    isTeacher,
+    publishDataSafe,
+    isDark,
+    updateUndoRedoState,
+    canvasRef,
+    pagesRef,
+    currentPageIndexRef,
+    historyMapRef,
+    isRemoteUpdateRef,
+    hasAppliedLiveSyncRef,
+    chunkAssemblerRef,
+    setPages,
+    setCurrentPageIndex,
+    setIsLocked,
+    applyBoardView,
   });
 
   // --- Derived ---
@@ -209,7 +320,10 @@ export function ClassWhiteboard({
       {isClearConfirmOpen && (
         <ClearConfirmDialog
           onCancel={() => setIsClearConfirmOpen(false)}
-          onConfirm={() => { handleClearPage(); setIsClearConfirmOpen(false); }}
+          onConfirm={() => {
+            handleClearPage();
+            setIsClearConfirmOpen(false);
+          }}
         />
       )}
 
@@ -231,14 +345,6 @@ export function ClassWhiteboard({
         />
       )}
 
-      {pendingImage && (
-        <ImageCropModal
-          src={pendingImage.src}
-          onCancel={cancelCrop}
-          onConfirm={confirmCrop}
-        />
-      )}
-
       {isTeacher && isAssignModalOpen && (
         <AssignModal
           pages={pages}
@@ -251,7 +357,9 @@ export function ClassWhiteboard({
           assignError={assignError}
           assignPending={assignPending}
           assignTargetType={assignTargetType}
-          onClose={() => { setIsAssignModalOpen(false); /* assignError null */ }}
+          onClose={() => {
+            setIsAssignModalOpen(false); /* assignError null */
+          }}
           onTogglePage={togglePageSelectionForAssign}
           onSelectAllPagesToggle={() => {
             if (selectedPagesForAssign.length === pages.length) setSelectedPagesForAssign([currentPageIndex]);
@@ -266,6 +374,7 @@ export function ClassWhiteboard({
       <TopToolbar
         isTeacher={isTeacher}
         isStudent={!isTeacher}
+        disabled={isLocked}
         canUndo={canUndo}
         canRedo={canRedo}
         onUndo={handleUndo}
@@ -297,15 +406,22 @@ export function ClassWhiteboard({
         shapesMenuRef={shapesMenuRef}
         colorMenuRef={colorMenuRef}
         stylusMenuRef={stylusMenuRef}
-        isPenMenuOpen={isPenMenuOpen} setIsPenMenuOpen={setIsPenMenuOpen}
-        isEraserMenuOpen={isEraserMenuOpen} setIsEraserMenuOpen={setIsEraserMenuOpen}
-        isShapesMenuOpen={isShapesMenuOpen} setIsShapesMenuOpen={setIsShapesMenuOpen}
-        isColorMenuOpen={isColorMenuOpen} setIsColorMenuOpen={setIsColorMenuOpen}
-        isStylusMenuOpen={isStylusMenuOpen} setIsStylusMenuOpen={setIsStylusMenuOpen}
-        isImageMenuOpen={isImageMenuOpen} setIsImageMenuOpen={setIsImageMenuOpen}
+        isPenMenuOpen={isPenMenuOpen}
+        setIsPenMenuOpen={setIsPenMenuOpen}
+        isEraserMenuOpen={isEraserMenuOpen}
+        setIsEraserMenuOpen={setIsEraserMenuOpen}
+        isShapesMenuOpen={isShapesMenuOpen}
+        setIsShapesMenuOpen={setIsShapesMenuOpen}
+        isColorMenuOpen={isColorMenuOpen}
+        setIsColorMenuOpen={setIsColorMenuOpen}
+        isStylusMenuOpen={isStylusMenuOpen}
+        setIsStylusMenuOpen={setIsStylusMenuOpen}
+        isImageMenuOpen={isImageMenuOpen}
+        setIsImageMenuOpen={setIsImageMenuOpen}
       />
 
-      <div className="relative flex-1 w-full min-h-0 min-w-0 overflow-hidden"
+      <div
+        className="relative flex-1 w-full min-h-0 min-w-0 overflow-hidden"
         style={{ backgroundColor: isDark ? '#020617' : '#ffffff' }}>
         <KonvaCanvas
           ref={canvasRef}
@@ -318,23 +434,14 @@ export function ClassWhiteboard({
           isDark={isDark}
           scale={zoomScale}
           onScaleChange={(newScale) => setZoomScale(newScale)}
+          stagePos={stagePos}
+          onStagePosChange={setStagePos}
+          disabled={isLocked}
           onLaserMove={handleLaserMove}
-          onCropImage={openCropForElement}
           stylusOnly={stylusOnly}
           onStylusButtonAction={applyStylusAction}
         />
       </div>
-
-      {isTeacher && (
-        <button
-          type="button"
-          aria-label="AI ასისტენტი"
-          title="AI ასისტენტი"
-          onClick={handleAskAIFromBoard}
-          className="absolute right-4 bottom-16 sm:bottom-20 z-[1000] flex h-11 w-11 items-center justify-center rounded-full bg-navy text-sm font-bold text-white shadow-xl hover:bg-navy-strong hover:scale-105 active:scale-95 transition-all focus:outline-none border-2 border-white/20">
-          <Sparkles className="size-5 text-amber-300" />
-        </button>
-      )}
 
       {isTeacher && isAiModalOpen && (
         <AiChatModal
@@ -342,7 +449,12 @@ export function ClassWhiteboard({
           aiModelStatus={aiModelStatus}
           aiInitialImages={aiInitialImages}
           onModelChange={setAiModel}
-          onClose={() => { setIsAiModalOpen(false); setAiInitialImages([]); }}
+          onClose={() => {
+            setIsAiModalOpen(false);
+            setAiInitialImages([]);
+          }}
+          enableSlashPrompts={enableSlashPrompts}
+          slashPromptsUserId={slashPromptsUserId}
         />
       )}
 
@@ -350,6 +462,7 @@ export function ClassWhiteboard({
         isFullscreen={isFullscreen}
         onToggleFullscreen={onToggleFullscreen}
         isTeacher={isTeacher}
+        disabled={isLocked}
         zoomPercent={zoomPercent}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}

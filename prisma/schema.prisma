@@ -139,6 +139,7 @@ model Course {
   attendance            Attendance[]
   lessonNotes           LessonNote[]
   whiteboardAssignments WhiteboardAssignment[]
+  whiteboard            CourseWhiteboard?
 
   @@index([teacherId])
   @@map("courses")
@@ -416,6 +417,20 @@ model WhiteboardAssignment {
   @@index([teacherId])
   @@index([courseId])
   @@map("whiteboard_assignments")
+}
+
+model CourseWhiteboard {
+  id               String   @id @default(cuid())
+  courseId         String   @unique
+  pages            Json
+  currentPageIndex Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@map("course_whiteboards")
 }
 
 model JournalEvent {

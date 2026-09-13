@@ -8,7 +8,7 @@ interface UseTextEditingOptions {
   onElementsChange: (elements: CanvasElement[], options?: { commitHistory?: boolean }) => void;
   scale: number;
   stagePos: { x: number; y: number };
-  setSelectedId: (id: string | null) => void;
+  setSelectedIds: (ids: string[]) => void;
 }
 
 export function useTextEditing({
@@ -16,7 +16,7 @@ export function useTextEditing({
   onElementsChange,
   scale,
   stagePos,
-  setSelectedId,
+  setSelectedIds,
 }: UseTextEditingOptions) {
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [editingTextValue, setEditingTextValue] = useState('');
@@ -41,7 +41,7 @@ export function useTextEditing({
       const remaining = elementsRef.current.filter((el) => el.id !== editingTextId);
       elementsRef.current = remaining;
       onElementsChange(remaining);
-      setSelectedId(null);
+      setSelectedIds([]);
     } else {
       const updated = elementsRef.current.map((el) =>
         el.id === editingTextId ? { ...el, text: val, fontSize: currentFontSize, width: finalWidth } : el,
@@ -59,7 +59,7 @@ export function useTextEditing({
     scale,
     onElementsChange,
     elementsRef,
-    setSelectedId,
+    setSelectedIds,
   ]);
 
   const startTextInlineEditing = useCallback(

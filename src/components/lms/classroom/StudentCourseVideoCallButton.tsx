@@ -1,5 +1,3 @@
-//CUT
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -12,7 +10,6 @@ interface StudentCourseVideoCallButtonProps {
   courseId: string;
   courseTitle: string;
   label?: string;
-  showFullscreen?: boolean;
 }
 
 export function StudentCourseVideoCallButton({
@@ -21,159 +18,57 @@ export function StudentCourseVideoCallButton({
   label,
 }: StudentCourseVideoCallButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isTeacherPresent, setIsTeacherPresent] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(true);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
-  // Check teacher presence on mount, then keep polling so the button always
-  // reflects whether the teacher is currently in the room (even after they leave).
   useEffect(() => {
     let cancelled = false;
-
     async function check() {
-      if (cancelled) return;
       try {
         const present = await checkTeacherInRoom(courseId);
-        if (!cancelled) {
-          setIsTeacherPresent(present);
-          setChecking(false);
-        }
-      } catch (error) {
-        console.error('Failed to check teacher presence:', error);
-        if (!cancelled) {
-          setIsTeacherPresent(false);
-          setChecking(false);
-        }
+        if (!cancelled) setIsTeacherPresent(present);
+      } catch {
+        if (!cancelled) setIsTeacherPresent(false);
+      } finally {
+        if (!cancelled) setChecking(false);
       }
     }
-
-    if (courseId) {
-      void check();
-    }
-
-    const intervalId = setInterval(() => {
-      void check();
-    }, 4000);
-
+    if (courseId) void check();
+    const id = setInterval(check, 4000);
     return () => {
       cancelled = true;
-      clearInterval(intervalId);
+      clearInterval(id);
     };
   }, [courseId]);
 
-  // Scroll lock when modal opens
   useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      const originalPaddingRight = document.body.style.paddingRight;
-      document.body.style.overflow = 'hidden';
-
-      return () => {
-        document.body.style.overflow = originalOverflow;
-        document.body.style.paddingRight = originalPaddingRight;
-      };
-    }
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, [isOpen]);
 
-  // Fullscreen events
-  useEffect(() => {
-    function handleFullscreenChange() {
-      const activeElement =
-        document.fullscreenElement ||
-        (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement;
-      setIsFullscreen(Boolean(activeElement));
-    }
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-    };
-  }, []);
-
-  const toggleFullscreen = useCallback(async (targetState?: boolean) => {
-    try {
-      const isCurrentlyFullscreen = Boolean(
-        document.fullscreenElement ||
-          (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement,
-      );
-
-      const shouldBeFullscreen = targetState ?? !isCurrentlyFullscreen;
-
-      if (shouldBeFullscreen && !isCurrentlyFullscreen) {
-        const elem = document.documentElement as HTMLElement & {
-          webkitRequestFullscreen?: () => Promise<void>;
-        };
-
-        if (elem.requestFullscreen) {
-          await elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-          await elem.webkitRequestFullscreen();
-        }
-      } else if (!shouldBeFullscreen && isCurrentlyFullscreen) {
-        const doc = document as Document & {
-          webkitExitFullscreen?: () => Promise<void>;
-        };
-
-        if (doc.exitFullscreen) {
-          await doc.exitFullscreen();
-        } else if (doc.webkitExitFullscreen) {
-          await doc.webkitExitFullscreen();
-        }
-      }
-    } catch (err) {
-      console.warn('Fullscreen toggle error:', err);
-    }
-  }, []);
-
-  function handleOpen(mode: 'normal' | 'fullscreen') {
-    if (!isTeacherPresent) return;
-    setIsOpen(true);
-    if (mode === 'fullscreen') {
-      void toggleFullscreen(true);
-    }
-  }
-
-  function handleClose() {
-    if (isFullscreen) {
-      void toggleFullscreen(false);
-    }
-    setIsOpen(false);
-  }
-
-  // When the teacher leaves the room while the student is inside, immediately
-  // close the modal (which disconnects the student) and mark the button inactive.
   const handleTeacherLeft = useCallback(() => {
     setIsTeacherPresent(false);
     setIsOpen(false);
-    if (isFullscreen) {
-      void toggleFullscreen(false);
-    }
-  }, [isFullscreen, toggleFullscreen]);
+  }, []);
 
-  // Safety net: if polling detects the teacher is no longer in the room while
-  // the modal is open (e.g. a real-time event was missed), kick the student out.
   useEffect(() => {
-    if (isOpen && isTeacherPresent === false) {
-      handleTeacherLeft();
-    }
+    if (isOpen && isTeacherPresent === false) handleTeacherLeft();
   }, [isOpen, isTeacherPresent, handleTeacherLeft]);
 
-  // Button disabled if still checking, or teacher not present
   const disabled = checking || isTeacherPresent === false;
 
   return (
     <>
       <button
         type="button"
-        onClick={() => handleOpen('normal')}
+        onClick={() => setIsOpen(true)}
         disabled={disabled}
         className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-bold text-white shadow-sm transition-all active:scale-[0.99] ${
           disabled
@@ -199,7 +94,7 @@ export function StudentCourseVideoCallButton({
             <ClassroomRoomModal
               courseId={courseId}
               courseTitle={courseTitle}
-              onClose={handleClose}
+              onClose={() => setIsOpen(false)}
               onTeacherLeft={handleTeacherLeft}
               isTeacher={false}
             />

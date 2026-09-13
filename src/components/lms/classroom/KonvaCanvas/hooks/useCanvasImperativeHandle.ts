@@ -1,18 +1,19 @@
 import { useImperativeHandle } from 'react';
-import type { Ref, RefObject } from 'react';
+import type { ForwardedRef, RefObject } from 'react';
 import Konva from 'konva';
 import type { KonvaCanvasHandle } from '../utils/types';
 
-interface UseCanvasImperativeHandleOptions {
-  ref: Ref<KonvaCanvasHandle>;
-  stageRef: RefObject<Konva.Stage>;
+interface Options {
+  ref: ForwardedRef<KonvaCanvasHandle>;
+  stageRef: RefObject<Konva.Stage | null>;
   trRef: RefObject<any>;
-  mainLayerRef: RefObject<Konva.Layer>;
+  mainLayerRef: RefObject<Konva.Layer | null>;
   isDark: boolean;
   fitToContent: () => void;
   renderRemoteLaser: (point: { x: number; y: number } | null) => void;
   deleteSelected: () => void;
   cropSelectedImage: () => void;
+  selectElement: (id: string) => void;
 }
 
 export function useCanvasImperativeHandle({
@@ -25,42 +26,28 @@ export function useCanvasImperativeHandle({
   renderRemoteLaser,
   deleteSelected,
   cropSelectedImage,
-}: UseCanvasImperativeHandleOptions) {
+  selectElement,
+}: Options) {
   useImperativeHandle(
     ref,
     () => ({
-      toDataURL: () => {
-        const stage = stageRef.current;
-        if (!stage) return null;
-        if (trRef.current) {
-          trRef.current.nodes([]);
-          mainLayerRef.current?.batchDraw();
-        }
-
-        const bgRect = new Konva.Rect({
-          x: -stage.x() / stage.scaleX(),
-          y: -stage.y() / stage.scaleY(),
-          width: stage.width() / stage.scaleX(),
-          height: stage.height() / stage.scaleY(),
-          fill: isDark ? '#020617' : '#ffffff',
-          listening: false,
-        });
-
-        mainLayerRef.current?.add(bgRect);
-        bgRect.moveToBottom();
-        mainLayerRef.current?.batchDraw();
-
-        const dataUrl = stage.toDataURL({ pixelRatio: 2 });
-        bgRect.destroy();
-        mainLayerRef.current?.batchDraw();
-
-        return dataUrl;
-      },
+      toDataURL: () => stageRef.current?.toDataURL() ?? null,
       fitToContent,
       renderRemoteLaser,
       deleteSelected,
       cropSelectedImage,
+      selectElement,
     }),
-    [stageRef, trRef, mainLayerRef, isDark, fitToContent, renderRemoteLaser, deleteSelected, cropSelectedImage],
+    [
+      stageRef,
+      trRef,
+      mainLayerRef,
+      isDark,
+      fitToContent,
+      renderRemoteLaser,
+      deleteSelected,
+      cropSelectedImage,
+      selectElement,
+    ],
   );
 }

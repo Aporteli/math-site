@@ -20,7 +20,7 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
     isDrawing,
     activeShapeRef,
     drawLayerRef,
-    setSelectedId,
+    startMarquee,
     isLasering,
     startLaserDrawing,
     onLaserMove,
@@ -31,6 +31,7 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
     elementsRef,
     currentFontSize,
     strokeColor,
+    setSelectedIds,
     onElementsChange,
     startTextInlineEditing,
     activeShapeIdRef,
@@ -72,7 +73,7 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
       )
         return;
 
-      if (handleSelectDown({ activeTool, setSelectedId }, e)) return;
+      if (handleSelectDown({ activeTool, getRelativePointerPosition, startMarquee }, e)) return;
 
       if (
         handleTextDown(
@@ -80,7 +81,7 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
             activeTool,
             elementsRef,
             onElementsChange,
-            setSelectedId,
+            setSelectedIds,
             startTextInlineEditing,
             currentFontSize,
             strokeColor,
@@ -115,7 +116,7 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
       isDrawing,
       activeShapeRef,
       drawLayerRef,
-      setSelectedId,
+      startMarquee,
       isLasering,
       startLaserDrawing,
       onLaserMove,
@@ -126,6 +127,7 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
       elementsRef,
       currentFontSize,
       strokeColor,
+      setSelectedIds,
       onElementsChange,
       startTextInlineEditing,
       activeShapeIdRef,

@@ -8,16 +8,15 @@ export interface UpdateActiveShapeContext {
   elementsRef: MutableRefObject<CanvasElement[]>;
   activeShapeRef: MutableRefObject<any>;
   drawLayerRef: RefObject<Konva.Layer>;
+  /** True while the Shift key is held — constrains freehand to a straight line. */
+  shiftHeld?: boolean;
 }
 
 /**
  * Grows/snaps the in-flight shape that was created on pointer-down. One branch
  * per tool. Always ends by calling `batchDraw` on the draw layer.
  */
-export function updateActiveShape(
-  ctx: UpdateActiveShapeContext,
-  pos: { x: number; y: number },
-): void {
+export function updateActiveShape(ctx: UpdateActiveShapeContext, pos: { x: number; y: number }): void {
   const shape = ctx.activeShapeRef.current;
   if (!shape) return;
 
@@ -26,12 +25,22 @@ export function updateActiveShape(
   const snapY = snap.y;
 
   if (ctx.activeTool === 'pen') {
-    const currentPts = shape.points();
-    const len = currentPts.length;
-    const lastX = currentPts[len - 2];
-    const lastY = currentPts[len - 1];
-    if (Math.hypot(pos.x - lastX, pos.y - lastY) >= 1.5) {
-      shape.points(currentPts.concat([pos.x, pos.y]));
+    if (ctx.shiftHeld) {
+      // Straight-line preview: keep the anchor, let the endpoint follow the
+      // cursor freely in any direction. Overwriting (instead of appending)
+      // is what makes the stroke perfectly straight regardless of hand jitter.
+      const pts = shape.points();
+      const startX = pts[0];
+      const startY = pts[1];
+      shape.points([startX, startY, pos.x, pos.y]);
+    } else {
+      const currentPts = shape.points();
+      const len = currentPts.length;
+      const lastX = currentPts[len - 2];
+      const lastY = currentPts[len - 1];
+      if (Math.hypot(pos.x - lastX, pos.y - lastY) >= 1.5) {
+        shape.points(currentPts.concat([pos.x, pos.y]));
+      }
     }
   } else if (ctx.activeTool === 'line' || ctx.activeTool === 'arrow') {
     const points = shape.points();

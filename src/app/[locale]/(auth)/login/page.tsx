@@ -1,3 +1,5 @@
+//REVIEW
+
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
@@ -41,6 +43,7 @@ export default async function LoginPage({ params }: LoginPageProps) {
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink">{copy.title}</h1>
         <div className="mt-6">
           <Suspense fallback={<div className="h-48 rounded-xl bg-paper-deep" aria-hidden="true" />}>
+          {/* გავჩერდით მომხმარებლის შესვლაზე */}
             <LoginForm locale={locale} copy={copy} />
           </Suspense>
         </div>

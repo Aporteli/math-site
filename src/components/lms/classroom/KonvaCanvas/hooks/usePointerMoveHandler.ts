@@ -26,6 +26,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
     eraserCursorPos,
     setEraserCursorPos,
     getRelativePointerPosition,
+    updateMarquee,
     addLaserPoint,
     eraseAtPosition,
     onLaserMove,
@@ -68,6 +69,11 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
       const pos = getRelativePointerPosition();
       if (!pos) return;
 
+      if (activeTool === 'select') {
+        updateMarquee(pos);
+        return;
+      }
+
       if (
         handleEraserMove(
           { activeTool, isErasing, eraserCursorPos, setEraserCursorPos, eraseAtPosition },
@@ -80,7 +86,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
 
       if (eraserCursorPos) setEraserCursorPos(null);
       if (!isDrawing.current || !activeShapeRef.current) return;
-      updateActiveShape({ activeTool, elementsRef, activeShapeRef, drawLayerRef }, pos);
+      updateActiveShape({ activeTool, elementsRef, activeShapeRef, drawLayerRef, shiftHeld: nativeEvt.shiftKey }, pos);
     },
     [
       isPinching,
@@ -91,6 +97,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
       isStylusActiveRef,
       activeTool,
       getRelativePointerPosition,
+      updateMarquee,
       setEraserCursorPos,
       eraserCursorPos,
       activePointerIdRef,

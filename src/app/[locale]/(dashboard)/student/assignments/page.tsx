@@ -1,5 +1,3 @@
-//CUT დასაჭრელი ფაილი
-
 'use client';
 
 import { Calendar as CalendarIcon, ClipboardList } from 'lucide-react';

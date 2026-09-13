@@ -5,7 +5,7 @@ export interface HandleTextDownContext {
   activeTool: string;
   elementsRef: MutableRefObject<CanvasElement[]>;
   onElementsChange: (elements: CanvasElement[], options?: { commitHistory?: boolean }) => void;
-  setSelectedId: (id: string | null) => void;
+  setSelectedIds: (ids: string[]) => void;
   startTextInlineEditing: (el: CanvasElement) => void;
   currentFontSize: number;
   strokeColor: string;
@@ -34,7 +34,7 @@ export function handleTextDown(
   };
   ctx.elementsRef.current = [...ctx.elementsRef.current, newElem];
   ctx.onElementsChange(ctx.elementsRef.current);
-  ctx.setSelectedId(id);
+  ctx.setSelectedIds([id]);
   ctx.startTextInlineEditing(newElem);
   return true;
 }

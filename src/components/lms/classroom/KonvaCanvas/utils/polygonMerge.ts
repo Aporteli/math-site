@@ -1,3 +1,6 @@
+//CUT
+
+
 import type { CanvasElement } from '../utils/types';
 
 export function tryMergeClosedPolygon(
@@ -32,7 +35,9 @@ export function tryMergeClosedPolygon(
     };
   };
 
-  const lineElements = allElements.filter((el) => el.type === 'line' && el.points && el.points.length === 4);
+  const lineElements = allElements.filter(
+    (el) => el.type === 'line' && el.points && el.points.length === 4,
+  );
   const segments: Segment[] = [...lineElements, newLine].map((el) => ({
     el,
     ...getAbsEnds(el),
@@ -99,14 +104,38 @@ export function tryMergeClosedPolygon(
     const usedIds = new Set(currentPath.map((p) => p.seg.el.id));
     const remaining = allElements.filter((el) => !usedIds.has(el.id));
 
+    // ── Per-edge color/width, indexed to match the polygon's edge order ──
+    //
+    // `currentPath[i].pt` is vertex i. `currentPath[i].seg` is the edge that
+    // *arrived at* vertex i — i.e. the edge from vertex i-1 → vertex i.
+    // The renderer draws edge i from vertex i → vertex i+1, so edge i
+    // corresponds to `currentPath[(i + 1) % N].seg`. Indexing by [i] would
+    // rotate every color/width by one slot.
+    const N = currentPath.length;
+    const edgeColors = Array.from(
+      { length: N },
+      (_, i) => currentPath[(i + 1) % N].seg.el.stroke ?? newLine.stroke ?? '#000',
+    );
+    const edgeWidths = Array.from(
+      { length: N },
+      (_, i) => currentPath[(i + 1) % N].seg.el.strokeWidth ?? newLine.strokeWidth ?? 2,
+    );
+
+    // Collapse to a single-color polygon when every edge shares a color —
+    // matches the previous compact fast path.
+    const allSameColor = edgeColors.every((c) => c === edgeColors[0]);
+    const allSameWidth = edgeWidths.every((w) => w === edgeWidths[0]);
+
     const mergedPolygon: CanvasElement = {
       id: `poly_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       type: 'triangle',
       points: polygonPoints,
       x: 0,
       y: 0,
-      stroke: newLine.stroke,
-      strokeWidth: newLine.strokeWidth,
+      stroke: allSameColor ? edgeColors[0] : newLine.stroke,
+      strokeWidth: allSameWidth ? edgeWidths[0] : newLine.strokeWidth,
+      ...(allSameColor ? {} : { edgeColors }),
+      ...(allSameWidth ? {} : { edgeWidths }),
     };
 
     return [...remaining, mergedPolygon];

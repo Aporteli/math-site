@@ -6,8 +6,8 @@ import { distToSegmentSquared } from '../utils/geometry';
 interface UseEraserOptions {
   elementsRef: MutableRefObject<CanvasElement[]>;
   onElementsChange: (elements: CanvasElement[], options?: { commitHistory?: boolean }) => void;
-  selectedId: string | null;
-  setSelectedId: (id: string | null) => void;
+  selectedIds: string[];
+  setSelectedIds: (ids: string[]) => void;
   eraserWidth: number;
   activeTool: string;
 }
@@ -15,8 +15,8 @@ interface UseEraserOptions {
 export function useEraser({
   elementsRef,
   onElementsChange,
-  selectedId,
-  setSelectedId,
+  selectedIds,
+  setSelectedIds,
   eraserWidth,
   activeTool,
 }: UseEraserOptions) {
@@ -87,12 +87,14 @@ export function useEraser({
         elementsRef.current = remaining;
         eraseStrokeDirtyRef.current = true;
         onElementsChange(remaining, { commitHistory: false });
-        if (selectedId && !remaining.find((el) => el.id === selectedId)) {
-          setSelectedId(null);
+        if (selectedIds.length > 0) {
+          const remainingIds = new Set(remaining.map((el) => el.id));
+          const nextSelected = selectedIds.filter((id) => remainingIds.has(id));
+          if (nextSelected.length !== selectedIds.length) setSelectedIds(nextSelected);
         }
       }
     },
-    [onElementsChange, selectedId, eraserWidth, elementsRef, setSelectedId],
+    [onElementsChange, selectedIds, eraserWidth, elementsRef, setSelectedIds],
   );
 
   const commitErase = useCallback(() => {

@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useState, type FormEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getSession, signIn } from "next-auth/react";
-import { isUserRole } from "@/lib/auth/roles";
-import { resolvePostLoginHref } from "@/lib/auth/paths";
-import { loginSchema } from "@/lib/auth/schemas";
-import type { Locale } from "@/i18n/config";
-import type { Dictionary } from "@/i18n/types";
+import { useState, type FormEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getSession, signIn } from 'next-auth/react';
+import { isUserRole } from '@/lib/auth/roles';
+import { resolvePostLoginHref } from '@/lib/auth/paths';
+import { loginSchema } from '@/lib/auth/schemas';
+import type { Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/types';
 
-type LoginCopy = Dictionary["auth"]["login"];
+type LoginCopy = Dictionary['auth']['login'];
 
 const fieldClass =
-  "w-full min-w-0 rounded-xl border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
+  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
 interface LoginFormProps {
   locale: Locale;
@@ -22,8 +22,8 @@ interface LoginFormProps {
 export function LoginForm({ locale, copy }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -39,7 +39,7 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
 
     setPending(true);
 
-    const result = await signIn("credentials", {
+    const result = await signIn('credentials', {
       email: parsed.data.email,
       password: parsed.data.password,
       redirect: false,
@@ -59,16 +59,14 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
       return;
     }
 
-    router.replace(
-      resolvePostLoginHref(role, locale, searchParams.get("callbackUrl")),
-    );
+    router.replace(resolvePostLoginHref(role, locale, searchParams.get('callbackUrl')));
     router.refresh();
   }
 
   function handleGoogleSignIn() {
-  const callbackUrl = searchParams.get("callbackUrl") || `/${locale}`;
-  signIn("google", { callbackUrl });
-}
+    const callbackUrl = searchParams.get('callbackUrl') || `/${locale}`;
+    signIn('google', { callbackUrl });
+  }
 
   return (
     <div className="space-y-4">
@@ -76,8 +74,7 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
       <button
         type="button"
         onClick={handleGoogleSignIn}
-        className="flex w-full items-center justify-center gap-3 rounded-full border border-hairline bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-navy/15"
-      >
+        className="flex w-full items-center justify-center gap-3 rounded-full border border-hairline bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-navy/15">
         <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
           <path
             fill="#4285F4"
@@ -102,9 +99,7 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
       {/* Divider */}
       <div className="relative flex items-center justify-center">
         <div className="w-full border-t border-hairline" />
-        <span className="absolute bg-surface px-3 text-xs uppercase text-body">
-          ან
-        </span>
+        <span className="absolute bg-surface px-3 text-xs uppercase text-body">ან</span>
       </div>
 
       {/* Credentials Form */}
@@ -149,8 +144,7 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex w-full items-center justify-center rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70"
-        >
+          className="inline-flex w-full items-center justify-center rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70">
           {pending ? copy.submitting : copy.submit}
         </button>
       </form>

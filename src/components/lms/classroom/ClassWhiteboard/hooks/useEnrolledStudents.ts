@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getEnrolledCourseStudentsAction } from '@/lib/actions/students';
-import type { Student } from '../types';
+import type { Student } from '../utils/types';
 
 export function useEnrolledStudents(courseId: string, isTeacher: boolean) {
   const [students, setStudents] = useState<Student[]>([]);

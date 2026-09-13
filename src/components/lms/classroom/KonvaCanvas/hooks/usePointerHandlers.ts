@@ -8,5 +8,5 @@ export function usePointerHandlers(ctx: PointerHandlerContext) {
   const handlePointerMove = usePointerMoveHandler(ctx);
   const handlePointerUp = usePointerUpHandler(ctx);
 
-  return { handlePointerDown, handlePointerMove, handlePointerUp };
+  return { handlePointerDown, handlePointerMove, handlePointerUp, };
 }

@@ -8,6 +8,7 @@ import type { CanvasElement } from './types';
  */
 export interface PointerHandlerContext {
   // props
+  scale: number;
   activeTool: string;
   strokeColor: string;
   strokeWidth: number;
@@ -35,8 +36,13 @@ export interface PointerHandlerContext {
   eraserCursorPos: { x: number; y: number } | null;
 
   // state setters
-  setSelectedId: (id: string | null) => void;
+  setSelectedIds: (ids: string[]) => void;
   setEraserCursorPos: (pos: { x: number; y: number } | null) => void;
+
+  // marquee (drag-to-select)
+  startMarquee: (pos: { x: number; y: number }) => void;
+  updateMarquee: (pos: { x: number; y: number }) => void;
+  endMarquee: () => void;
 
   // callbacks
   getRelativePointerPosition: () => { x: number; y: number } | null;

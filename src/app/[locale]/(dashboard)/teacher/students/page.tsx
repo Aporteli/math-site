@@ -148,6 +148,7 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
         initialStudents={studentsList}
         courses={coursesSimple}
         availableSetProblems={availableSetProblems}
+        currentUserId={session.user.id}
       />
     </div>
   );

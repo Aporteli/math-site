@@ -12,6 +12,7 @@ interface Props {
   onNext: () => void;
   onToggleTray: () => void;
   onAddNewPage: () => void;
+  disabled?: boolean;
 }
 
 export function PageNavigation({
@@ -24,13 +25,14 @@ export function PageNavigation({
   onNext,
   onToggleTray,
   onAddNewPage,
+  disabled = false,
 }: Props) {
   return (
     <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 border-r border-slate-200 pr-1.5 dark:border-slate-800">
       <button
         type="button"
         onClick={onPrev}
-        disabled={currentPageIndex === 0}
+        disabled={disabled || currentPageIndex === 0}
         className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors">
         <ChevronLeft className="size-4" />
       </button>
@@ -39,8 +41,9 @@ export function PageNavigation({
         type="button"
         data-tray-trigger
         onClick={onToggleTray}
+        disabled={disabled}
         title="ყველა დაფის ნახვა"
-        className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${
+        className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl text-xs font-bold transition-all disabled:opacity-40 disabled:pointer-events-none ${
           isPagesTrayOpen
             ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500'
             : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
@@ -59,7 +62,7 @@ export function PageNavigation({
       <button
         type="button"
         onClick={onNext}
-        disabled={currentPageIndex === pagesLength - 1}
+        disabled={disabled || currentPageIndex === pagesLength - 1}
         className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors">
         <ChevronRight className="size-4" />
       </button>

@@ -1,4 +1,5 @@
 import type { CanvasElement } from '../types';
+import { simplifyPoints } from '../simplifyPoints';
 
 export interface BuildElementFromShapeParams {
   activeTool: string;
@@ -6,18 +7,16 @@ export interface BuildElementFromShapeParams {
   shape: any;
   strokeColor: string;
   strokeWidth: number;
+  scale: number; // ← add
 }
 
-/**
- * Pure: reads the finished Konva shape and produces the persisted
- * `CanvasElement` payload. Returns `null` when the tool has no persisted form.
- */
 export function buildElementFromShape({
   activeTool,
   activeShapeId,
   shape,
   strokeColor,
   strokeWidth,
+  scale, // ← add
 }: BuildElementFromShapeParams): CanvasElement | null {
   if (
     activeTool === 'pen' ||
@@ -26,10 +25,13 @@ export function buildElementFromShape({
     activeTool === 'triangle' ||
     activeTool === 'diamond'
   ) {
+    const rawPoints: number[] = shape.points();
+    const points = activeTool === 'pen' ? simplifyPoints(rawPoints, 1.5 / (scale || 1)) : rawPoints;
+
     return {
       id: activeShapeId,
       type: activeTool === 'pen' ? 'freedraw' : activeTool,
-      points: shape.points(),
+      points,
       stroke: strokeColor,
       strokeWidth: strokeWidth,
     };

@@ -1,9 +1,15 @@
+//CUT
+
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CanvasElement } from '../../KonvaCanvas/utils/types';
 import { adaptStrokeForTheme } from '../utils/theme';
 import type { HistoryMap } from '../utils/types';
+import {
+  getCourseWhiteboardAction,
+  saveCourseWhiteboardAction,
+} from '@/lib/actions/course-whiteboard';
 
 interface Options {
   courseId: string;
@@ -12,24 +18,21 @@ interface Options {
   publishDataSafe: (payload: any, reliable?: boolean) => Promise<void>;
 }
 
-export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSafe }: Options) {
-  const storageKeyPages = `konva_whiteboard_pages_${courseId}`;
-  const isRemoteUpdateRef = useRef(false);
+const SAVE_DEBOUNCE_MS = 1500;
 
-  const [pages, setPages] = useState<CanvasElement[][]>(() => {
-    if (isTeacher && typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(storageKeyPages);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch (e) {
-        console.error('Failed to load pages:', e);
-      }
-    }
-    return [[]];
-  });
+export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSafe }: Options) {
+  const isRemoteUpdateRef = useRef(false);
+  // True once the initial DB read has completed (whether or not a saved board
+  // existed). Prevents the teacher from overwriting a saved board with the
+  // empty `[[]]` placeholder before the load finishes.
+  const hasLoadedFromDbRef = useRef(false);
+  // True once a live (WebRTC) snapshot has been applied. The DB load checks
+  // this so a slower database read never clobbers a fresher in-room sync.
+  const hasAppliedLiveSyncRef = useRef(false);
+  // Latest board snapshot that has not yet been flushed to the database.
+  const pendingSaveRef = useRef<{ pages: CanvasElement[][]; pageIndex: number } | null>(null);
+
+  const [pages, setPages] = useState<CanvasElement[][]>([[]]);
 
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
@@ -54,6 +57,49 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
       setCanRedo(false);
     }
   }, []);
+
+  // Load the saved board from the database. The teacher restores their last
+  // lesson; students see the last saved snapshot until the live sync arrives.
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const data = await getCourseWhiteboardAction(courseId);
+        if (cancelled) return;
+
+        if (data && Array.isArray(data.pages) && data.pages.length > 0 && !hasAppliedLiveSyncRef.current) {
+          // If the user already made local edits before the database answered
+          // (extremely fast draw on a slow connection), keep those edits.
+          const isPristine =
+            pagesRef.current.length === 1 && (pagesRef.current[0]?.length ?? 0) === 0;
+
+          if (isPristine) {
+            const loadedPages = data.pages as CanvasElement[][];
+            const loadedIndex =
+              typeof data.currentPageIndex === 'number' ? data.currentPageIndex : 0;
+
+            setPages(loadedPages);
+            pagesRef.current = loadedPages;
+            setCurrentPageIndex(loadedIndex);
+            currentPageIndexRef.current = loadedIndex;
+
+            historyMapRef.current = new Map(
+              loadedPages.map((page, idx) => [idx, { states: [page || []], index: 0 }]),
+            );
+            updateUndoRedoState();
+          }
+        }
+      } finally {
+        // Always allow saving after the initial read attempt, even if it failed.
+        if (!cancelled) hasLoadedFromDbRef.current = true;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [courseId, updateUndoRedoState]);
 
   // Theme conversion
   useEffect(() => {
@@ -81,28 +127,46 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
         historyMapRef.current.set(pIndex, { states: nextStates, index: nextStates.length - 1 });
         updateUndoRedoState();
       }
-
-      if (isTeacher && typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(storageKeyPages, JSON.stringify(newPages));
-        } catch {}
-      }
     }
-  }, [isDark, storageKeyPages, updateUndoRedoState, isTeacher]);
+  }, [isDark, updateUndoRedoState]);
 
-  // Sync refs + persistence
+  // Sync refs
   useEffect(() => {
     pagesRef.current = pages;
     currentPageIndexRef.current = currentPageIndex;
     updateUndoRedoState();
-    if (isTeacher && typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(storageKeyPages, JSON.stringify(pages));
-      } catch (err) {
-        console.warn('Quota warning:', err);
+  }, [pages, currentPageIndex, updateUndoRedoState]);
+
+  // Persist the teacher's board to the database (debounced). The latest
+  // snapshot is kept in `pendingSaveRef` so it can be flushed on unmount.
+  useEffect(() => {
+    if (!isTeacher) return;
+    if (!hasLoadedFromDbRef.current) return;
+
+    pendingSaveRef.current = { pages, pageIndex: currentPageIndex };
+
+    const t = setTimeout(() => {
+      const pending = pendingSaveRef.current;
+      pendingSaveRef.current = null;
+      if (pending) {
+        void saveCourseWhiteboardAction(courseId, pending.pages, pending.pageIndex);
       }
-    }
-  }, [pages, currentPageIndex, isTeacher, storageKeyPages, updateUndoRedoState]);
+    }, SAVE_DEBOUNCE_MS);
+
+    return () => clearTimeout(t);
+  }, [pages, currentPageIndex, isTeacher, courseId]);
+
+  // Flush the latest pending snapshot when the teacher leaves the room, so a
+  // debounced save is never lost when the component unmounts.
+  useEffect(() => {
+    return () => {
+      const pending = pendingSaveRef.current;
+      pendingSaveRef.current = null;
+      if (isTeacher && pending) {
+        void saveCourseWhiteboardAction(courseId, pending.pages, pending.pageIndex);
+      }
+    };
+  }, [isTeacher, courseId]);
 
   const handleElementsChange = useCallback(
     (newElems: CanvasElement[], options?: { commitHistory?: boolean }) => {
@@ -252,7 +316,7 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     currentPageIndex, setCurrentPageIndex, currentPageIndexRef,
     selectedPages, setSelectedPages,
     isPagesTrayOpen, setIsPagesTrayOpen,
-    historyMapRef, isRemoteUpdateRef,
+    historyMapRef, isRemoteUpdateRef, hasAppliedLiveSyncRef,
     canUndo, canRedo, updateUndoRedoState,
     handleElementsChange, handleUndo, handleRedo,
     handleClearPage, handleAddNewPage, handleDeletePage, handleDeletePages,

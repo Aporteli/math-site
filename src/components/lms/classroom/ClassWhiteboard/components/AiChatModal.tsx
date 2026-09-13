@@ -10,12 +10,27 @@ interface Props {
   aiInitialImages: string[];
   onModelChange: (m: AiModelId) => void;
   onClose: () => void;
+  enableSlashPrompts?: boolean;
+  slashPromptsUserId?: string;
 }
 
-export function AiChatModal({ aiModel, aiModelStatus, aiInitialImages, onModelChange, onClose }: Props) {
+export function AiChatModal({
+  aiModel,
+  aiModelStatus,
+  aiInitialImages,
+  onModelChange,
+  onClose,
+  enableSlashPrompts = false,
+  slashPromptsUserId = '',
+}: Props) {
   return (
     <div className="fixed inset-0 z-[1000001] flex items-end justify-end bg-slate-950/50 p-3 sm:items-center sm:justify-center sm:p-6 backdrop-blur-xs animate-in fade-in duration-150">
-      <button type="button" aria-label="დახურვა" className="absolute inset-0 cursor-default bg-transparent" onClick={onClose} />
+      <button
+        type="button"
+        aria-label="დახურვა"
+        className="absolute inset-0 cursor-default bg-transparent"
+        onClick={onClose}
+      />
       <div className="relative z-10 w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-150">
         <TeacherAiChatPanel
           copy={DEFAULT_AI_COPY.chat}
@@ -26,6 +41,8 @@ export function AiChatModal({ aiModel, aiModelStatus, aiInitialImages, onModelCh
           initialImagesBase64={aiInitialImages}
           onClose={onClose}
           showSaveToLab={true}
+          enableSlashPrompts={enableSlashPrompts}
+          slashPromptsUserId={slashPromptsUserId}
           className="max-h-[min(85vh,56rem)] overflow-y-auto"
         />
       </div>

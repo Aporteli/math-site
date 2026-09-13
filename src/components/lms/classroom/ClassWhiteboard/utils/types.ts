@@ -15,3 +15,10 @@ export interface PageHistoryEntry {
 }
 
 export type HistoryMap = Map<number, PageHistoryEntry>;
+
+export interface BoardView {
+  scale: number;
+  x: number;
+  y: number;
+  pageIndex: number;
+}

@@ -26,21 +26,21 @@ export function AudioIsolationListener({ isTeacher }: AudioIsolationListenerProp
     ) => {
       if (topic !== AUDIO_ISOLATION_TOPIC) return;
 
-      let message: { studentIdentity?: unknown; isolate?: unknown };
+      let message: { isolatedIdentities?: unknown };
       try {
         message = JSON.parse(new TextDecoder().decode(payload)) as {
-          studentIdentity?: unknown;
-          isolate?: unknown;
+          isolatedIdentities?: unknown;
         };
       } catch {
         return;
       }
 
-      if (typeof message.studentIdentity !== "string" || typeof message.isolate !== "boolean") {
+      if (!Array.isArray(message.isolatedIdentities) ||
+          !message.isolatedIdentities.every((id) => typeof id === "string")) {
         return;
       }
 
-      applyIsolationLocally(room, message.studentIdentity, message.isolate);
+      applyIsolationLocally(room, message.isolatedIdentities as string[]);
     };
 
     room.on(RoomEvent.DataReceived, handleData);
@@ -52,21 +52,19 @@ export function AudioIsolationListener({ isTeacher }: AudioIsolationListenerProp
   return null;
 }
 
-function applyIsolationLocally(room: Room, studentIdentity: string, isolate: boolean) {
-  const localIdentity = room.localParticipant.identity;
+function applyIsolationLocally(room: Room, isolatedIdentities: string[]) {
+  const isolatedSet = new Set(isolatedIdentities);
+  const localIsolated = isolatedSet.has(room.localParticipant.identity);
 
-  if (localIdentity === studentIdentity) {
-    for (const participant of room.remoteParticipants.values()) {
-      for (const publication of participant.audioTrackPublications.values()) {
-        publication.setSubscribed(!isolate);
-      }
+  // The local client (never the teacher, since the listener is disabled for
+  // the teacher) recomputes which remote audio it should hear:
+  //  - isolated locally  -> hear nobody;
+  //  - otherwise          -> hear everyone except isolated students.
+  for (const participant of room.remoteParticipants.values()) {
+    const shouldHear = !localIsolated && !isolatedSet.has(participant.identity);
+
+    for (const publication of participant.audioTrackPublications.values()) {
+      publication.setSubscribed(shouldHear);
     }
-    return;
-  }
-  const isolatedParticipant = room.remoteParticipants.get(studentIdentity);
-  if (!isolatedParticipant) return;
-
-  for (const publication of isolatedParticipant.audioTrackPublications.values()) {
-    publication.setSubscribed(!isolate);
   }
 }

@@ -27,6 +27,9 @@ interface Props {
 
   onAskAI: () => void;
   onOpenSend: () => void;
+
+  /** When true, zoom + board navigation are disabled — lock/sync feature. */
+  disabled?: boolean;
 }
 
 export function BottomPanel(props: Props) {
@@ -42,6 +45,7 @@ export function BottomPanel(props: Props) {
             onZoomOut={props.onZoomOut}
             onZoomReset={props.onZoomReset}
             onFit={props.onFit}
+            disabled={props.disabled}
           />
           <div className="flex shrink-0 items-center border-r border-slate-200 pr-1.5 dark:border-slate-800">
             <button
@@ -64,6 +68,7 @@ export function BottomPanel(props: Props) {
             onNext={props.onNextPage}
             onToggleTray={props.onToggleTray}
             onAddNewPage={props.onAddNewPage}
+            disabled={props.disabled}
           />
           {props.isTeacher && (
             <TeacherActions

@@ -34,4 +34,5 @@ export interface TeacherStudentsWorkspaceProps {
   initialStudents: StudentItem[];
   courses: { id: string; title: string }[];
   availableSetProblems: SetProblem[];
+  currentUserId: string;
 }

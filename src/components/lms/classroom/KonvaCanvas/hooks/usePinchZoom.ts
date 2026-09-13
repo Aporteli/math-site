@@ -1,3 +1,5 @@
+//CUT
+
 import { useRef } from 'react';
 import type { MutableRefObject, RefObject } from 'react';
 import Konva from 'konva';
@@ -13,6 +15,8 @@ interface UsePinchZoomOptions {
   stagePos: { x: number; y: number };
   onScaleChange?: (newScale: number) => void;
   setStagePos: (pos: { x: number; y: number }) => void;
+  /** When true, pinch-to-zoom/pan is disabled (lock/sync feature). */
+  disabled?: boolean;
 }
 
 export function usePinchZoom({
@@ -25,12 +29,14 @@ export function usePinchZoom({
   stagePos,
   onScaleChange,
   setStagePos,
+  disabled = false,
 }: UsePinchZoomOptions) {
   const lastCenter = useRef<{ x: number; y: number } | null>(null);
   const lastDist = useRef<number>(0);
   const isPinching = useRef<boolean>(false);
 
   const handleTouchStart = (e: any) => {
+    if (disabled) return;
     const touchEvent = e.evt as TouchEvent;
     if (!touchEvent.touches) return;
 
@@ -54,6 +60,7 @@ export function usePinchZoom({
   };
 
   const handleTouchMove = (e: any) => {
+    if (disabled) return;
     const touchEvent = e.evt as TouchEvent;
     if (!touchEvent.touches || touchEvent.touches.length !== 2 || !stageRef.current) return;
 

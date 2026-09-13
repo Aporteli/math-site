@@ -110,6 +110,8 @@ export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
           courseTitle={ws.activeVideoCallCourse.title}
           onClose={() => ws.setActiveVideoCallCourse(null)}
           isTeacher={true}
+          enableSlashPrompts={true}
+          slashPromptsUserId={props.currentUserId}
         />
       )}
 

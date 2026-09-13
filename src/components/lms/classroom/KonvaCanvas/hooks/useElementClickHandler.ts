@@ -3,22 +3,22 @@ import type { CanvasElement } from '../utils/types';
 
 interface UseElementClickHandlerOptions {
   activeTool: string;
-  setSelectedId: (id: string | null) => void;
+  setSelectedIds: (ids: string[]) => void;
   startTextInlineEditing: (el: CanvasElement) => void;
 }
 
 export function useElementClickHandler({
   activeTool,
-  setSelectedId,
+  setSelectedIds,
   startTextInlineEditing,
 }: UseElementClickHandlerOptions) {
   return useCallback(
     (el: CanvasElement) => {
       if (activeTool === 'select') {
-        setSelectedId(el.id);
+        setSelectedIds([el.id]);
         if (el.type === 'text') startTextInlineEditing(el);
       }
     },
-    [activeTool, setSelectedId, startTextInlineEditing],
+    [activeTool, setSelectedIds, startTextInlineEditing],
   );
 }

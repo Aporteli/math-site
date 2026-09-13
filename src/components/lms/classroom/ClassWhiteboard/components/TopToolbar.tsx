@@ -20,6 +20,8 @@ interface Props {
   canRedo: boolean;
   onUndo: () => void;
   onRedo: () => void;
+  /** When true, board navigation controls (pan) are disabled — lock/sync feature. */
+  disabled?: boolean;
 
   activeTool: any;
   setActiveTool: (t: any) => void;
@@ -79,6 +81,7 @@ export function TopToolbar(props: Props) {
     canRedo,
     onUndo,
     onRedo,
+    disabled = false,
     activeTool,
     setActiveTool,
     strokeColor,
@@ -136,7 +139,7 @@ export function TopToolbar(props: Props) {
           {isTeacher && (
             <UndoRedoButtons canUndo={canUndo} canRedo={canRedo} onUndo={onUndo} onRedo={onRedo} />
           )}
-          <SelectPanButtons isTeacher={isTeacher} activeTool={activeTool} setActiveTool={setActiveTool} closeAllMenus={closeAllMenus} />
+          <SelectPanButtons isTeacher={isTeacher} activeTool={activeTool} setActiveTool={setActiveTool} closeAllMenus={closeAllMenus} disabled={disabled} />
 
           {isTeacher && (
             <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1.5 dark:border-slate-800">

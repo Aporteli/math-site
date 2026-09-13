@@ -1,4 +1,4 @@
-import { Line, Circle, Rect, Arrow, Star, Text } from 'react-konva';
+import { Line, Circle, Rect, Arrow, Star, Text, Group } from 'react-konva';
 import type { CanvasElement } from '../utils/types';
 import { adaptStrokeForTheme } from '../utils/theme';
 import { CanvasImageElement } from './CanvasImageElement';
@@ -10,8 +10,9 @@ interface ElementRendererProps {
   strokeWidth: number;
   editingTextId: string | null;
   onElementClick: (el: CanvasElement) => void;
+  onDragStart: (id: string, e: any) => void;
+  onDragMove: (id: string, e: any) => void;
   onDragEnd: (id: string, e: any) => void;
-  onTransformEnd: (id: string, e: any) => void;
 }
 
 export function ElementRenderer({
@@ -21,8 +22,9 @@ export function ElementRenderer({
   strokeWidth,
   editingTextId,
   onElementClick,
+  onDragStart,
+  onDragMove,
   onDragEnd,
-  onTransformEnd,
 }: ElementRendererProps) {
   return (
     <>
@@ -38,8 +40,9 @@ export function ElementRenderer({
               isListening={isListening}
               activeTool={activeTool}
               onClick={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
               onDragEnd={(e) => onDragEnd(el.id, e)}
-              onTransformEnd={(e) => onTransformEnd(el.id, e)}
             />
           );
         }
@@ -64,8 +67,9 @@ export function ElementRenderer({
               draggable={activeTool === 'select'}
               onClick={() => onElementClick(el)}
               onTap={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
               onDragEnd={(e) => onDragEnd(el.id, e)}
-              onTransformEnd={(e) => onTransformEnd(el.id, e)}
             />
           );
         }
@@ -89,8 +93,9 @@ export function ElementRenderer({
               draggable={activeTool === 'select'}
               onClick={() => onElementClick(el)}
               onTap={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
               onDragEnd={(e) => onDragEnd(el.id, e)}
-              onTransformEnd={(e) => onTransformEnd(el.id, e)}
             />
           );
         }
@@ -116,8 +121,9 @@ export function ElementRenderer({
               draggable={activeTool === 'select'}
               onClick={() => onElementClick(el)}
               onTap={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
               onDragEnd={(e) => onDragEnd(el.id, e)}
-              onTransformEnd={(e) => onTransformEnd(el.id, e)}
             />
           );
         }
@@ -141,8 +147,9 @@ export function ElementRenderer({
               draggable={activeTool === 'select'}
               onClick={() => onElementClick(el)}
               onTap={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
               onDragEnd={(e) => onDragEnd(el.id, e)}
-              onTransformEnd={(e) => onTransformEnd(el.id, e)}
             />
           );
         }
@@ -165,12 +172,66 @@ export function ElementRenderer({
               draggable={activeTool === 'select'}
               onClick={() => onElementClick(el)}
               onTap={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
               onDragEnd={(e) => onDragEnd(el.id, e)}
-              onTransformEnd={(e) => onTransformEnd(el.id, e)}
             />
           );
         }
         if (el.type === 'triangle' && el.points) {
+          // Multi-colored polygon: render each edge separately inside a
+          // Group so the whole shape still behaves as one selectable,
+          // draggable, transformable element.
+          if (el.edgeColors && el.edgeColors.length > 0) {
+            const pts = el.points;
+            const edgeCount = Math.floor(pts.length / 2);
+            const colors = el.edgeColors;
+            const widths = el.edgeWidths;
+
+            return (
+              <Group
+                key={el.id}
+                id={el.id}
+                x={el.x || 0}
+                y={el.y || 0}
+                rotation={el.rotation || 0}
+                scaleX={el.scaleX || 1}
+                scaleY={el.scaleY || 1}
+                draggable={activeTool === 'select'}
+                onClick={() => onElementClick(el)}
+                onTap={() => onElementClick(el)}
+                onDragStart={(e) => onDragStart(el.id, e)}
+                onDragMove={(e) => onDragMove(el.id, e)}
+                onDragEnd={(e) => onDragEnd(el.id, e)}
+              >
+                {Array.from({ length: edgeCount }).map((_, i) => {
+                  const a = i;
+                  const b = (i + 1) % edgeCount;
+                  const color = colors[i] ?? el.stroke;
+                  const width = widths?.[i] ?? el.strokeWidth;
+                  return (
+                    <Line
+                      key={i}
+                      points={[
+                        pts[a * 2],
+                        pts[a * 2 + 1],
+                        pts[b * 2],
+                        pts[b * 2 + 1],
+                      ]}
+                      stroke={adaptStrokeForTheme(color, isDark)}
+                      strokeWidth={width}
+                      lineCap="round"
+                      lineJoin="round"
+                      perfectDrawEnabled={false}
+                      hitStrokeWidth={24}
+                    />
+                  );
+                })}
+              </Group>
+            );
+          }
+
+          // Single-color polygon: unchanged path.
           return (
             <Line
               key={el.id}
@@ -191,8 +252,9 @@ export function ElementRenderer({
               draggable={activeTool === 'select'}
               onClick={() => onElementClick(el)}
               onTap={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
               onDragEnd={(e) => onDragEnd(el.id, e)}
-              onTransformEnd={(e) => onTransformEnd(el.id, e)}
             />
           );
         }
@@ -217,8 +279,9 @@ export function ElementRenderer({
               draggable={activeTool === 'select'}
               onClick={() => onElementClick(el)}
               onTap={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
               onDragEnd={(e) => onDragEnd(el.id, e)}
-              onTransformEnd={(e) => onTransformEnd(el.id, e)}
             />
           );
         }
@@ -243,8 +306,9 @@ export function ElementRenderer({
               draggable={activeTool === 'select'}
               onClick={() => onElementClick(el)}
               onTap={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
               onDragEnd={(e) => onDragEnd(el.id, e)}
-              onTransformEnd={(e) => onTransformEnd(el.id, e)}
             />
           );
         }
@@ -271,8 +335,9 @@ export function ElementRenderer({
               draggable={activeTool === 'select'}
               onClick={() => onElementClick(el)}
               onTap={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
               onDragEnd={(e) => onDragEnd(el.id, e)}
-              onTransformEnd={(e) => onTransformEnd(el.id, e)}
             />
           );
         }

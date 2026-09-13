@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
-import type { Room } from "livekit-client";
-import { ClassWhiteboard } from "./ClassWhiteboardDynamic";
+import type { Room } from 'livekit-client';
+import { ClassWhiteboard } from './ClassWhiteboardDynamic';
+import type { Student } from '../../ClassWhiteboard/utils/types';
 
 interface ClassroomWhiteboardPanelProps {
   room: Room | null;
@@ -10,6 +11,9 @@ interface ClassroomWhiteboardPanelProps {
   isFullscreen: boolean;
   onToggleFullscreen: () => void;
   isTeacher: boolean;
+  students: Student[];
+  enableSlashPrompts?: boolean;
+  slashPromptsUserId?: string;
 }
 
 export function ClassroomWhiteboardPanel({
@@ -19,6 +23,9 @@ export function ClassroomWhiteboardPanel({
   isFullscreen,
   onToggleFullscreen,
   isTeacher,
+  students,
+  enableSlashPrompts = false,
+  slashPromptsUserId = '',
 }: ClassroomWhiteboardPanelProps) {
   return (
     <div className="relative flex flex-1 h-full min-h-0 min-w-0 overflow-hidden rounded-xl bg-white">
@@ -29,6 +36,9 @@ export function ClassroomWhiteboardPanel({
         isFullscreen={isFullscreen}
         onToggleFullscreen={onToggleFullscreen}
         isTeacher={isTeacher}
+        students={students}
+        enableSlashPrompts={enableSlashPrompts}
+        slashPromptsUserId={slashPromptsUserId}
       />
     </div>
   );

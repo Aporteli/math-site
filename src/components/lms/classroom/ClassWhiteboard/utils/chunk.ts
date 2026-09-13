@@ -78,6 +78,10 @@ export class ChunkAssembler {
         entry.chunks[chunkIndex] = data;
         entry.received += 1;
       }
+      // Keep the transfer alive while chunks are still flowing. Otherwise a
+      // large (many-chunk) full sync can take longer than the absolute
+      // 10s window below and get torn down mid-transfer.
+      entry.createdAt = Date.now();
     }
 
     const entry = this.pending.get(transferId);

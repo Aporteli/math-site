@@ -1,5 +1,3 @@
-//CUT 
-
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -32,6 +30,15 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
   const cropRef = useRef<CropRect>({ x: 0, y: 0, w: 0, h: 0 });
   const dragRef = useRef<{ startX: number; startY: number; moved: boolean } | null>(null);
 
+  // Reads the *actual* rendered container size. `display.w/h` is the size we
+  // asked CSS for, but flexbox can shrink the container to fit its parent.
+  // All coordinate math must use the real rendered size, otherwise the
+  // crop is scaled by the wrong ratio and lands offset.
+  const getContainerSize = useCallback(() => {
+    const r = containerRef.current?.getBoundingClientRect();
+    return r ? { w: r.width, h: r.height } : { w: 0, h: 0 };
+  }, []);
+
   useEffect(() => {
     const img = new window.Image();
     img.onload = () => {
@@ -50,6 +57,8 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
       }
       setDisplay({ w, h });
 
+      // Seed with intended size — after mount we'll normalise to the actual
+      // rendered size on the first pointer interaction anyway.
       const full: CropRect = { x: 0, y: 0, w, h };
       setCrop(full);
       cropRef.current = full;
@@ -65,17 +74,14 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
 
-  const getPos = useCallback(
-    (clientX: number, clientY: number) => {
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return { x: 0, y: 0 };
-      return {
-        x: clamp(clientX - rect.left, 0, display.w),
-        y: clamp(clientY - rect.top, 0, display.h),
-      };
-    },
-    [display.w, display.h],
-  );
+  const getPos = useCallback((clientX: number, clientY: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return {
+      x: clamp(clientX - rect.left, 0, rect.width),
+      y: clamp(clientY - rect.top, 0, rect.height),
+    };
+  }, []);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -106,9 +112,10 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
   const handlePointerUp = () => {
     const drag = dragRef.current;
     if (!drag) return;
+    const { w, h } = getContainerSize();
     const final: CropRect =
       !drag.moved || cropRef.current.w < 8 || cropRef.current.h < 8
-        ? { x: 0, y: 0, w: display.w, h: display.h }
+        ? { x: 0, y: 0, w, h }
         : cropRef.current;
     setCrop(final);
     cropRef.current = final;
@@ -116,20 +123,27 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
   };
 
   const resetToFull = useCallback(() => {
-    const full: CropRect = { x: 0, y: 0, w: display.w, h: display.h };
+    const { w, h } = getContainerSize();
+    const full: CropRect = { x: 0, y: 0, w, h };
     setCrop(full);
     cropRef.current = full;
-  }, [display.w, display.h]);
+  }, [getContainerSize]);
 
   const applyCrop = useCallback(() => {
-    if (!natural || display.w === 0 || display.h === 0) return;
+    if (!natural) return;
+    const { w: displayW, h: displayH } = getContainerSize();
+    if (displayW === 0 || displayH === 0) return;
+
     const rect =
       cropRef.current.w > 0 && cropRef.current.h > 0
         ? cropRef.current
-        : { x: 0, y: 0, w: display.w, h: display.h };
+        : { x: 0, y: 0, w: displayW, h: displayH };
 
-    const scaleX = natural.w / display.w;
-    const scaleY = natural.h / display.h;
+    // Scale factor must divide by the ACTUAL rendered size, not the
+    // intended `display` size — otherwise the crop is offset and shrunk
+    // by the ratio (intended / actual).
+    const scaleX = natural.w / displayW;
+    const scaleY = natural.h / displayH;
     const sx = clamp(Math.round(rect.x * scaleX), 0, natural.w - 1);
     const sy = clamp(Math.round(rect.y * scaleY), 0, natural.h - 1);
     const sw = clamp(Math.round(rect.w * scaleX), 1, natural.w - sx);
@@ -149,21 +163,22 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
       onConfirm(canvas.toDataURL('image/png'));
     };
     img.src = src;
-  }, [natural, display, src, onConfirm]);
+  }, [natural, getContainerSize, src, onConfirm]);
 
+  const { w: actualW, h: actualH } = getContainerSize();
   const hasSelection = crop.w > 0 && crop.h > 0;
   const isFull =
-    display.w > 0 &&
+    actualW > 0 &&
     Math.abs(crop.x) < 1 &&
     Math.abs(crop.y) < 1 &&
-    Math.abs(crop.w - display.w) < 1 &&
-    Math.abs(crop.h - display.h) < 1;
+    Math.abs(crop.w - actualW) < 1 &&
+    Math.abs(crop.h - actualH) < 1;
 
   const cropLabel =
-    natural && display.w > 0
+    natural && actualW > 0
       ? isFull
         ? `${natural.w} × ${natural.h} px`
-        : `${Math.round((crop.w * natural.w) / display.w)} × ${Math.round((crop.h * natural.h) / display.h)} px`
+        : `${Math.round((crop.w * natural.w) / actualW)} × ${Math.round((crop.h * natural.h) / actualH)} px`
       : '';
 
   return (
@@ -196,7 +211,7 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
             <div
               ref={containerRef}
               className="relative touch-none select-none overflow-hidden"
-              style={{ width: display.w, height: display.h }}
+              style={{ width: display.w, height: display.h, flexShrink: 0 }}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -271,4 +286,3 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
     </div>
   );
 }
-
