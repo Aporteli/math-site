@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlignLeft,
   Bell,
@@ -47,6 +47,32 @@ type PopoverState = {
   mode: 'create' | 'edit';
   anchor: { top: number; left: number };
   draft: JournalEvent;
+};
+
+type DragState = {
+  id: string;
+  pointerId: number;
+  startX: number;
+  startY: number;
+  lastClientX: number;
+  lastClientY: number;
+  startScrollTop: number;
+  scrollContainer: HTMLElement | null;
+  originStart: string;
+  originDateKey: string;
+  durationMin: number;
+  moved: boolean;
+  minuteDelta: number;
+  targetDateKey: string;
+  columns: { dateKey: string; left: number; right: number }[];
+};
+
+type DragPreview = {
+  id: string;
+  dx: number;
+  dy: number;
+  startTime: string;
+  endTime: string;
 };
 
 const WEEKDAY_LABELS = ['ორშ', 'სამ', 'ოთხ', 'ხუთ', 'პარ', 'შაბ', 'კვ'];
@@ -121,6 +147,15 @@ function timeToMinutes(timeStr: string) {
   return (h || 0) * 60 + (m || 0);
 }
 
+function snapTo(minutes: number, step = 15) {
+  return Math.round(minutes / step) * step;
+}
+
+function minutesToTime(mins: number) {
+  const clamped = Math.max(0, Math.min(23 * 60 + 45, mins));
+  return `${pad(Math.floor(clamped / 60))}:${pad(clamped % 60)}`;
+}
+
 function emptyDraft(dateKey: string, startH = 9, endH = 10): JournalEvent {
   return {
     id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -183,6 +218,11 @@ export function TeacherJournalWorkspace() {
   const [expanded, setExpanded] = useState(false);
   const [guestDraft, setGuestDraft] = useState('');
 
+  const dragRef = useRef<DragState | null>(null);
+  const didDragRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
+  const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
+
   const today = useMemo(() => new Date(), []);
 
   useEffect(() => {
@@ -195,6 +235,12 @@ export function TeacherJournalWorkspace() {
       setLoading(false);
     }
     loadEvents();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   const monthGrid = useMemo(() => {
@@ -312,6 +358,10 @@ export function TeacherJournalWorkspace() {
 
   function handleEventClick(e: React.MouseEvent<HTMLDivElement>, ev: JournalEvent) {
     e.stopPropagation();
+    if (didDragRef.current) {
+      didDragRef.current = false;
+      return;
+    }
     const rect = e.currentTarget.getBoundingClientRect();
     const pos = clampPosition(rect.top, rect.left, POPOVER_FULL_WIDTH, true);
     setExpanded(true);
@@ -396,6 +446,158 @@ export function TeacherJournalWorkspace() {
     setCurrentDate(new Date());
   }
 
+  /* ----------------------------- Drag & Drop ----------------------------- */
+
+  function startDragLoop() {
+    if (rafRef.current !== null) return;
+
+    const tick = () => {
+      const d = dragRef.current;
+      if (!d) {
+        rafRef.current = null;
+        return;
+      }
+
+      // Auto-scroll near the container edges every frame.
+      const sc = d.scrollContainer;
+      if (sc && d.moved) {
+        const r = sc.getBoundingClientRect();
+        const EDGE = 40;
+        const SPEED = 12;
+        if (d.lastClientY < r.top + EDGE) {
+          sc.scrollTop -= SPEED;
+        } else if (d.lastClientY > r.bottom - EDGE) {
+          sc.scrollTop += SPEED;
+        }
+      }
+
+      if (d.moved) {
+        const scrollTop = d.scrollContainer?.scrollTop ?? 0;
+        const scrollDelta = scrollTop - d.startScrollTop;
+
+        const dxViewport = d.lastClientX - d.startX;
+        const dyContent = d.lastClientY - d.startY + scrollDelta;
+
+        const minuteDelta = snapTo((dyContent / HOUR_HEIGHT) * 60, 15);
+        const dyPx = (minuteDelta / 60) * HOUR_HEIGHT;
+
+        const hit = d.columns.find((c) => d.lastClientX >= c.left && d.lastClientX < c.right);
+        if (hit) d.targetDateKey = hit.dateKey;
+        d.minuteDelta = minuteDelta;
+
+        const rawStart = timeToMinutes(d.originStart) + minuteDelta;
+        const startMin = Math.max(0, Math.min(24 * 60 - d.durationMin, rawStart));
+        const startTime = minutesToTime(startMin);
+        const endTime = minutesToTime(startMin + d.durationMin);
+
+        setDragPreview((prev) => {
+          if (
+            prev &&
+            prev.id === d.id &&
+            prev.dx === dxViewport &&
+            prev.dy === dyPx &&
+            prev.startTime === startTime &&
+            prev.endTime === endTime
+          ) {
+            return prev;
+          }
+          return { id: d.id, dx: dxViewport, dy: dyPx, startTime, endTime };
+        });
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+  }
+
+  function handleEventPointerDown(e: React.PointerEvent<HTMLDivElement>, ev: JournalEvent, dateKey: string) {
+    if (e.button !== 0 || ev.allDay || ev.repeat !== 'none') return;
+
+    e.stopPropagation();
+    didDragRef.current = false;
+    e.currentTarget.setPointerCapture(e.pointerId);
+
+    const scrollContainer = e.currentTarget.closest('.overflow-y-auto') as HTMLElement | null;
+
+    const columns = Array.from(document.querySelectorAll<HTMLElement>('[data-day-column]')).map((c) => {
+      const r = c.getBoundingClientRect();
+      return { dateKey: c.dataset.dateKey!, left: r.left, right: r.right };
+    });
+
+    dragRef.current = {
+      id: ev.id,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      lastClientX: e.clientX,
+      lastClientY: e.clientY,
+      startScrollTop: scrollContainer?.scrollTop ?? 0,
+      scrollContainer,
+      originStart: ev.startTime,
+      originDateKey: dateKey,
+      durationMin: Math.max(30, timeToMinutes(ev.endTime) - timeToMinutes(ev.startTime)),
+      moved: false,
+      minuteDelta: 0,
+      targetDateKey: dateKey,
+      columns,
+    };
+
+    startDragLoop();
+  }
+
+  function handleEventPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== e.pointerId) return;
+
+    d.lastClientX = e.clientX;
+    d.lastClientY = e.clientY;
+
+    if (!d.moved) {
+      const dx = e.clientX - d.startX;
+      const dy = e.clientY - d.startY;
+      if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      d.moved = true;
+      didDragRef.current = true;
+    }
+  }
+
+  function handleEventPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== e.pointerId) return;
+
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+
+    dragRef.current = null;
+    setDragPreview(null);
+
+    if (!d.moved) return;
+
+    const rawStart = timeToMinutes(d.originStart) + d.minuteDelta;
+    const startMin = Math.max(0, Math.min(24 * 60 - d.durationMin, rawStart));
+
+    void moveEvent(d.id, d.targetDateKey, minutesToTime(startMin), minutesToTime(startMin + d.durationMin));
+  }
+
+  async function moveEvent(id: string, date: string, startTime: string, endTime: string) {
+    const current = events.find((e) => e.id === id);
+    if (!current) return;
+    if (current.date === date && current.startTime === startTime && current.endTime === endTime) return;
+
+    const next: JournalEvent = { ...current, date, startTime, endTime, allDay: false };
+
+    setEvents((prev) => prev.map((e) => (e.id === id ? next : e)));
+    const res = await saveJournalEventAction(next);
+    if (!res.success) {
+      setEvents((prev) => prev.map((e) => (e.id === id ? current : e)));
+    }
+  }
+
+  /* ----------------------------------------------------------------------- */
+
   const draft = popover?.draft;
 
   const headerTitle = useMemo(() => {
@@ -458,14 +660,19 @@ export function TeacherJournalWorkspace() {
     );
   };
 
-  const renderHourlyColumn = (date: Date, isLast = false) => {
+  const renderHourlyColumn = (date: Date, dayIndex: number, isLast = false) => {
     const dateKey = toDateKey(date);
     const dayEvents = eventsByDate[dateKey] || [];
     const isToday = isSameDay(date, today);
     const currentMinutes = today.getHours() * 60 + today.getMinutes();
 
     return (
-      <div key={dateKey} className={`relative w-full h-full select-none ${!isLast ? 'border-r border-hairline' : ''}`}>
+      <div
+        key={dateKey}
+        data-day-column
+        data-day-index={dayIndex}
+        data-date-key={dateKey}
+        className={`relative w-full h-full select-none ${!isLast ? 'border-r border-hairline' : ''}`}>
         {HOURS.map((hour) => (
           <div
             key={hour}
@@ -493,20 +700,39 @@ export function TeacherJournalWorkspace() {
           const endMin = Math.max(startMin + 30, timeToMinutes(ev.endTime));
           const top = (startMin / 60) * HOUR_HEIGHT;
           const height = Math.max(26, ((endMin - startMin) / 60) * HOUR_HEIGHT - 2);
+          const isDragging = dragPreview?.id === ev.id;
+
+          // While dragging, show the live preview time right on the chip.
+          const displayStart = isDragging ? dragPreview!.startTime : ev.startTime;
+          const displayEnd = isDragging ? dragPreview!.endTime : ev.endTime;
 
           return (
             <div
               key={`${ev.id}-${dateKey}`}
+              onPointerDown={(e) => handleEventPointerDown(e, ev, dateKey)}
+              onPointerMove={handleEventPointerMove}
+              onPointerUp={handleEventPointerUp}
+              onPointerCancel={handleEventPointerUp}
               onClick={(e) => handleEventClick(e, ev)}
-              style={{ top: `${top}px`, height: `${height}px` }}
-              className={`absolute inset-x-1 z-10 overflow-hidden rounded-xl border p-1.5 text-xs font-bold leading-tight shadow-md hover:z-30 hover:scale-[1.01] transition-all cursor-pointer ${COLOR_CHIP[ev.color]}`}>
+              style={{
+                top: `${top}px`,
+                height: `${height}px`,
+                touchAction: 'none',
+                transform: isDragging ? `translate(${dragPreview!.dx}px, ${dragPreview!.dy}px)` : undefined,
+              }}
+              className={`absolute inset-x-1 z-10 overflow-hidden rounded-xl border p-1.5 text-xs font-bold leading-tight shadow-md cursor-grab active:cursor-grabbing transition-all ${
+                isDragging
+                  ? 'pointer-events-none z-50 shadow-2xl transition-none ring-2 ring-white/70'
+                  : 'hover:z-30 hover:scale-[1.01]'
+              } ${COLOR_CHIP[ev.color]}`}>
               <div className="flex items-center gap-1">
-                {ev.repeat !== 'none' && <Repeat className=" text-brass-strong size-3 shrink-0 opacity-75" />}
-                <span className="truncate">{ev.title || '(უსათაურო)'}</span>
+                {ev.repeat !== 'none' && <Repeat className=" text-black size-3 shrink-0 opacity-75" />}
+                <span className="text-black text-[15px]">{ev.title || '(უსათაურო)'}</span>
               </div>
-              <div className="text-[10px] opacity-80 font-normal">
-                {ev.startTime} - {ev.endTime}
+              <div className="text-[12px] opacity-80 font-normal tabular-nums text-black">
+                {displayStart} - {displayEnd}
               </div>
+         
             </div>
           );
         })}
@@ -677,7 +903,7 @@ export function TeacherJournalWorkspace() {
             </div>
 
             {/* 7 დღის საათობრივი სვეტები */}
-            {weekGrid.map(({ date }, idx) => renderHourlyColumn(date, idx === weekGrid.length - 1))}
+            {weekGrid.map(({ date }, idx) => renderHourlyColumn(date, idx, idx === weekGrid.length - 1))}
           </div>
         </div>
       )}
@@ -713,7 +939,7 @@ export function TeacherJournalWorkspace() {
             </div>
 
             {/* დღის სვეტი */}
-            <div>{renderHourlyColumn(currentDate, true)}</div>
+            <div>{renderHourlyColumn(currentDate, 0, true)}</div>
           </div>
         </div>
       )}
