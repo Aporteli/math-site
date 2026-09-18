@@ -1,6 +1,5 @@
 //CUT
 
-
 'use client';
 
 import { useCallback, useEffect, useRef, type MutableRefObject, type RefObject } from 'react';
@@ -10,6 +9,8 @@ import type { CanvasElement, KonvaCanvasHandle } from '../../KonvaCanvas/utils/t
 import { ChunkAssembler } from '../utils/chunk';
 import { adaptElementsForTheme } from '../utils/theme';
 import type { BoardView, HistoryMap } from '../utils/types';
+
+const TRACK_STUDENT_HISTORY = false;
 
 /** Delay before re-requesting a full snapshot when the first request is unanswered. */
 const SYNC_RETRY_DELAY_MS = 2000;
@@ -38,11 +39,22 @@ interface Options {
 
 export function useWhiteboardDataChannel(opts: Options) {
   const {
-    room, isTeacher, publishDataSafe, isDark, updateUndoRedoState, canvasRef,
-    pagesRef, currentPageIndexRef, historyMapRef,
-    isRemoteUpdateRef, hasAppliedLiveSyncRef, chunkAssemblerRef,
-    setPages, setCurrentPageIndex,
-    setIsLocked, applyBoardView,
+    room,
+    isTeacher,
+    publishDataSafe,
+    isDark,
+    updateUndoRedoState,
+    canvasRef,
+    pagesRef,
+    currentPageIndexRef,
+    historyMapRef,
+    isRemoteUpdateRef,
+    hasAppliedLiveSyncRef,
+    chunkAssemblerRef,
+    setPages,
+    setCurrentPageIndex,
+    setIsLocked,
+    applyBoardView,
   } = opts;
 
   const publishRef = useRef<Options['publishDataSafe']>(publishDataSafe);
@@ -131,10 +143,9 @@ export function useWhiteboardDataChannel(opts: Options) {
               syncRetryTimerRef.current = null;
             }
 
-            const newPages = (data.pages as CanvasElement[][]).map((page) =>
-              adaptElementsForTheme(page || [], isDark),
-            );
-            const newPageIndex = data.currentPageIndex ?? 0;
+            const newPages = (data.pages as CanvasElement[][]).map((page) => adaptElementsForTheme(page || [], isDark));
+            const rawIndex = data.currentPageIndex ?? 0;
+            const newPageIndex = Math.min(Math.max(0, rawIndex), Math.max(0, newPages.length - 1));
             historyMapRef.current = new Map();
             newPages.forEach((p, idx) => {
               historyMapRef.current.set(idx, { states: [p || []], index: 0 });
@@ -157,6 +168,7 @@ export function useWhiteboardDataChannel(opts: Options) {
         }
 
         if (data.type === 'WHITEBOARD_SYNC' && Array.isArray(data.elements)) {
+          if (isTeacher) return;
           const pageIndex = typeof data.pageIndex === 'number' ? data.pageIndex : 0;
           isRemoteUpdateRef.current = true;
           if (hasAppliedLiveSyncRef) hasAppliedLiveSyncRef.current = true;
@@ -167,12 +179,15 @@ export function useWhiteboardDataChannel(opts: Options) {
           setPages(updated);
           pagesRef.current = updated;
 
-          const pHist =
-            historyMapRef.current.get(pageIndex) || { states: [], index: -1 };
-          pHist.states.push(adaptedElements);
-          pHist.index = pHist.states.length - 1;
-          historyMapRef.current.set(pageIndex, pHist);
-          updateUndoRedoState();
+          // სტუდენტის ისტორია დროებით გამორთულია — მეხსიერების ოპტიმიზაცია.
+          // ჩართე, თუ სტუდენტსაც მისცემ undo-ს.
+          if (TRACK_STUDENT_HISTORY) {
+            const pHist = historyMapRef.current.get(pageIndex) || { states: [], index: -1 };
+            pHist.states.push(adaptedElements);
+            pHist.index = pHist.states.length - 1;
+            historyMapRef.current.set(pageIndex, pHist);
+            updateUndoRedoState();
+          }
 
           setTimeout(() => {
             isRemoteUpdateRef.current = false;
@@ -185,10 +200,7 @@ export function useWhiteboardDataChannel(opts: Options) {
             pagesRef.current = newPages;
           }
         } else if (data.type === 'WHITEBOARD_LASER') {
-          if (
-            data.pageIndex === undefined ||
-            data.pageIndex === currentPageIndexRef.current
-          ) {
+          if (data.pageIndex === undefined || data.pageIndex === currentPageIndexRef.current) {
             canvasRef.current?.renderRemoteLaser(data.point);
           }
         }
@@ -224,9 +236,20 @@ export function useWhiteboardDataChannel(opts: Options) {
       }
     };
   }, [
-    room, isTeacher, isDark, updateUndoRedoState, canvasRef,
-    pagesRef, currentPageIndexRef, historyMapRef,
-    isRemoteUpdateRef, chunkAssemblerRef, setPages, setCurrentPageIndex,
-    setIsLocked, applyBoardView, sendSyncRequest,
+    room,
+    isTeacher,
+    isDark,
+    updateUndoRedoState,
+    canvasRef,
+    pagesRef,
+    currentPageIndexRef,
+    historyMapRef,
+    isRemoteUpdateRef,
+    chunkAssemblerRef,
+    setPages,
+    setCurrentPageIndex,
+    setIsLocked,
+    applyBoardView,
+    sendSyncRequest,
   ]);
 }

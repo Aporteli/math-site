@@ -18,7 +18,7 @@ export function createShapeNode(
       strokeWidth: strokeWidth,
       lineCap: 'round',
       lineJoin: 'round',
-      tension: 0.4,
+      // tension: 0.4,
     });
   }
   if (activeTool === 'line') {

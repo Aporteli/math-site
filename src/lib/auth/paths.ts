@@ -67,14 +67,9 @@ export function isStudentPath(path: string) {
 export function canAccessPath(path: string, role: UserRole) {
   if (isTeacherPath(path)) return role === 'TEACHER' || role === 'ADMIN';
   if (isStudentPath(path)) return role === 'STUDENT' || role === 'ADMIN';
-  // ვიზიტორს და ნებისმიერ სხვა როლს აქვს წვდომა ყველა დანარჩენ საჯარო გვერდზე
   return true;
 }
 
-/**
- * After a successful sign-in, send the user to `callbackUrl` when it belongs
- * to their role; otherwise fall back to the role home.
- */
 export function resolvePostLoginHref(role: UserRole, locale: Locale, callbackUrl?: string | null) {
   const home = localePath(locale, dashboardHomeForRole(role));
   const pathname = extractPathname(callbackUrl);

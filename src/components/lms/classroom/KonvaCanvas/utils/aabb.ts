@@ -25,7 +25,8 @@ export function getElementAABB(el: CanvasElement): AABB | null {
     el.type === 'line' ||
     el.type === 'arrow' ||
     el.type === 'triangle' ||
-    el.type === 'diamond'
+    el.type === 'diamond' ||
+    el.type === 'parallelogram'
   ) {
     if (!el.points || el.points.length < 2) return null;
     minX = Infinity;

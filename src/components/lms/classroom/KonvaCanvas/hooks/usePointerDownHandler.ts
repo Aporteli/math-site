@@ -36,11 +36,13 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
     startTextInlineEditing,
     activeShapeIdRef,
     strokeWidth,
+    cancelHoldToSnap,
   } = ctx;
 
   return useCallback(
     (e: any) => {
       if (isPinching.current) return;
+      cancelHoldToSnap();
 
       const evt = e.evt as PointerEvent;
 
@@ -134,6 +136,7 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
       startTextInlineEditing,
       activeShapeIdRef,
       strokeWidth,
+      cancelHoldToSnap,
     ],
   );
 }

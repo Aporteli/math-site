@@ -21,8 +21,7 @@ export function LockButton({ locked, onClick, isDark }: LockButtonProps) {
           : isDark
             ? 'bg-white/10 text-slate-200 hover:bg-white/20'
             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-      }`}
-    >
+      }`}>
       {locked ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5" />}
       <span>{locked ? 'მართვა ჩართულია' : 'მართვა'}</span>
     </button>

@@ -52,6 +52,8 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
       return;
     }
 
+//REVIEW
+
     router.replace(resolvePostLoginHref(role, locale, searchParams.get('callbackUrl')));
     router.refresh();
   }

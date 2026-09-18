@@ -58,4 +58,7 @@ export interface PointerHandlerContext {
 
   // stylus sync
   syncStylusButtonsFromEvent: (evt: PointerEvent, phase: 'down' | 'move' | 'up' | 'cancel') => void;
+
+  noteStrokeMove: (pos: { x: number; y: number }) => void;
+  cancelHoldToSnap: () => void;
 }

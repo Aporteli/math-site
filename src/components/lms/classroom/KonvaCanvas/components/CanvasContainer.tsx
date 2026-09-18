@@ -19,7 +19,10 @@ export function CanvasContainer({ containerRef, activeTool, children }: CanvasCo
     <div
       ref={containerRef}
       className={`w-full h-full relative inset-0 overflow-hidden select-none touch-none ${getCursorClass(activeTool)}`}
-      onContextMenu={(e) => e.preventDefault()}>
+      onContextMenu={(e) => e.preventDefault()}
+      onMouseDown={(e) => {
+        if (e.button === 1) e.preventDefault();
+      }}>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Kalam:wght@700&display=swap');
       `}</style>

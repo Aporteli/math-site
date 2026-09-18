@@ -6,10 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CanvasElement } from '../../KonvaCanvas/utils/types';
 import { adaptStrokeForTheme } from '../utils/theme';
 import type { HistoryMap } from '../utils/types';
-import {
-  getCourseWhiteboardAction,
-  saveCourseWhiteboardAction,
-} from '@/lib/actions/course-whiteboard';
+import { getCourseWhiteboardAction, saveCourseWhiteboardAction } from '@/lib/actions/course-whiteboard';
 
 interface Options {
   courseId: string;
@@ -38,9 +35,7 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
   const [isPagesTrayOpen, setIsPagesTrayOpen] = useState<boolean>(false);
 
-  const historyMapRef = useRef<HistoryMap>(
-    new Map([[0, { states: [pages[0] || []], index: 0 }]]),
-  );
+  const historyMapRef = useRef<HistoryMap>(new Map([[0, { states: [pages[0] || []], index: 0 }]]));
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -71,22 +66,18 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
         if (data && Array.isArray(data.pages) && data.pages.length > 0 && !hasAppliedLiveSyncRef.current) {
           // If the user already made local edits before the database answered
           // (extremely fast draw on a slow connection), keep those edits.
-          const isPristine =
-            pagesRef.current.length === 1 && (pagesRef.current[0]?.length ?? 0) === 0;
+          const isPristine = pagesRef.current.length === 1 && (pagesRef.current[0]?.length ?? 0) === 0;
 
           if (isPristine) {
             const loadedPages = data.pages as CanvasElement[][];
-            const loadedIndex =
-              typeof data.currentPageIndex === 'number' ? data.currentPageIndex : 0;
+            const loadedIndex = typeof data.currentPageIndex === 'number' ? data.currentPageIndex : 0;
 
             setPages(loadedPages);
             pagesRef.current = loadedPages;
             setCurrentPageIndex(loadedIndex);
             currentPageIndexRef.current = loadedIndex;
 
-            historyMapRef.current = new Map(
-              loadedPages.map((page, idx) => [idx, { states: [page || []], index: 0 }]),
-            );
+            historyMapRef.current = new Map(loadedPages.map((page, idx) => [idx, { states: [page || []], index: 0 }]));
             updateUndoRedoState();
           }
         }
@@ -170,6 +161,7 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
 
   const handleElementsChange = useCallback(
     (newElems: CanvasElement[], options?: { commitHistory?: boolean }) => {
+      if (!isTeacher) return;
       if (isRemoteUpdateRef.current) return;
       const pIndex = currentPageIndexRef.current;
       const updated = [...pagesRef.current];
@@ -192,10 +184,11 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
         elements: newElems,
       });
     },
-    [publishDataSafe, updateUndoRedoState],
+    [isTeacher, publishDataSafe, updateUndoRedoState],
   );
 
   const handleUndo = useCallback(() => {
+    if (!isTeacher) return;
     const pIndex = currentPageIndexRef.current;
     const pageHist = historyMapRef.current.get(pIndex);
     if (!pageHist || pageHist.index <= 0) return;
@@ -210,7 +203,7 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
 
     updateUndoRedoState();
     void publishDataSafe({ type: 'WHITEBOARD_SYNC', pageIndex: pIndex, elements: targetElements });
-  }, [publishDataSafe, updateUndoRedoState]);
+  }, [isTeacher, publishDataSafe, updateUndoRedoState]);
 
   const handleRedo = useCallback(() => {
     const pIndex = currentPageIndexRef.current;
@@ -233,93 +226,130 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     handleElementsChange([]);
   }, [handleElementsChange]);
 
+  const publishFullSync = useCallback(() => {
+    void publishDataSafe(
+      {
+        type: 'WHITEBOARD_FULL_SYNC',
+        pages: pagesRef.current,
+        currentPageIndex: currentPageIndexRef.current,
+      },
+      true,
+    );
+  }, [publishDataSafe]);
+
   const handleAddNewPage = useCallback(() => {
     const updated = [...pagesRef.current, []];
     const newIdx = updated.length - 1;
     setPages(updated);
     setCurrentPageIndex(newIdx);
+    currentPageIndexRef.current = newIdx;
     historyMapRef.current.set(newIdx, { states: [[]], index: 0 });
     void publishDataSafe({ type: 'WHITEBOARD_PAGE_COUNT', count: updated.length });
   }, [publishDataSafe]);
 
-  const handleDeletePages = useCallback((indices: number[]) => {
-    const currentPages = pagesRef.current;
-    if (currentPages.length <= 1) {
-      handleElementsChange([]);
-      return;
-    }
+  const handleDeletePages = useCallback(
+    (indices: number[]) => {
+      const currentPages = pagesRef.current;
+      if (currentPages.length <= 1) {
+        handleElementsChange([]);
+        return;
+      }
 
-    const deleteSet = new Set(indices);
-    if (deleteSet.size === 0) return;
+      const deleteSet = new Set(indices);
+      if (deleteSet.size === 0) return;
 
-    const updated = currentPages.filter((_, idx) => !deleteSet.has(idx));
+      const updated = currentPages.filter((_, idx) => !deleteSet.has(idx));
 
-    // Keep at least one page so the board never becomes empty.
-    if (updated.length === 0) {
-      const single: CanvasElement[][] = [[]];
-      setPages(single);
-      pagesRef.current = single;
-      setCurrentPageIndex(0);
-      currentPageIndexRef.current = 0;
-      setSelectedPages([]);
-      historyMapRef.current = new Map([[0, { states: [[]], index: 0 }]]);
+      // Keep at least one page so the board never becomes empty.
+      if (updated.length === 0) {
+        const single: CanvasElement[][] = [[]];
+        setPages(single);
+        pagesRef.current = single;
+        setCurrentPageIndex(0);
+        currentPageIndexRef.current = 0;
+        setSelectedPages([]);
+        historyMapRef.current = new Map([[0, { states: [[]], index: 0 }]]);
+        updateUndoRedoState();
+        publishFullSync();
+        return;
+      }
+
+      setPages(updated);
+      pagesRef.current = updated;
+
+      const prevCurrent = currentPageIndexRef.current;
+      const nextIdx = deleteSet.has(prevCurrent)
+        ? Math.min(prevCurrent, updated.length - 1)
+        : prevCurrent - [...deleteSet].filter((d) => d < prevCurrent).length;
+      setCurrentPageIndex(nextIdx);
+      currentPageIndexRef.current = nextIdx;
+
+      const sortedDeleted = [...deleteSet].sort((a, b) => a - b);
+      setSelectedPages((prev) =>
+        prev.filter((p) => !deleteSet.has(p)).map((p) => p - sortedDeleted.filter((d) => d < p).length),
+      );
+
+      historyMapRef.current = new Map(updated.map((page, idx) => [idx, { states: [page || []], index: 0 }]));
       updateUndoRedoState();
-      void publishDataSafe({ type: 'WHITEBOARD_PAGE_COUNT', count: 1 });
-      return;
-    }
+      publishFullSync();
+    },
+    [handleElementsChange, publishDataSafe, publishFullSync, updateUndoRedoState],
+  );
 
-    setPages(updated);
-    pagesRef.current = updated;
+  const handleDeletePage = useCallback(
+    (pageIdx: number) => {
+      handleDeletePages([pageIdx]);
+    },
+    [handleDeletePages],
+  );
 
-    const prevCurrent = currentPageIndexRef.current;
-    const nextIdx = deleteSet.has(prevCurrent)
-      ? Math.min(prevCurrent, updated.length - 1)
-      : prevCurrent - [...deleteSet].filter((d) => d < prevCurrent).length;
-    setCurrentPageIndex(nextIdx);
-    currentPageIndexRef.current = nextIdx;
-
-    const sortedDeleted = [...deleteSet].sort((a, b) => a - b);
-    setSelectedPages((prev) =>
-      prev
-        .filter((p) => !deleteSet.has(p))
-        .map((p) => p - sortedDeleted.filter((d) => d < p).length),
-    );
-
-    void publishDataSafe({ type: 'WHITEBOARD_PAGE_COUNT', count: updated.length });
-  }, [handleElementsChange, publishDataSafe, updateUndoRedoState]);
-
-  const handleDeletePage = useCallback((pageIdx: number) => {
-    handleDeletePages([pageIdx]);
-  }, [handleDeletePages]);
-
-  const handleSwitchPage = useCallback((idx: number) => {
-    if (idx < 0 || idx >= pagesRef.current.length) return;
-    setCurrentPageIndex(idx);
-    if (!historyMapRef.current.has(idx)) {
-      historyMapRef.current.set(idx, { states: [pagesRef.current[idx] || []], index: 0 });
-    }
-    updateUndoRedoState();
-  }, [updateUndoRedoState]);
+  const handleSwitchPage = useCallback(
+    (idx: number) => {
+      if (idx < 0 || idx >= pagesRef.current.length) return;
+      setCurrentPageIndex(idx);
+      currentPageIndexRef.current = idx;
+      if (!historyMapRef.current.has(idx)) {
+        historyMapRef.current.set(idx, { states: [pagesRef.current[idx] || []], index: 0 });
+      }
+      updateUndoRedoState();
+    },
+    [updateUndoRedoState],
+  );
 
   const togglePageSelect = useCallback((idx: number) => {
     setSelectedPages((prev) => (prev.includes(idx) ? prev.filter((p) => p !== idx) : [...prev, idx]));
   }, []);
 
   const selectAllPages = useCallback(() => {
-    setSelectedPages((prev) =>
-      prev.length === pagesRef.current.length ? [] : pagesRef.current.map((_, i) => i),
-    );
+    setSelectedPages((prev) => (prev.length === pagesRef.current.length ? [] : pagesRef.current.map((_, i) => i)));
   }, []);
 
   return {
-    pages, setPages, pagesRef,
-    currentPageIndex, setCurrentPageIndex, currentPageIndexRef,
-    selectedPages, setSelectedPages,
-    isPagesTrayOpen, setIsPagesTrayOpen,
-    historyMapRef, isRemoteUpdateRef, hasAppliedLiveSyncRef,
-    canUndo, canRedo, updateUndoRedoState,
-    handleElementsChange, handleUndo, handleRedo,
-    handleClearPage, handleAddNewPage, handleDeletePage, handleDeletePages,
-    handleSwitchPage, togglePageSelect, selectAllPages,
+    pages,
+    setPages,
+    pagesRef,
+    currentPageIndex,
+    setCurrentPageIndex,
+    currentPageIndexRef,
+    selectedPages,
+    setSelectedPages,
+    isPagesTrayOpen,
+    setIsPagesTrayOpen,
+    historyMapRef,
+    isRemoteUpdateRef,
+    hasAppliedLiveSyncRef,
+    canUndo,
+    canRedo,
+    updateUndoRedoState,
+    handleElementsChange,
+    handleUndo,
+    handleRedo,
+    handleClearPage,
+    handleAddNewPage,
+    handleDeletePage,
+    handleDeletePages,
+    handleSwitchPage,
+    togglePageSelect,
+    selectAllPages,
   };
 }

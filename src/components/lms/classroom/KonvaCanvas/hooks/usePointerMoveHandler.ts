@@ -31,6 +31,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
     eraseAtPosition,
     onLaserMove,
     syncStylusButtonsFromEvent,
+    noteStrokeMove,
   } = ctx;
 
   return useCallback(
@@ -87,6 +88,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
       if (eraserCursorPos) setEraserCursorPos(null);
       if (!isDrawing.current || !activeShapeRef.current) return;
       updateActiveShape({ activeTool, elementsRef, activeShapeRef, drawLayerRef, shiftHeld: nativeEvt.shiftKey }, pos);
+      noteStrokeMove(pos);
     },
     [
       isPinching,
@@ -112,6 +114,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
       activeShapeRef,
       drawLayerRef,
       elementsRef,
+      noteStrokeMove,
     ],
   );
 }

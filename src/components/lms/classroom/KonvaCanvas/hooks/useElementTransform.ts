@@ -75,7 +75,8 @@ function bakeNodeTransform(node: any, el: CanvasElement): CanvasElement {
     el.type === 'line' ||
     el.type === 'arrow' ||
     el.type === 'triangle' ||
-    el.type === 'diamond'
+    el.type === 'diamond' ||
+    el.type === 'parallelogram'
   ) {
     const pts = el.points || [];
     const newPoints: number[] = [];

@@ -281,6 +281,33 @@ export function ElementRenderer({
             />
           );
         }
+        if (el.type === 'parallelogram' && el.points) {
+          return (
+            <Line
+              key={el.id}
+              id={el.id}
+              x={el.x || 0}
+              y={el.y || 0}
+              rotation={el.rotation || 0}
+              scaleX={el.scaleX || 1}
+              scaleY={el.scaleY || 1}
+              points={el.points}
+              closed={true}
+              stroke={displayStroke}
+              strokeWidth={el.strokeWidth}
+              lineJoin="round"
+              perfectDrawEnabled={false}
+              strokeScaleEnabled={false}
+              hitStrokeWidth={24}
+              draggable={activeTool === 'select'}
+              onClick={() => onElementClick(el)}
+              onTap={() => onElementClick(el)}
+              onDragStart={(e) => onDragStart(el.id, e)}
+              onDragMove={(e) => onDragMove(el.id, e)}
+              onDragEnd={(e) => onDragEnd(el.id, e)}
+            />
+          );
+        }
         if (el.type === 'star') {
           return (
             <Star

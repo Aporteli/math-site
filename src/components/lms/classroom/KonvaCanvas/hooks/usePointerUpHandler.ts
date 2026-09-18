@@ -31,10 +31,13 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
     onElementsChange,
     onLaserMove,
     syncStylusButtonsFromEvent,
+    cancelHoldToSnap,
   } = ctx;
 
   return useCallback(
     (e: any) => {
+      cancelHoldToSnap();
+
       const evt = e.evt as PointerEvent;
 
       if (stylusUpPhase({ isStylusActiveRef, syncStylusButtonsFromEvent }, evt)) {
@@ -114,6 +117,7 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
     },
     [
       syncStylusButtonsFromEvent,
+      cancelHoldToSnap,
       activePointerIdRef,
       isStylusActiveRef,
       activeTool,

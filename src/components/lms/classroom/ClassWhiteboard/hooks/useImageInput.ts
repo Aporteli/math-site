@@ -20,7 +20,8 @@ export function useImageInput({
   selectElement,
 }: Options) {
   const addImageToCanvas = useCallback(
-    (dataUrl: string, pos?: { x: number; y: number }) => {
+    (dataUrl: string, pos?: { x: number; y: number }, pageIndex?: number) => {
+      const targetPage = pageIndex ?? currentPageIndexRef.current;
       const img = new window.Image();
       img.src = dataUrl;
       img.onload = () => {
@@ -35,6 +36,14 @@ export function useImageInput({
           h = Math.round(h * ratio);
         }
 
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressedSrc = canvas.toDataURL('image/jpeg', 0.82);
+
         const newImageElem: CanvasElement = {
           id: `el_img_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
           type: 'image',
@@ -42,12 +51,13 @@ export function useImageInput({
           y: pos ? pos.y : 100,
           width: w,
           height: h,
-          src: dataUrl,
+          src: compressedSrc,
           stroke: 'transparent',
           strokeWidth: 0,
         };
 
-        const currentElems = pagesRef.current[currentPageIndexRef.current] || [];
+        const currentElems = pagesRef.current[targetPage] || [];
+        currentPageIndexRef.current = targetPage;
         handleElementsChange([...currentElems, newImageElem]);
         setActiveTool('select');
         // Select on the next frame so the Konva node exists in the tree.
@@ -81,27 +91,45 @@ export function useImageInput({
       console.error(err);
       alert('გთხოვთ დართოთ ბუფერთან წვდომის უფლება, ან გამოიყენოთ კლავიატურა (Ctrl+V).');
     }
-  }, [addImageToCanvas]);
+  }, [addImageToCanvas, currentPageIndexRef]);
 
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') return;
+      const tag = target?.tagName;
+      const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+      const files = e.clipboardData?.files;
       const items = e.clipboardData?.items;
-      if (!items) return;
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') !== -1) {
-          const blob = items[i].getAsFile();
-          if (blob) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-              const base64 = event.target?.result as string;
-              if (base64) addImageToCanvas(base64);
-            };
-            reader.readAsDataURL(blob);
+      let blob: File | null = null;
+      if (files && files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+          if (files[i].type.startsWith('image/')) {
+            blob = files[i];
+            break;
           }
         }
       }
+
+      if (!blob && items) {
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) {
+            blob = items[i].getAsFile();
+            if (blob) break;
+          }
+        }
+      }
+      if (!blob) return;
+      // Image paste always belongs on the board, even if a leftover
+      // text overlay is still focused after switching pages.
+      if (typing && !blob) return;
+      e.preventDefault();
+      const pageIndex = currentPageIndexRef.current;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        if (base64) addImageToCanvas(base64, undefined, pageIndex);
+      };
+      reader.readAsDataURL(blob);
     };
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);

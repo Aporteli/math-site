@@ -26,7 +26,9 @@ export function buildElementFromShape({
     activeTool === 'diamond'
   ) {
     const rawPoints: number[] = shape.points();
-    const points = activeTool === 'pen' ? simplifyPoints(rawPoints, 1.5 / (scale || 1)) : rawPoints;
+    // const points = activeTool === 'pen' ? simplifyPoints(rawPoints, 1.5 / (scale || 1)) : rawPoints;
+
+    const points = rawPoints;
 
     return {
       id: activeShapeId,

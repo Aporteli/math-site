@@ -181,10 +181,10 @@ export function ClassWhiteboard({
     [setZoomScale, setCurrentPageIndex, pagesRef],
   );
 
-  // When the board gets locked, drop out of pan mode so the student can't sit on 'hand'.
+  // Students are view-only. Pan is allowed when unlocked; drawing tools stay off.
   useEffect(() => {
-    if (isLocked && activeTool === 'hand') setActiveTool('pen');
-  }, [isLocked, activeTool, setActiveTool]);
+    if (!isTeacher && activeTool !== 'hand') setActiveTool('hand');
+  }, [isTeacher, activeTool, setActiveTool]);
 
   // --- Laser pointer ---
   const handleLaserMove = useLaserPointer({ publishDataSafe, currentPageIndexRef });
@@ -425,6 +425,7 @@ export function ClassWhiteboard({
         style={{ backgroundColor: isDark ? '#020617' : '#ffffff' }}>
         <KonvaCanvas
           ref={canvasRef}
+          key={currentPageIndex}
           elements={pages[currentPageIndex] || []}
           onElementsChange={handleElementsChange}
           activeTool={activeTool}

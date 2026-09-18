@@ -127,7 +127,7 @@ export function BoardThumbnail({
         for (let i = 2; i < el.points.length; i += 2) {
           ctx.lineTo(ox + el.points[i], oy + el.points[i + 1]);
         }
-        if (el.type === 'triangle' || el.type === 'diamond') {
+        if (el.type === 'triangle' || el.type === 'diamond' || el.type === 'parallelogram') {
           ctx.closePath();
         }
         ctx.stroke();

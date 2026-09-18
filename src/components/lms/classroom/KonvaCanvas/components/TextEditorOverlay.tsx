@@ -30,6 +30,17 @@ export function TextEditorOverlay({
   onKeyDown,
 }: TextEditorOverlayProps) {
   const handlePaste = (e: ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    let hasImage = false;
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          hasImage = true;
+          break;
+        }
+      }
+    }
+    if (hasImage) return;
     e.stopPropagation();
     const pasted = e.clipboardData.getData('text/plain');
     if (pasted) {

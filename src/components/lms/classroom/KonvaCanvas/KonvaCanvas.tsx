@@ -30,6 +30,9 @@ import { useDrawLayerCleanup } from './hooks/useDrawLayerCleanup';
 import { useElementClickHandler } from './hooks/useElementClickHandler';
 import { useMarqueeSelection } from './hooks/useMarqueeSelection';
 import { useInlineCrop } from './hooks/useInlineCrop';
+import { useMiddleButtonPan } from './hooks/useMiddleButtonPan';
+
+Konva.dragButtons = [0];
 
 interface DragSnapshot {
   points?: number[];
@@ -96,9 +99,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   const stageSize = useStageSize(containerRef as RefObject<HTMLDivElement>);
 
   // ---- Stylus ----
-  const { stylusPrimaryHeldRef, stylusSecondaryHeldRef, syncStylusButtonsFromEvent } = useStylusButtons(
-    onStylusButtonAction,
-  );
+  const { stylusPrimaryHeldRef, stylusSecondaryHeldRef, syncStylusButtonsFromEvent } =
+    useStylusButtons(onStylusButtonAction);
 
   // ---- Selection-derived values ----
   const selectedElement = selectedIds.length === 1 ? elements.find((el) => el.id === selectedIds[0]) : undefined;
@@ -139,31 +141,19 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   });
 
   // ---- Laser ----
-  const {
-    laserLayerRef,
-    isLasering,
-    startLaserDrawing,
-    addLaserPoint,
-    triggerLaserFade,
-    renderRemoteLaser,
-  } = useLaser();
+  const { laserLayerRef, isLasering, startLaserDrawing, addLaserPoint, triggerLaserFade, renderRemoteLaser } =
+    useLaser();
 
   // ---- Eraser ----
-  const {
-    eraserCursorPos,
-    setEraserCursorPos,
-    isErasing,
-    eraseStrokeDirtyRef,
-    eraseAtPosition,
-    commitErase,
-  } = useEraser({
-    elementsRef,
-    onElementsChange,
-    selectedIds,
-    setSelectedIds,
-    eraserWidth,
-    activeTool,
-  });
+  const { eraserCursorPos, setEraserCursorPos, isErasing, eraseStrokeDirtyRef, eraseAtPosition, commitErase } =
+    useEraser({
+      elementsRef,
+      onElementsChange,
+      selectedIds,
+      setSelectedIds,
+      eraserWidth,
+      activeTool,
+    });
 
   // ---- Pointer helpers ----
   const getRelativePointerPosition = React.useCallback(() => {
@@ -239,6 +229,12 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     endMarquee,
   });
 
+  const middlePan = useMiddleButtonPan({
+    stageRef: stageRef as RefObject<Konva.Stage>,
+    setStagePos,
+    disabled,
+  });
+
   // ---- Element transform (drag / transform) ----
   const { handleDragStart, handleDragMove, handleDragEnd, handleTransformEnd } = useElementTransform({
     elementsRef,
@@ -300,9 +296,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
             if (snap.points) {
               // Line-like element: mutate points in place, keep transform identity.
-              node.points(
-                snap.points.map((v, i) => (i % 2 === 0 ? v + dx : v + dy)),
-              );
+              node.points(snap.points.map((v, i) => (i % 2 === 0 ? v + dx : v + dy)));
               node.x(0);
               node.y(0);
             } else {
@@ -398,6 +392,25 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
 
   // ---- Global side-effects ----
   useKeyboardDelete(editingTextId, selectedIds, deleteSelected);
+  useEffect(() => {
+    if (disabled) return;
+    const onCopy = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === 'TEXTAREA' || tag === 'INPUT') return;
+      const src = selectedImage?.src;
+      if (!src) return;
+      e.preventDefault();
+      void (async () => {
+        const res = await fetch(src);
+        const blob = await res.blob();
+        await navigator.clipboard.write([new ClipboardItem({ [blob.type || 'image/png']: blob })]);
+      })();
+    };
+    window.addEventListener('copy', onCopy);
+    return () => window.removeEventListener('copy', onCopy);
+  }, [disabled, selectedImage]);
+
   useDrawLayerCleanup(drawLayerRef as RefObject<Konva.Layer>, isDrawing, elements);
   useGlobalPointerHandlers({
     syncStylusButtonsFromEvent,
@@ -436,17 +449,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
       x: cx,
       y: above < 44 ? box.y + box.height + 10 : above,
     });
-  }, [
-    selectedImage,
-    activeTool,
-    isCropping,
-    disabled,
-    isDraggingImage,
-    elements,
-    scale,
-    stagePos.x,
-    stagePos.y,
-  ]);
+  }, [selectedImage, activeTool, isCropping, disabled, isDraggingImage, elements, scale, stagePos.x, stagePos.y]);
 
   return (
     <CanvasContainer containerRef={containerRef as RefObject<HTMLDivElement>} activeTool={activeTool}>
@@ -488,6 +491,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
             if (e.target === stageRef.current) setStagePos({ x: e.target.x(), y: e.target.y() });
           }}
           onPointerDown={(e) => {
+            if (disabled) return;
+            if (middlePan.onPointerDown(e)) return;
             if (isCropping) return;
             if (isPinching.current) return;
             if (editingTextId) {
@@ -496,13 +501,20 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
             }
             handlePointerDown(e);
           }}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
+          onPointerMove={(e) => {
+            if (disabled) return;
+            if (middlePan.onPointerMove(e)) return;
+            handlePointerMove(e);
+          }}
+          onPointerUp={(e) => {
+            if (disabled) return;
+            if (middlePan.onPointerUp(e)) return;
+            handlePointerUp(e);
+          }}
           onPointerLeave={() => {
             if (!isErasing.current) setEraserCursorPos(null);
           }}
-          pixelRatio={typeof window !== 'undefined' ? window.devicePixelRatio || 2 : 2}
-        >
+          pixelRatio={typeof window !== 'undefined' ? window.devicePixelRatio || 2 : 2}>
           <Layer ref={mainLayerRef}>
             <ElementRenderer
               elements={elements}
