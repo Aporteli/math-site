@@ -8,6 +8,7 @@ import { updateActiveShape } from '../utils/pointer-move/updateActiveShape';
 
 export function usePointerMoveHandler(ctx: PointerHandlerContext) {
   const {
+    scale,
     activeTool,
     stylusOnly,
     containerRef,
@@ -87,7 +88,17 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
 
       if (eraserCursorPos) setEraserCursorPos(null);
       if (!isDrawing.current || !activeShapeRef.current) return;
-      updateActiveShape({ activeTool, elementsRef, activeShapeRef, drawLayerRef, shiftHeld: nativeEvt.shiftKey }, pos);
+      updateActiveShape(
+        {
+          activeTool,
+          elementsRef,
+          activeShapeRef,
+          drawLayerRef,
+          scale,
+          shiftHeld: nativeEvt.shiftKey,
+        },
+        pos,
+      );
       noteStrokeMove(pos);
     },
     [
@@ -97,6 +108,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
       stylusPrimaryHeldRef,
       stylusSecondaryHeldRef,
       isStylusActiveRef,
+      scale,
       activeTool,
       getRelativePointerPosition,
       updateMarquee,
