@@ -1012,8 +1012,7 @@ export function TeacherJournalWorkspace() {
           <div className="fixed inset-0 z-40" onClick={closePopover} />
           <div
             style={{ top: popover.anchor.top, left: popover.anchor.left }}
-            className={`fixed z-50 rounded-2xl border border-hairline bg-white shadow-2xl ring-1 ring-black/5 transition-[top,width] duration-150 animate-in fade-in zoom-in-95 ${
-              expanded ? 'w-[400px]' : 'w-80'
+            className={`fixed z-50 rounded-2xl border border-hairline bg-white shadow-2xl ring-1 ring-black/5 transition-[top,width] duration-150 animate-in fade-in zoom-in-95 w-80
             }`}
             onClick={(e) => e.stopPropagation()}>
             <div className={`h-1.5 w-full rounded-t-2xl ${COLOR_DOT[draft.color]}`} />
