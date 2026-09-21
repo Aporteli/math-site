@@ -13,34 +13,6 @@ export interface AuthUser {
   password: string;
 }
 
-/**
- * Seed accounts used until Prisma `User` is wired. Swap `findUserByEmail`
- * for `prisma.user.findUnique({ where: { email } })` without changing callers.
- */
-const DEMO_USERS: AuthUser[] = [
-  {
-    id: 'teacher-1',
-    name: 'შოთა მიკოლაიჩუკი',
-    email: 'teacher@mathlab.ge',
-    role: 'TEACHER',
-    password: 'mathlab-demo',
-  },
-  {
-    id: 'student-1',
-    name: 'ნინო ბერიძე',
-    email: 'student@mathlab.ge',
-    role: 'STUDENT',
-    password: 'mathlab-demo',
-  },
-  {
-    id: 'admin-1',
-    name: 'MathLab Admin',
-    email: 'admin@mathlab.ge',
-    role: 'ADMIN',
-    password: 'mathlab-demo',
-  },
-];
-
 export async function findUserByEmail(email: string) {
   const normalized = email.trim().toLowerCase();
 
@@ -61,9 +33,6 @@ export async function findUserByEmail(email: string) {
   } catch (error) {
     console.warn('Prisma user lookup failed, falling back to demo users:', error);
   }
-
-  // Fallback to demo users
-  return DEMO_USERS.find((user) => user.email === normalized) ?? null;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -143,7 +112,6 @@ export async function createUser(data: {
       role: data.role,
       password: passwordHash,
     };
-    DEMO_USERS.push(newUser);
     return newUser;
   }
 }

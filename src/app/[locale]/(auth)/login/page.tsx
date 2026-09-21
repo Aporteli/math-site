@@ -44,7 +44,6 @@ export default async function LoginPage({ params }: LoginPageProps) {
             <LoginForm locale={locale} copy={copy} />
           </Suspense>
         </div>
-        {/* REVIEW: Signup link */}
         <div className="mt-6 text-center">
           <Link href={localePath(locale, SIGNUP_PATH)} className="text-sm font-medium text-navy hover:text-navy-strong">
             {copy.signupLink}
