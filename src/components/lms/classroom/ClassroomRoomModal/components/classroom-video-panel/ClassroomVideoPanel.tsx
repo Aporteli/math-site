@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { LiveKitRoom, RoomAudioRenderer } from '@livekit/components-react';
+import { RefreshCw } from 'lucide-react';
+import { DisconnectReason } from 'livekit-client';
 import { AudioIsolationListener } from '../AudioIsolationListener';
 import { ChatBackgroundListener } from '../ChatBackgroundListener';
 import { ConnectionStatusBadge } from '../ConnectionStatusBadge';
@@ -13,6 +15,14 @@ import { MyVideoGrid } from '../video-grid/MyVideoGrid';
 import type { ClassroomVideoPanelProps } from './types';
 import '@livekit/components-styles';
 
+/** Disconnects worth explaining instead of silently closing the whole classroom. */
+const DISCONNECT_NOTICE: Partial<Record<DisconnectReason, string>> = {
+  [DisconnectReason.DUPLICATE_IDENTITY]:
+    'ამ ექაუნთით ზარი სხვა მოწყობილობაზე ან ტაბშია გახსნილი. აქ შესვლისას იქაური კავშირი გაითიშება.',
+  [DisconnectReason.PARTICIPANT_REMOVED]: 'მასწავლებელმა ოთახიდან ამოგიყვანა.',
+  [DisconnectReason.ROOM_DELETED]: 'ოთახი დაიხურა.',
+};
+
 export function ClassroomVideoPanel({
   token,
   courseId,
@@ -22,9 +32,41 @@ export function ClassroomVideoPanel({
 }: ClassroomVideoPanelProps) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isolatedIdentities, setIsolatedIdentities] = useState<string[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
+  /** Remount key: lets the user reconnect with the same token. */
+  const [connectAttempt, setConnectAttempt] = useState(0);
+
+  const handleDisconnected = (reason?: DisconnectReason) => {
+    const message = reason !== undefined ? DISCONNECT_NOTICE[reason] : undefined;
+    if (message) {
+      setNotice(message);
+      return;
+    }
+    onClose();
+  };
+
+  if (notice) {
+    return (
+      <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-3 p-4 text-center">
+        <p className="text-sm font-semibold text-white/90">{notice}</p>
+        <button
+          type="button"
+          onClick={() => {
+            setNotice(null);
+            setConnectAttempt((attempt) => attempt + 1);
+          }}
+          className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/20"
+        >
+          <RefreshCw className="size-4" />
+          თავიდან შესვლა
+        </button>
+      </div>
+    );
+  }
 
   return (
     <LiveKitRoom
+      key={connectAttempt}
       video
       audio
       token={token}
@@ -32,7 +74,7 @@ export function ClassroomVideoPanel({
       options={{ videoCaptureDefaults: { resolution: { width: 1280, height: 720 } } }}
       data-lk-theme="default"
       className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden"
-      onDisconnected={onClose}
+      onDisconnected={handleDisconnected}
     >
       <AudioVolumeProvider>
         <RoomInstanceBridge onRoom={onRoom} />

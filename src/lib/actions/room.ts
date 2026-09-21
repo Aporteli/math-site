@@ -3,6 +3,7 @@
 
 import { RoomServiceClient } from 'livekit-server-sdk';
 import { getSession } from '@/lib/auth/session';
+import { participantUserId } from '@/lib/livekit/participant-identity';
 import { prisma } from '@/lib/prisma';
 
 export async function checkTeacherInRoom(courseId: string): Promise<boolean> {
@@ -34,8 +35,8 @@ export async function checkTeacherInRoom(courseId: string): Promise<boolean> {
 
   try {
     const participants = await roomService.listParticipants(roomName);
-    // Check if the teacher is among the participants
-    return participants.some((p) => p.identity === course.teacherId);
+    // Check if the teacher is among the participants (any of their connections).
+    return participants.some((p) => participantUserId(p) === course.teacherId);
   } catch (error) {
     // If room doesn't exist or error, treat as teacher not present
     return false;

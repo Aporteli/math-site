@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { Room } from 'livekit-client';
+import { liveIdentitiesFor } from '@/lib/livekit/participant-identity';
 
 interface Options {
   room: Room | null;
@@ -47,7 +48,13 @@ export function useBoardViewStream({
       lastSent = now;
 
       const view = viewRef.current;
-      void publishDataSafe({ type: 'BOARD_VIEW', view }, false, ids);
+      // Locked ids are account ids; stream to every live device of those students.
+      const destinations = ids.flatMap((id) =>
+        liveIdentitiesFor(room.remoteParticipants.values(), id),
+      );
+      if (destinations.length === 0) return;
+
+      void publishDataSafe({ type: 'BOARD_VIEW', view }, false, destinations);
     };
 
     raf = requestAnimationFrame(tick);

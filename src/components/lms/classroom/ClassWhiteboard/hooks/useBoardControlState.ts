@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Room } from 'livekit-client';
 import { RoomEvent } from 'livekit-client';
+import { liveIdentitiesFor, participantUserId } from '@/lib/livekit/participant-identity';
 import type { Student } from '../utils/types';
 
 interface Options {
@@ -25,7 +26,9 @@ export function useBoardControlState({ room, isTeacher, students, publishDataSaf
     if (!isTeacher || !room) return;
 
     const update = () => {
-      setConnectedIds(Array.from(room.remoteParticipants.values()).map((p) => p.identity));
+      // Presence is tracked by account id, so several devices of the same
+      // student count as one present student.
+      setConnectedIds(Array.from(room.remoteParticipants.values()).map(participantUserId));
     };
     update();
 
@@ -57,8 +60,13 @@ export function useBoardControlState({ room, isTeacher, students, publishDataSaf
     if (!isTeacher || !room) return;
 
     const handleConnected = () => {
+      const participants = Array.from(room.remoteParticipants.values());
       for (const id of lockedIdsRef.current) {
-        void publishDataSafe({ type: 'BOARD_CONTROL', enabled: true }, true, [id]);
+        // Locked boards are addressed by account id; every live connection of
+        // that student must receive the state.
+        const destinations = liveIdentitiesFor(participants, id);
+        if (destinations.length === 0) continue;
+        void publishDataSafe({ type: 'BOARD_CONTROL', enabled: true }, true, destinations);
       }
     };
 
@@ -78,23 +86,21 @@ export function useBoardControlState({ room, isTeacher, students, publishDataSaf
       if (!isTeacher) return;
 
       const willLock = !lockedStudentIds.has(identity);
-      if (willLock) {
-        setLockedStudentIds((prev) => {
-          const next = new Set(prev);
-          next.add(identity);
-          return next;
-        });
-        void publishDataSafe({ type: 'BOARD_CONTROL', enabled: true }, true, [identity]);
-      } else {
-        setLockedStudentIds((prev) => {
-          const next = new Set(prev);
-          next.delete(identity);
-          return next;
-        });
-        void publishDataSafe({ type: 'BOARD_CONTROL', enabled: false }, true, [identity]);
+      setLockedStudentIds((prev) => {
+        const next = new Set(prev);
+        if (willLock) next.add(identity);
+        else next.delete(identity);
+        return next;
+      });
+
+      const destinations = room
+        ? liveIdentitiesFor(room.remoteParticipants.values(), identity)
+        : [];
+      if (destinations.length > 0) {
+        void publishDataSafe({ type: 'BOARD_CONTROL', enabled: willLock }, true, destinations);
       }
     },
-    [isTeacher, lockedStudentIds, publishDataSafe],
+    [isTeacher, lockedStudentIds, publishDataSafe, room],
   );
 
   return { presentStudents, lockedStudentIds, toggleStudentLock };

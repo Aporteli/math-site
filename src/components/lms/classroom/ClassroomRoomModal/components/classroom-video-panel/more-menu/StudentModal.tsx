@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Lock, LockOpen, Shield, ShieldAlert, Volume2 } from 'lucide-react';
+import { participantUserId } from '@/lib/livekit/participant-identity';
 import type { StudentModalProps } from './types';
 import { useBoardControlContext } from '../../BoardControlContext';
 import { useAudioVolume } from '../AudioVolumeContext';
@@ -22,7 +23,9 @@ export function StudentModal({
   const modalRef = useRef<HTMLDivElement>(null);
   const { lockedStudentIds, toggleStudentLock } = useBoardControlContext();
   const { getVolume, setVolume } = useAudioVolume();
-  const isLocked = student ? lockedStudentIds.has(student.identity) : false;
+  // Board lock is tracked per account; volume stays per live connection.
+  const studentUserId = student ? participantUserId(student) : null;
+  const isLocked = studentUserId ? lockedStudentIds.has(studentUserId) : false;
   const volume = student ? getVolume(student.identity) : 1;
   const volumePercent = Math.round(volume * 100);
 
@@ -100,7 +103,7 @@ export function StudentModal({
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
-              toggleStudentLock(student.identity);
+              toggleStudentLock(participantUserId(student));
             }}
             aria-pressed={isLocked}
             className={`flex items-center justify-between w-full rounded-lg px-2 py-1.5 transition text-left font-medium ${

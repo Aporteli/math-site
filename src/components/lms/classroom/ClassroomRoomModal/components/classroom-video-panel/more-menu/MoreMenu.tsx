@@ -3,6 +3,7 @@
 import { useRemoteParticipants } from '@livekit/components-react';
 import { BlurToggleButton } from '@/components/ui/blur-toggle-button/BlurToggleButton';
 import { VirtualBackgroundControl } from '@/components/ui/virtual-background/VirtualBackgroundControl';
+import { isStaffParticipant } from '@/lib/livekit/participant-identity';
 import { TemporalBackgroundTunerButton } from '../TemporalBackgroundTuner';
 import { StudentsList } from './StudentsList';
 import type { MoreMenuProps } from './types';
@@ -14,6 +15,9 @@ export function MoreMenu({
   onIsolationChange,
 }: MoreMenuProps) {
   const participants = useRemoteParticipants();
+  // Staff connections (another teacher/admin, or the teacher's own second device)
+  // are not students.
+  const students = participants.filter((participant) => !isStaffParticipant(participant));
 
   return (
     <div
@@ -41,7 +45,7 @@ export function MoreMenu({
       </div>
 
       <StudentsList
-        participants={participants}
+        participants={students}
         isTeacher={isTeacher}
         isolatedIdentities={isolatedIdentities}
         onIsolationChange={onIsolationChange}

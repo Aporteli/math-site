@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Video, Loader2 } from 'lucide-react';
 import { ClassroomRoomModal } from '@/components/lms/classroom/ClassroomRoomModal/components/ClassroomRoomModal';
@@ -22,20 +22,41 @@ export function StudentCourseVideoCallButton({
   const [isTeacherPresent, setIsTeacherPresent] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(true);
 
+  /** Teacher was in the room at least once during the current call. */
+  const teacherSeenRef = useRef(false);
+  const handleTeacherLeftRef = useRef<() => void>(() => {});
+
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     let cancelled = false;
+    let missingPolls = 0;
+
     async function check() {
+      let present = false;
       try {
-        const present = await checkTeacherInRoom(courseId);
-        if (!cancelled) setIsTeacherPresent(present);
+        present = await checkTeacherInRoom(courseId);
       } catch {
-        if (!cancelled) setIsTeacherPresent(false);
-      } finally {
-        if (!cancelled) setChecking(false);
+        present = false;
       }
+      if (cancelled) return;
+
+      setIsTeacherPresent(present);
+      setChecking(false);
+
+      if (present) {
+        missingPolls = 0;
+        teacherSeenRef.current = true;
+        return;
+      }
+
+      // ზარი მხოლოდ მაშინ იხურება, თუ მასწავლებელი ოთახში ნამდვილად იყო და
+      // უკვე ორი შემოწმებაა აღარ ჩანს — მოწყობილობის შეცვლისას ხანმოკლე
+      // წყვეტა სტუდენტს ზარიდან არ აგდებს.
+      missingPolls += 1;
+      if (teacherSeenRef.current && missingPolls >= 2) handleTeacherLeftRef.current();
     }
+
     if (courseId) void check();
     const id = setInterval(check, 4000);
     return () => {
@@ -54,13 +75,14 @@ export function StudentCourseVideoCallButton({
   }, [isOpen]);
 
   const handleTeacherLeft = useCallback(() => {
+    teacherSeenRef.current = false;
     setIsTeacherPresent(false);
     setIsOpen(false);
   }, []);
 
   useEffect(() => {
-    if (isOpen && isTeacherPresent === false) handleTeacherLeft();
-  }, [isOpen, isTeacherPresent, handleTeacherLeft]);
+    handleTeacherLeftRef.current = handleTeacherLeft;
+  }, [handleTeacherLeft]);
 
   const disabled = checking || isTeacherPresent === false;
 
@@ -68,7 +90,10 @@ export function StudentCourseVideoCallButton({
     <>
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          teacherSeenRef.current = false;
+          setIsOpen(true);
+        }}
         disabled={disabled}
         className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-bold text-white shadow-sm transition-all active:scale-[0.99] ${
           disabled

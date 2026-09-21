@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { RoomEvent } from 'livekit-client';
 import type { RemoteParticipant, Room } from 'livekit-client';
 import { getCourseTeacherId } from '@/lib/actions/room';
+import { participantUserId } from '@/lib/livekit/participant-identity';
 
 export function useTeacherKick(
   courseId: string,
@@ -22,24 +23,33 @@ export function useTeacherKick(
 
     let cancelled = false;
     let teacherId: string | null = null;
+    /** Only a teacher that was actually in the room can end the call by leaving. */
+    let sawTeacher = false;
 
     const kick = () => {
       if (!cancelled) onTeacherLeftRef.current?.();
     };
-    const maybeKickIfTeacherMissing = () => {
-      if (
-        teacherId &&
-        room.remoteParticipants.size > 0 &&
-        !room.remoteParticipants.has(teacherId)
-      ) {
-        kick();
+    const teacherPresent = () =>
+      Array.from(room.remoteParticipants.values()).some(
+        (participant) => participantUserId(participant) === teacherId,
+      );
+
+    const syncTeacherPresence = () => {
+      if (!teacherId || room.remoteParticipants.size === 0) return;
+
+      if (teacherPresent()) {
+        sawTeacher = true;
+        return;
       }
+      if (sawTeacher) kick();
     };
 
     const handleParticipantDisconnected = (participant: RemoteParticipant) => {
-      if (teacherId && participant.identity === teacherId) {
-        kick();
-      }
+      if (!teacherId || participantUserId(participant) !== teacherId) return;
+
+      sawTeacher = true;
+      // The teacher may still be connected from another device.
+      if (!teacherPresent()) kick();
     };
 
     async function init() {
@@ -50,15 +60,17 @@ export function useTeacherKick(
         return;
       }
       if (cancelled) return;
-      maybeKickIfTeacherMissing();
+      syncTeacherPresence();
     }
 
     void init();
 
+    room.on(RoomEvent.ParticipantConnected, syncTeacherPresence);
     room.on(RoomEvent.ParticipantDisconnected, handleParticipantDisconnected);
 
     return () => {
       cancelled = true;
+      room.off(RoomEvent.ParticipantConnected, syncTeacherPresence);
       room.off(RoomEvent.ParticipantDisconnected, handleParticipantDisconnected);
     };
   }, [courseId, room, isTeacher]);

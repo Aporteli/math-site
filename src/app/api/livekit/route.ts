@@ -1,6 +1,11 @@
+import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { getSession } from '@/lib/auth/session';
+import {
+  PARTICIPANT_ROLE,
+  PARTICIPANT_USER_ID,
+} from '@/lib/livekit/participant-identity';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(req: NextRequest) {
@@ -72,11 +77,18 @@ export async function GET(req: NextRequest) {
       // თუ ოთახი უკვე შექმნილია, შეცდომას ვაიგნორებთ და ჩვეულებრივ ვაგრძელებთ
     }
 
-    // 4. ტოკენის გენერაცია
+    // 4. ტოკენის გენერაცია — identity უნიკალურია თითო კავშირზე, რომ ერთი ექაუნთით
+    // რამდენიმე მოწყობილობიდან შესვლისას LiveKit-მა ძველი კავშირი არ გათიშოს.
+    const role = typeof userRole === 'string' && userRole ? userRole.toLowerCase() : 'student';
+
     const at = new AccessToken(apiKey, apiSecret, {
-      identity: userId,
+      identity: `${userId}:${randomUUID().slice(0, 8)}`,
       name: userName,
       ttl: '12h',
+      attributes: {
+        [PARTICIPANT_USER_ID]: userId,
+        [PARTICIPANT_ROLE]: role,
+      },
     });
 
     at.addGrant({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { RoomServiceClient, TrackType } from 'livekit-server-sdk';
 import type { ParticipantInfo } from 'livekit-server-sdk';
 import { getSession } from '@/lib/auth/session';
+import { participantUserId } from '@/lib/livekit/participant-identity';
 import { prisma } from '@/lib/prisma';
 
 interface IsolationRequestBody {
@@ -62,13 +63,22 @@ export async function POST(req: NextRequest) {
     const roomService = new RoomServiceClient(httpUrl, apiKey, apiSecret);
     const roomName = `course-${courseId}`;
 
-    // Never treat the teacher as isolated, and dedupe the requested set.
-    const isolatedSet = new Set(
-      isolatedIdentities.filter((id) => id !== course.teacherId),
+    const participants = await roomService.listParticipants(roomName);
+
+    // Isolation is keyed by live connection identity: the teacher may be
+    // connected from several devices, and none of them may ever be isolated.
+    const teacherIdentities = new Set(
+      participants
+        .filter((p) => participantUserId(p) === course.teacherId)
+        .map((p) => p.identity),
     );
 
-    const participants = await roomService.listParticipants(roomName);
-    const nonTeacherParticipants = participants.filter((p) => p.identity !== course.teacherId);
+    // Never treat the teacher as isolated, and dedupe the requested set.
+    const isolatedSet = new Set(
+      isolatedIdentities.filter((id) => !teacherIdentities.has(id)),
+    );
+
+    const nonTeacherParticipants = participants.filter((p) => !teacherIdentities.has(p.identity));
 
     const audioTrackSids = (participant: ParticipantInfo) =>
       participant.tracks
