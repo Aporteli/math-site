@@ -12,9 +12,11 @@ import {
   Download,
   Eraser,
   Hand,
+  Expand,
   ImageIcon,
   Loader2,
   Maximize2,
+  Minimize2,
   Minus,
   Moon,
   MousePointer,
@@ -29,6 +31,7 @@ import {
   Sparkles,
   Square,
   Star,
+  Spline,
   Sun,
   Trash2,
   Triangle,
@@ -117,13 +120,7 @@ const SHAPE_TOOLS: { id: ToolId; icon: typeof Minus; label: string }[] = [
   { id: 'star', icon: Star, label: 'ვარსკვლავი' },
 ];
 
-type StylusButtonAction =
-  | 'temporary-eraser'
-  | 'toggle-eraser'
-  | 'cycle-colors'
-  | 'toggle-laser'
-  | 'undo'
-  | 'none';
+type StylusButtonAction = 'temporary-eraser' | 'toggle-eraser' | 'cycle-colors' | 'toggle-laser' | 'undo' | 'none';
 
 const STYLUS_BUTTON_ACTIONS: StylusButtonAction[] = [
   'temporary-eraser',
@@ -487,7 +484,10 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const shapesMenuRef = useRef<HTMLDivElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
   const stylusMenuRef = useRef<HTMLDivElement>(null);
+  const smoothMenuRef = useRef<HTMLDivElement>(null);
   const pagesTrayRef = useRef<HTMLDivElement>(null);
+  const boardRootRef = useRef<HTMLDivElement>(null);
+  const [isBoardFullscreen, setIsBoardFullscreen] = useState(false);
 
   const [pages, setPages] = useState<CanvasElement[][]>([[]]);
   const [currentPageIndex, setCurrentPageIndex] = useState<number>(0);
@@ -496,6 +496,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const [strokeWidth, setStrokeWidth] = useState<number>(2);
   const [isDark, setIsDark] = useState<boolean>(false);
   const [stylusOnly, setStylusOnly] = useState(false);
+  const [penSmoothEnabled, setPenSmoothEnabled] = useState(false);
+  const [penSmoothIntensity, setPenSmoothIntensity] = useState(0.45);
   const [stylusPrimaryAction, setStylusPrimaryAction] = useState<StylusButtonAction>('temporary-eraser');
   const [stylusSecondaryAction, setStylusSecondaryAction] = useState<StylusButtonAction>('none');
   const [zoomScale, setZoomScale] = useState<number>(1);
@@ -508,6 +510,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const [isShapesMenuOpen, setIsShapesMenuOpen] = useState(false);
   const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
   const [isStylusMenuOpen, setIsStylusMenuOpen] = useState(false);
+  const [isSmoothMenuOpen, setIsSmoothMenuOpen] = useState(false);
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
   const [isPagesTrayOpen, setIsPagesTrayOpen] = useState(false);
 
@@ -556,6 +559,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         if (isStylusButtonAction(p.stylusSecondaryAction)) setStylusSecondaryAction(p.stylusSecondaryAction);
         if (typeof p.zoomScale === 'number') setZoomScale(p.zoomScale);
         if (typeof p.currentPageIndex === 'number') setCurrentPageIndex(p.currentPageIndex);
+        if (typeof p.penSmoothEnabled === 'boolean') setPenSmoothEnabled(p.penSmoothEnabled);
+        if (typeof p.penSmoothIntensity === 'number') setPenSmoothIntensity(p.penSmoothIntensity);
       }
       const pagesRaw = localStorage.getItem(STORAGE_KEY_PAGES);
       if (pagesRaw) {
@@ -583,9 +588,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         const current = raw ? JSON.parse(raw) : {};
         const next = {
           ...current,
-          tool: isTemporaryEraserRef.current
-            ? previousToolRef.current
-            : (updates.tool ?? activeTool),
+          tool: isTemporaryEraserRef.current ? previousToolRef.current : (updates.tool ?? activeTool),
           color: updates.color ?? strokeColor,
           width: updates.width ?? strokeWidth,
           isDark: updates.isDark ?? isDark,
@@ -594,13 +597,25 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           stylusOnly: updates.stylusOnly ?? stylusOnly,
           stylusPrimaryAction: updates.stylusPrimaryAction ?? stylusPrimaryAction,
           stylusSecondaryAction: updates.stylusSecondaryAction ?? stylusSecondaryAction,
+          penSmoothEnabled: updates.penSmoothEnabled ?? penSmoothEnabled,
+          penSmoothIntensity: updates.penSmoothIntensity ?? penSmoothIntensity,
         };
         localStorage.setItem(PREFS_KEY, JSON.stringify(next));
       } catch (e) {
         console.error(e);
       }
     },
-    [activeTool, strokeColor, strokeWidth, isDark, zoomScale, currentPageIndex, stylusOnly, stylusPrimaryAction, stylusSecondaryAction],
+    [
+      activeTool,
+      strokeColor,
+      strokeWidth,
+      isDark,
+      zoomScale,
+      currentPageIndex,
+      stylusOnly,
+      stylusPrimaryAction,
+      stylusSecondaryAction,
+    ],
   );
 
   const updateUndoRedoState = useCallback(() => {
@@ -767,6 +782,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       if (shapesMenuRef.current && !shapesMenuRef.current.contains(target)) setIsShapesMenuOpen(false);
       if (colorMenuRef.current && !colorMenuRef.current.contains(target)) setIsColorMenuOpen(false);
       if (stylusMenuRef.current && !stylusMenuRef.current.contains(target)) setIsStylusMenuOpen(false);
+      if (smoothMenuRef.current && !smoothMenuRef.current.contains(target)) setIsSmoothMenuOpen(false);
       if (pagesTrayRef.current && !pagesTrayRef.current.contains(target)) {
         const el = target as HTMLElement;
         if (!el.closest?.('[data-tray-trigger]')) setIsPagesTrayOpen(false);
@@ -820,83 +836,86 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const undoRef = useRef(undo);
   undoRef.current = undo;
 
-  const applyStylusAction = useCallback((buttonIndex: 1 | 2, state: 'down' | 'up') => {
-    if (state === 'down') {
-      if (stylusButtonHeldRef.current[buttonIndex]) return;
-      stylusButtonHeldRef.current[buttonIndex] = true;
-    } else {
-      if (!stylusButtonHeldRef.current[buttonIndex]) return;
-      stylusButtonHeldRef.current[buttonIndex] = false;
-    }
-
-    const action = buttonIndex === 1 ? stylusPrimaryActionRef.current : stylusSecondaryActionRef.current;
-    if (action === 'none') return;
-
-    if (action === 'temporary-eraser') {
+  const applyStylusAction = useCallback(
+    (buttonIndex: 1 | 2, state: 'down' | 'up') => {
       if (state === 'down') {
-        temporaryEraserHoldersRef.current.add(buttonIndex);
-        if (!isTemporaryEraserRef.current) {
-          const current = activeToolRef.current;
-          if (current !== 'eraser') previousToolRef.current = current;
-          isTemporaryEraserRef.current = true;
+        if (stylusButtonHeldRef.current[buttonIndex]) return;
+        stylusButtonHeldRef.current[buttonIndex] = true;
+      } else {
+        if (!stylusButtonHeldRef.current[buttonIndex]) return;
+        stylusButtonHeldRef.current[buttonIndex] = false;
+      }
+
+      const action = buttonIndex === 1 ? stylusPrimaryActionRef.current : stylusSecondaryActionRef.current;
+      if (action === 'none') return;
+
+      if (action === 'temporary-eraser') {
+        if (state === 'down') {
+          temporaryEraserHoldersRef.current.add(buttonIndex);
+          if (!isTemporaryEraserRef.current) {
+            const current = activeToolRef.current;
+            if (current !== 'eraser') previousToolRef.current = current;
+            isTemporaryEraserRef.current = true;
+            setActiveTool('eraser');
+          }
+        } else {
+          temporaryEraserHoldersRef.current.delete(buttonIndex);
+          if (temporaryEraserHoldersRef.current.size === 0 && isTemporaryEraserRef.current) {
+            isTemporaryEraserRef.current = false;
+            setActiveTool(previousToolRef.current || 'pen');
+          }
+        }
+        return;
+      }
+
+      if (state !== 'down') return;
+
+      if (action === 'toggle-eraser') {
+        isTemporaryEraserRef.current = false;
+        temporaryEraserHoldersRef.current.clear();
+        if (activeToolRef.current === 'eraser') {
+          const restored = previousToolRef.current || 'pen';
+          setActiveTool(restored);
+          savePreferencesImmediately({ tool: restored });
+        } else {
+          previousToolRef.current = activeToolRef.current;
           setActiveTool('eraser');
+          savePreferencesImmediately({ tool: 'eraser' });
         }
-      } else {
-        temporaryEraserHoldersRef.current.delete(buttonIndex);
-        if (temporaryEraserHoldersRef.current.size === 0 && isTemporaryEraserRef.current) {
-          isTemporaryEraserRef.current = false;
-          setActiveTool(previousToolRef.current || 'pen');
+        return;
+      }
+
+      if (action === 'toggle-laser') {
+        isTemporaryEraserRef.current = false;
+        temporaryEraserHoldersRef.current.clear();
+        if (activeToolRef.current === 'laser') {
+          const restored = previousToolRef.current || 'pen';
+          setActiveTool(restored);
+          savePreferencesImmediately({ tool: restored });
+        } else {
+          previousToolRef.current = activeToolRef.current;
+          setActiveTool('laser');
+          savePreferencesImmediately({ tool: 'laser' });
         }
+        return;
       }
-      return;
-    }
 
-    if (state !== 'down') return;
-
-    if (action === 'toggle-eraser') {
-      isTemporaryEraserRef.current = false;
-      temporaryEraserHoldersRef.current.clear();
-      if (activeToolRef.current === 'eraser') {
-        const restored = previousToolRef.current || 'pen';
-        setActiveTool(restored);
-        savePreferencesImmediately({ tool: restored });
-      } else {
-        previousToolRef.current = activeToolRef.current;
-        setActiveTool('eraser');
-        savePreferencesImmediately({ tool: 'eraser' });
+      if (action === 'cycle-colors') {
+        const palette = COLORS.map((c) => c.hex);
+        const current = strokeColorRef.current;
+        const idx = palette.indexOf(current);
+        const next = palette[(idx + 1) % palette.length];
+        setStrokeColor(next);
+        savePreferencesImmediately({ color: next });
+        return;
       }
-      return;
-    }
 
-    if (action === 'toggle-laser') {
-      isTemporaryEraserRef.current = false;
-      temporaryEraserHoldersRef.current.clear();
-      if (activeToolRef.current === 'laser') {
-        const restored = previousToolRef.current || 'pen';
-        setActiveTool(restored);
-        savePreferencesImmediately({ tool: restored });
-      } else {
-        previousToolRef.current = activeToolRef.current;
-        setActiveTool('laser');
-        savePreferencesImmediately({ tool: 'laser' });
+      if (action === 'undo') {
+        undoRef.current();
       }
-      return;
-    }
-
-    if (action === 'cycle-colors') {
-      const palette = COLORS.map((c) => c.hex);
-      const current = strokeColorRef.current;
-      const idx = palette.indexOf(current);
-      const next = palette[(idx + 1) % palette.length];
-      setStrokeColor(next);
-      savePreferencesImmediately({ color: next });
-      return;
-    }
-
-    if (action === 'undo') {
-      undoRef.current();
-    }
-  }, [savePreferencesImmediately]);
+    },
+    [savePreferencesImmediately],
+  );
 
   useEffect(() => {
     const isTypingTarget = (target: EventTarget | null) => {
@@ -967,6 +986,24 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const zoomReset = () => {
     setZoomScale(1);
     savePreferencesImmediately({ zoomScale: 1 });
+  };
+
+  useEffect(() => {
+    const sync = () => {
+      const el = boardRootRef.current;
+      setIsBoardFullscreen(!!el && document.fullscreenElement === el);
+    };
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
+  const toggleBoardFullscreen = () => {
+    const el = boardRootRef.current;
+    if (!el) return;
+    if (document.fullscreenElement === el) {
+      void document.exitFullscreen();
+      return;
+    }
+    void el.requestFullscreen();
   };
 
   const fitToContent = () => canvasRef.current?.fitToContent();
@@ -1170,7 +1207,9 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     isDark && (strokeColor === DEFAULT_COLOR || strokeColor === '#000000') ? '#ffffff' : strokeColor;
 
   return (
-    <div className="relative flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm">
+    <div
+      ref={boardRootRef}
+      className={`relative flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden border border-hairline bg-white shadow-sm ${isBoardFullscreen ? 'rounded-none' : 'rounded-2xl'}`}>
       <input
         ref={fileInputRef}
         type="file"
@@ -1220,278 +1259,343 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           </div>
 
           <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
-          <div ref={penMenuRef} className="relative flex shrink-0 items-center">
-            <div
-              className={`flex items-center h-8 rounded-xl transition-all shadow-xs ${activeTool === 'pen' ? 'bg-navy text-white' : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'}`}>
-              <button
-                type="button"
-                title="კალამი"
-                onClick={() => {
-                  setAndSaveTool('pen');
-                  setIsPenMenuOpen(false);
-                  setIsShapesMenuOpen(false);
-                  setIsColorMenuOpen(false);
-                }}
-                className="flex items-center gap-1 h-full px-2 rounded-l-xl focus:outline-none">
-                <Pencil className="size-4" />
-                <span className="text-[11px] font-mono font-medium opacity-90">{strokeWidth}px</span>
-              </button>
-              <button
-                type="button"
-                title="სისქის მენიუ"
-                onClick={() => {
-                  setIsPenMenuOpen((prev) => !prev);
-                  setIsShapesMenuOpen(false);
-                  setIsColorMenuOpen(false);
-                }}
-                className={`flex items-center justify-center px-1.5 h-full rounded-r-xl transition-colors border-l ${activeTool === 'pen' ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
-                <ChevronDown
-                  className={`size-3 transition-transform duration-200 ${isPenMenuOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-            </div>
-            {isPenMenuOpen && (
-              <div className="absolute top-full mt-2 left-0 z-[120] w-56 rounded-2xl bg-white p-3 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center justify-between pb-2 mb-2 border-b border-hairline">
-                  <span className="text-xs font-semibold text-ink">კალმის სისქე</span>
-                  <span className="text-xs font-mono font-bold text-navy">{strokeWidth}px</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="24"
-                  step="0.5"
-                  value={strokeWidth}
-                  onChange={(e) => setAndSaveWidth(parseFloat(e.target.value))}
-                  className="w-full h-1.5 bg-paper-deep rounded-lg appearance-none cursor-pointer accent-navy"
-                />
-                <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-hairline">
-                  {STROKE_SIZES.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setAndSaveWidth(size)}
-                      className={`size-7 flex items-center justify-center rounded-xl transition-colors ${strokeWidth === size ? 'bg-navy-tint text-navy ring-1 ring-navy font-bold' : 'hover:bg-paper text-muted'}`}>
-                      <div
-                        className="rounded-full bg-current"
-                        style={{ width: Math.min(14, size + 2), height: Math.min(14, size + 2) }}
-                      />
-                    </button>
-                  ))}
-                </div>
+            <div ref={penMenuRef} className="relative flex shrink-0 items-center">
+              <div
+                className={`flex items-center h-8 rounded-xl transition-all shadow-xs ${activeTool === 'pen' ? 'bg-navy text-white' : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'}`}>
+                <button
+                  type="button"
+                  title="კალამი"
+                  onClick={() => {
+                    setAndSaveTool('pen');
+                    setIsPenMenuOpen(false);
+                    setIsShapesMenuOpen(false);
+                    setIsColorMenuOpen(false);
+                  }}
+                  className="flex items-center gap-1 h-full px-2 rounded-l-xl focus:outline-none">
+                  <Pencil className="size-4" />
+                  <span className="text-[11px] font-mono font-medium opacity-90">{strokeWidth}px</span>
+                </button>
+                <button
+                  type="button"
+                  title="სისქის მენიუ"
+                  onClick={() => {
+                    setIsPenMenuOpen((prev) => !prev);
+                    setIsShapesMenuOpen(false);
+                    setIsColorMenuOpen(false);
+                  }}
+                  className={`flex items-center justify-center px-1.5 h-full rounded-r-xl transition-colors border-l ${activeTool === 'pen' ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
+                  <ChevronDown
+                    className={`size-3 transition-transform duration-200 ${isPenMenuOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
               </div>
-            )}
-          </div>
-
-          <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
-            <button
-              type="button"
-              onClick={() => {
-                setIsColorMenuOpen((prev) => !prev);
-                setIsPenMenuOpen(false);
-                setIsShapesMenuOpen(false);
-                setIsStylusMenuOpen(false);
-              }}
-              title="ფერის არჩევა"
-              className="flex items-center gap-1.5 h-8 px-2 rounded-xl bg-paper hover:bg-paper-deep transition-colors border border-hairline">
-              <span
-                className="size-4 rounded-full border border-black/10 shadow-2xs"
-                style={{ backgroundColor: effectiveStroke }}
-              />
-              <ChevronDown
-                className={`size-3 text-muted transition-transform duration-200 ${isColorMenuOpen ? 'rotate-180' : ''}`}
-              />
-            </button>
-            {isColorMenuOpen && (
-              <div className="absolute top-full mt-2 left-0 z-[120] w-max rounded-2xl bg-white p-2.5 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center gap-2">
-                  {COLORS.map((c) => (
-                    <button
-                      key={c.hex}
-                      type="button"
-                      title={c.label}
-                      onClick={() => setAndSaveColor(c.hex)}
-                      className={`size-7 rounded-full border transition-transform ${strokeColor === c.hex ? 'scale-115 ring-2 ring-navy ring-offset-1' : 'hover:scale-110 border-black/10'}`}
-                      style={{ backgroundColor: c.hex }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <ToolButton
-            title={copy.tools.eraser}
-            active={activeTool === 'eraser'}
-            onClick={() => setAndSaveTool('eraser')}>
-            <Eraser className="size-4" />
-          </ToolButton>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
-          <div ref={shapesMenuRef} className="relative flex shrink-0 items-center">
-            <div
-              className={`flex items-center h-8 rounded-xl transition-all shadow-xs ${isShapeActive ? 'bg-navy text-white' : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'}`}>
-              <button
-                type="button"
-                title="ფიგურა"
-                onClick={() => {
-                  setAndSaveTool(currentShapeObj.id);
-                  setIsShapesMenuOpen(false);
-                  setIsPenMenuOpen(false);
-                  setIsColorMenuOpen(false);
-                }}
-                className="flex items-center justify-center size-8 rounded-l-xl focus:outline-none">
-                <CurrentShapeIcon className="size-4" />
-              </button>
-              <button
-                type="button"
-                title="ფიგურების მენიუ"
-                onClick={() => {
-                  setIsShapesMenuOpen((prev) => !prev);
-                  setIsPenMenuOpen(false);
-                  setIsColorMenuOpen(false);
-                }}
-                className={`flex items-center justify-center px-1.5 h-full rounded-r-xl transition-colors border-l ${isShapeActive ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
-                <ChevronDown
-                  className={`size-3 transition-transform duration-200 ${isShapesMenuOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-            </div>
-            {isShapesMenuOpen && (
-              <div className="absolute top-full mt-2 left-0 z-[120] w-48 rounded-2xl bg-white p-2.5 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
-                <div className="grid grid-cols-2 gap-1.5">
-                  {SHAPE_TOOLS.map((s) => {
-                    const SIcon = s.icon;
-                    const isSelected = activeTool === s.id;
-                    return (
+              {isPenMenuOpen && (
+                <div className="absolute top-full mt-2 left-0 z-[120] w-56 rounded-2xl bg-white p-3 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-hairline">
+                    <span className="text-xs font-semibold text-ink">კალმის სისქე</span>
+                    <span className="text-xs font-mono font-bold text-navy">{strokeWidth}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="24"
+                    step="0.5"
+                    value={strokeWidth}
+                    onChange={(e) => setAndSaveWidth(parseFloat(e.target.value))}
+                    className="w-full h-1.5 bg-paper-deep rounded-lg appearance-none cursor-pointer accent-navy"
+                  />
+                  <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-hairline">
+                    {STROKE_SIZES.map((size) => (
                       <button
-                        key={s.id}
+                        key={size}
                         type="button"
-                        title={s.label}
-                        onClick={() => {
-                          setAndSaveTool(s.id);
-                          setIsShapesMenuOpen(false);
-                        }}
-                        className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-xs transition-colors ${isSelected ? 'bg-navy text-white font-bold' : 'text-body hover:bg-paper hover:text-navy'}`}>
-                        <SIcon className="size-3.5 shrink-0" />
-                        <span className="truncate text-[11px]">{s.label}</span>
+                        onClick={() => setAndSaveWidth(size)}
+                        className={`size-7 flex items-center justify-center rounded-xl transition-colors ${strokeWidth === size ? 'bg-navy-tint text-navy ring-1 ring-navy font-bold' : 'hover:bg-paper text-muted'}`}>
+                        <div
+                          className="rounded-full bg-current"
+                          style={{ width: Math.min(14, size + 2), height: Math.min(14, size + 2) }}
+                        />
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          <ToolButton title={copy.tools.text} active={activeTool === 'text'} onClick={() => setAndSaveTool('text')}>
-            <Type className="size-4" />
-          </ToolButton>
-          <ToolButton title={copy.tools.image} onClick={openImagePicker}>
-            <ImageIcon className="size-4" />
-          </ToolButton>
+            <div ref={colorMenuRef} className="relative flex shrink-0 items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsColorMenuOpen((prev) => !prev);
+                  setIsPenMenuOpen(false);
+                  setIsShapesMenuOpen(false);
+                  setIsStylusMenuOpen(false);
+                }}
+                title="ფერის არჩევა"
+                className="flex items-center gap-1.5 h-8 px-2 rounded-xl bg-paper hover:bg-paper-deep transition-colors border border-hairline">
+                <span
+                  className="size-4 rounded-full border border-black/10 shadow-2xs"
+                  style={{ backgroundColor: effectiveStroke }}
+                />
+                <ChevronDown
+                  className={`size-3 text-muted transition-transform duration-200 ${isColorMenuOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {isColorMenuOpen && (
+                <div className="absolute top-full mt-2 left-0 z-[120] w-max rounded-2xl bg-white p-2.5 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center gap-2">
+                    {COLORS.map((c) => (
+                      <button
+                        key={c.hex}
+                        type="button"
+                        title={c.label}
+                        onClick={() => setAndSaveColor(c.hex)}
+                        className={`size-7 rounded-full border transition-transform ${strokeColor === c.hex ? 'scale-115 ring-2 ring-navy ring-offset-1' : 'hover:scale-110 border-black/10'}`}
+                        style={{ backgroundColor: c.hex }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div ref={smoothMenuRef} className="relative flex shrink-0 items-center">
+              <div
+                className={`flex items-center h-8 rounded-xl transition-all shadow-xs ${
+                  penSmoothEnabled
+                    ? 'bg-navy text-white'
+                    : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'
+                }`}>
+                <button
+                  type="button"
+                  title={penSmoothEnabled ? 'ხელწერის გასწორება ჩართულია' : 'ხელწერის გასწორება'}
+                  onClick={() => {
+                    const next = !penSmoothEnabled;
+                    setPenSmoothEnabled(next);
+                    savePreferencesImmediately({ penSmoothEnabled: next });
+                  }}
+                  className="flex items-center justify-center size-8 rounded-l-xl">
+                  <Spline className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  title="ინტენსივობა"
+                  onClick={() => {
+                    setIsSmoothMenuOpen((prev) => !prev);
+                    setIsPenMenuOpen(false);
+                    setIsShapesMenuOpen(false);
+                    setIsColorMenuOpen(false);
+                    setIsStylusMenuOpen(false);
+                  }}
+                  className={`flex items-center justify-center px-1.5 h-full rounded-r-xl border-l ${
+                    penSmoothEnabled ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'
+                  }`}>
+                  <ChevronDown className={`size-3 transition-transform ${isSmoothMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+              {isSmoothMenuOpen && (
+                <div className="absolute top-full mt-2 left-0 z-[120] w-56 rounded-2xl bg-white p-3 shadow-2xl border border-hairline">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-hairline">
+                    <span className="text-xs font-semibold text-ink">გასწორების ინტენსივობა</span>
+                    <span className="text-xs font-mono font-bold text-navy">
+                      {Math.round(penSmoothIntensity * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0.1}
+                    max={1}
+                    step={0.05}
+                    value={penSmoothIntensity}
+                    onChange={(e) => {
+                      const next = parseFloat(e.target.value);
+                      setPenSmoothIntensity(next);
+                      savePreferencesImmediately({ penSmoothIntensity: next });
+                    }}
+                    className="w-full h-1.5 bg-paper-deep rounded-lg appearance-none cursor-pointer accent-navy"
+                  />
+                </div>
+              )}
+            </div>
+
+            <ToolButton
+              title={copy.tools.eraser}
+              active={activeTool === 'eraser'}
+              onClick={() => setAndSaveTool('eraser')}>
+              <Eraser className="size-4" />
+            </ToolButton>
           </div>
 
           <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
-            <ToolButton title={copy.tools.laser} active={activeTool === 'laser'} onClick={() => setAndSaveTool('laser')}>
+            <div ref={shapesMenuRef} className="relative flex shrink-0 items-center">
+              <div
+                className={`flex items-center h-8 rounded-xl transition-all shadow-xs ${isShapeActive ? 'bg-navy text-white' : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'}`}>
+                <button
+                  type="button"
+                  title="ფიგურა"
+                  onClick={() => {
+                    setAndSaveTool(currentShapeObj.id);
+                    setIsShapesMenuOpen(false);
+                    setIsPenMenuOpen(false);
+                    setIsColorMenuOpen(false);
+                  }}
+                  className="flex items-center justify-center size-8 rounded-l-xl focus:outline-none">
+                  <CurrentShapeIcon className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  title="ფიგურების მენიუ"
+                  onClick={() => {
+                    setIsShapesMenuOpen((prev) => !prev);
+                    setIsPenMenuOpen(false);
+                    setIsColorMenuOpen(false);
+                  }}
+                  className={`flex items-center justify-center px-1.5 h-full rounded-r-xl transition-colors border-l ${isShapeActive ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
+                  <ChevronDown
+                    className={`size-3 transition-transform duration-200 ${isShapesMenuOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              </div>
+              {isShapesMenuOpen && (
+                <div className="absolute top-full mt-2 left-0 z-[120] w-48 rounded-2xl bg-white p-2.5 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {SHAPE_TOOLS.map((s) => {
+                      const SIcon = s.icon;
+                      const isSelected = activeTool === s.id;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          title={s.label}
+                          onClick={() => {
+                            setAndSaveTool(s.id);
+                            setIsShapesMenuOpen(false);
+                          }}
+                          className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl text-xs transition-colors ${isSelected ? 'bg-navy text-white font-bold' : 'text-body hover:bg-paper hover:text-navy'}`}>
+                          <SIcon className="size-3.5 shrink-0" />
+                          <span className="truncate text-[11px]">{s.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <ToolButton title={copy.tools.text} active={activeTool === 'text'} onClick={() => setAndSaveTool('text')}>
+              <Type className="size-4" />
+            </ToolButton>
+            <ToolButton title={copy.tools.image} onClick={openImagePicker}>
+              <ImageIcon className="size-4" />
+            </ToolButton>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
+            <ToolButton
+              title={copy.tools.laser}
+              active={activeTool === 'laser'}
+              onClick={() => setAndSaveTool('laser')}>
               <Crosshair className="size-4" />
             </ToolButton>
           </div>
 
           <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
-          <div ref={stylusMenuRef} className="relative flex shrink-0 items-center gap-0.5">
-            <button
-              type="button"
-              onClick={() => {
-                const next = !stylusOnly;
-                setStylusOnly(next);
-                savePreferencesImmediately({ stylusOnly: next });
-              }}
-              title={stylusOnly ? copy.stylusOnlyOn : copy.stylusOnlyOff}
-              aria-label={stylusOnly ? copy.stylusOnlyOn : copy.stylusOnlyOff}
-              aria-pressed={stylusOnly}
-              className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                stylusOnly
-                  ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-600/30'
-                  : 'text-body hover:bg-paper hover:text-navy'
-              }`}>
-              <PenTool className="size-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsStylusMenuOpen((prev) => !prev);
-                setIsPenMenuOpen(false);
-                setIsShapesMenuOpen(false);
-                setIsColorMenuOpen(false);
-              }}
-              title={copy.stylusSettings}
-              aria-label={copy.stylusSettings}
-              aria-expanded={isStylusMenuOpen}
-              className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                isStylusMenuOpen ? 'bg-paper-deep text-navy' : 'text-body hover:bg-paper hover:text-navy'
-              }`}>
-              <Settings2 className="size-4" />
-            </button>
-            {isStylusMenuOpen && (
-              <div className="absolute top-full mt-2 right-0 z-[120] w-64 rounded-2xl bg-white p-3 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
-                <p className="text-xs font-semibold text-ink mb-3">{copy.stylusButtons}</p>
-                <label htmlFor="teacher-stylus-primary-action" className="block text-[11px] font-medium text-muted mb-1">
-                  {copy.stylusButton1}
-                </label>
-                <select
-                  id="teacher-stylus-primary-action"
-                  value={stylusPrimaryAction}
-                  onChange={(e) => {
-                    const next = e.target.value as StylusButtonAction;
-                    setStylusPrimaryAction(next);
-                    savePreferencesImmediately({ stylusPrimaryAction: next });
-                  }}
-                  className="mb-3 w-full h-8 rounded-lg border border-hairline bg-white px-2 text-xs text-ink outline-none focus:ring-2 focus:ring-navy/30">
-                  {STYLUS_BUTTON_ACTIONS.map((action) => (
-                    <option key={action} value={action}>
-                      {copy.stylusActions[action]}
-                    </option>
-                  ))}
-                </select>
-                <label htmlFor="teacher-stylus-secondary-action" className="block text-[11px] font-medium text-muted mb-1">
-                  {copy.stylusButton2}
-                </label>
-                <select
-                  id="teacher-stylus-secondary-action"
-                  value={stylusSecondaryAction}
-                  onChange={(e) => {
-                    const next = e.target.value as StylusButtonAction;
-                    setStylusSecondaryAction(next);
-                    savePreferencesImmediately({ stylusSecondaryAction: next });
-                  }}
-                  className="w-full h-8 rounded-lg border border-hairline bg-white px-2 text-xs text-ink outline-none focus:ring-2 focus:ring-navy/30">
-                  {STYLUS_BUTTON_ACTIONS.map((action) => (
-                    <option key={action} value={action}>
-                      {copy.stylusActions[action]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
+            <div ref={stylusMenuRef} className="relative flex shrink-0 items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !stylusOnly;
+                  setStylusOnly(next);
+                  savePreferencesImmediately({ stylusOnly: next });
+                }}
+                title={stylusOnly ? copy.stylusOnlyOn : copy.stylusOnlyOff}
+                aria-label={stylusOnly ? copy.stylusOnlyOn : copy.stylusOnlyOff}
+                aria-pressed={stylusOnly}
+                className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                  stylusOnly
+                    ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-600/30'
+                    : 'text-body hover:bg-paper hover:text-navy'
+                }`}>
+                <PenTool className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsStylusMenuOpen((prev) => !prev);
+                  setIsPenMenuOpen(false);
+                  setIsShapesMenuOpen(false);
+                  setIsColorMenuOpen(false);
+                }}
+                title={copy.stylusSettings}
+                aria-label={copy.stylusSettings}
+                aria-expanded={isStylusMenuOpen}
+                className={`flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                  isStylusMenuOpen ? 'bg-paper-deep text-navy' : 'text-body hover:bg-paper hover:text-navy'
+                }`}>
+                <Settings2 className="size-4" />
+              </button>
+              {isStylusMenuOpen && (
+                <div className="absolute top-full mt-2 right-0 z-[120] w-64 rounded-2xl bg-white p-3 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
+                  <p className="text-xs font-semibold text-ink mb-3">{copy.stylusButtons}</p>
+                  <label
+                    htmlFor="teacher-stylus-primary-action"
+                    className="block text-[11px] font-medium text-muted mb-1">
+                    {copy.stylusButton1}
+                  </label>
+                  <select
+                    id="teacher-stylus-primary-action"
+                    value={stylusPrimaryAction}
+                    onChange={(e) => {
+                      const next = e.target.value as StylusButtonAction;
+                      setStylusPrimaryAction(next);
+                      savePreferencesImmediately({ stylusPrimaryAction: next });
+                    }}
+                    className="mb-3 w-full h-8 rounded-lg border border-hairline bg-white px-2 text-xs text-ink outline-none focus:ring-2 focus:ring-navy/30">
+                    {STYLUS_BUTTON_ACTIONS.map((action) => (
+                      <option key={action} value={action}>
+                        {copy.stylusActions[action]}
+                      </option>
+                    ))}
+                  </select>
+                  <label
+                    htmlFor="teacher-stylus-secondary-action"
+                    className="block text-[11px] font-medium text-muted mb-1">
+                    {copy.stylusButton2}
+                  </label>
+                  <select
+                    id="teacher-stylus-secondary-action"
+                    value={stylusSecondaryAction}
+                    onChange={(e) => {
+                      const next = e.target.value as StylusButtonAction;
+                      setStylusSecondaryAction(next);
+                      savePreferencesImmediately({ stylusSecondaryAction: next });
+                    }}
+                    className="w-full h-8 rounded-lg border border-hairline bg-white px-2 text-xs text-ink outline-none focus:ring-2 focus:ring-navy/30">
+                    {STYLUS_BUTTON_ACTIONS.map((action) => (
+                      <option key={action} value={action}>
+                        {copy.stylusActions[action]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-0.5">
-          <ToolButton title={isDark ? copy.lightMode : copy.darkMode} onClick={toggleAndSaveTheme}>
-            {isDark ? <Sun className="size-4 text-amber-400" /> : <Moon className="size-4" />}
-          </ToolButton>
-          <ToolButton title={copy.export} onClick={exportPng}>
-            <Download className="size-4" />
-          </ToolButton>
-          <button
-            type="button"
-            title={copy.clear}
-            aria-label={copy.clear}
-            onClick={() => setIsClearConfirmOpen(true)}
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl text-body transition-colors hover:bg-rose-50 hover:text-rose-500">
-            <Trash2 className="size-4" />
-          </button>
+            <ToolButton title={isDark ? copy.lightMode : copy.darkMode} onClick={toggleAndSaveTheme}>
+              {isDark ? <Sun className="size-4 text-amber-400" /> : <Moon className="size-4" />}
+            </ToolButton>
+            <ToolButton title={copy.export} onClick={exportPng}>
+              <Download className="size-4" />
+            </ToolButton>
+            <button
+              type="button"
+              title={copy.clear}
+              aria-label={copy.clear}
+              onClick={() => setIsClearConfirmOpen(true)}
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl text-body transition-colors hover:bg-rose-50 hover:text-rose-500">
+              <Trash2 className="size-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -1529,6 +1633,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           onPasteImage={addImage}
           stylusOnly={stylusOnly}
           onStylusButtonAction={applyStylusAction}
+          penSmoothIntensity={penSmoothEnabled ? penSmoothIntensity : 0}
         />
       </div>
 
@@ -1589,58 +1694,63 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               <ToolButton title={copy.fitToContent} onClick={fitToContent}>
                 <Maximize2 className="size-4" />
               </ToolButton>
+              <ToolButton
+                title={isBoardFullscreen ? 'სრული ეკრანიდან გამოსვლა' : 'სრული ეკრანი'}
+                onClick={toggleBoardFullscreen}>
+                {isBoardFullscreen ? <Minimize2 className="size-4" /> : <Expand className="size-4" />}
+              </ToolButton>
             </div>
             <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 border-r border-hairline pr-1.5">
-            <button
-              type="button"
-              onClick={() => handleSwitchPage(currentPageIndex - 1)}
-              disabled={currentPageIndex === 0}
-              className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-paper hover:bg-paper-deep disabled:opacity-40 text-ink transition-colors">
-              <ChevronLeft className="size-4" />
-            </button>
-            <button
-              type="button"
-              data-tray-trigger
-              onClick={() => setIsPagesTrayOpen((prev) => !prev)}
-              title="ყველა დაფის ნახვა"
-              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${isPagesTrayOpen ? 'bg-navy text-white shadow-xs' : 'hover:bg-paper text-ink'}`}>
-              <Layers className="size-3.5" />
-              <span>
-                {currentPageIndex + 1} / {pages.length}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSwitchPage(currentPageIndex + 1)}
-              disabled={currentPageIndex === pages.length - 1}
-              className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-paper hover:bg-paper-deep disabled:opacity-40 text-ink transition-colors">
-              <ChevronRight className="size-4" />
-            </button>
-            <button
-              type="button"
-              onClick={handleAddNewPage}
-              className="flex items-center gap-1.5 h-7 sm:h-8 px-2.5 rounded-xl bg-paper hover:bg-paper-deep text-ink text-xs font-medium transition-colors">
-              <Plus className="size-3.5" />
-              <span>ახალი</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchPage(currentPageIndex - 1)}
+                disabled={currentPageIndex === 0}
+                className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-paper hover:bg-paper-deep disabled:opacity-40 text-ink transition-colors">
+                <ChevronLeft className="size-4" />
+              </button>
+              <button
+                type="button"
+                data-tray-trigger
+                onClick={() => setIsPagesTrayOpen((prev) => !prev)}
+                title="ყველა დაფის ნახვა"
+                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition-all ${isPagesTrayOpen ? 'bg-navy text-white shadow-xs' : 'hover:bg-paper text-ink'}`}>
+                <Layers className="size-3.5" />
+                <span>
+                  {currentPageIndex + 1} / {pages.length}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchPage(currentPageIndex + 1)}
+                disabled={currentPageIndex === pages.length - 1}
+                className="flex size-7 sm:size-8 items-center justify-center rounded-xl bg-paper hover:bg-paper-deep disabled:opacity-40 text-ink transition-colors">
+                <ChevronRight className="size-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleAddNewPage}
+                className="flex items-center gap-1.5 h-7 sm:h-8 px-2.5 rounded-xl bg-paper hover:bg-paper-deep text-ink text-xs font-medium transition-colors">
+                <Plus className="size-3.5" />
+                <span>ახალი</span>
+              </button>
             </div>
             <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-            <button
-              type="button"
-              onClick={() => setIsAiModalOpen(true)}
-              title="AI ასისტენტი"
-              className="inline-flex items-center gap-1.5 h-7 sm:h-8 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-2.5 text-xs font-bold text-white shadow-xs hover:from-indigo-600 hover:to-purple-700 transition-all active:scale-95 shrink-0">
-              <Sparkles className="size-3.5 animate-pulse" />
-              <span>AI</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenAssignModal}
-              title="დაფის სურათის გაგზავნა მოსწავლეებთან"
-              className="flex items-center gap-1.5 h-7 sm:h-8 px-3 rounded-xl bg-navy hover:bg-navy-strong text-white text-xs font-bold transition-all shadow-xs active:scale-95 shrink-0">
-              <Send className="size-3.5" />
-              <span>გაგზავნა</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setIsAiModalOpen(true)}
+                title="AI ასისტენტი"
+                className="inline-flex items-center gap-1.5 h-7 sm:h-8 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-2.5 text-xs font-bold text-white shadow-xs hover:from-indigo-600 hover:to-purple-700 transition-all active:scale-95 shrink-0">
+                <Sparkles className="size-3.5 animate-pulse" />
+                <span>AI</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenAssignModal}
+                title="დაფის სურათის გაგზავნა მოსწავლეებთან"
+                className="flex items-center gap-1.5 h-7 sm:h-8 px-3 rounded-xl bg-navy hover:bg-navy-strong text-white text-xs font-bold transition-all shadow-xs active:scale-95 shrink-0">
+                <Send className="size-3.5" />
+                <span>გაგზავნა</span>
+              </button>
             </div>
           </div>
         </div>

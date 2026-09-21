@@ -13,10 +13,7 @@ export interface UpdateActiveShapeContext {
   shiftHeld?: boolean;
 }
 
-export function updateActiveShape(
-  ctx: UpdateActiveShapeContext,
-  pos: { x: number; y: number },
-): void {
+export function updateActiveShape(ctx: UpdateActiveShapeContext, pos: { x: number; y: number }): void {
   const shape = ctx.activeShapeRef.current;
   if (!shape) return;
 
@@ -26,17 +23,10 @@ export function updateActiveShape(
 
   // Snap the cursor to any nearby vertex (endpoint OR interior junction)
   // for the tools where the endpoint is meaningful.
-  const isEndpointTool =
-    ctx.activeTool === 'line' ||
-    ctx.activeTool === 'arrow' ||
-    ctx.activeTool === 'pen';
+  const isEndpointTool = ctx.activeTool === 'line' || ctx.activeTool === 'arrow' || ctx.activeTool === 'pen';
 
   if (isEndpointTool) {
-    const hit = findNearbyEndpoint(
-      { x: snapX, y: snapY },
-      ctx.elementsRef.current,
-      ctx.scale,
-    );
+    const hit = findNearbyEndpoint({ x: snapX, y: snapY }, ctx.elementsRef.current, ctx.scale);
     if (hit) {
       snapX = hit.x;
       snapY = hit.y;
@@ -51,9 +41,8 @@ export function updateActiveShape(
       shape.points([startX, startY, snapX, snapY]);
     } else {
       const currentPts = shape.points();
-      const len = currentPts.length;
-      const lastX = currentPts[len - 2];
-      const lastY = currentPts[len - 1];
+      const lastX = currentPts[currentPts.length - 2];
+      const lastY = currentPts[currentPts.length - 1];
       if (Math.hypot(pos.x - lastX, pos.y - lastY) >= 1.5) {
         shape.points(currentPts.concat([pos.x, pos.y]));
       }

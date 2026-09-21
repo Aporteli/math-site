@@ -64,6 +64,7 @@ export interface KonvaCanvasProps {
   onCropImage?: (el: CanvasElement) => void;
   stylusOnly?: boolean;
   onStylusButtonAction?: (buttonIndex: 1 | 2, state: 'down' | 'up') => void;
+  penSmoothIntensity?: number;
 }
 
 export interface LaserPoint {

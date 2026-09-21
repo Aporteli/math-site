@@ -24,6 +24,8 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
     event.preventDefault();
     setError(null);
 
+    // ეს ბლოკი ამოწმებს შეყვანილი ელფოსტისა და პაროლის ვალიდურობას loginSchema-ის გამოყენებით. 
+    // თუ ვალიდაცია ვერ გაიარა, აყენებს შეცდომის მესიჯს და წყვეტს შემდგომ მოქმედებას.
     const parsed = loginSchema.safeParse({ email, password });
     if (!parsed.success) {
       setError(copy.error);
@@ -32,6 +34,8 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
 
     setPending(true);
 
+    // აქ ხდება სახელისა და პაროლის დახმარებით ავტორიზაციის ცდა (signIn) "credentials" მეთოდით.
+    // ფუნქცია signIn აგზავნის ელფოსტას და პაროლს სერვერზე და აბრუნებს შედეგს (result), სადაც მიუთითებულია წარმატებული იყო თუ არა ავტორიზაცია.
     const result = await signIn('credentials', {
       email: parsed.data.email,
       password: parsed.data.password,
@@ -52,8 +56,8 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
       return;
     }
 
-//REVIEW
-
+    // ეს ორი ხაზი ავტომატურად გადაამისამართებს მომხმარებელს ავტორიზაციის შემდეგ შესაბამის მთავარ გვერდზე
+    // მისი როლისა და ენის მიხედვით. ასევე ახდენს გვერდის განახლებას, რათა აისახოს ახალი სესია.
     router.replace(resolvePostLoginHref(role, locale, searchParams.get('callbackUrl')));
     router.refresh();
   }

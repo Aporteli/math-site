@@ -18,6 +18,7 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
     strokeColor,
     strokeWidth,
     scale,
+    penSmoothIntensity,
     elementsRef,
     isDrawing,
     activeShapeRef,
@@ -64,6 +65,7 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
         strokeColor,
         strokeWidth,
         scale,
+        penSmoothIntensity,
       });
 
       activeShapeRef.current = null;
@@ -132,6 +134,7 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
       strokeColor,
       strokeWidth,
       scale,
+      penSmoothIntensity,
       elementsRef,
       onElementsChange,
     ],

@@ -14,6 +14,7 @@ export interface PointerHandlerContext {
   strokeWidth: number;
   stylusOnly: boolean;
   currentFontSize: number;
+  penSmoothIntensity?: number;
 
   // refs
   containerRef: RefObject<HTMLDivElement>;

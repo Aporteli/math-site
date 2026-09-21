@@ -59,6 +59,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     onCropImage,
     stylusOnly = false,
     onStylusButtonAction,
+    penSmoothIntensity = 0,
   },
   ref,
 ) {
@@ -195,6 +196,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     strokeWidth,
     stylusOnly,
     currentFontSize,
+    penSmoothIntensity,
     containerRef: containerRef as RefObject<HTMLDivElement>,
     stageRef: stageRef as RefObject<Konva.Stage>,
     drawLayerRef: drawLayerRef as RefObject<Konva.Layer>,
