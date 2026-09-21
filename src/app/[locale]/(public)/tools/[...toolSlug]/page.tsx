@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CatalogToolShell } from "@/components/tools/catalog-tool-shell";
-import { GraphingToolLoader } from "@/components/tools/graphing-tool-loader";
+import { CatalogToolShell } from "@/components/tools/CatalogToolShell";
+import { GraphingToolLoader } from "@/components/tools/graphing/GraphingLoader";
+import { QuadraticLoader } from "@/components/tools/quadratic/QuadraticLoader";
+import { VectorFunctionLoader } from "@/components/tools/vector-function/VectorFunctionLoader";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
-import {
-  catalogToolStaticParams,
-  getCatalogToolByPath,
-} from "@/lib/tools";
+import { catalogToolStaticParams, getCatalogToolByPath } from "@/lib/tools";
+import { FractionToolLoader } from "@/components/tools/fraction/FractionLoader";
 
 type ToolPageProps = {
   params: Promise<{ locale: string; toolSlug: string[] }>;
@@ -51,6 +51,38 @@ export default async function ToolPage({ params }: ToolPageProps) {
       <GraphingToolLoader
         locale={locale}
         copy={dict.graphingTool}
+        title={item.title}
+        description={item.description}
+      />
+    );
+  }
+
+  if (tool.id === "quadratic-equations") {
+    return (
+      <QuadraticLoader
+        locale={locale}
+        copy={dict.equations}
+        title={item.title}
+        description={item.description}
+      />
+    );
+  }
+  if (tool.id === "fractions") {
+    return (
+      <FractionToolLoader
+        locale={locale}
+        copy={dict.fractionTool}
+        title={item.title}
+        description={item.description}
+      />
+    );
+  }
+
+  if (tool.id === "vectorFunction") {
+    return (
+      <VectorFunctionLoader
+        locale={locale}
+        copy={dict.vectorFunctionTool}
         title={item.title}
         description={item.description}
       />

@@ -1,11 +1,17 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
 import {
   envValue,
   type AiProviderId,
 } from "./ai-models";
 
-const HINTS = path.join(process.cwd(), "data", "ai-wallet-hints.json");
+// Vercel Serverless (Read-Only) გარემოში იყენებს /tmp დირექტორიას, ლოკალზე process.cwd()/data-ს
+const DATA_DIR = process.env.VERCEL
+  ? path.join(os.tmpdir(), "data")
+  : path.join(process.cwd(), "data");
+
+const HINTS = path.join(DATA_DIR, "ai-wallet-hints.json");
 const CACHE_MS = 2 * 60 * 1000;
 const PROBE_MS = 8_000;
 
@@ -138,8 +144,12 @@ async function readHints(): Promise<HintMap> {
 }
 
 async function writeHints(hints: HintMap) {
-  await mkdir(path.dirname(HINTS), { recursive: true });
-  await writeFile(HINTS, `${JSON.stringify(hints, null, 2)}\n`, "utf8");
+  try {
+    await mkdir(path.dirname(HINTS), { recursive: true });
+    await writeFile(HINTS, `${JSON.stringify(hints, null, 2)}\n`, "utf8");
+  } catch (error) {
+    console.error("AI_WALLET_HINTS_WRITE_ERROR:", error);
+  }
 }
 
 export async function rememberProviderWallet(

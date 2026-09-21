@@ -202,6 +202,11 @@ export async function teacherAiChatAction(
       .slice(-20),
   };
 
+  const hasImages = input.images.length > 0;
+  if (hasImages && getAiModel(input.model)?.provider !== "gemini") {
+    return { ok: false, error: "image_unsupported" };
+  }
+
   try {
     await assertModelAvailable(input.model);
   } catch (error) {
@@ -239,14 +244,15 @@ export async function teacherAiChatAction(
       classified !== "bad_output" &&
       classified !== "timeout"
     ) {
-      return { ok: false, error: classified };
+      return { ok: false, error: classified as TeacherAiChatError };
     }
 
     const fallback = (await listAiModelStatus()).find(
       (status) =>
         status.id !== input.model &&
         status.configured &&
-        (status.limit === 0 || status.remaining > 0),
+        (status.limit === 0 || status.remaining > 0) &&
+        (!hasImages || getAiModel(status.id)?.provider === "gemini"),
     );
     if (!fallback) {
       return { ok: false, error: classified };
@@ -264,7 +270,7 @@ export async function teacherAiChatAction(
       if (fallbackProvider && fallbackClassified === "billing") {
         await rememberProviderWallet(fallbackProvider, "needs_billing");
       }
-      return { ok: false, error: fallbackClassified };
+      return { ok: false, error: fallbackClassified as TeacherAiChatError };
     }
   }
 }

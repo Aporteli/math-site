@@ -503,9 +503,9 @@ export const binomialExpansionProblem = defineAlgebraProblem(
           const z =
             variable !== "z" && y !== "z"
               ? "z"
-              : variable !== "w" && y !== "w"
-                ? "w"
-                : "t";
+              : variable !== "t" && y !== "t"
+                ? "t"
+                : "a";
           const coef = binom(n, a) * binom(n - a, b);
           return problem(
             "evaluate",

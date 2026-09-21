@@ -1,4 +1,4 @@
-import type { Prisma, Problem as ProblemRow } from "@/generated/prisma/client";
+import type { Prisma, Problem as ProblemRow } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   PROBLEM_INSTRUCTIONS,

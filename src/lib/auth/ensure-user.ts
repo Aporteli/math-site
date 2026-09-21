@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { Role } from "@/generated/prisma/enums";
+import type { Role } from "@prisma/client";
 import type { UserRole } from "@/lib/auth/roles";
 
 const UNUSABLE_PASSWORD_HASH = "unusable";

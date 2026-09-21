@@ -1,38 +1,127 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 /**
- * Base palette: ink navy + brass on warm paper.
+ * Base palette: Lichess-style ink + blue/brass on a warm off-white page.
  * Use these semantic tokens instead of raw Tailwind color scales so the
- * whole platform (public site, LMS, math tools) stays visually consistent.
+ * whole platform (public site, LMS, math tools) stays visually consistent,
+ * and so light/dark stay perfect mirrors of lichess.org's own themes.
  */
 @theme {
-  --font-sans: "Noto Sans Georgian", "BPG Arial", Sylfaen, ui-sans-serif, system-ui,
-    -apple-system, "Segoe UI", sans-serif;
+  --font-sans:
+    'Noto Sans Georgian', 'BPG Arial', Sylfaen, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  /* Neutral surfaces */
-  --color-paper: #faf9f6;
-  --color-paper-deep: #f2f0ea;
-  --color-hairline: #e6e3da;
-  --color-hairline-soft: #efece4;
+  /* =========================================================
+     LIGHT THEME (Lichess Default Warm Paper Palette)
+     ========================================================= */
 
-  /* Text */
-  --color-ink: #16233a;
-  --color-body: #515b6b;
-  --color-muted: #7b8494;
+ /* Neutral surfaces — resolved from lichess --c-bg-page etc. (site-hue: 30) */
+--color-paper: #edebe9;         /* c-bg-page */
+--color-paper-deep: #e3e3e3;    /* c-bg-low */
+--color-hairline: #d9d9d9;      /* c-border */
+--color-hairline-soft: #d6d6d6; /* c-shade */
+--color-grid: #000000;
 
-  /* Primary accent */
-  --color-navy: #17365d;
-  --color-navy-strong: #0f2544;
-  --color-navy-tint: #e9eef5;
+/* Cards & Elevated Panels */
+--color-surface: #ffffff;       /* c-bg / c-bg-popup */
+--color-surface-hover: #fafafa; /* c-metal-top-hover */
 
-  /* Secondary accent */
-  --color-brass: #8a621b;
-  --color-brass-strong: #6f4e14;
-  --color-brass-soft: #d3ab61;
-  --color-brass-tint: #f7f0e0;
+/* Chess Board Squares — unrelated to this palette (board themes are separate in lichess); kept as-is, already accurate */
+--color-board-light: #f0d9b5;
+--color-board-dark: #b58863;
+--color-board-move: #cdd26a;
+
+/* Text / Ink */
+--color-ink: #1a1a1a;           /* darker than c-font for headings; lichess's c-font-clearer is pure black */
+--color-hero: #5e5e5e;          /* c-font-page */
+--color-body: #4c4c4c;          /* c-font */
+--color-muted: #787878;         /* c-font-dim */
+
+/* Primary Accent — c-primary */
+--color-navy: #1b78d0;
+--color-navy-strong: #155f9e;   /* manually darkened, mirrors lichess's --c-link-hover mix */
+--color-navy-tint: #e4f0fb;
+
+/* Secondary Accent — c-brag (lichess's own "brass"-equivalent accent) */
+--color-brass: #d57a20;
+--color-brass-strong: #b3630f;
+--color-brass-soft: #e2a462;
+--color-brass-extra: #b27a00;   /* c-mistake, a muted amber, works well as a tertiary warm */
+--color-brass-tint: #faf1de;
+
+/* Game Status Accents — lichess's actual move-quality colors */
+--color-win: #168326;           /* c-brilliant */
+--color-win-tint: #e7f5e8;
+--color-loss: #d62929;          /* c-blunder */
+--color-loss-tint: #fbe6e6;
+
+/* Bonus — lichess also distinguishes these, worth having if you show move analysis */
+--color-inaccuracy: #167bb6;
+--color-mistake: #b27a00;
 
   --animate-dropdown: dropdown 140ms ease-out;
   --animate-fade-up: fade-up 600ms ease-out both;
+}
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* =========================================================
+     DARK THEME (Lichess Dark Charcoal & Walnut Palette)
+     ========================================================= */
+
+  /* Neutral surfaces */
+  --color-paper: #161512;         /* Lichess Dark მთავარი ღრმა ნახშირისფერი ფონი */
+  --color-paper-deep: #1e1c18;    /* საიდბარის და მეორე დონის ფონი */
+  --color-hairline: #363431;      /* ბარათების საზღვრები */
+  --color-hairline-soft: #262421; /* მკრთალი გამყოფები */
+  --color-grid: #ffffff;
+
+  /* Cards & Elevate Panels */
+  --color-surface: #262421;       /* სტანდარტული ბარათის ფონი */
+  --color-surface-hover: #2e261f; /* Lichess-ის თბილი ესპრესო ჰოვერზე/აქტიურზე */
+
+  /* Chess Board Squares (Classic Wood/Brown Theme) */
+  --color-board-light: #c2ab87;   /* მუქ თემაში შერბილებული ღია უჯრა */
+  --color-board-dark: #7b583c;    /* მუქ თემაში შერბილებული მუქი უჯრა */
+  --color-board-move: #879038;    /* სვლის ინდიკატორი მუქ რეჟიმში */
+
+  /* Text / Ink */
+  --color-ink: #bababa;           /* ძირითადი თეთრი/ღია-ნაცრისფერი ტექსტი */
+  --color-hero: #585858;
+  --color-body: #9e9c98;          /* მეორეხარისხოვანი ტექსტი */
+  --color-muted: #6b6965;         /* პასიური ტექსტები, ქვესათაურები */
+
+  /* Primary Accent (Lichess Action Blue) */
+  --color-navy: #3692e7;          /* ოფიციალური CTA ლურჯი */
+  --color-navy-strong: #54a3ee;   /* ღია ლურჯი ჰოვერზე */
+  --color-navy-tint: #1b2838;     /* ლურჯი ბეიჯების ფონი */
+
+  /* Secondary Accent (Lichess Gold / Amber) */
+  --color-brass: #d59920;         /* ოქროსფერი აქცენტი */
+  --color-brass-strong: #e5a52c;
+  --color-brass-soft: #b8811b;
+  --color-brass-extra: #f97316;
+  --color-brass-tint: #2b2114;    /* ოქროსფერი შეფერილობის მუქი ფონი */
+
+  /* Game Status Accents */
+  --color-win: #629924;           /* მოგება / სწორი პასუხი */
+  --color-win-tint: #1c2b12;
+  --color-loss: #cc3333;          /* წაგება / შეცდომა */
+  --color-loss-tint: #381a1a;
+}
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 @keyframes dropdown {
@@ -49,18 +138,6 @@
   }
 }
 
-/**
- * Scroll-triggered reveals, driven entirely by the native view() timeline —
- * no observer, no main-thread work.
- *
- * Progressive enhancement: browsers without `animation-timeline` skip the
- * block and render the final state. Because the range sits inside the `entry`
- * phase, anything already on screen at load is past 100% progress and never
- * flashes in; only elements scrolled into view animate.
- *
- * `.reveal` animates one element, `.reveal-group` animates its children with
- * a staggered range so a row of cards cascades instead of landing at once.
- */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .reveal,
@@ -140,3 +217,138 @@ body {
 .katex-error {
   color: inherit !important;
 }
+
+/* თხელი, თანამედროვე სქროლბარი */
+.thin-scrollbar {
+  scrollbar-width: thin; /* Firefox-ისთვის */
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  height: 4px; /* ჰორიზონტალური სქროლის სისქე (სულ რაღაც 4px) */
+  width: 4px; /* ვერტიკალური სქროლის სისქე */
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+/* სრულად უხილავი სქროლბარი (თუ საერთოდ არ გინდათ რომ გამოჩნდეს, მაგრამ ისქროლებოდეს) */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+html {
+  background-color: var(--color-paper);
+}
+
+/* Flip white card surfaces to the dark surface in dark mode. */
+.dark .bg-white {
+  background-color: var(--color-surface);
+}
+.dark .hover\:bg-white:hover {
+  background-color: var(--color-surface);
+}
+.dark .bg-white\/70,
+.dark .hover\:bg-white\/70:hover {
+  background-color: color-mix(in oklab, var(--color-surface) 70%, transparent);
+}
+.dark .bg-white\/80 {
+  background-color: color-mix(in oklab, var(--color-surface) 80%, transparent);
+}
+.dark .bg-white\/95 {
+  background-color: color-mix(in oklab, var(--color-surface) 95%, transparent);
+}
+
+
+/* Vector Function Tool */
+
+/* @theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Newsreader", "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --color-paper: #f3efe6;
+  --color-paper-deep: #e8e1d4;
+  --color-surface: #fffdf8;
+  --color-ink: #172033;
+  --color-body: #3a4454;
+  --color-muted: #6b7380;
+  --color-navy: #1f3d63;
+  --color-navy-strong: #152a45;
+  --color-navy-tint: #e4ebf4;
+  --color-brass: #8a621b;
+  --color-coral: #c2410c;
+  --color-violet-acc: #7c3aed;
+  --color-hairline: #d8d0c4;
+  --color-hairline-soft: #e6dfd4;
+  --color-stage: #e7ebf1;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+.katex {
+  font-size: 1.05em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+} */
