@@ -5,6 +5,7 @@ import { getSession } from '@/lib/auth/session';
 import {
   PARTICIPANT_ROLE,
   PARTICIPANT_USER_ID,
+  participantUserId,
 } from '@/lib/livekit/participant-identity';
 import { prisma } from '@/lib/prisma';
 
@@ -63,11 +64,11 @@ export async function GET(req: NextRequest) {
 
     const roomName = `course-${courseId}`;
 
+    const httpUrl = livekitUrl.replace('wss://', 'https://').replace('ws://', 'http://');
+    const roomService = new RoomServiceClient(httpUrl, apiKey, apiSecret);
+
     // 3. ოთახის დარეგისტრირება მუდმივი სტატუსით (არ დაიხურება 24 საათის განმავლობაში)
     try {
-      const httpUrl = livekitUrl.replace('wss://', 'https://').replace('ws://', 'http://');
-      const roomService = new RoomServiceClient(httpUrl, apiKey, apiSecret);
-
       await roomService.createRoom({
         name: roomName,
         emptyTimeout: 60 * 60 * 24, // 24 საათი ცარიელიც რომ იყოს, ოთახი არ წაიშლება
@@ -75,6 +76,16 @@ export async function GET(req: NextRequest) {
       });
     } catch {
       // თუ ოთახი უკვე შექმნილია, შეცდომას ვაიგნორებთ და ჩვეულებრივ ვაგრძელებთ
+    }
+
+    // 3.1. იგივე ექაუნთით სხვა მოწყობილობა უკვე ოთახშია? მაშინ ეს კავშირი „მეორეულია“:
+    // ხმა (დინამიკი/მიკროფონი) პირველ მოწყობილობაზე რჩება, რომ ხმა არ გაორმაგდეს.
+    let secondary = false;
+    try {
+      const participants = await roomService.listParticipants(roomName);
+      secondary = participants.some((participant) => participantUserId(participant) === userId);
+    } catch {
+      secondary = false;
     }
 
     // 4. ტოკენის გენერაცია — identity უნიკალურია თითო კავშირზე, რომ ერთი ექაუნთით
@@ -101,7 +112,7 @@ export async function GET(req: NextRequest) {
 
     const token = await at.toJwt();
 
-    return NextResponse.json({ token, room: roomName });
+    return NextResponse.json({ token, room: roomName, secondary });
   } catch (error) {
     console.error('LiveKit token error:', error);
     return new NextResponse('Internal Server Error', { status: 500 });

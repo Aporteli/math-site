@@ -9,6 +9,7 @@ interface CollapsibleVideoPanelProps {
   token: string;
   courseId: string;
   isTeacher: boolean;
+  secondary: boolean;
   onClose: () => void;
   onRoom: (room: Room) => void;
   /** Hides the panel (used by the "board" tab) while keeping it mounted. */
@@ -19,6 +20,7 @@ export function CollapsibleVideoPanel({
   token,
   courseId,
   isTeacher,
+  secondary,
   onClose,
   onRoom,
   hidden,
@@ -50,6 +52,7 @@ export function CollapsibleVideoPanel({
         token={token}
         courseId={courseId}
         isTeacher={isTeacher}
+        secondary={secondary}
         onClose={onClose}
         onRoom={onRoom}
       />

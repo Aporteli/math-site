@@ -7,6 +7,7 @@ import { DisconnectReason } from 'livekit-client';
 import { AudioIsolationListener } from '../AudioIsolationListener';
 import { ChatBackgroundListener } from '../ChatBackgroundListener';
 import { ConnectionStatusBadge } from '../ConnectionStatusBadge';
+import { OwnDeviceAudioListener } from '../OwnDeviceAudioListener';
 import { ControlBar } from './ControlBar';
 import { AudioVolumeProvider } from './AudioVolumeContext';
 import { CustomChat } from '../custom-chat/CustomChat';
@@ -18,7 +19,7 @@ import '@livekit/components-styles';
 /** Disconnects worth explaining instead of silently closing the whole classroom. */
 const DISCONNECT_NOTICE: Partial<Record<DisconnectReason, string>> = {
   [DisconnectReason.DUPLICATE_IDENTITY]:
-    'ამ ექაუნთით ზარი სხვა მოწყობილობაზე ან ტაბშია გახსნილი. აქ შესვლისას იქაური კავშირი გაითიშება.',
+    'კავშირი გაწყდა: იგივე სესია სხვაგან დაუკავშირდა. სცადეთ თავიდან შესვლა.',
   [DisconnectReason.PARTICIPANT_REMOVED]: 'მასწავლებელმა ოთახიდან ამოგიყვანა.',
   [DisconnectReason.ROOM_DELETED]: 'ოთახი დაიხურა.',
 };
@@ -27,6 +28,7 @@ export function ClassroomVideoPanel({
   token,
   courseId,
   isTeacher,
+  secondary = false,
   onClose,
   onRoom,
 }: ClassroomVideoPanelProps) {
@@ -68,7 +70,9 @@ export function ClassroomVideoPanel({
     <LiveKitRoom
       key={connectAttempt}
       video
-      audio
+      // მეორეულ მოწყობილობაზე მიკროფონი ავტომატურად არ ირთვება (ხმა არ გაორმაგდეს);
+      // საჭიროებისას მომხმარებელს ღილაკით ჩართვა მაინც შეუძლია.
+      audio={!secondary}
       token={token}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
       options={{ videoCaptureDefaults: { resolution: { width: 1280, height: 720 } } }}
@@ -79,11 +83,19 @@ export function ClassroomVideoPanel({
       <AudioVolumeProvider>
         <RoomInstanceBridge onRoom={onRoom} />
         <AudioIsolationListener isTeacher={isTeacher} />
+        <OwnDeviceAudioListener />
         <ChatBackgroundListener courseId={courseId} />
 
         <div className="absolute top-2 left-2 z-10">
           <ConnectionStatusBadge />
         </div>
+
+        {secondary && (
+          <p className="mx-2 mt-2 shrink-0 rounded-lg bg-amber-500/15 px-2 py-1.5 text-[11px] leading-snug text-amber-200">
+            მეორეული მოწყობილობა: მიკროფონი გამორთულია და ამ ექაუნთის ხმა აქ არ ისმის.
+            ლაპარაკი აქედანაც შეგიძლია — მიკროფონის ღილაკით.
+          </p>
+        )}
 
         {isChatOpen ? (
           <div className="relative flex-1 min-h-0 w-full overflow-hidden p-2">

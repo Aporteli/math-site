@@ -6,6 +6,8 @@ export function useLiveKitToken(courseId: string) {
   const [token, setToken] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /** `true`, თუ იგივე ექაუნთით სხვა მოწყობილობა უკვე ოთახშია (ეს კავშირი მეორეულია). */
+  const [secondary, setSecondary] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -22,6 +24,7 @@ export function useLiveKitToken(courseId: string) {
         const data = await res.json();
         if (isMounted) {
           setToken(data.token);
+          setSecondary(Boolean(data.secondary));
           setLoading(false);
         }
       } catch (err: any) {
@@ -38,5 +41,5 @@ export function useLiveKitToken(courseId: string) {
     };
   }, [courseId]);
 
-  return { token, loading, error };
+  return { token, loading, error, secondary };
 }

@@ -6,6 +6,8 @@ export interface ClassroomVideoPanelProps {
   token: string;
   courseId: string;
   isTeacher: boolean;
+  /** `true`, თუ იგივე ექაუნთით სხვა მოწყობილობა უკვე ოთახშია (ხმა პირველზე რჩება). */
+  secondary?: boolean;
   onClose: () => void;
   onRoom: (room: Room) => void;
 }

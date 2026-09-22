@@ -43,7 +43,7 @@ export function ClassroomRoomModal({
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [activeRoom, setActiveRoom] = useState<Room | null>(null);
 
-  const { token, loading, error } = useLiveKitToken(courseId);
+  const { token, loading, error, secondary } = useLiveKitToken(courseId);
   const { isBoardFullscreen, isChromeOpen, setIsChromeOpen, toggleClassroomFullscreen } =
     useClassroomFullscreen(classroomRootRef);
   const { undo, redo } = useWhiteboardHistory();
@@ -112,6 +112,7 @@ export function ClassroomRoomModal({
               token={token}
               courseId={courseId}
               isTeacher={isTeacher}
+              secondary={secondary}
               onClose={onClose}
               onRoom={setActiveRoom}
             />
