@@ -75,7 +75,7 @@ export function SearchTrigger({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={header.search}
-        className={`min-w-0 items-center gap-2 rounded-full border border-hairline bg-white py-2 pr-2 pl-3 text-left text-sm text-muted transition-colors hover:border-navy/40 hover:text-ink ${className}`}
+        className={`min-w-0 cursor-pointer items-center gap-2 rounded-full border border-hairline bg-paper py-2 pr-2 pl-3 text-left text-sm font-medium text-muted shadow-sm transition hover:border-navy/40 hover:text-ink ${className}`}
       >
         <Search className="size-4 shrink-0" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">{header.searchPlaceholder}</span>
@@ -93,9 +93,9 @@ export function SearchTrigger({
       aria-haspopup="dialog"
       aria-expanded={open}
       aria-label={header.search}
-      className={`inline-flex shrink-0 items-center justify-center rounded-full border border-hairline bg-white p-2 text-ink transition-colors duration-200 hover:border-navy/40 hover:text-navy ${className}`}
+      className={`size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-hairline bg-paper text-ink shadow-sm transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy ${className}`}
     >
-      <Search className="size-5" aria-hidden="true" />
+      <Search className="size-4" aria-hidden="true" />
     </button>
   );
 }
@@ -285,14 +285,15 @@ export function SiteSearch({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className="relative z-10 flex max-h-[min(32rem,70vh)] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-lg shadow-navy/10"
+                className="relative z-10 flex max-h-[min(32rem,70vh)] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-2xl shadow-navy/10"
               >
                 <h2 id={titleId} className="sr-only">
                   {header.search}
                 </h2>
-                <div className="flex items-center gap-2 border-b border-hairline px-3">
+                <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
+                <div className="flex items-center gap-2 border-b border-hairline px-4">
                   <Search
-                    className="size-5 shrink-0 text-muted"
+                    className="size-5 shrink-0 text-navy"
                     aria-hidden="true"
                   />
                   <input
@@ -315,7 +316,7 @@ export function SiteSearch({
                     type="button"
                     onClick={closeSearch}
                     aria-label={header.searchClose}
-                    className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-paper-deep hover:text-ink"
+                    className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-paper hover:text-ink"
                   >
                     <X className="size-4" aria-hidden="true" />
                   </button>
@@ -323,7 +324,7 @@ export function SiteSearch({
 
                 <div ref={listRef} className="thin-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
                   {hits.length === 0 ? (
-                    <p className="px-3 py-10 text-center text-sm text-muted">
+                    <p className="mx-2 my-6 rounded-2xl border border-dashed border-hairline bg-paper px-3 py-10 text-center text-sm font-medium text-muted">
                       {header.searchEmpty}
                     </p>
                   ) : (
@@ -333,7 +334,7 @@ export function SiteSearch({
 
                       return (
                         <section key={group} className="mb-2 last:mb-0">
-                          <h3 className="px-3 py-1.5 text-xs font-semibold tracking-wide text-brass">
+                          <h3 className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-brass">
                             {header.searchGroups[group]}
                           </h3>
                           <ul>
@@ -349,31 +350,31 @@ export function SiteSearch({
                                     data-search-index={index}
                                     onMouseEnter={() => setActiveIndex(index)}
                                     onClick={() => setOpen(false)}
-                                    className={`flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors ${
+                                    className={`flex items-start gap-3 rounded-xl px-3 py-2.5 transition ${
                                       active
-                                        ? "bg-navy-tint text-navy"
+                                        ? "bg-navy text-white"
                                         : "text-ink hover:bg-paper"
                                     }`}
                                   >
                                     <Icon
                                       className={`mt-0.5 size-4 shrink-0 ${
-                                        active ? "text-navy" : "text-muted"
+                                        active ? "text-white" : "text-muted"
                                       }`}
                                       aria-hidden="true"
                                     />
                                     <span className="min-w-0 flex-1">
-                                      <span className="block truncate text-sm font-medium">
+                                      <span className={`block truncate text-sm font-bold ${active ? "text-white" : ""}`}>
                                         {hit.title}
                                       </span>
                                       {hit.subtitle ? (
-                                        <span className="mt-0.5 block truncate text-xs text-muted">
+                                        <span className={`mt-0.5 block truncate text-xs ${active ? "text-white/80" : "text-muted"}`}>
                                           {hit.subtitle}
                                         </span>
                                       ) : null}
                                     </span>
                                     <ArrowRight
                                       className={`mt-0.5 size-4 shrink-0 ${
-                                        active ? "text-navy" : "text-muted/0"
+                                        active ? "text-white" : "text-transparent"
                                       }`}
                                       aria-hidden="true"
                                     />

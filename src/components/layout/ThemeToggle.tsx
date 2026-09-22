@@ -59,7 +59,7 @@ export function ThemeToggle({
       aria-label={label}
       title={label}
       className={[
-        "inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-hairline bg-white text-muted shadow-sm transition-colors hover:border-navy/30 hover:text-navy",
+        "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-hairline bg-paper text-muted shadow-sm transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy",
         className,
       ].join(" ")}
     >

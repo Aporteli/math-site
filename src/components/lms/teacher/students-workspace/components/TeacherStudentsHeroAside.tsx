@@ -19,14 +19,14 @@ export function TeacherStudentsHeroAside({
 }: TeacherStudentsHeroAsideProps) {
   return (
     <div className="flex w-full flex-col gap-3">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
-        <div className="rounded-xl border border-hairline bg-white px-4 py-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">სულ მოსწავლე</p>
-          <p className="mt-1 text-2xl font-bold text-ink">{studentsCount}</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-hairline bg-white px-4 py-3 shadow-sm">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted">სულ მოსწავლე</p>
+          <p className="mt-1 text-3xl font-bold tracking-tight text-ink">{studentsCount}</p>
         </div>
-        <div className="rounded-xl border border-hairline bg-white px-4 py-3 shadow-sm">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">ხელმისაწვდომი ბარათები</p>
-          <p className="mt-1 text-2xl font-bold text-ink">{cardsCount}</p>
+        <div className="rounded-2xl border border-hairline bg-white px-4 py-3 shadow-sm">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted">ხელმისაწვდომი ბარათები</p>
+          <p className="mt-1 text-3xl font-bold tracking-tight text-navy">{cardsCount}</p>
         </div>
       </div>
 
@@ -34,10 +34,9 @@ export function TeacherStudentsHeroAside({
         <button
           type="button"
           onClick={onStartClassCall}
-          className="flex items-center justify-center gap-1.5 rounded-xl border border-hairline bg-white py-2.5 px-2 text-xs font-bold text-ink hover:border-navy/60 hover:bg-navy-tint/20 hover:text-navy active:scale-98 transition-all cursor-pointer min-w-0 shadow-sm">
-          <div className="flex size-5 shrink-0 items-center justify-center rounded-lg bg-navy/15 text-navy">
-            <Video className="size-3" />
-          </div>
+          className="inline-flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-navy px-3 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong"
+        >
+          <Video className="size-4 shrink-0" />
           <span className="truncate">გაკვეთილი</span>
         </button>
 
@@ -46,10 +45,9 @@ export function TeacherStudentsHeroAside({
           onClick={onOpenAssignModal}
           disabled={!canSendCard}
           title={canSendCard ? 'ბარათის გაგზავნა' : 'აირჩიეთ მოსწავლე ბარათის გასაგზავნად'}
-          className="flex items-center justify-center gap-1.5 rounded-xl border border-hairline bg-white py-2.5 px-2 text-xs font-bold text-ink hover:border-brass/60 hover:bg-brass-tint/30 hover:text-brass-strong active:scale-98 transition-all cursor-pointer min-w-0 shadow-sm disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:border-hairline disabled:hover:bg-white disabled:hover:text-ink">
-          <div className="flex size-5 shrink-0 items-center justify-center rounded-lg bg-brass-tint text-brass-strong">
-            <Plus className="size-3" />
-          </div>
+          className="inline-flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brass-strong px-3 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-brass disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          <Plus className="size-4 shrink-0" />
           <span className="truncate">ბარათი</span>
         </button>
       </div>

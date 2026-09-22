@@ -1,6 +1,6 @@
 'use client';
 
-import { UploadCloud } from 'lucide-react';
+import { BookOpen, CheckCircle2, Layers, UploadCloud } from 'lucide-react';
 import type { ContentTab, StudentItem } from '../types/teacher-workspace.types';
 
 interface TeacherWorkspaceTabsProps {
@@ -13,6 +13,12 @@ interface TeacherWorkspaceTabsProps {
   onOpenUploadMaterial: () => void;
 }
 
+const tabs: { id: ContentTab; label: string; icon: typeof BookOpen }[] = [
+  { id: 'tasks', label: 'დავალებები', icon: BookOpen },
+  { id: 'answers', label: 'პასუხები', icon: CheckCircle2 },
+  { id: 'materials', label: 'მასალები', icon: Layers },
+];
+
 export function TeacherWorkspaceTabs({
   activeTab,
   setActiveTab,
@@ -22,71 +28,53 @@ export function TeacherWorkspaceTabs({
   activeStudent,
   onOpenUploadMaterial,
 }: TeacherWorkspaceTabsProps) {
+  const counts: Record<ContentTab, number> = {
+    tasks: tasksCount,
+    answers: answersCount,
+    materials: materialsCount,
+  };
+
   return (
-    <div className="bg-surface/70 border-b border-hairline px-3 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-      <div className="w-full sm:w-auto p-1 bg-paper-deep/80 rounded-2xl border border-hairline">
-        <div className="grid grid-cols-3 sm:flex items-center gap-1">
-          {/* 1. დავალებები */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('tasks')}
-            className={`group flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors text-center cursor-pointer ${
-              activeTab === 'tasks'
-                ? 'bg-surface text-ink shadow-inner border-hairline/80'
-                : 'bg-transparent border-transparent text-body hover:text-ink'
-            }`}>
-            <span className="truncate">დავალებები</span>
-            <span className="text-brass-soft px-1.5 py-0.5 text-[12px] font-bold shrink-0">
-              {tasksCount}
-            </span>
-          </button>
+    <div className="flex flex-col gap-2 border-b border-hairline bg-paper/70 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+      <div className="grid w-full grid-cols-3 gap-1 rounded-2xl border border-hairline bg-surface p-1 sm:flex sm:w-auto">
+        {tabs.map((tab) => {
+          const active = activeTab === tab.id;
+          const Icon = tab.icon;
+          const count = counts[tab.id];
 
-          {/* 2. პასუხები */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('answers')}
-            className={`group flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors text-center cursor-pointer ${
-              activeTab === 'answers'
-                ? 'bg-surface text-ink shadow-inner border-hairline/80'
-                : 'bg-transparent border-transparent text-body hover:text-ink'
-            }`}>
-            <span className="truncate">პასუხები</span>
-            {answersCount > 0 && (
-              <span className="text-brass-soft px-1.5 py-0.5 text-[12px] font-bold shrink-0">
-                {answersCount}
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${
+                active ? 'bg-navy text-white shadow-sm' : 'text-body hover:bg-paper hover:text-ink'
+              }`}
+            >
+              <Icon className="size-3.5 shrink-0" />
+              <span className="truncate">{tab.label}</span>
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                  active ? 'bg-white/20 text-white' : 'bg-paper-deep text-muted'
+                }`}
+              >
+                {count}
               </span>
-            )}
-          </button>
-
-          {/* 3. მასალები */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('materials')}
-            className={`group flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors text-center cursor-pointer ${
-              activeTab === 'materials'
-                ? 'bg-surface text-ink shadow-inner border-hairline/80'
-                : 'bg-transparent border-transparent text-body hover:text-ink'
-            }`}>
-            <span className="truncate">მასალები</span>
-            {materialsCount > 0 && (
-              <span className="text-brass-soft px-1.5 py-0.5 text-[12px] font-bold shrink-0">
-                {materialsCount}
-              </span>
-            )}
-          </button>
-        </div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* მასალების ატვირთვის ღილაკი */}
-      {activeTab === 'materials' && activeStudent && (
+      {activeTab === 'materials' && activeStudent ? (
         <button
           type="button"
           onClick={onOpenUploadMaterial}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-navy text-white text-xs font-bold shadow-xs hover:bg-navy-strong active:scale-98 transition-all cursor-pointer">
-          <UploadCloud className="size-3.5 text-white/90" />
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-navy px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong"
+        >
+          <UploadCloud className="size-3.5" />
           <span>მასალის ატვირთვა</span>
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

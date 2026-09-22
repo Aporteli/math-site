@@ -49,7 +49,7 @@ export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
         }
       />
 
-      <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[38rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
+      <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[40rem] lg:grid-cols-[18.5rem_minmax(0,1fr)] lg:items-stretch">
         <TeacherClassesSidebar
           courses={ws.courses}
           filteredCourses={ws.filteredCourses}
@@ -62,7 +62,7 @@ export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
         />
 
         {/* 2. მარჯვენა მხარე: სამუშაო სივრცე */}
-        <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-paper shadow-sm overflow-hidden">
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-sm">
           <TeacherWorkspaceHeader
             studentsInActiveCourse={ws.studentsInActiveCourse}
             selectedStudentId={ws.selectedStudentId}

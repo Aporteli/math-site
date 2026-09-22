@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2 } from 'lucide-react';
 
 export type SubmittedAnswerItem = {
   id: string;
@@ -16,56 +16,49 @@ interface AssignmentAnswersTabProps {
 
 export function AssignmentAnswersTab({ answers, onPreviewAnswer }: AssignmentAnswersTabProps) {
   return (
-    <div className="flex-1 overflow-y-auto pt-1 pe-1 custom-scrollbar bg-navy-tint/20">
+    <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto bg-paper p-3 pe-2 sm:p-4">
       {answers.length === 0 ? (
-        <div className="py-16 flex flex-col items-center justify-center text-center text-muted  ">
-          <CheckCircle2 className="size-8 opacity-40 mb-2 text-brass" />
+        <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-hairline bg-surface px-6 py-16 text-center">
+          <span className="mb-3 inline-flex size-12 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
+            <CheckCircle2 className="size-5" />
+          </span>
           <p className="text-sm font-bold text-ink">პასუხები ჯერ არ გაგიგზავნიათ</p>
-          <p className="text-xs max-w-xs mt-1 text-muted">გამოიყენეთ ქვედა პანელი პასუხის ასატვირთად და გასაგზავნად.</p>
+          <p className="mt-1 max-w-xs text-xs text-muted">გამოიყენეთ ქვედა პანელი პასუხის ასატვირთად და გასაგზავნად.</p>
         </div>
       ) : (
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-          {answers.map((ans) => (
-            <div
-              key={ans.id}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {answers.map((answer) => (
+            <button
+              key={answer.id}
+              type="button"
               onClick={() =>
                 onPreviewAnswer({
-                  url: ans.url,
-                  title: ans.title,
+                  url: answer.url,
+                  title: answer.title,
                   isAnswer: true,
                 })
               }
-              className="flex flex-col justify-between rounded-2xl border border-hairline/40 bg-surface/30 p-3.5 transition-all cursor-pointer group hover:border-hairline hover:bg-surface/50 min-h-[220px]">
-              
-              <div className="flex flex-col gap-3 min-w-0">
-                {/* ზედა პატარა ბეიჯი სურათის მსგავსად */}
-                <div className="flex items-center">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-paper-deep/70 px-2.5 py-0.5 text-[10px] font-medium text-body border border-hairline/50">
-                    <CheckCircle2 className="size-3 text-brass" />
-                    <span>ჩაბარებულია</span>
-                  </span>
-                </div>
+              className="group flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-navy/35"
+            >
+              <span className="h-1 w-full shrink-0 bg-win" aria-hidden="true" />
 
-                {/* სურათის ჩარჩო: მუქი შეჭრილი ბლოკი */}
-                <div className="w-full h-32 rounded-xl bg-black/50 p-1 flex items-center justify-center overflow-hidden border border-black/40">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={ans.url}
-                    alt="მოსწავლის პასუხი"
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                </div>
-              </div>
-
-              {/* ქვედა ზოლი: ხაზის გარეშე, სუფთა ტექსტური ისრით ზუსტად როგორც სურათზე */}
-              <div className="pt-2">
-                <span className="text-xs font-semibold text-body group-hover:text-ink flex items-center gap-1 transition-colors">
-                  <span>ნახვა</span>
-                  <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+              <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-xl border border-hairline bg-paper">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={answer.url} alt="" className="size-full bg-white object-contain p-2 transition duration-200 group-hover:scale-[1.03]" />
+                <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-win/20 bg-win-tint px-2 py-0.5 text-[10px] font-bold text-win shadow-sm">
+                  <CheckCircle2 className="size-3" />
+                  ჩაბარებულია
                 </span>
               </div>
 
-            </div>
+              <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
+                <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{answer.title}</p>
+                <span className="inline-flex w-fit items-center gap-1 rounded-full bg-navy-tint px-2.5 py-1 text-xs font-bold text-navy transition group-hover:bg-navy group-hover:text-white">
+                  ნახვა
+                  <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </span>
+              </div>
+            </button>
           ))}
         </div>
       )}

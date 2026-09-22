@@ -33,8 +33,8 @@ export function SiteLogo({
       {markOnly ? null : (
         <span className="flex min-w-0 flex-col leading-tight">
           <span
-            className={`text-base font-bold tracking-tight ${
-              isLight ? "text-white" : "text-ink"
+            className={`text-base font-bold tracking-tight transition-colors ${
+              isLight ? "text-white" : "text-ink group-hover:text-navy"
             }`}
           >
             {brand.name}

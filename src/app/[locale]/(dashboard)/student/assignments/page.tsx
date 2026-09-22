@@ -73,12 +73,12 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
       />
 
       {/* ─── მთავარი სამუშაო სივრცე: ფილტრები და კონტენტი ─── */}
-      <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[38rem] lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-stretch">
+      <div className="grid gap-5 lg:h-[calc(100vh-14rem)] lg:min-h-[40rem] lg:grid-cols-[18.5rem_minmax(0,1fr)] lg:items-stretch">
         {/* სვეტი 1: ფილტრები */}
         <AssignmentFiltersSidebar statusFilter={statusFilter} onFilterChange={setStatusFilter} />
 
         {/* სვეტი 2: მოსწავლის სამუშაო სივრცე */}
-        <section className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-white shadow-sm overflow-hidden">
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-sm">
           {/* ზედა ზოლი 1: სათაური და კალენდარი */}
           <AssignmentDatePickerHeader
             tasksCount={taskAssignments.length}

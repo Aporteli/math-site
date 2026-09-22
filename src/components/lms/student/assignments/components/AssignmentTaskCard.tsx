@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowUpRight } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 import type { Assignment, AssignmentProblem } from '../types/student-assignment.types';
 import { assignmentStatusMeta, extractFirstImageUrl } from '../helpers/student-assignment.helpers';
@@ -24,6 +25,7 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
     extractFirstImageUrl(firstProblemTex);
 
   const isGraded = meta.id === 'graded';
+  const StatusIcon = meta.icon;
 
   const handleClick = () => {
     if (!firstProblem) return;
@@ -36,59 +38,53 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
     });
   };
 
+  const showNote =
+    Boolean(teacherNote && teacherNote.trim() !== '' && teacherNote.trim() !== 'გთხოვთ ამოხსნათ მოცემული ამოცანა.');
+
   return (
-    <div
+    <button
+      type="button"
       onClick={handleClick}
-      className={`group flex min-h-[210px] cursor-pointer flex-col justify-between rounded-2xl border p-3.5 transition-colors ${
-        isGraded
-          ? 'border-brass/35 bg-surface/90 hover:border-brass/55'
-          : 'border-hairline bg-surface hover:border-brass/45 hover:bg-surface/85'
-      }`}>
-      <div className="flex min-w-0 flex-col gap-2.5">
-        {/* სტატუსის ბეიჯი Lichess-ის ოქროსფერ/ნეიტრალურ ტონებში */}
-        <div className="flex items-center justify-between gap-1.5">
-          <span
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border transition-colors ${
-              isGraded
-                ? 'border-brass/40 bg-brass-tint/60 text-brass'
-                : 'border-hairline/50 bg-paper-deep/70 text-body group-hover:text-ink'
-            }`}>
-            <meta.icon className={`size-3 ${isGraded ? 'text-brass' : 'text-brass/80'}`} />
-            <span className="truncate">{meta.label}</span>
-          </span>
-        </div>
+      className="group flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-navy/35"
+    >
+      <span className={`h-1 w-full shrink-0 ${isGraded ? 'bg-win' : 'bg-navy'}`} aria-hidden="true" />
 
-        {/* სურათის ან ფორმულის პრევიუ */}
+      <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-xl border border-hairline bg-paper">
         {boardImageUrl ? (
-          <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl border-hairline bg-paper shadow-inner">
-            <img src={boardImageUrl} alt="დაფის ჩანაწერი" className="h-full w-full rounded-lg object-contain" />
-          </div>
+          <img src={boardImageUrl} alt="" className="size-full bg-white object-contain p-2 transition duration-200 group-hover:scale-[1.03]" />
         ) : firstProblemTex ? (
-          <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl border border-hairline/60 bg-paper-deep p-3 shadow-inner">
-            <KatexPreview
-              tex={firstProblemTex}
-              className="line-clamp-3 pointer-events-none text-xs leading-relaxed text-ink"
-            />
+          <div className="flex size-full items-center justify-center overflow-hidden px-3 py-2">
+            <KatexPreview tex={firstProblemTex} className="pointer-events-none line-clamp-4 text-sm leading-relaxed text-ink" />
           </div>
-        ) : null}
-
-        {/* მასწავლებლის შენიშვნა Lichess-ის თბილ ბრინჯაოსფერ ბლოკში */}
-        {teacherNote && teacherNote.trim() !== '' && teacherNote.trim() !== 'გთხოვთ ამოხსნათ მოცემული ამოცანა.' && (
-          <div className="rounded-lg border border-brass/25 bg-brass-tint/60 p-2">
-            <p className="line-clamp-2 text-[11px] leading-snug text-ink/85">
-              <span className="mr-1 font-bold text-brass">შენიშვნა:</span>
-              {teacherNote}
-            </p>
-          </div>
+        ) : (
+          <div className="flex size-full items-center justify-center text-[11px] font-semibold text-muted">პრევიუ არ არის</div>
         )}
-      </div>
 
-      {/* ქვედა ზოლი */}
-      <div className="flex items-center justify-between border-t border-hairline/60 pt-2.5">
-        <span className="flex items-center gap-1 text-xs font-bold text-muted transition-colors group-hover:text-brass">
-          ნახვა <span className="transition-transform group-hover:translate-x-0.5">→</span>
+        <span
+          className={`absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold shadow-sm ${
+            isGraded ? 'border-win/20 bg-win-tint text-win' : 'border-navy/15 bg-surface text-navy'
+          }`}
+        >
+          <StatusIcon className="size-3" />
+          <span className="truncate">{meta.label}</span>
         </span>
       </div>
-    </div>
+
+      <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
+        <div className="space-y-2">
+          <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{assignment.title}</p>
+          {showNote ? (
+            <p className="line-clamp-2 rounded-lg bg-brass-tint px-2 py-1.5 text-[11px] leading-snug text-ink">
+              <span className="mr-1 font-bold text-brass-strong">შენიშვნა:</span>
+              {teacherNote}
+            </p>
+          ) : null}
+        </div>
+        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-navy-tint px-2.5 py-1 text-xs font-bold text-navy transition group-hover:bg-navy group-hover:text-white">
+          ნახვა
+          <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </span>
+      </div>
+    </button>
   );
 }

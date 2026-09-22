@@ -80,7 +80,20 @@ export function ClassroomVideoPanel({
       audio={!secondary}
       token={token}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
-      options={{ videoCaptureDefaults: { resolution: { width: 1280, height: 720 } } }}
+      options={{
+        videoCaptureDefaults: { resolution: { width: 1280, height: 720 } },
+        // LiveKit's defaults turn on experimental voice isolation and DTX.
+        // Voice isolation gates the mic; DTX then drops what it thinks is
+        // silence. The other person hears a quiet, chopped voice even when
+        // the microphone itself is fine. Echo cancellation, noise
+        // suppression, and auto gain stay on.
+        audioCaptureDefaults: {
+          voiceIsolation: false,
+        },
+        publishDefaults: {
+          dtx: false,
+        },
+      }}
       data-lk-theme="default"
       className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden"
       onDisconnected={handleDisconnected}

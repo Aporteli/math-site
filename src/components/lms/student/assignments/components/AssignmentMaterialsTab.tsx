@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, Layers, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, FileText, Layers } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 import type { Assignment, AssignmentProblem } from '../types/student-assignment.types';
 import { extractFirstImageUrl, isImageString } from '../helpers/student-assignment.helpers';
@@ -25,25 +25,27 @@ export function AssignmentMaterialsTab({
   setActiveProblemModal,
 }: AssignmentMaterialsTabProps) {
   return (
-    <div className="flex-1 overflow-y-auto pt-1 pe-1 custom-scrollbar bg-navy-tint/20">
+    <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto bg-paper p-3 pe-2 sm:p-4">
       {materialsForDate.length === 0 ? (
-        <div className="py-16 flex flex-col items-center justify-center text-center text-muted  ">
-          <Layers className="size-8 opacity-40 mb-2 text-brass" />
+        <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-hairline bg-surface px-6 py-16 text-center">
+          <span className="mb-3 inline-flex size-12 items-center justify-center rounded-2xl border border-hairline bg-brass-tint text-brass-strong">
+            <Layers className="size-5" />
+          </span>
           <p className="text-sm font-bold text-ink">სასწავლო მასალები არ არის</p>
-          <p className="text-xs max-w-xs mt-1 text-muted">ამ თარიღისთვის მასალები არ მოიძებნა.</p>
+          <p className="mt-1 max-w-xs text-xs text-muted">ამ თარიღისთვის მასალები არ მოიძებნა.</p>
         </div>
       ) : (
-        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-          {materialsForDate.map((mat) => {
-            const firstProb = mat.problems?.[0];
-            const promptText = firstProb?.promptTex || mat.instructions;
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {materialsForDate.map((material) => {
+            const firstProblem = material.problems?.[0];
+            const promptText = firstProblem?.promptTex || material.instructions;
 
             const rawFileUrl =
-              mat.attachmentUrl ||
-              mat.problemImageUrl ||
-              firstProb?.teacherAttachmentUrl ||
-              (typeof mat.customPayload?.imageUrl === 'string' ? mat.customPayload.imageUrl : null) ||
-              (typeof mat.customPayload?.attachmentUrl === 'string' ? mat.customPayload.attachmentUrl : null);
+              material.attachmentUrl ||
+              material.problemImageUrl ||
+              firstProblem?.teacherAttachmentUrl ||
+              (typeof material.customPayload?.imageUrl === 'string' ? material.customPayload.imageUrl : null) ||
+              (typeof material.customPayload?.attachmentUrl === 'string' ? material.customPayload.attachmentUrl : null);
 
             const fileUrl =
               extractFirstImageUrl(rawFileUrl) || (typeof rawFileUrl === 'string' ? rawFileUrl.trim() : null);
@@ -51,80 +53,64 @@ export function AssignmentMaterialsTab({
             const isFile = Boolean(fileUrl) && !isImg;
 
             return (
-              <div
-                key={mat.id}
+              <button
+                key={material.id}
+                type="button"
                 onClick={() => {
                   if (fileUrl) {
                     setPreviewMaterialModal({
                       url: fileUrl,
-                      title: mat.title,
+                      title: material.title,
                       isAnswer: false,
-                      instructions: mat.instructions,
+                      instructions: material.instructions,
                     });
-                  } else if (firstProb && firstProb.promptTex) {
+                  } else if (firstProblem && firstProblem.promptTex) {
                     setActiveProblemModal({
-                      assignmentId: mat.id,
-                      problem: firstProb,
+                      assignmentId: material.id,
+                      problem: firstProblem,
                     });
                   }
                 }}
-                className="flex flex-col justify-between rounded-2xl border border-hairline/40 bg-surface/30 p-3.5 transition-all cursor-pointer group hover:border-hairline hover:bg-surface/50 min-h-[220px]">
-                <div className="flex flex-col gap-3 min-w-0">
-                  {/* ზედა მომრგვალებული ბეიჯი Lichess-ის სტილში */}
-                  <div className="flex items-center">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-paper-deep/70 px-2.5 py-0.5 text-[10px] font-medium text-body border border-hairline/50">
-                      <Layers className="size-3 text-brass" />
-                      <span>სასწავლო მასალა</span>
-                    </span>
-                  </div>
+                className="group flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-navy/35"
+              >
+                <span className="h-1 w-full shrink-0 bg-brass" aria-hidden="true" />
 
+                <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-xl border border-hairline bg-paper">
                   {isImg && fileUrl ? (
-                    <div className="w-full h-32 rounded-xl bg-paper flex items-center justify-center overflow-hidden">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={fileUrl}
-                        alt={mat.title}
-                        className="w-full h-full object-contain rounded-lg"
-                        onError={(e) => {
-                          const target = e.target as HTMLElement;
-                          target.style.display = 'none';
-                          if (target.parentElement) {
-                            target.parentElement.innerHTML =
-                              '<div class="flex flex-col items-center justify-center text-brass"><svg class="size-8 mb-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="text-[10px] font-bold">ფაილის ნახვა</span></div>';
-                          }
-                        }}
-                      />
-                    </div>
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={fileUrl}
+                      alt=""
+                      className="size-full bg-white object-contain p-2 transition duration-200 group-hover:scale-[1.03]"
+                    />
                   ) : isFile ? (
-                    <div className="w-full h-32 rounded-xl bg-paper-deep/80 border border-hairline/60 p-3 flex flex-col items-center justify-center text-center shadow-inner group-hover:border-brass/40 transition-colors">
-                      <FileText className="size-9 text-brass mb-1.5 opacity-90" />
-                      <p className="text-xs font-bold text-ink line-clamp-1">{mat.title}</p>
-                      <span className="text-[10px] font-medium text-brass/80 mt-1">ფაილის გახსნა ↗</span>
+                    <div className="flex size-full flex-col items-center justify-center gap-1.5 px-3 text-center">
+                      <FileText className="size-8 text-navy" />
+                      <span className="text-[11px] font-semibold text-navy">ფაილი</span>
                     </div>
                   ) : promptText ? (
-                    <div className="w-full h-32 rounded-xl bg-paper-deep/80 border border-hairline/60 p-3 flex items-center justify-center overflow-hidden shadow-inner">
+                    <div className="flex size-full items-center justify-center overflow-hidden px-3 py-2">
                       <KatexPreview
                         tex={promptText}
-                        className="text-xs text-ink line-clamp-3 pointer-events-none leading-relaxed"
+                        className="pointer-events-none line-clamp-4 text-sm leading-relaxed text-ink"
                       />
                     </div>
                   ) : (
-                    <div className="w-full h-32 rounded-xl bg-paper-deep/80 border border-hairline/60 p-3 flex flex-col items-center justify-center text-center shadow-inner group-hover:border-brass/40 transition-colors">
-                      <FileText className="size-9 text-brass mb-1.5 opacity-90" />
-                      <p className="text-xs font-bold text-ink line-clamp-1">{mat.title}</p>
-                      <span className="text-[10px] font-medium text-brass/80 mt-1">ფაილის გახსნა ↗</span>
+                    <div className="flex size-full flex-col items-center justify-center gap-1.5 bg-brass-tint px-3 text-center">
+                      <Layers className="size-8 text-brass-strong" />
+                      <span className="text-[11px] font-semibold text-brass-strong">სასწავლო მასალა</span>
                     </div>
                   )}
                 </div>
 
-                {/* ქვედა ზოლი: ხაზის გარეშე, სუფთა ტექსტური ისრით */}
-                <div className="pt-2">
-                  <span className="text-xs font-semibold text-body group-hover:text-ink flex items-center gap-1 transition-colors">
-                    <span>მასალის გახსნა</span>
-                    <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+                <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
+                  <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{material.title}</p>
+                  <span className="inline-flex w-fit items-center gap-1 rounded-full bg-navy-tint px-2.5 py-1 text-xs font-bold text-navy transition group-hover:bg-navy group-hover:text-white">
+                    მასალის გახსნა
+                    <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </span>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

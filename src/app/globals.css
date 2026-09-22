@@ -1,64 +1,65 @@
 @import 'tailwindcss';
-
 @custom-variant dark (&:where(.dark, .dark *));
 
-/**
- * Base palette: Lichess-style ink + blue/brass on a warm off-white page.
- * Use these semantic tokens instead of raw Tailwind color scales so the
- * whole platform (public site, LMS, math tools) stays visually consistent,
- * and so light/dark stay perfect mirrors of lichess.org's own themes.
- */
 @theme {
-  --font-sans:
-    'Noto Sans Georgian', 'BPG Arial', Sylfaen, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans: 'Noto Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
 
   /* =========================================================
      LIGHT THEME (Lichess Default Warm Paper Palette)
      ========================================================= */
 
- /* Neutral surfaces — resolved from lichess --c-bg-page etc. (site-hue: 30) */
---color-paper: #edebe9;         /* c-bg-page */
---color-paper-deep: #e3e3e3;    /* c-bg-low */
---color-hairline: #d9d9d9;      /* c-border */
---color-hairline-soft: #d6d6d6; /* c-shade */
---color-grid: #000000;
+  --color-button_1: #5cb305;
+  --color-button_2: #004f99;
+  --color-block-header_1: #dfca9f;
+  --color-icon: #a7730c;
+  --color-text_1: #7ddd1d;
 
-/* Cards & Elevated Panels */
---color-surface: #ffffff;       /* c-bg / c-bg-popup */
---color-surface-hover: #fafafa; /* c-metal-top-hover */
+  /* Neutral surfaces — resolved from lichess --c-bg-page etc. (site-hue: 30) */
+  --color-paper: #edebe9; /* c-bg-page */
+  --color-paper-deep: #e3e3e3; /* c-bg-low */
+  --color-paper-light: #e3e3e3;
+  --color-hairline: #d9d9d9; /* c-border */
+  --color-hairline-soft: #d6d6d6; /* c-shade */
+  --color-grid: #000000;
 
-/* Chess Board Squares — unrelated to this palette (board themes are separate in lichess); kept as-is, already accurate */
---color-board-light: #f0d9b5;
---color-board-dark: #b58863;
---color-board-move: #cdd26a;
+  /* Cards & Elevated Panels */
+  --color-surface: #ffffff; /* c-bg / c-bg-popup */
+  --color-surface-light: #4d6a6a;
+  --color-surface-hover: #fafafa; /* c-metal-top-hover */
 
-/* Text / Ink */
---color-ink: #1a1a1a;           /* darker than c-font for headings; lichess's c-font-clearer is pure black */
---color-hero: #5e5e5e;          /* c-font-page */
---color-body: #4c4c4c;          /* c-font */
---color-muted: #787878;         /* c-font-dim */
+  /* Chess Board Squares — unrelated to this palette (board themes are separate in lichess); kept as-is, already accurate */
+  --color-board-light: #f0d9b5;
+  --color-board-dark: #b58863;
+  --color-board-move: #cdd26a;
 
-/* Primary Accent — c-primary */
---color-navy: #1b78d0;
---color-navy-strong: #155f9e;   /* manually darkened, mirrors lichess's --c-link-hover mix */
---color-navy-tint: #e4f0fb;
+  /* Text / Ink */
+  --color-ink: #1a1a1a; /* darker than c-font for headings; lichess's c-font-clearer is pure black */
+  --color-hero: #5e5e5e; /* c-font-page */
+  --color-body: #4c4c4c; /* c-font */
+  --color-muted: #787878; /* c-font-dim */
 
-/* Secondary Accent — c-brag (lichess's own "brass"-equivalent accent) */
---color-brass: #d57a20;
---color-brass-strong: #b3630f;
---color-brass-soft: #e2a462;
---color-brass-extra: #b27a00;   /* c-mistake, a muted amber, works well as a tertiary warm */
---color-brass-tint: #faf1de;
+  /* Primary Accent — c-primary */
+  --color-navy: #1b78d0;
+  --color-navy-light: #6291fe;
+  --color-navy-strong: #155f9e; /* manually darkened, mirrors lichess's --c-link-hover mix */
+  --color-navy-tint: #e4f0fb;
 
-/* Game Status Accents — lichess's actual move-quality colors */
---color-win: #168326;           /* c-brilliant */
---color-win-tint: #e7f5e8;
---color-loss: #d62929;          /* c-blunder */
---color-loss-tint: #fbe6e6;
+  /* Secondary Accent — c-brag (lichess's own "brass"-equivalent accent) */
+  --color-brass: #d57a20;
+  --color-brass-strong: #b3630f;
+  --color-brass-soft: #e2a462;
+  --color-brass-extra: #b27a00; /* c-mistake, a muted amber, works well as a tertiary warm */
+  --color-brass-tint: #faf1de;
 
-/* Bonus — lichess also distinguishes these, worth having if you show move analysis */
---color-inaccuracy: #167bb6;
---color-mistake: #b27a00;
+  /* Game Status Accents — lichess's actual move-quality colors */
+  --color-win: #168326; /* c-brilliant */
+  --color-win-tint: #e7f5e8;
+  --color-loss: #d62929; /* c-blunder */
+  --color-loss-tint: #fbe6e6;
+
+  /* Bonus — lichess also distinguishes these, worth having if you show move analysis */
+  --color-inaccuracy: #167bb6;
+  --color-mistake: #b27a00;
 
   --animate-dropdown: dropdown 140ms ease-out;
   --animate-fade-up: fade-up 600ms ease-out both;
@@ -75,44 +76,58 @@
      DARK THEME (Lichess Dark Charcoal & Walnut Palette)
      ========================================================= */
 
+  --color-navy: #3692e7;
+  --color-navy-light: #6291fe;
+  --color-surface-light: #d59920;
+  --color-button_1: #5cb305;
+  --color-button_2: #0d0165;
+  --color-block-header_1: #1E1E1E;
+  --color-icon: #a7730c;
+  --color-black: #000000;
+  --color-ink: #bababa;
+  --color-white: #ffffff;
+  --color-text_1: #7ddd1d;
+
   /* Neutral surfaces */
-  --color-paper: #161512;         /* Lichess Dark მთავარი ღრმა ნახშირისფერი ფონი */
-  --color-paper-deep: #1e1c18;    /* საიდბარის და მეორე დონის ფონი */
-  --color-hairline: #363431;      /* ბარათების საზღვრები */
+  --color-paper: #161512; /* Lichess Dark მთავარი ღრმა ნახშირისფერი ფონი */
+  --color-paper-deep: #1e1c18; /* საიდბარის და მეორე დონის ფონი */
+  --color-paper-light: #524e47;
+  --color-hairline: #363431; /* ბარათების საზღვრები */
   --color-hairline-soft: #262421; /* მკრთალი გამყოფები */
-  --color-grid: #ffffff;
+  --color-grid: #fef1cd;
 
   /* Cards & Elevate Panels */
-  --color-surface: #262421;       /* სტანდარტული ბარათის ფონი */
+  --color-surface: #252526; /* სტანდარტული ბარათის ფონი */
+
   --color-surface-hover: #2e261f; /* Lichess-ის თბილი ესპრესო ჰოვერზე/აქტიურზე */
 
   /* Chess Board Squares (Classic Wood/Brown Theme) */
-  --color-board-light: #c2ab87;   /* მუქ თემაში შერბილებული ღია უჯრა */
-  --color-board-dark: #7b583c;    /* მუქ თემაში შერბილებული მუქი უჯრა */
-  --color-board-move: #879038;    /* სვლის ინდიკატორი მუქ რეჟიმში */
+  --color-board-light: #c2ab87; /* მუქ თემაში შერბილებული ღია უჯრა */
+  --color-board-dark: #7b583c; /* მუქ თემაში შერბილებული მუქი უჯრა */
+  --color-board-move: #879038; /* სვლის ინდიკატორი მუქ რეჟიმში */
 
   /* Text / Ink */
-  --color-ink: #bababa;           /* ძირითადი თეთრი/ღია-ნაცრისფერი ტექსტი */
+  /* ძირითადი თეთრი/ღია-ნაცრისფერი ტექსტი */
   --color-hero: #585858;
-  --color-body: #9e9c98;          /* მეორეხარისხოვანი ტექსტი */
-  --color-muted: #6b6965;         /* პასიური ტექსტები, ქვესათაურები */
+  --color-body: #9e9c98; /* მეორეხარისხოვანი ტექსტი */
+  --color-muted: #6b6965; /* პასიური ტექსტები, ქვესათაურები */
 
   /* Primary Accent (Lichess Action Blue) */
-  --color-navy: #3692e7;          /* ოფიციალური CTA ლურჯი */
-  --color-navy-strong: #54a3ee;   /* ღია ლურჯი ჰოვერზე */
-  --color-navy-tint: #1b2838;     /* ლურჯი ბეიჯების ფონი */
+  /* ოფიციალური CTA ლურჯი */
+  --color-navy-strong: #54a3ee; /* ღია ლურჯი ჰოვერზე */
+  --color-navy-tint: #121212; /* ლურჯი ბეიჯების ფონი */
 
   /* Secondary Accent (Lichess Gold / Amber) */
-  --color-brass: #d59920;         /* ოქროსფერი აქცენტი */
+  --color-brass: #d59920; /* ოქროსფერი აქცენტი */
   --color-brass-strong: #e5a52c;
   --color-brass-soft: #b8811b;
   --color-brass-extra: #f97316;
-  --color-brass-tint: #2b2114;    /* ოქროსფერი შეფერილობის მუქი ფონი */
+  --color-brass-tint: #2b2114; /* ოქროსფერი შეფერილობის მუქი ფონი */
 
   /* Game Status Accents */
-  --color-win: #629924;           /* მოგება / სწორი პასუხი */
+  --color-win: #629924; /* მოგება / სწორი პასუხი */
   --color-win-tint: #1c2b12;
-  --color-loss: #cc3333;          /* წაგება / შეცდომა */
+  --color-loss: #cc3333; /* წაგება / შეცდომა */
   --color-loss-tint: #381a1a;
 }
 
@@ -273,7 +288,6 @@ html {
 .dark .bg-white\/95 {
   background-color: color-mix(in oklab, var(--color-surface) 95%, transparent);
 }
-
 
 /* Vector Function Tool */
 

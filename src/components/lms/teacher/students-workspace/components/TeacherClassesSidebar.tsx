@@ -25,81 +25,67 @@ export function TeacherClassesSidebar({
   students,
 }: TeacherClassesSidebarProps) {
   return (
-    <aside className="flex h-full min-h-0 flex-col rounded-3xl border border-hairline bg-paper shadow-sm overflow-hidden">
-      {/* ჰედერი */}
-      <div className="w-full flex shrink-0 items-center justify-between border-b border-hairline bg-surface/50 px-4 py-3.5">
-        <div className="flex items-center gap-2">
-          <GraduationCap className="size-4 text-brass-strong" />
-          <h3 className="text-xs font-extrabold uppercase tracking-wider text-ink">კლასები</h3>
+    <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-sm">
+      <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
+
+      <div className="flex shrink-0 items-center justify-between border-b border-hairline px-4 py-4">
+        <div className="flex items-center gap-2.5">
+          <span className="inline-flex size-9 items-center justify-center rounded-xl border border-hairline bg-brass-tint text-brass-strong">
+            <GraduationCap className="size-4" />
+          </span>
+          <div>
+            <h3 className="text-sm font-bold text-ink">კლასები</h3>
+            <p className="text-[11px] font-medium text-muted">{studentsCount} მოსწავლე</p>
+          </div>
         </div>
-        <span className="rounded-md bg-paper-deep px-2 py-0.5 text-[10px] font-mono font-bold text-muted border border-hairline/60">
+        <span className="rounded-full border border-hairline bg-paper-deep px-2.5 py-1 text-[11px] font-bold text-ink">
           {courses.length}
         </span>
       </div>
 
-      {/* შუა ნაწილი: ძიება და სია */}
-      <div className="flex flex-1 min-h-0 flex-col p-3 gap-2.5">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 p-3">
         <div className="relative shrink-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
           <input
             type="text"
             value={classSearchQuery}
             onChange={(e) => setClassSearchQuery(e.target.value)}
             placeholder="მოძებნეთ კლასი..."
-            className="w-full rounded-xl border border-hairline bg-paper-deep/80 py-2 pl-9 pr-3 text-xs font-medium text-ink placeholder:text-muted outline-none focus:border-brass-strong/60 focus:bg-surface transition-all"
+            className="w-full rounded-xl border border-hairline bg-paper py-2.5 pl-9 pr-3 text-xs font-medium text-ink outline-none transition placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
           />
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-hairline/60  p-1.5 space-y-1 custom-scrollbar">
-          {/* ყველა მოსწავლე */}
-          {/* <button
-            type="button"
-            onClick={() => handleCourseChange('all')}
-            className={`group relative flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-all border cursor-pointer ${
-              activeCourseId === 'all'
-                ? 'bg-surface border-hairline text-ink shadow-2xs font-bold'
-                : 'border-transparent text-body hover:bg-surface/50 hover:text-ink'
-            }`}>
-            {activeCourseId === 'all' && (
-              <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-brass-strong" />
-            )}
-            <span className="truncate text-xs">ყველა მოსწავლე</span>
-            <span
-              className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-mono font-bold ${
-                activeCourseId === 'all' ? 'bg-paper-deep text-ink' : 'text-muted'
-              }`}>
-              {studentsCount}
-            </span>
-          </button> */}
+        <div className="custom-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto pe-0.5">
+          {filteredCourses.length === 0 ? (
+            <p className="px-2 py-6 text-center text-xs font-medium text-muted">კლასი ვერ მოიძებნა</p>
+          ) : (
+            filteredCourses.map((course) => {
+              const active = course.id === activeCourseId;
+              const courseStudents = students.filter((s) => s.courses.some((c) => c.id === course.id));
 
-          {/* კურსების სია */}
-          {filteredCourses.map((course) => {
-            const active = course.id === activeCourseId;
-            const courseStudents = students.filter((s) => s.courses.some((c) => c.id === course.id));
-
-            return (
-              <button
-                key={course.id}
-                type="button"
-                onClick={() => handleCourseChange(course.id)}
-                className={`group relative flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-all border cursor-pointer ${
-                  active
-                    ? 'bg-surface border-hairline text-ink shadow-2xs font-bold'
-                    : 'border-transparent text-body hover:bg-surface/50 hover:text-ink'
-                }`}>
-                {active && (
-                  <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-brass-strong" />
-                )}
-                <span className="truncate text-xs">{course.title}</span>
-                <span
-                  className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-mono font-bold ${
-                    active ? 'bg-paper-deep text-ink' : 'text-muted'
-                  }`}>
-                  {courseStudents.length}
-                </span>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={course.id}
+                  type="button"
+                  onClick={() => handleCourseChange(course.id)}
+                  className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left transition ${
+                    active
+                      ? 'border-navy/25 bg-navy-tint text-navy-strong shadow-sm'
+                      : 'border-transparent text-body hover:bg-paper hover:text-ink'
+                  }`}
+                >
+                  <span className="truncate text-[13px] font-bold">{course.title}</span>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      active ? 'bg-navy text-white' : 'bg-paper-deep text-muted'
+                    }`}
+                  >
+                    {courseStudents.length}
+                  </span>
+                </button>
+              );
+            })
+          )}
         </div>
       </div>
     </aside>

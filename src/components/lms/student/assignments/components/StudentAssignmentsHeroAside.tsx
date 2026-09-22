@@ -15,39 +15,33 @@ export function StudentAssignmentsHeroAside({
   isGroupAlreadySubmitted,
   courses,
 }: StudentAssignmentsHeroAsideProps) {
+  const status =
+    todayAssignmentsCount === 0
+      ? { icon: BookOpen, label: 'დავალება არ არის', tone: 'text-muted' }
+      : isGroupAlreadySubmitted
+        ? { icon: CheckCircle2, label: 'გაგზავნილია', tone: 'text-win' }
+        : { icon: Clock, label: 'შესასრულებელი', tone: 'text-brass-strong' };
+
+  const StatusIcon = status.icon;
+
   return (
-    <div className="flex w-full flex-col gap-2.5">
-      {/* სტატუსის ბლოკი Lichess-ის სტილში */}
-      <div
-        className={`rounded-2xl border px-4 py-3 shadow-inner transition-colors ${
-          todayAssignmentsCount === 0
-            ? 'border-hairline bg-surface text-muted'
-            : isGroupAlreadySubmitted
-              ? 'border-brass/30 bg-brass-tint text-brass'
-              : 'border-brass/40 bg-surface text-ink'
-        }`}>
-        <div className="mt-1 flex items-center gap-2">
-          {todayAssignmentsCount === 0 ? (
-            <>
-              <BookOpen className="size-5 text-muted shrink-0" />
-              <span className="text-base font-bold text-muted">დავალება არ არის</span>
-            </>
-          ) : isGroupAlreadySubmitted ? (
-            <>
-              <CheckCircle2 className="size-5 text-brass shrink-0" />
-              <span className="text-base font-bold text-brass">გაგზავნილია</span>
-            </>
-          ) : (
-            <>
-              <Clock className="size-5 text-brass shrink-0" />
-              <span className="text-base font-bold text-ink">შესასრულებელი</span>
-            </>
-          )}
+    <div className="flex w-full flex-col gap-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-hairline bg-white px-4 py-3 shadow-sm">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted">დღევანდელი</p>
+          <p className="mt-1 text-3xl font-bold tracking-tight text-ink">{todayAssignmentsCount}</p>
+        </div>
+        <div className="flex flex-col justify-center rounded-2xl border border-hairline bg-white px-4 py-3 shadow-sm">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-muted">სტატუსი</p>
+          <p className={`mt-1 inline-flex items-center gap-1.5 text-sm font-bold ${status.tone}`}>
+            <StatusIcon className="size-4 shrink-0" />
+            <span className="truncate">{status.label}</span>
+          </p>
         </div>
       </div>
 
-      {courses.length > 0 && (
-        <div >
+      {courses.length > 0 ? (
+        <div className="flex flex-col gap-2">
           {courses.map((course) => (
             <StudentCourseVideoCallButton
               key={course.id}
@@ -58,7 +52,7 @@ export function StudentAssignmentsHeroAside({
             />
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

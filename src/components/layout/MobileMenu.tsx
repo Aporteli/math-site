@@ -24,7 +24,7 @@ export function MobileMenu({ locale, header, nav, menus, children }: MobileMenuP
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-controls="mobile-menu"
-        className="inline-flex shrink-0 items-center justify-center rounded-full border border-hairline bg-white p-2 text-ink transition-colors duration-200 hover:border-navy/40 hover:text-navy">
+        className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-hairline bg-paper text-ink shadow-sm transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy">
         {open ? <X className="size-5" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
         <span className="sr-only">{open ? header.closeMenu : header.openMenu}</span>
       </button>
@@ -32,7 +32,7 @@ export function MobileMenu({ locale, header, nav, menus, children }: MobileMenuP
       {open && (
         <div
           id="mobile-menu"
-          className="absolute inset-x-0 top-full border-b border-hairline bg-paper px-4 pb-6 pt-4 shadow-sm sm:px-6">
+          className="absolute inset-x-0 top-full border-b border-hairline bg-surface px-4 pb-6 pt-4 shadow-md sm:px-6">
           {children ? <div className="mb-3">{children}</div> : null}
           <nav aria-label={header.mobileNav}>
             <NavLinks locale={locale} labels={nav} menus={menus} variant="mobile" onNavigate={() => setOpen(false)} />

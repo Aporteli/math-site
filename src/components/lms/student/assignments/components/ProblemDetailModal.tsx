@@ -90,39 +90,37 @@ export function ProblemDetailModal({
         onClick={onClose}
       >
         <div
-          className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-hairline bg-paper shadow-2xl animate-in zoom-in-95 duration-150"
+          className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-2xl animate-in zoom-in-95 duration-150"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-hairline bg-surface px-5 py-3.5">
-            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+          <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
+          <div className="flex items-center justify-between border-b border-hairline bg-surface px-5 py-4">
+            <div className="flex min-w-0 items-center gap-3 pr-2">
               <div
-                className={`flex size-7 items-center justify-center rounded-lg shrink-0 ${
-                  isGraded ? 'bg-win-tint text-win' : 'bg-navy/15 text-navy'
+                className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${
+                  isGraded ? 'border-win/20 bg-win-tint text-win' : 'border-navy/20 bg-navy-tint text-navy'
                 }`}
               >
-                {isGraded ? <CheckCircle2 className="size-4" /> : <BookOpen className="size-4" />}
+                {isGraded ? <CheckCircle2 className="size-5" /> : <BookOpen className="size-5" />}
               </div>
-              <div className="flex items-baseline gap-2 min-w-0">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-ink truncate">
+              <div className="min-w-0">
+                <h3 className="truncate text-sm font-bold text-ink">
                   {assignmentTitle || problem.topic || 'დავალების დეტალები'}
                 </h3>
-                <span className="text-[11px] font-mono text-muted shrink-0">
-                  / {isGraded ? 'შეფასებული' : 'ამოცანის პირობა'}
-                </span>
+                <p className="mt-0.5 text-xs font-medium text-muted">{isGraded ? 'შეფასებული' : 'ამოცანის პირობა'}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex size-7 shrink-0 items-center justify-center bg-surface text-muted hover:bg-paper-deep hover:text-ink transition-colors cursor-pointer rounded-lg border border-hairline/80"
+              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-hairline bg-paper text-muted transition hover:bg-paper-deep hover:text-ink"
             >
-              <X className="size-3.5" />
+              <X className="size-4" />
             </button>
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+          <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto bg-paper p-5">
             {hasTextPrompt && (
               <div className="rounded-xl border border-hairline bg-surface p-4 shadow-2xs">
                 <KatexPreview tex={problem.promptTex} className="text-xs text-ink leading-relaxed" />
@@ -177,11 +175,11 @@ export function ProblemDetailModal({
           </div>
 
           {/* Footer */}
-          <div className="border-t border-hairline bg-surface px-5 py-3 flex items-center justify-end">
+          <div className="flex items-center justify-end border-t border-hairline bg-surface px-5 py-3">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl px-4 py-1.5 text-xs font-bold text-ink bg-paper-deep hover:bg-surface border border-hairline transition-all active:scale-98 cursor-pointer"
+              className="cursor-pointer rounded-xl bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong"
             >
               დახურვა
             </button>

@@ -21,13 +21,18 @@ export function MaterialPreviewModal({ modal, onClose }: MaterialPreviewModalPro
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}>
       <div
-        className="flex h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] border border-hairline bg-paper shadow-2xl animate-in zoom-in-95 duration-200"
+        className="flex h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-2xl animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}>
-        {/* მოდალის ჰედერი Lichess-ის ზედაპირით */}
-        <div className="flex items-center justify-between border-b border-hairline bg-surface px-6 py-4 shrink-0">
-          <div className="flex items-center gap-3 min-w-0 pr-2">
+        <div className={`h-1 shrink-0 ${modal.isAnswer ? 'bg-win' : 'bg-brass'}`} aria-hidden="true" />
+        <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-surface px-5 py-4">
+          <div className="flex min-w-0 items-center gap-3 pr-2">
             <div
-              className="flex size-10 items-center justify-center rounded-xl shrink-0 bg-brass-tint text-brass border border-brass/25">
+              className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${
+                modal.isAnswer
+                  ? 'border-win/20 bg-win-tint text-win'
+                  : 'border-brass/25 bg-brass-tint text-brass-strong'
+              }`}
+            >
               {modal.isAnswer ? <CheckCircle2 className="size-5" /> : <Layers className="size-5" />}
             </div>
             <div className="min-w-0">
@@ -44,21 +49,21 @@ export function MaterialPreviewModal({ modal, onClose }: MaterialPreviewModalPro
               target="_blank"
               rel="noreferrer"
               download
-              className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-paper-deep px-3.5 py-1.5 text-xs font-bold text-ink hover:bg-paper hover:text-brass transition-colors shadow-xs">
-              <Download className="size-3.5 text-brass" />
+              className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong">
+              <Download className="size-3.5" />
               <span>გადმოწერა</span>
             </a>
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 items-center justify-center rounded-xl border border-hairline bg-surface text-muted hover:text-ink hover:bg-paper-deep transition-colors">
+              className="flex size-8 cursor-pointer items-center justify-center rounded-xl border border-hairline bg-paper text-muted transition hover:bg-paper-deep hover:text-ink">
               <X className="size-4" />
             </button>
           </div>
         </div>
 
         {/* კონტენტის ბუდე: Lichess-ის მუქი ნახშირისფერი ფონი */}
-        <div className="flex-1 bg-paper-deep/80 p-2 overflow-hidden flex items-center justify-center">
+        <div className="flex flex-1 items-center justify-center overflow-hidden bg-paper p-3">
           {isImg ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img

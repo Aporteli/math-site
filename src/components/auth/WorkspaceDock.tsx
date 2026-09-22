@@ -43,7 +43,7 @@ export function WorkspaceDock({
         href={href}
         onClick={handleDockClick}
         aria-label={displayHint}
-        className="inline-flex min-w-0 items-center gap-2 rounded-full bg-navy px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy-strong"
+        className="inline-flex min-w-0 items-center gap-2 rounded-full bg-navy px-3 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong"
       >
         {isVisitor ? (
           <UserPlus className="size-4 shrink-0" aria-hidden="true" />
@@ -60,9 +60,9 @@ export function WorkspaceDock({
       <Link
         href={href}
         onClick={handleDockClick}
-        className="pointer-events-auto flex max-w-xs items-center gap-3 rounded-2xl border border-hairline bg-white p-3 shadow-md transition-all hover:border-navy/30 hover:shadow-lg"
+        className="pointer-events-auto flex max-w-xs items-center gap-3 overflow-hidden rounded-2xl border border-hairline bg-surface p-3 shadow-md transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-lg"
       >
-        <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-navy text-white">
+          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-sm">
           {isVisitor ? (
             <UserPlus className="size-5" aria-hidden="true" />
           ) : (
@@ -73,7 +73,7 @@ export function WorkspaceDock({
           <span className="block text-xs font-semibold tracking-wide text-brass">
             {displayRoleLabel}
           </span>
-          <span className="mt-0.5 flex items-center gap-1 text-sm font-semibold text-ink">
+          <span className="mt-0.5 flex items-center gap-1 text-sm font-bold text-ink">
             {displayLabel}
             <ArrowUpRight className="size-3.5 shrink-0 text-navy" aria-hidden="true" />
           </span>

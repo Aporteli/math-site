@@ -38,7 +38,8 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
       nav={dict.nav}
       toolItems={dict.toolsPage.items}
       posts={dict.blogPage.posts}>
-      <header className="sticky top-0 z-50 border-b border-hairline bg-paper/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-hairline bg-surface/95 shadow-sm backdrop-blur-md">
+        <div className="h-1 bg-brass" aria-hidden="true" />
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8 xl:gap-4">
           <SiteLogo locale={locale} brand={dict.brand} className="shrink-0" />
 
@@ -63,9 +64,9 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
 
       <nav
         aria-label={dict.header.quickActions}
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-hairline bg-paper/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md min-[500px]:hidden">
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-hairline bg-surface/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(16,28,52,0.06)] backdrop-blur-md min-[500px]:hidden">
         <div className="flex items-center justify-around gap-2 px-3 py-2">
-          <SearchTrigger variant="icon" />
+          <SearchTrigger variant="icon" className="inline-flex" />
           <LanguageSwitcher locale={locale} label={dict.header.language} menuPlacement="above" menuAlign="center" />
           <ThemeToggle label={dict.header.theme} />
           {session ? (
