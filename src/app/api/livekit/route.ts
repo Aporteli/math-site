@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { getSession } from '@/lib/auth/session';
 import {
+  CONNECTION_ID_SUFFIX_LENGTH,
   PARTICIPANT_ROLE,
   PARTICIPANT_USER_ID,
   participantUserId,
@@ -93,7 +94,7 @@ export async function GET(req: NextRequest) {
     const role = typeof userRole === 'string' && userRole ? userRole.toLowerCase() : 'student';
 
     const at = new AccessToken(apiKey, apiSecret, {
-      identity: `${userId}:${randomUUID().slice(0, 8)}`,
+      identity: `${userId}:${randomUUID().slice(0, CONNECTION_ID_SUFFIX_LENGTH)}`,
       name: userName,
       ttl: '12h',
       attributes: {

@@ -14,6 +14,9 @@ interface MediaControlProps {
   fallbackPrefix: string;
   activeMenu: MenuId | null;
   setActiveMenu: (m: MenuId | null) => void;
+  /** Microphone stays on the account's first device. */
+  locked?: boolean;
+  lockedTitle?: string;
 }
 
 export function MediaControl({
@@ -24,15 +27,32 @@ export function MediaControl({
   fallbackPrefix,
   activeMenu,
   setActiveMenu,
+  locked = false,
+  lockedTitle,
 }: MediaControlProps) {
   const { localParticipant } = useLocalParticipant();
   const { devices, activeDeviceId, setActiveMediaDevice } = useMediaDeviceSelect({ kind });
 
   const isMic = kind === 'audioinput';
-  const muted = isMic
+  const muted = locked || (isMic
     ? !localParticipant.isMicrophoneEnabled
-    : !localParticipant.isCameraEnabled;
+    : !localParticipant.isCameraEnabled);
   const Icon = isMic ? (muted ? MicOff : Mic) : muted ? VideoOff : Video;
+
+  if (locked) {
+    return (
+      <div className="relative flex items-center rounded-xl border border-white/10 bg-white/5 p-0.5">
+        <button
+          type="button"
+          disabled
+          title={lockedTitle}
+          className="flex h-8 cursor-not-allowed items-center justify-center rounded-lg bg-red-500/20 px-2 text-red-400 opacity-70"
+        >
+          <MicOff className="size-4" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative flex items-center rounded-xl border border-white/10 bg-white/5 p-0.5">

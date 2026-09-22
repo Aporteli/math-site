@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useLocalParticipant } from '@livekit/components-react';
+import { useAudioDeviceRole } from '../../hooks/useAudioDeviceRole';
 import { MessageSquare, MoreVertical, MonitorUp } from 'lucide-react';
 import { ControlButton } from './ControlButton';
 import { MediaControl } from './MediaControl';
@@ -17,6 +18,8 @@ interface ControlBarProps {
   courseId: string;
   isolatedIdentities: string[];
   onIsolationChange: (isolatedIdentities: string[]) => void;
+  /** Token was issued for a later connection of this account. */
+  secondary?: boolean;
 }
 
 export function ControlBar({
@@ -26,8 +29,10 @@ export function ControlBar({
   courseId,
   isolatedIdentities,
   onIsolationChange,
+  secondary = false,
 }: ControlBarProps) {
   const { localParticipant } = useLocalParticipant();
+  const audioRole = useAudioDeviceRole();
   const [activeMenu, setActiveMenu] = useState<MenuId | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -51,6 +56,8 @@ export function ControlBar({
             fallbackPrefix="Microphone"
             activeMenu={activeMenu}
             setActiveMenu={setActiveMenu}
+            locked={audioRole === 'secondary' || (secondary && audioRole !== 'primary')}
+            lockedTitle="ხმა პირველ მოწყობილობაზე რჩება"
           />
           <MediaControl
             kind="videoinput"

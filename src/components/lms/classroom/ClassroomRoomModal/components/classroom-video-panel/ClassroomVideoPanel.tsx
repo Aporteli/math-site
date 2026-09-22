@@ -1,13 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { LiveKitRoom, RoomAudioRenderer } from '@livekit/components-react';
+import { LiveKitRoom } from '@livekit/components-react';
 import { RefreshCw } from 'lucide-react';
 import { DisconnectReason } from 'livekit-client';
 import { AudioIsolationListener } from '../AudioIsolationListener';
 import { ChatBackgroundListener } from '../ChatBackgroundListener';
 import { ConnectionStatusBadge } from '../ConnectionStatusBadge';
 import { OwnDeviceAudioListener } from '../OwnDeviceAudioListener';
+import {
+  PrimaryRoomAudio,
+  SecondaryCaptureGuard,
+  SecondaryDeviceNotice,
+} from '../PrimaryDeviceAudio';
 import { ControlBar } from './ControlBar';
 import { AudioVolumeProvider } from './AudioVolumeContext';
 import { CustomChat } from '../custom-chat/CustomChat';
@@ -69,9 +74,9 @@ export function ClassroomVideoPanel({
   return (
     <LiveKitRoom
       key={connectAttempt}
-      video
-      // მეორეულ მოწყობილობაზე მიკროფონი ავტომატურად არ ირთვება (ხმა არ გაორმაგდეს);
-      // საჭიროებისას მომხმარებელს ღილაკით ჩართვა მაინც შეუძლია.
+      // მეორეული კავშირი ჩუმად შემოდის: ხმა პირველ მოწყობილობაზე რჩება,
+      // კამერა კი ღილაკით გადააქვთ.
+      video={!secondary}
       audio={!secondary}
       token={token}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
@@ -84,18 +89,14 @@ export function ClassroomVideoPanel({
         <RoomInstanceBridge onRoom={onRoom} />
         <AudioIsolationListener isTeacher={isTeacher} />
         <OwnDeviceAudioListener />
+        <SecondaryCaptureGuard />
         <ChatBackgroundListener courseId={courseId} />
 
         <div className="absolute top-2 left-2 z-10">
           <ConnectionStatusBadge />
         </div>
 
-        {secondary && (
-          <p className="mx-2 mt-2 shrink-0 rounded-lg bg-amber-500/15 px-2 py-1.5 text-[11px] leading-snug text-amber-200">
-            მეორეული მოწყობილობა: მიკროფონი გამორთულია და ამ ექაუნთის ხმა აქ არ ისმის.
-            ლაპარაკი აქედანაც შეგიძლია — მიკროფონის ღილაკით.
-          </p>
-        )}
+        <SecondaryDeviceNotice />
 
         {isChatOpen ? (
           <div className="relative flex-1 min-h-0 w-full overflow-hidden p-2">
@@ -112,9 +113,10 @@ export function ClassroomVideoPanel({
           courseId={courseId}
           isolatedIdentities={isolatedIdentities}
           onIsolationChange={setIsolatedIdentities}
+          secondary={secondary}
         />
 
-        <RoomAudioRenderer />
+        <PrimaryRoomAudio preferSilence={secondary} />
       </AudioVolumeProvider>
     </LiveKitRoom>
   );

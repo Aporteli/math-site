@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { isTrackReference, useLocalParticipant, useTracks } from "@livekit/components-react";
+import { isTrackReference, useTracks } from "@livekit/components-react";
 import type { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import { participantUserId } from "@/lib/livekit/participant-identity";
@@ -9,28 +9,30 @@ import { GalleryLayout } from "./GalleryLayout";
 import { SpotlightLayout } from "./SpotlightLayout";
 import { trackKey } from "./track-key";
 
+function isCameraLive(ref: TrackReferenceOrPlaceholder): boolean {
+  return isTrackReference(ref) && !ref.publication.isMuted;
+}
+
 /**
- * ერთი ექაუნთი შეიძლება რამდენიმე მოწყობილობიდან იყოს ოთახში, მაგრამ ბადეში მისი
- * მხოლოდ ერთი კამერა უნდა ჩანდეს. პრიორიტეტი: ამ მოწყობილობის (local) კავშირი →
- * ჩართული კამერის მქონე კავშირი → უფრო ადრე შემოსული მოწყობილობა.
+ * ერთი ექაუნთის რამდენიმე მოწყობილობიდან ბადეში ერთი კამერა ჩანს.
+ * ჩართული კამერებიდან იმარჯვებს ყველაზე გვიან შემოსული — ასე ტელეფონის
+ * კამერის ჩართვა სურათს იქ გადაიტანს, გამორთვა კი პირველ მოწყობილობას დაუბრუნებს.
+ * თუ კამერა არსადაა ჩართული, რჩება პირველი მოწყობილობის ადგილი.
  */
 function isBetterCameraRef(
   candidate: TrackReferenceOrPlaceholder,
   current: TrackReferenceOrPlaceholder,
-  localSid: string | undefined,
 ): boolean {
-  if (localSid) {
-    if (candidate.participant.sid === localSid) return true;
-    if (current.participant.sid === localSid) return false;
-  }
-
-  const candidateLive = isTrackReference(candidate);
-  const currentLive = isTrackReference(current);
+  const candidateLive = isCameraLive(candidate);
+  const currentLive = isCameraLive(current);
   if (candidateLive !== currentLive) return candidateLive;
 
   const candidateJoined = candidate.participant.joinedAt?.getTime() ?? Number.MAX_SAFE_INTEGER;
   const currentJoined = current.participant.joinedAt?.getTime() ?? Number.MAX_SAFE_INTEGER;
-  if (candidateJoined !== currentJoined) return candidateJoined < currentJoined;
+
+  if (candidateJoined !== currentJoined) {
+    return candidateLive ? candidateJoined > currentJoined : candidateJoined < currentJoined;
+  }
 
   return candidate.participant.sid < current.participant.sid;
 }
@@ -44,10 +46,7 @@ export function MyVideoGrid() {
     { onlySubscribed: false },
   );
 
-  const { localParticipant } = useLocalParticipant();
-
   const tracks = useMemo(() => {
-    const localSid = localParticipant?.sid;
     const cameraByUser = new Map<string, TrackReferenceOrPlaceholder>();
     const sharedTracks: TrackReferenceOrPlaceholder[] = [];
 
@@ -63,13 +62,13 @@ export function MyVideoGrid() {
 
       const userId = participantUserId(participant);
       const current = cameraByUser.get(userId);
-      if (!current || isBetterCameraRef(ref, current, localSid)) {
+      if (!current || isBetterCameraRef(ref, current)) {
         cameraByUser.set(userId, ref);
       }
     }
 
     return [...cameraByUser.values(), ...sharedTracks];
-  }, [rawTracks, localParticipant]);
+  }, [rawTracks]);
 
   const [focusedKey, setFocusedKey] = useState<string | null>(null);
 
