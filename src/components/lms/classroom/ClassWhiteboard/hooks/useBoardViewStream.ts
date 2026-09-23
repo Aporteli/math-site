@@ -19,9 +19,7 @@ interface Options {
 const VIEW_STREAM_INTERVAL_MS = 40;
 
 /**
- * Streams the teacher's current board view (pan/zoom/page) to locked students
- * over the lossy LiveKit data channel, targeting only locked participants so
- * the server and other clients never process unnecessary traffic.
+ * Streams the teacher's pan/zoom to locked students only.
  */
 export function useBoardViewStream({
   room,
@@ -43,6 +41,8 @@ export function useBoardViewStream({
       const assigned = assignedPageByStudent[id];
       return assigned === undefined || assigned === currentPageIndex;
     });
+    if (ids.length === 0) return;
+
     let raf = 0;
     let lastSent = 0;
 
@@ -53,7 +53,6 @@ export function useBoardViewStream({
       lastSent = now;
 
       const view = viewRef.current;
-      // Locked ids are account ids; stream to every live device of those students.
       const destinations = ids.flatMap((id) =>
         liveIdentitiesFor(room.remoteParticipants.values(), id),
       );

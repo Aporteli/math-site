@@ -26,6 +26,7 @@ export const Tile = memo(function Tile({
   const p = trackRef.participant;
   const name = p?.name || p?.identity || "მონაწილე";
   const isScreenShare = trackRef.source === Track.Source.ScreenShare;
+  const mirrorLocalCamera = Boolean(p?.isLocal) && !isScreenShare;
 
   return (
     <TrackRefContext.Provider value={trackRef}>
@@ -41,7 +42,10 @@ export const Tile = memo(function Tile({
           <VideoTrack
             trackRef={trackRef}
             className="h-full w-full"
-            style={{ objectFit: isScreenShare ? "contain" : "cover" }}
+            style={{
+              objectFit: isScreenShare ? "contain" : "cover",
+              transform: mirrorLocalCamera ? "scaleX(-1)" : undefined,
+            }}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-slate-900">

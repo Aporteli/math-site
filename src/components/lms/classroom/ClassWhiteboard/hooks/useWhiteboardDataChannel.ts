@@ -150,6 +150,7 @@ export function useWhiteboardDataChannel(opts: Options) {
         }
 
         if (data.type === 'BOARD_VIEW' && data.view) {
+          if (isTeacher) return;
           const view = data.view as BoardView;
           if (assignedPageIndex !== null) {
             applyBoardView({ ...view, pageIndex: assignedPageIndex });

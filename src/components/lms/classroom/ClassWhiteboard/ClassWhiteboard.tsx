@@ -563,7 +563,7 @@ export function ClassWhiteboard({
         isFullscreen={isFullscreen}
         onToggleFullscreen={onToggleFullscreen}
         isTeacher={isTeacher}
-        disabled={isLocked || pageLocked}
+        disabled={isLocked}
         zoomPercent={zoomPercent}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}

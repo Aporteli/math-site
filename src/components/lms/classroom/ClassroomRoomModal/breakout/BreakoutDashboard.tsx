@@ -175,7 +175,6 @@ function AssignRooms({ students }: { students: StudentOption[] }) {
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      <p className="text-xs leading-5 text-white/60">მოსწავლე აირჩიეთ ოთახი A-ში ან B-ში, შემდეგ დააჭირეთ გაყოფას.</p>
 
       {students.length === 0 ? (
         <p className="text-xs leading-5 text-white/40">ჩარიცხული მოსწავლეები ვერ მოიძებნა</p>
