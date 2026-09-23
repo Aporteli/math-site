@@ -6,10 +6,7 @@ import { getSession, signIn } from 'next-auth/react';
 import { isUserRole } from '@/lib/auth/roles';
 import { resolvePostLoginHref } from '@/lib/auth/paths';
 import { signupSchema } from '@/lib/auth/schemas';
-import {
-  sendSignupOtpAction,
-  verifyAndCreateUserAction,
-} from '@/app/[locale]/(auth)/signup/actions';
+import { sendSignupOtpAction, verifyAndCreateUserAction } from '@/app/[locale]/(auth)/signup/actions';
 import type { SignupFormProps } from './types';
 
 const fieldClass =
@@ -57,16 +54,13 @@ export function SignupForm({ locale, copy }: SignupFormProps) {
     setPending(false);
 
     if (!result.success) {
-      setError(
-        result.error === 'Email already exists' ? copy.emailExists : copy.error,
-      );
+      setError(result.error === 'Email already exists' ? copy.emailExists : copy.error);
       return;
     }
 
     setStep('OTP');
   }
 
-  // ეტაპი 2: კოდის გადამოწმება, იუზერის შექმნა და ავტომატური ლოგინი
   async function handleVerifyAndRegister(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -87,7 +81,6 @@ export function SignupForm({ locale, copy }: SignupFormProps) {
       return;
     }
 
-    // ავტომატური შესვლა რეგისტრაციის წარმატებით გავლის შემდეგ
     const signInResult = await signIn('credentials', {
       email,
       password,
@@ -190,8 +183,7 @@ export function SignupForm({ locale, copy }: SignupFormProps) {
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex w-full items-center justify-center rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70"
-          >
+            className="inline-flex w-full items-center justify-center rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70">
             {pending ? copy.submitting : 'კოდის მიღება'}
           </button>
         </form>
@@ -230,16 +222,14 @@ export function SignupForm({ locale, copy }: SignupFormProps) {
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex w-full items-center justify-center rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70"
-          >
+            className="inline-flex w-full items-center justify-center rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70">
             {pending ? copy.submitting : copy.submit}
           </button>
 
           <button
             type="button"
             onClick={() => setStep('DETAILS')}
-            className="w-full text-center text-xs text-muted hover:text-ink transition-colors"
-          >
+            className="w-full text-center text-xs text-muted hover:text-ink transition-colors">
             მონაცემების რედაქტირება
           </button>
         </form>

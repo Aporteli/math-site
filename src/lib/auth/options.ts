@@ -5,7 +5,7 @@ import { LOGIN_PATH } from '@/lib/auth/paths';
 import { loginSchema } from '@/lib/auth/schemas';
 import { authSecret } from '@/lib/auth/secret';
 import { prisma } from '@/lib/prisma';
-import { findUserByEmail, passwordsMatch, toPublicUser } from '@/lib/auth/users';
+import { findUserByEmail, toPublicUser, verifyPassword } from '@/lib/auth/users';
 import { isOwnerEmail, isUserRole, type UserRole } from '@/lib/auth/roles';
 
 export { authSecret };
@@ -43,7 +43,7 @@ export const authOptions: NextAuthOptions = {
         const user = await findUserByEmail(parsed.data.email);
         if (!user) return null;
 
-        const isValid = await passwordsMatch(parsed.data.password, user.password);
+        const isValid = await verifyPassword(parsed.data.password, user.password);
         if (!isValid) return null;
 
         return toPublicUser(user);

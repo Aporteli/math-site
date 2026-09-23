@@ -23,7 +23,6 @@ function detectLocale(request: NextRequest) {
     const tag = entry.split(';')[0]?.trim().slice(0, 2).toLowerCase();
     if (tag && isLocale(tag)) return tag;
   }
-
   return defaultLocale;
 }
 

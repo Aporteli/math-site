@@ -13,7 +13,6 @@ export async function sendSignupOtpAction(formData: FormData) {
   const password = formData.get('password') as string;
   const confirmPassword = formData.get('confirmPassword') as string;
 
-  // Zod-ით ვამოწმებთ შეყვანილ მონაცემებს
   const parsed = signupSchema.safeParse({
     name,
     email,
@@ -25,13 +24,11 @@ export async function sendSignupOtpAction(formData: FormData) {
     return { success: false, error: 'Invalid input' };
   }
 
-  // ვამოწმებთ, ხომ არ არის მეილი უკვე დაკავებული
   const existingUser = await findUserByEmail(parsed.data.email);
   if (existingUser) {
     return { success: false, error: 'Email already exists' };
   }
 
-  // ვაგენერირებთ და ვაგზავნით კოდს
   try {
     await generateAndSendOTP(parsed.data.email);
     return { success: true };
@@ -41,9 +38,6 @@ export async function sendSignupOtpAction(formData: FormData) {
   }
 }
 
-/**
- * ეტაპი 2: 6-ნიშნა კოდის გადამოწმება და მომხმარებლის ბაზაში შექმნა
- */
 export async function verifyAndCreateUserAction(formData: FormData) {
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;
@@ -66,13 +60,11 @@ export async function verifyAndCreateUserAction(formData: FormData) {
     return { success: false, error: 'Invalid input' };
   }
 
-  // ვამოწმებთ მეილზე გაგზავნილ OTP კოდს Prisma-ს ბაზაში
   const isValid = await verifyOTP(parsed.data.email, code);
   if (!isValid) {
     return { success: false, error: 'Invalid or expired OTP' };
   }
 
-  // ვქმნით მომხმარებელს ბაზაში
   try {
     await createUser({
       name: parsed.data.name,

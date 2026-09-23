@@ -16,7 +16,6 @@ export interface AuthUser {
 export async function findUserByEmail(email: string) {
   const normalized = email.trim().toLowerCase();
 
-  // Try Prisma first
   try {
     const user = await prisma.user.findUnique({
       where: { email: normalized },
@@ -41,24 +40,13 @@ export async function hashPassword(password: string): Promise<string> {
   return `${salt}:${derivedKey.toString('hex')}`;
 }
 
-export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  const [salt, key] = hashedPassword.split(':');
+export async function verifyPassword(input: string, hashed: string): Promise<boolean> {
+  if (!input || !hashed) return false;
+  const [salt, key] = hashed.split(':');
   if (!salt || !key) return false;
-  const derivedKey = (await scryptAsync(password, salt, 64)) as Buffer;
+  const derivedKey = (await scryptAsync(input, salt, 64)) as Buffer;
   const keyBuffer = Buffer.from(key, 'hex');
   return timingSafeEqual(derivedKey, keyBuffer);
-}
-
-export async function passwordsMatch(input: string, hashed: string): Promise<boolean> {
-  if (!input || !hashed) return false;
-  if (hashed === 'mathlab-demo') {
-    return input === hashed;
-  }
-  try {
-    return await verifyPassword(input, hashed);
-  } catch {
-    return false;
-  }
 }
 
 export function toPublicUser(user: AuthUser) {

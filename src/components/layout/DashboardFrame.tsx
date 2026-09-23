@@ -323,7 +323,7 @@ function SidebarChrome({
       {/* ლოგოს და ჩაკეცვის ზოლი */}
       <div
         className={[
-          'flex border-b border-hairline/60',
+          'flex',
           collapsed ? 'flex-col items-center gap-2 px-2 py-3' : 'items-center gap-2 px-3.5 py-3',
         ].join(' ')}>
         <SiteLogo
