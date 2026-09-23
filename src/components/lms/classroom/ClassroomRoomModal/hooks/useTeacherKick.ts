@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { RoomEvent } from 'livekit-client';
 import type { RemoteParticipant, Room } from 'livekit-client';
-import { getCourseTeacherId } from '@/lib/actions/room';
+import { checkTeacherInRoom, getCourseTeacherId } from '@/lib/actions/room';
 import { participantUserId } from '@/lib/livekit/participant-identity';
 
 export function useTeacherKick(
@@ -26,6 +26,8 @@ export function useTeacherKick(
     /** Only a teacher that was actually in the room can end the call by leaving. */
     let sawTeacher = false;
 
+    let kickTimer: ReturnType<typeof setTimeout> | null = null;
+
     const kick = () => {
       if (!cancelled) onTeacherLeftRef.current?.();
     };
@@ -34,22 +36,44 @@ export function useTeacherKick(
         (participant) => participantUserId(participant) === teacherId,
       );
 
+    const cancelKick = () => {
+      if (!kickTimer) return;
+      clearTimeout(kickTimer);
+      kickTimer = null;
+    };
+
+    // Leaving this room can mean the teacher joined the other breakout room.
+    // Confirm they are gone from the whole class before ending the call.
+    const scheduleKick = () => {
+      if (kickTimer || teacherPresent()) return;
+      kickTimer = setTimeout(() => {
+        kickTimer = null;
+        if (cancelled || teacherPresent()) return;
+        void checkTeacherInRoom(courseId).then((present) => {
+          if (cancelled || present || teacherPresent()) return;
+          kick();
+        }).catch(() => {
+          if (!cancelled && !teacherPresent()) kick();
+        });
+      }, 3000);
+    };
+
     const syncTeacherPresence = () => {
       if (!teacherId || room.remoteParticipants.size === 0) return;
 
       if (teacherPresent()) {
         sawTeacher = true;
+        cancelKick();
         return;
       }
-      if (sawTeacher) kick();
+      if (sawTeacher) scheduleKick();
     };
 
     const handleParticipantDisconnected = (participant: RemoteParticipant) => {
       if (!teacherId || participantUserId(participant) !== teacherId) return;
 
       sawTeacher = true;
-      // The teacher may still be connected from another device.
-      if (!teacherPresent()) kick();
+      if (!teacherPresent()) scheduleKick();
     };
 
     async function init() {
@@ -70,6 +94,7 @@ export function useTeacherKick(
 
     return () => {
       cancelled = true;
+      if (kickTimer) clearTimeout(kickTimer);
       room.off(RoomEvent.ParticipantConnected, syncTeacherPresence);
       room.off(RoomEvent.ParticipantDisconnected, handleParticipantDisconnected);
     };

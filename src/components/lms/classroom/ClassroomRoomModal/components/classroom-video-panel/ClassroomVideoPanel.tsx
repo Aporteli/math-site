@@ -18,6 +18,10 @@ import { AudioVolumeProvider } from './AudioVolumeContext';
 import { CustomChat } from '../custom-chat/CustomChat';
 import { RoomInstanceBridge } from '../RoomInstanceBridge';
 import { MyVideoGrid } from '../video-grid/MyVideoGrid';
+import { ApplyListenMix } from '../../breakout/ApplyListenMix';
+import { BreakoutSignal } from '../../breakout/BreakoutSignal';
+import { ReportPresence } from '../../breakout/ReportPresence';
+import { useBreakout } from '../../breakout/BreakoutContext';
 import type { ClassroomVideoPanelProps } from './types';
 import '@livekit/components-styles';
 
@@ -37,6 +41,7 @@ export function ClassroomVideoPanel({
   onClose,
   onRoom,
 }: ClassroomVideoPanelProps) {
+  const breakout = useBreakout();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isolatedIdentities, setIsolatedIdentities] = useState<string[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
@@ -44,6 +49,7 @@ export function ClassroomVideoPanel({
   const [connectAttempt, setConnectAttempt] = useState(0);
 
   const handleDisconnected = (reason?: DisconnectReason) => {
+    if (Date.now() < breakout.ignoreDisconnectUntil.current) return;
     const message = reason !== undefined ? DISCONNECT_NOTICE[reason] : undefined;
     if (message) {
       setNotice(message);
@@ -73,7 +79,7 @@ export function ClassroomVideoPanel({
 
   return (
     <LiveKitRoom
-      key={connectAttempt}
+      key={`${breakout.roomKey}:${connectAttempt}:${token.slice(-12)}`}
       // მეორეული კავშირი ჩუმად შემოდის: ხმა პირველ მოწყობილობაზე რჩება,
       // კამერა კი ღილაკით გადააქვთ.
       video={!secondary}
@@ -97,16 +103,30 @@ export function ClassroomVideoPanel({
       data-lk-theme="default"
       className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden"
       onDisconnected={handleDisconnected}
+      onConnected={breakout.markMediaConnected}
     >
       <AudioVolumeProvider>
-        <RoomInstanceBridge onRoom={onRoom} />
+        {breakout.roomKey === 'main' && <RoomInstanceBridge onRoom={onRoom} />}
+        <BreakoutSignal />
+        {isTeacher && <ReportPresence roomKey={breakout.roomKey} />}
+        {isTeacher && breakout.breakout.active && <ApplyListenMix />}
         <AudioIsolationListener isTeacher={isTeacher} />
         <OwnDeviceAudioListener />
         <SecondaryCaptureGuard />
         <ChatBackgroundListener courseId={courseId} />
 
-        <div className="absolute top-2 left-2 z-10">
+        <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
           <ConnectionStatusBadge />
+          {breakout.roomKey !== 'main' && (
+            <span className="rounded-md bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-bold text-slate-950">
+              {breakout.roomKey === 'a' ? 'ოთახი A' : 'ოთახი B'}
+            </span>
+          )}
+          {breakout.moving && (
+            <span className="rounded-md bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+              გადასვლა...
+            </span>
+          )}
         </div>
 
         <SecondaryDeviceNotice />

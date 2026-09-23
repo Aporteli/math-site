@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { isTrackReference, useTracks } from "@livekit/components-react";
 import type { TrackReferenceOrPlaceholder } from "@livekit/components-react";
 import { Track } from "livekit-client";
-import { participantUserId } from "@/lib/livekit/participant-identity";
+import { participantUserId, isAuxiliaryParticipant } from "@/lib/livekit/participant-identity";
 import { GalleryLayout } from "./GalleryLayout";
 import { SpotlightLayout } from "./SpotlightLayout";
 import { trackKey } from "./track-key";
@@ -52,7 +52,7 @@ export function MyVideoGrid() {
 
     for (const ref of rawTracks) {
       const participant = ref.participant;
-      if (!participant?.sid) continue;
+      if (!participant?.sid || isAuxiliaryParticipant(participant)) continue;
 
       // ეკრანის ჩვენება შინაარსია — ყოველთვის ჩანს.
       if (ref.source !== Track.Source.Camera) {

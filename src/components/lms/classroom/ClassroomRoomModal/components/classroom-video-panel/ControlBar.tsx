@@ -3,12 +3,13 @@
 import { useRef, useState } from 'react';
 import { useLocalParticipant } from '@livekit/components-react';
 import { useAudioDeviceRole } from '../../hooks/useAudioDeviceRole';
-import { MessageSquare, MoreVertical, MonitorUp } from 'lucide-react';
+import { MessageSquare, MoreVertical, MonitorUp, Columns2 } from 'lucide-react';
 import { ControlButton } from './ControlButton';
 import { MediaControl } from './MediaControl';
 import { MoreMenu } from './more-menu/MoreMenu';
 import { TemporalBackgroundTunerPanel } from './TemporalBackgroundTuner';
 import { useClickOutside } from './use-click-outside';
+import { useBreakout } from '../../breakout/BreakoutContext';
 import type { MenuId } from './types';
 
 interface ControlBarProps {
@@ -33,6 +34,7 @@ export function ControlBar({
 }: ControlBarProps) {
   const { localParticipant } = useLocalParticipant();
   const audioRole = useAudioDeviceRole();
+  const breakout = useBreakout();
   const [activeMenu, setActiveMenu] = useState<MenuId | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +88,16 @@ export function ControlBar({
             activeClass="border-emerald-500 bg-emerald-500 text-white"
             onClick={onToggleChat}
           />
+
+          {isTeacher && (
+            <ControlButton
+              icon={Columns2}
+              title="ოთახები"
+              active={breakout.dashboardOpen}
+              activeClass="border-amber-500 bg-amber-500 text-slate-950"
+              onClick={breakout.toggleDashboard}
+            />
+          )}
 
           <div className="relative">
             <ControlButton

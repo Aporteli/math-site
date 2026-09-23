@@ -3,8 +3,11 @@
 
 import { RoomServiceClient } from 'livekit-server-sdk';
 import { getSession } from '@/lib/auth/session';
+import { courseRoomName, type BreakoutRoomKey } from '@/lib/livekit/breakout';
 import { participantUserId } from '@/lib/livekit/participant-identity';
 import { prisma } from '@/lib/prisma';
+
+const CLASS_ROOMS: BreakoutRoomKey[] = ['main', 'a', 'b'];
 
 export async function checkTeacherInRoom(courseId: string): Promise<boolean> {
   const session = await getSession();
@@ -31,16 +34,21 @@ export async function checkTeacherInRoom(courseId: string): Promise<boolean> {
 
   const httpUrl = livekitUrl.replace('wss://', 'https://').replace('ws://', 'http://');
   const roomService = new RoomServiceClient(httpUrl, apiKey, apiSecret);
-  const roomName = `course-${courseId}`;
 
-  try {
-    const participants = await roomService.listParticipants(roomName);
-    // Check if the teacher is among the participants (any of their connections).
-    return participants.some((p) => participantUserId(p) === course.teacherId);
-  } catch (error) {
-    // If room doesn't exist or error, treat as teacher not present
-    return false;
+  // The teacher is still in the class when they move from the main room into
+  // Room A or Room B. Any of their connections counts.
+  for (const key of CLASS_ROOMS) {
+    try {
+      const participants = await roomService.listParticipants(courseRoomName(courseId, key));
+      if (participants.some((participant) => participantUserId(participant) === course.teacherId)) {
+        return true;
+      }
+    } catch {
+      // That room is not open.
+    }
   }
+
+  return false;
 }
 
 export async function getCourseTeacherId(courseId: string): Promise<string> {

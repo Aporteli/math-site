@@ -49,6 +49,15 @@ export function isStaffParticipant(participant: ParticipantAttributes): boolean 
   return role === 'teacher' || role === 'admin';
 }
 
+/**
+ * Extra connections that carry audio monitoring or whiteboard data.
+ * They belong to a real account but must not appear as another person.
+ */
+export function isAuxiliaryParticipant(participant: ParticipantAttributes): boolean {
+  const role = participantRole(participant);
+  return role === 'monitor' || role === 'board';
+}
+
 /** Every live connection identity that belongs to the given account id. */
 export function liveIdentitiesFor(
   participants: Iterable<ParticipantAttributes>,

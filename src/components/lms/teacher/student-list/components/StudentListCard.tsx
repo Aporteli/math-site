@@ -69,9 +69,6 @@ export function StudentListCard({
             <p className="min-w-0 truncate text-sm font-bold leading-tight text-ink">
               {student.firstName} {student.lastName}
             </p>
-            <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${badge.cls}`}>
-              {badge.label}
-            </span>
           </div>
 
           <button

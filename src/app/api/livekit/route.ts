@@ -1,121 +1,134 @@
-import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
-import { getSession } from '@/lib/auth/session';
+import { type RoomServiceClient } from 'livekit-server-sdk';
+import { loadCourseAccess } from '@/lib/livekit/course-access';
 import {
-  CONNECTION_ID_SUFFIX_LENGTH,
-  PARTICIPANT_ROLE,
-  PARTICIPANT_USER_ID,
-  participantUserId,
-} from '@/lib/livekit/participant-identity';
-import { prisma } from '@/lib/prisma';
+  IDLE_BREAKOUT,
+  assignedRoom,
+  courseRoomName,
+  parseBreakoutMetadata,
+  roomKeyFromParam,
+  type BreakoutAssignment,
+  type BreakoutRoomKey,
+} from '@/lib/livekit/breakout';
+import { ensureLiveKitRoom, hasRealAccountConnection, issueRoomToken } from '@/lib/livekit/issue-token';
+import { getLiveKitEnv } from '@/lib/livekit/livekit-env';
+
+const MAIN_EMPTY_TIMEOUT = 60 * 60 * 24;
+const BREAKOUT_EMPTY_TIMEOUT = 60 * 10;
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const courseId = searchParams.get('courseId');
+    if (!courseId) return new NextResponse('Missing courseId', { status: 400 });
 
-    if (!courseId) {
-      return new NextResponse('Missing courseId', { status: 400 });
-    }
+    const loaded = await loadCourseAccess(courseId);
+    if (!loaded.ok) return new NextResponse(loaded.message, { status: loaded.status });
 
-    // 1. სესიის შემოწმება — დაულოგინებელი მომხმარებლის დაბლოკვა (401)
-    const session = await getSession();
-    const userId = session?.user?.id;
-    const userName = session?.user?.name || 'მომხმარებელი';
-    const userRole = (session?.user as any)?.role;
+    const env = getLiveKitEnv();
+    if (!env) return new NextResponse('LiveKit config is missing', { status: 500 });
 
-    if (!userId) {
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
+    const assignment = await readAssignment(env.roomService, courseId);
+    const intent = searchParams.get('intent') === 'monitor' ? 'monitor' : 'media';
+    const requestedRoom = roomKeyFromParam(searchParams.get('roomKey'));
 
-    // 2. კურსის და უფლებების შემოწმება
-    const course = await prisma.course.findUnique({
-      where: { id: courseId },
-      select: { teacherId: true },
-    });
-
-    if (!course) {
-      return new NextResponse('Course not found', { status: 404 });
-    }
-
-    const isTeacher = course.teacherId === userId || userRole === 'ADMIN';
-
-    if (!isTeacher) {
-      const enrollment = await prisma.enrollment.findFirst({
-        where: {
-          courseId: courseId,
-          userId: userId,
-          status: 'ACTIVE',
-        },
-      });
-
-      if (!enrollment) {
-        return new NextResponse('Access denied for this course', { status: 403 });
+    if (intent === 'monitor') {
+      if (!loaded.access.isTeacher) {
+        return new NextResponse('Only the teacher can monitor a room', { status: 403 });
       }
-    }
-
-    const apiKey = process.env.LIVEKIT_API_KEY;
-    const apiSecret = process.env.LIVEKIT_API_SECRET;
-    const livekitUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL;
-
-    if (!apiKey || !apiSecret || !livekitUrl) {
-      return new NextResponse('LiveKit config is missing', { status: 500 });
-    }
-
-    const roomName = `course-${courseId}`;
-
-    const httpUrl = livekitUrl.replace('wss://', 'https://').replace('ws://', 'http://');
-    const roomService = new RoomServiceClient(httpUrl, apiKey, apiSecret);
-
-    // 3. ოთახის დარეგისტრირება მუდმივი სტატუსით (არ დაიხურება 24 საათის განმავლობაში)
-    try {
-      await roomService.createRoom({
-        name: roomName,
-        emptyTimeout: 60 * 60 * 24, // 24 საათი ცარიელიც რომ იყოს, ოთახი არ წაიშლება
-        maxParticipants: 50,
+      if (!assignment.active || !requestedRoom) {
+        return new NextResponse('Nothing to monitor', { status: 409 });
+      }
+      const roomName = courseRoomName(courseId, requestedRoom);
+      await ensureLiveKitRoom(
+        env.roomService,
+        roomName,
+        requestedRoom === 'main' ? MAIN_EMPTY_TIMEOUT : BREAKOUT_EMPTY_TIMEOUT,
+      );
+      const token = await issueRoomToken({
+        apiKey: env.apiKey,
+        apiSecret: env.apiSecret,
+        userId: loaded.access.userId,
+        userName: loaded.access.userName,
+        role: 'monitor',
+        roomName,
+        canPublish: false,
+        canSubscribe: true,
+        canPublishData: false,
+        hidden: true,
       });
-    } catch {
-      // თუ ოთახი უკვე შექმნილია, შეცდომას ვაიგნორებთ და ჩვეულებრივ ვაგრძელებთ
+      return NextResponse.json({ token, room: roomName, roomKey: requestedRoom });
     }
 
-    // 3.1. იგივე ექაუნთით სხვა მოწყობილობა უკვე ოთახშია? მაშინ ეს კავშირი „მეორეულია“:
-    // ხმა (დინამიკი/მიკროფონი) პირველ მოწყობილობაზე რჩება, რომ ხმა არ გაორმაგდეს.
-    let secondary = false;
-    try {
-      const participants = await roomService.listParticipants(roomName);
-      secondary = participants.some((participant) => participantUserId(participant) === userId);
-    } catch {
-      secondary = false;
-    }
+    const roomKey = mediaRoomKey(assignment, loaded.access.isTeacher, loaded.access.userId, requestedRoom);
+    const roomName = courseRoomName(courseId, roomKey);
+    await ensureLiveKitRoom(
+      env.roomService,
+      roomName,
+      roomKey === 'main' ? MAIN_EMPTY_TIMEOUT : BREAKOUT_EMPTY_TIMEOUT,
+    );
 
-    // 4. ტოკენის გენერაცია — identity უნიკალურია თითო კავშირზე, რომ ერთი ექაუნთით
-    // რამდენიმე მოწყობილობიდან შესვლისას LiveKit-მა ძველი კავშირი არ გათიშოს.
-    const role = typeof userRole === 'string' && userRole ? userRole.toLowerCase() : 'student';
-
-    const at = new AccessToken(apiKey, apiSecret, {
-      identity: `${userId}:${randomUUID().slice(0, CONNECTION_ID_SUFFIX_LENGTH)}`,
-      name: userName,
-      ttl: '12h',
-      attributes: {
-        [PARTICIPANT_USER_ID]: userId,
-        [PARTICIPANT_ROLE]: role,
-      },
-    });
-
-    at.addGrant({
-      roomJoin: true,
-      room: roomName,
+    const secondary = await hasRealAccountConnection(env.roomService, roomName, loaded.access.userId);
+    const role = loaded.access.userRole.toLowerCase();
+    const token = await issueRoomToken({
+      apiKey: env.apiKey,
+      apiSecret: env.apiSecret,
+      userId: loaded.access.userId,
+      userName: loaded.access.userName,
+      role,
+      roomName,
       canPublish: true,
       canSubscribe: true,
       canPublishData: true,
     });
 
-    const token = await at.toJwt();
+    let boardToken: string | null = null;
+    if (roomKey !== 'main') {
+      const mainRoom = courseRoomName(courseId, 'main');
+      await ensureLiveKitRoom(env.roomService, mainRoom, MAIN_EMPTY_TIMEOUT);
+      boardToken = await issueRoomToken({
+        apiKey: env.apiKey,
+        apiSecret: env.apiSecret,
+        userId: loaded.access.userId,
+        userName: loaded.access.userName,
+        role: 'board',
+        roomName: mainRoom,
+        canPublish: false,
+        canSubscribe: true,
+        canPublishData: true,
+      });
+    }
 
-    return NextResponse.json({ token, room: roomName, secondary });
+    return NextResponse.json({
+      token,
+      room: roomName,
+      roomKey,
+      secondary,
+      breakout: assignment,
+      boardToken,
+    });
   } catch (error) {
     console.error('LiveKit token error:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
+  }
+}
+
+function mediaRoomKey(
+  assignment: BreakoutAssignment,
+  isTeacher: boolean,
+  userId: string,
+  requested: BreakoutRoomKey | null,
+): BreakoutRoomKey {
+  if (!assignment.active) return 'main';
+  if (isTeacher) return requested ?? 'main';
+  return assignedRoom(assignment, userId);
+}
+
+async function readAssignment(roomService: RoomServiceClient, courseId: string): Promise<BreakoutAssignment> {
+  try {
+    const rooms = await roomService.listRooms([courseRoomName(courseId, 'main')]);
+    return parseBreakoutMetadata(rooms[0]?.metadata);
+  } catch {
+    return IDLE_BREAKOUT;
   }
 }

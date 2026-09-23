@@ -10,10 +10,14 @@ import { ClassroomError } from './ClassroomError';
 import { BoardFullscreenSensor } from './classroom-video-panel/BoardFullscreenSensor';
 import { CollapsibleVideoPanel } from './classroom-video-panel/CollapsibleVideoPanel';
 import { BoardControlContextProvider } from './BoardControlContext';
-import { useLiveKitToken } from '../hooks/useLiveKitToken';
 import { useClassroomFullscreen } from '../hooks/useClassroomFullscreen';
 import { useHideAiWidget } from '../hooks/useHideAiWidget';
 import { useTeacherKick } from '../hooks/useTeacherKick';
+import { BreakoutContext } from '../breakout/BreakoutContext';
+import { BoardDataRoom } from '../breakout/BoardDataRoom';
+import { BreakoutDashboard } from '../breakout/BreakoutDashboard';
+import { MonitorRoom } from '../breakout/MonitorRoom';
+import { useClassroomConnection } from '../breakout/useClassroomConnection';
 import { useWhiteboardHistory } from './classroom-video-panel/hooks/use-white-board-history';
 import { useBoardControlState } from '../../ClassWhiteboard/hooks/useBoardControlState';
 import { useEnrolledStudents } from '../../ClassWhiteboard/hooks/useEnrolledStudents';
@@ -43,7 +47,7 @@ export function ClassroomRoomModal({
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [activeRoom, setActiveRoom] = useState<Room | null>(null);
 
-  const { token, loading, error, secondary } = useLiveKitToken(courseId);
+  const connection = useClassroomConnection(courseId, isTeacher);
   const { isBoardFullscreen, isChromeOpen, setIsChromeOpen, toggleClassroomFullscreen } =
     useClassroomFullscreen(classroomRootRef);
   const { undo, redo } = useWhiteboardHistory();
@@ -69,10 +73,11 @@ export function ClassroomRoomModal({
     [boardControl.presentStudents, boardControl.lockedStudentIds, boardControl.toggleStudentLock],
   );
 
-  if (loading) return <ClassroomLoading />;
-  if (error || !token) return <ClassroomError error={error} onClose={onClose} />;
+  if (connection.loading) return <ClassroomLoading />;
+  if (connection.error || !connection.mediaToken) return <ClassroomError error={connection.error} onClose={onClose} />;
 
   return (
+    <BreakoutContext.Provider value={connection}>
     <BoardControlContextProvider value={boardControlValue}>
       <div
         ref={classroomRootRef}
@@ -109,13 +114,27 @@ export function ClassroomRoomModal({
             }`}>
             <CollapsibleVideoPanel
               hidden={activeTab === 'board'}
-              token={token}
+              token={connection.mediaToken}
               courseId={courseId}
               isTeacher={isTeacher}
-              secondary={secondary}
+              secondary={connection.secondary}
               onClose={onClose}
               onRoom={setActiveRoom}
             />
+
+            {connection.boardToken && (
+              <BoardDataRoom token={connection.boardToken} onRoom={setActiveRoom} />
+            )}
+            {isTeacher && connection.monitorTokens.main && (
+              <MonitorRoom token={connection.monitorTokens.main} roomKey="main" />
+            )}
+            {isTeacher && connection.monitorTokens.a && (
+              <MonitorRoom token={connection.monitorTokens.a} roomKey="a" />
+            )}
+            {isTeacher && connection.monitorTokens.b && (
+              <MonitorRoom token={connection.monitorTokens.b} roomKey="b" />
+            )}
+            {isTeacher && <BreakoutDashboard students={students} />}
 
             <ClassroomWhiteboardPanel
               room={activeRoom}
@@ -132,5 +151,6 @@ export function ClassroomRoomModal({
         </main>
       </div>
     </BoardControlContextProvider>
+    </BreakoutContext.Provider>
   );
 }
