@@ -1,0 +1,441 @@
+﻿generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                   String                 @id @default(cuid())
+  name                 String
+  email                String                 @unique
+  emailVerified        DateTime?
+  passwordHash         String
+  role                 Role                   @default(VISITOR)
+  imageUrl             String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  targetedAssignments  Assignment[]           @relation("TargetedStudent")
+  attendance           Attendance[]
+  comments             Comment[]
+  coursesTaught        Course[]               @relation("CourseTeacher")
+  enrollments          Enrollment[]
+  gradesGiven          Grade[]                @relation("GradedBy")
+  journalEvents        JournalEvent[]
+  lessonNotes          LessonNote[]
+  problemFamilies      ProblemFamily[]
+  problemSets          ProblemSet[]
+  problems             Problem[]
+  submissions          Submission[]
+  whiteboardsAsStudent WhiteboardAssignment[] @relation("WhiteboardStudent")
+  whiteboardsAsTeacher WhiteboardAssignment[] @relation("WhiteboardTeacher")
+
+  @@map("users")
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([email, token])
+  @@index([email])
+  @@map("verification_tokens")
+}
+
+model Course {
+  id                    String                 @id @default(cuid())
+  slug                  String                 @unique
+  inviteCode            String?                @unique
+  title                 String
+  description           String
+  yearGroup             YearGroup
+  locale                String                 @db.VarChar(8)
+  teacherId             String
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  assignments           Assignment[]
+  attendance            Attendance[]
+  whiteboard            CourseWhiteboard?
+  teacher               User                   @relation("CourseTeacher", fields: [teacherId], references: [id])
+  enrollments           Enrollment[]
+  lessonNotes           LessonNote[]
+  problemSets           ProblemSet[]
+  whiteboardAssignments WhiteboardAssignment[]
+
+  @@index([teacherId])
+  @@map("courses")
+}
+
+model Enrollment {
+  id         String           @id @default(cuid())
+  userId     String
+  courseId   String
+  status     EnrollmentStatus @default(ACTIVE)
+  enrolledAt DateTime         @default(now())
+  course     Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@map("enrollments")
+}
+
+model Problem {
+  id             String            @id @default(cuid())
+  authorId       String
+  templateId     String
+  topic          String            @db.VarChar(64)
+  difficulty     ProblemDifficulty
+  yearGroup      YearGroup?
+  source         ProblemSource
+  collection     ProblemCollection @default(bank)
+  originId       String?
+  instructionId  String
+  promptTex      String
+  solutionTex    String
+  seed           Int?
+  graphExpr      String?
+  kind           String?
+  formula        String?
+  variables      Json?
+  promptTemplate String?
+  branchId       String?
+  topicNodeId    String?
+  subtopicId     String?
+  conceptId      String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  items          ProblemSetItem[]
+  author         User              @relation(fields: [authorId], references: [id])
+  branch         TaxonomyNode?     @relation("ProblemBranch", fields: [branchId], references: [id])
+  concept        TaxonomyNode?     @relation("ProblemConcept", fields: [conceptId], references: [id])
+  subtopic       TaxonomyNode?     @relation("ProblemSubtopic", fields: [subtopicId], references: [id])
+  topicNode      TaxonomyNode?     @relation("ProblemTopic", fields: [topicNodeId], references: [id])
+
+  @@index([authorId, topic, difficulty])
+  @@index([authorId, collection])
+  @@index([authorId, collection, originId])
+  @@index([yearGroup, source])
+  @@index([branchId])
+  @@index([topicNodeId])
+  @@index([subtopicId])
+  @@index([conceptId])
+  @@map("problems")
+}
+
+model TaxonomyNode {
+  id                 String         @id @default(cuid())
+  level              TaxonomyLevel
+  slug               String         @db.VarChar(64)
+  nameKa             String         @db.VarChar(120)
+  nameEn             String         @db.VarChar(120)
+  nameRu             String         @db.VarChar(120)
+  parentId           String?
+  sortOrder          Int            @default(0)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  problemsAsBranch   Problem[]      @relation("ProblemBranch")
+  problemsAsConcept  Problem[]      @relation("ProblemConcept")
+  problemsAsSubtopic Problem[]      @relation("ProblemSubtopic")
+  problemsAsTopic    Problem[]      @relation("ProblemTopic")
+  parent             TaxonomyNode?  @relation("TaxonomyTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children           TaxonomyNode[] @relation("TaxonomyTree")
+
+  @@unique([parentId, slug])
+  @@index([level, parentId])
+  @@index([sortOrder])
+  @@map("taxonomy_nodes")
+}
+
+model ProblemFamily {
+  id            String          @id @default(cuid())
+  authorId      String
+  slug          String          @db.VarChar(64)
+  title         String          @db.VarChar(120)
+  topic         String          @db.VarChar(64)
+  instructionId String          @db.VarChar(64)
+  template      Json
+  parentId      String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  author        User            @relation(fields: [authorId], references: [id])
+  parent        ProblemFamily?  @relation("FamilySubtitles", fields: [parentId], references: [id], onDelete: Restrict)
+  children      ProblemFamily[] @relation("FamilySubtitles")
+
+  @@unique([authorId, slug])
+  @@index([authorId, topic])
+  @@index([authorId, parentId])
+  @@map("problem_families")
+}
+
+model ProblemSet {
+  id          String           @id @default(cuid())
+  title       String
+  slug        String
+  authorId    String
+  courseId    String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  assignments Assignment[]
+  items       ProblemSetItem[]
+  author      User             @relation(fields: [authorId], references: [id])
+  course      Course?          @relation(fields: [courseId], references: [id])
+
+  @@unique([authorId, slug])
+  @@index([authorId])
+  @@index([courseId])
+  @@map("problem_sets")
+}
+
+model ProblemSetItem {
+  id        String     @id @default(cuid())
+  setId     String
+  problemId String
+  position  Int
+  problem   Problem    @relation(fields: [problemId], references: [id])
+  set       ProblemSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@unique([setId, problemId])
+  @@index([problemId])
+  @@map("problem_set_items")
+}
+
+model Assignment {
+  id            String           @id @default(cuid())
+  courseId      String
+  problemSetId  String?
+  targetUserId  String?
+  type          AssignmentType   @default(PROBLEM)
+  title         String
+  instructions  String?
+  customPayload Json?
+  status        AssignmentStatus @default(DRAFT)
+  dueAt         DateTime?
+  publishedAt   DateTime?
+  attachmentUrl String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  course        Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  problemSet    ProblemSet?      @relation(fields: [problemSetId], references: [id])
+  targetUser    User?            @relation("TargetedStudent", fields: [targetUserId], references: [id])
+  comments      Comment[]
+  submissions   Submission[]
+
+  @@index([courseId, status])
+  @@index([problemSetId])
+  @@index([targetUserId])
+  @@map("assignments")
+}
+
+model Submission {
+  id            String           @id @default(cuid())
+  assignmentId  String
+  studentId     String
+  status        SubmissionStatus @default(DRAFT)
+  answers       Json?
+  attachmentUrl String?
+  submittedAt   DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  grade         Grade?
+  assignment    Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student       User             @relation(fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId])
+  @@index([studentId])
+  @@map("submissions")
+}
+
+model Comment {
+  id           String     @id @default(cuid())
+  assignmentId String
+  authorId     String
+  body         String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  author       User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model Grade {
+  id           String     @id @default(cuid())
+  submissionId String     @unique
+  graderId     String
+  score        Decimal    @db.Decimal(6, 2)
+  maxScore     Decimal    @db.Decimal(6, 2)
+  comment      String?
+  gradedAt     DateTime   @default(now())
+  grader       User       @relation("GradedBy", fields: [graderId], references: [id])
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([graderId])
+  @@map("grades")
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  courseId  String
+  studentId String
+  date      DateTime @db.Date
+  present   Boolean  @default(true)
+  note      String?
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, studentId, date])
+  @@index([studentId])
+  @@map("attendance")
+}
+
+model LessonNote {
+  id        String   @id @default(cuid())
+  courseId  String
+  teacherId String
+  date      DateTime @db.Date
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacher   User     @relation(fields: [teacherId], references: [id])
+
+  @@index([courseId, date])
+  @@map("lesson_notes")
+}
+
+model WhiteboardAssignment {
+  id        String                     @id @default(cuid())
+  courseId  String
+  studentId String
+  teacherId String
+  title     String
+  content   Json
+  status    WhiteboardAssignmentStatus @default(ASSIGNED)
+  createdAt DateTime                   @default(now())
+  updatedAt DateTime                   @updatedAt
+  course    Course                     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student   User                       @relation("WhiteboardStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  teacher   User                       @relation("WhiteboardTeacher", fields: [teacherId], references: [id])
+
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([courseId])
+  @@map("whiteboard_assignments")
+}
+
+model CourseWhiteboard {
+  id               String   @id @default(cuid())
+  courseId         String   @unique
+  pages            Json
+  currentPageIndex Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@map("course_whiteboards")
+}
+
+model JournalEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  date        String
+  allDay      Boolean  @default(false)
+  startTime   String   @default("09:00")
+  endTime     String   @default("10:00")
+  location    String   @default("")
+  description String   @default("")
+  guests      String[] @default([])
+  color       String   @default("navy")
+  repeat      String   @default("none")
+  reminder    String   @default("30")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@map("journal_events")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+  VISITOR
+}
+
+enum YearGroup {
+  YEAR_7
+  YEAR_8
+  YEAR_9
+  YEAR_10
+  YEAR_11
+  YEAR_12
+}
+
+enum ProblemDifficulty {
+  easy
+  medium
+  hard
+  olympiad
+}
+
+enum ProblemSource {
+  bank
+  generated
+  ai
+  custom
+}
+
+enum ProblemCollection {
+  bank
+  lab
+}
+
+enum TaxonomyLevel {
+  branch
+  topic
+  subtopic
+  concept
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+}
+
+enum AssignmentStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum AssignmentType {
+  FLASHCARD
+  PROBLEM
+  HOMEWORK
+  QUIZ
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  RETURNED
+}
+
+enum WhiteboardAssignmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+

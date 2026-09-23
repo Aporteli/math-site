@@ -6,6 +6,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+}
+
 enum Role {
   ADMIN
   TEACHER
@@ -87,6 +93,8 @@ model User {
   passwordHash  String
   role          Role      @default(VISITOR)
   imageUrl      String?
+  phone         String?   
+  parentPhone   String?   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -104,6 +112,9 @@ model User {
   whiteboardsAsStudent WhiteboardAssignment[] @relation("WhiteboardStudent")
   whiteboardsAsTeacher WhiteboardAssignment[] @relation("WhiteboardTeacher")
   journalEvents        JournalEvent[]
+
+  paymentsMade         Payment[] @relation("StudentPayments")
+  paymentsRecorded     Payment[] @relation("PaymentRecorder")
 
   @@map("users")
 }
@@ -130,6 +141,7 @@ model Course {
   locale      String    @db.VarChar(8)
   teacherId   String
   teacher     User      @relation("CourseTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  defaultMonthlyPrice Decimal @default(0) @db.Decimal(10, 2)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -149,15 +161,53 @@ model Enrollment {
   id         String           @id @default(cuid())
   userId     String
   courseId   String
+  monthlyPrice Decimal?      @db.Decimal(10, 2)  
   status     EnrollmentStatus @default(ACTIVE)
   enrolledAt DateTime         @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
+  lessons LessonSlot[]
+
   @@unique([userId, courseId])
   @@index([courseId])
   @@map("enrollments")
+}
+
+model LessonSlot {
+  id           String @id @default(cuid())
+  enrollmentId String
+  dayOfWeek    Int    // 1=ორშ ... 7=კვი
+  startTime    String @db.VarChar(5)  // "16:00"
+  endTime      String @db.VarChar(5)  // "17:30"
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@index([enrollmentId])
+  @@index([dayOfWeek])
+  @@map("lesson_slots")
+}
+
+model Payment {
+  id           String         @id @default(cuid())
+  studentId    String
+  monthKey     String         @db.VarChar(7)     // "2026-09"
+  amount       Decimal        @db.Decimal(10, 2)
+  method       PaymentMethod?
+  note         String?        @db.Text
+  recordedById String?                            // ვინ შეიყვანა (მასწავლებელი)
+  paidAt       DateTime       @default(now())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  student    User  @relation("StudentPayments", fields: [studentId], references: [id], onDelete: Cascade)
+  recordedBy User? @relation("PaymentRecorder", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, monthKey])   // ერთი ჩანაწერი ერთ მოსწავლეზე ერთ თვეში
+  @@index([monthKey])
+  @@index([studentId])
+  @@map("payments")
 }
 
 model Problem {

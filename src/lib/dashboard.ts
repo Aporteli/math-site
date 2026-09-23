@@ -38,6 +38,7 @@ export const TEACHER_NAV: DashboardLink<TeacherNavId>[] = [
   { id: "problems", href: "/teacher/problems", icon: Library },
   { id: "tools", href: "/teacher/tools", icon: Wrench },
   { id: "students", href: "/teacher/students", icon: Users },
+  { id: "studentList", href: "/teacher/student-list", icon: Users },
 ];
 
 export const STUDENT_NAV: DashboardLink<StudentNavId>[] = [
