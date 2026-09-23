@@ -43,7 +43,7 @@ export function ClassroomRoomModal({
   slashPromptsUserId = '',
 }: ClassroomRoomModalProps) {
   const classroomRootRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'split' | 'board'>('split');
+  const [activeTab, setActiveTab] = useState<'split' | 'board' | 'video'>('split');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [activeRoom, setActiveRoom] = useState<Room | null>(null);
 
@@ -92,80 +92,81 @@ export function ClassroomRoomModal({
 
   return (
     <BreakoutContext.Provider value={connection}>
-    <BoardControlContextProvider value={boardControlValue}>
-      <div
-        ref={classroomRootRef}
-        data-classroom-root
-        className={`fixed inset-0 z-50 flex h-[100dvh] w-screen flex-col overflow-hidden bg-slate-950 ${
-          isBoardFullscreen
-            ? 'p-0'
-            : 'pt-2 pr-2 pl-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:pt-3 sm:pr-3 sm:pl-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))]'
-        }`}>
-        {isTeacher && <ClassroomAiModal isOpen={isAiModalOpen} onClose={() => setIsAiModalOpen(false)} />}
-
-        {isBoardFullscreen && <BoardFullscreenSensor onEnter={() => setIsChromeOpen(true)} />}
-
-        <ClassroomHeader
-          courseTitle={courseTitle}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          isBoardFullscreen={isBoardFullscreen}
-          isChromeOpen={isChromeOpen}
-          setIsChromeOpen={setIsChromeOpen}
-          isTeacher={isTeacher}
-          onClose={onClose}
-          handleUndo={undo}
-          handleRedo={redo}
-          setIsAiModalOpen={setIsAiModalOpen}
-        />
-
-        <main
-          className={`relative flex flex-1 min-h-0 w-full overflow-hidden bg-slate-900 ${
-            isBoardFullscreen ? '' : 'rounded-2xl border border-white/10'
+      <BoardControlContextProvider value={boardControlValue}>
+        <div
+          ref={classroomRootRef}
+          data-classroom-root
+          className={`fixed inset-0 z-50 flex h-[100dvh] w-screen flex-col overflow-hidden bg-slate-950 ${
+            isBoardFullscreen
+              ? 'p-0'
+              : 'pt-2 pr-2 pl-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:pt-3 sm:pr-3 sm:pl-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))]'
           }`}>
-          <div
-            className={`flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row ${
-              isBoardFullscreen ? 'gap-0 p-0' : 'gap-2.5 p-2'
+          {isTeacher && <ClassroomAiModal isOpen={isAiModalOpen} onClose={() => setIsAiModalOpen(false)} />}
+
+          {isBoardFullscreen && <BoardFullscreenSensor onEnter={() => setIsChromeOpen(true)} />}
+
+          <ClassroomHeader
+            courseTitle={courseTitle}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            isBoardFullscreen={isBoardFullscreen}
+            isChromeOpen={isChromeOpen}
+            setIsChromeOpen={setIsChromeOpen}
+            isTeacher={isTeacher}
+            onClose={onClose}
+            handleUndo={undo}
+            handleRedo={redo}
+            setIsAiModalOpen={setIsAiModalOpen}
+          />
+
+          <main
+            className={`relative flex flex-1 min-h-0 w-full overflow-hidden bg-slate-900 ${
+              isBoardFullscreen ? '' : 'rounded-2xl border border-white/10'
             }`}>
-            <CollapsibleVideoPanel
-              hidden={activeTab === 'board'}
-              token={connection.mediaToken}
-              courseId={courseId}
-              isTeacher={isTeacher}
-              secondary={connection.secondary}
-              onClose={onClose}
-              onRoom={setActiveRoom}
-            />
+            <div
+              className={`flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row ${
+                isBoardFullscreen ? 'gap-0 p-0' : 'gap-2.5 p-2'
+              }`}>
+              <CollapsibleVideoPanel
+                hidden={activeTab === 'board'}
+                expanded={activeTab === 'video'}
+                token={connection.mediaToken}
+                courseId={courseId}
+                isTeacher={isTeacher}
+                secondary={connection.secondary}
+                onClose={onClose}
+                onRoom={setActiveRoom}
+              />
 
-            {connection.boardToken && (
-              <BoardDataRoom token={connection.boardToken} onRoom={setActiveRoom} />
-            )}
-            {isTeacher && connection.monitorTokens.main && (
-              <MonitorRoom token={connection.monitorTokens.main} roomKey="main" />
-            )}
-            {isTeacher && connection.monitorTokens.a && (
-              <MonitorRoom token={connection.monitorTokens.a} roomKey="a" />
-            )}
-            {isTeacher && connection.monitorTokens.b && (
-              <MonitorRoom token={connection.monitorTokens.b} roomKey="b" />
-            )}
-            {isTeacher && <BreakoutDashboard students={students} />}
+              {connection.boardToken && <BoardDataRoom token={connection.boardToken} onRoom={setActiveRoom} />}
+              {isTeacher && connection.monitorTokens.main && (
+                <MonitorRoom token={connection.monitorTokens.main} roomKey="main" />
+              )}
+              {isTeacher && connection.monitorTokens.a && (
+                <MonitorRoom token={connection.monitorTokens.a} roomKey="a" />
+              )}
+              {isTeacher && connection.monitorTokens.b && (
+                <MonitorRoom token={connection.monitorTokens.b} roomKey="b" />
+              )}
+              {isTeacher && <BreakoutDashboard students={students} />}
 
-            <ClassroomWhiteboardPanel
-              room={activeRoom}
-              courseId={courseId}
-              courseTitle={courseTitle}
-              isFullscreen={isBoardFullscreen}
-              onToggleFullscreen={toggleClassroomFullscreen}
-              isTeacher={isTeacher}
-              students={students}
-              enableSlashPrompts={enableSlashPrompts}
-              slashPromptsUserId={slashPromptsUserId}
-            />
-          </div>
-        </main>
-      </div>
-    </BoardControlContextProvider>
+              <ClassroomWhiteboardPanel
+                room={activeRoom}
+                hidden={activeTab === 'video'}
+
+                courseId={courseId}
+                courseTitle={courseTitle} 
+                isFullscreen={isBoardFullscreen}
+                onToggleFullscreen={toggleClassroomFullscreen}
+                isTeacher={isTeacher}
+                students={students}
+                enableSlashPrompts={enableSlashPrompts}
+                slashPromptsUserId={slashPromptsUserId}
+              />
+            </div>
+          </main>
+        </div>
+      </BoardControlContextProvider>
     </BreakoutContext.Provider>
   );
 }

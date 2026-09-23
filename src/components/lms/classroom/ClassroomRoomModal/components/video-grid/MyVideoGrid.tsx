@@ -37,7 +37,7 @@ function isBetterCameraRef(
   return candidate.participant.sid < current.participant.sid;
 }
 
-export function MyVideoGrid() {
+export function MyVideoGrid({ expanded = false }: { expanded?: boolean }) {
   const rawTracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -112,5 +112,5 @@ export function MyVideoGrid() {
     );
   }
 
-  return <GalleryLayout tracks={tracks} onSelect={handleSelect} />;
+  return <GalleryLayout tracks={tracks} onSelect={handleSelect} expanded={expanded} />;
 }

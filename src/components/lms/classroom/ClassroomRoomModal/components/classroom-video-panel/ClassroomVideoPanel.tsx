@@ -40,6 +40,7 @@ export function ClassroomVideoPanel({
   secondary = false,
   onClose,
   onRoom,
+  expanded = false,
 }: ClassroomVideoPanelProps) {
   const breakout = useBreakout();
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -136,7 +137,7 @@ export function ClassroomVideoPanel({
             <CustomChat courseId={courseId} />
           </div>
         ) : (
-          <MyVideoGrid />
+          <MyVideoGrid expanded={expanded} />
         )}
 
         <ControlBar

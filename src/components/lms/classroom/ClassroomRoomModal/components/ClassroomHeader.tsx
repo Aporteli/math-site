@@ -2,12 +2,12 @@
 
 'use client';
 
-import { X, Layout, PenTool, Sparkles, Undo, Redo } from 'lucide-react';
+import { X, Layout, PenTool, Sparkles, Undo, Redo, Video } from 'lucide-react';
 
 interface ClassroomHeaderProps {
   courseTitle: string;
-  activeTab: 'split' | 'board';
-  setActiveTab: (tab: 'split' | 'board') => void;
+  activeTab: 'split' | 'board' | 'video';
+  setActiveTab: (tab: 'split' | 'board' | 'video') => void;
   isBoardFullscreen: boolean;
   isChromeOpen: boolean;
   setIsChromeOpen: (open: boolean) => void;
@@ -79,12 +79,22 @@ export function ClassroomHeader({
 
           <button
             type="button"
+            onClick={() => setActiveTab('video')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'video' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'
+            }`}>
+            <Video className="size-3.5" />
+            <span className="hidden sm:inline">ვიდეო</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('board')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
               activeTab === 'board' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'
             }`}>
             <PenTool className="size-3.5" />
-            <span className="hidden sm:inline">მხოლოდ დაფა</span>
+            <span className="hidden sm:inline">დაფა</span>
           </button>
         </div>
       </div>

@@ -14,6 +14,7 @@ interface ClassroomWhiteboardPanelProps {
   students: Student[];
   enableSlashPrompts?: boolean;
   slashPromptsUserId?: string;
+  hidden?: boolean;
 }
 
 export function ClassroomWhiteboardPanel({
@@ -26,9 +27,14 @@ export function ClassroomWhiteboardPanel({
   students,
   enableSlashPrompts = false,
   slashPromptsUserId = '',
+  hidden = false,
 }: ClassroomWhiteboardPanelProps) {
   return (
-    <div className="relative flex flex-1 h-full min-h-0 min-w-0 overflow-hidden rounded-xl bg-white">
+    <div
+      className={`relative flex flex-1 h-full min-h-0 min-w-0 overflow-hidden rounded-xl bg-white ${
+        hidden ? 'hidden' : ''
+      }`}>
+      {' '}
       <ClassWhiteboard
         room={room}
         courseId={courseId}

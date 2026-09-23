@@ -10,4 +10,6 @@ export interface ClassroomVideoPanelProps {
   secondary?: boolean;
   onClose: () => void;
   onRoom: (room: Room) => void;
+  expanded?: boolean;
+
 }
