@@ -312,7 +312,7 @@ export function StudentList({
               </div>
               <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <Wallet className="size-3 shrink-0" /> სულ შემოსავალი
+                  <Wallet className="size-3 shrink-0" /> ჯამში
                 </p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-ink sm:text-xl">
                   {formatPrice(stats.totalPrice)}
