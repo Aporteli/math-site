@@ -1,12 +1,12 @@
 import type { Viewport } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/layout/ThemeProvider';
-import { Inter, JetBrains_Mono, Noto_Sans_Georgian } from 'next/font/google';
-
+import { Noto_Sans_Georgian } from 'next/font/google';
 
 const notoGeorgian = Noto_Sans_Georgian({
   subsets: ['latin', 'georgian'],
-  weight: ['400', '500', '600', '700', '900'],
+  weight: 'variable',
+  display: 'swap',
   variable: '--font-georgian',
 });
 
@@ -20,8 +20,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html data-scroll-behavior="smooth" suppressHydrationWarning className={`${notoGeorgian.variable} ...`}>
-      <body className="flex min-h-screen flex-col bg-paper text-ink">
+    <html
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+      className={`${notoGeorgian.variable} ${notoGeorgian.className}`}
+    >
+      <body className="flex min-h-screen flex-col bg-paper font-sans text-ink">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

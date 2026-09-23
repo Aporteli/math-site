@@ -118,7 +118,7 @@ export function LessonEditorModal({
         <div className="custom-scrollbar flex-1 overflow-y-auto p-5">
           {/* არსებული გაკვეთილები */}
           <div className="mb-4">
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted">
+            <p className="mb-2 text-[11px] font-bold tracking-wide text-muted">
               არსებული გაკვეთილები
             </p>
 
@@ -178,7 +178,7 @@ export function LessonEditorModal({
 
           {/* ახლის დამატება */}
           <div className="rounded-2xl border border-navy/20 bg-navy-tint/30 p-4">
-            <p className="mb-3 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-navy">
+            <p className="mb-3 flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-navy">
               <Plus className="h-3 w-3" /> ახალი გაკვეთილი
             </p>
 

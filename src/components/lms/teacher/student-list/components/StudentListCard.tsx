@@ -124,7 +124,7 @@ export function StudentListCard({
 
       {/* ─── Payment ─── */}
       <div className="border-t border-hairline bg-paper/50 px-4 py-3">
-        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted">
+        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-muted">
           <Wallet className="h-3 w-3" /> გადახდა
         </p>
 
@@ -169,7 +169,7 @@ export function StudentListCard({
       {/* ─── Schedule ─── */}
       <div className="border-t border-hairline px-4 py-3">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted">
+          <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-muted">
             <Clock3 className="h-3 w-3" /> გაკვეთილები
           </p>
 

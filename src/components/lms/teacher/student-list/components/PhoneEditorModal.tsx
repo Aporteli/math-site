@@ -94,7 +94,7 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
         <div className="space-y-4 p-5">
           {/* მოსწავლის ტელეფონი */}
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">
+            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-muted">
               <User2 className="h-3 w-3" /> მოსწავლის ტელეფონი
             </label>
             <div className="relative">
@@ -130,7 +130,7 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
 
           {/* მშობლის ტელეფონი */}
           <div>
-            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">
+            <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-muted">
               <Users className="h-3 w-3" /> მშობლის ტელეფონი
             </label>
             <div className="relative">

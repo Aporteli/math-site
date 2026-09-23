@@ -38,7 +38,7 @@ export function StudentListTable({
       <div className="custom-scrollbar overflow-x-auto">
         <table className="w-full min-w-[1000px] border-collapse text-left">
           <thead className="bg-paper">
-            <tr className="border-b border-hairline text-[11px] font-bold uppercase tracking-wide text-muted">
+            <tr className="border-b border-hairline text-[11px] font-bold tracking-wide text-muted">
               <th className="px-4 py-3">მოსწავლე</th>
               <th className="px-4 py-3">ტელეფონი</th>
               <th className="px-4 py-3">ჯგუფები</th>

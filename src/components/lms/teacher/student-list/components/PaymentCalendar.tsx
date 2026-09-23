@@ -90,19 +90,19 @@ export function PaymentCalendar({
 
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-            <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted">
+            <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
               <Users className="size-3" /> უნდა
             </p>
             <p className="mt-1 text-lg font-bold text-ink sm:text-xl">{formatPrice(monthStats.expected)}</p>
           </div>
           <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-            <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted">
+            <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
               <TrendingUp className="size-3" /> გადახდილი
             </p>
             <p className="mt-1 text-lg font-bold text-win sm:text-xl">{formatPrice(monthStats.paid)}</p>
           </div>
           <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-            <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted">
+            <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
               <AlertCircle className="size-3" /> დავალიანება
             </p>
             <p className="mt-1 text-lg font-bold text-loss sm:text-xl">{formatPrice(monthStats.debt)}</p>
@@ -114,7 +114,7 @@ export function PaymentCalendar({
         <div className="flex flex-col rounded-3xl border border-hairline bg-surface p-3 shadow-sm sm:p-4">
           <div className="grid grid-cols-7 gap-1 pb-2">
             {WEEKDAYS_KA.map((d) => (
-              <div key={d} className="text-center text-[10px] font-bold uppercase tracking-wide text-muted">
+              <div key={d} className="text-center text-[10px] font-bold tracking-wide text-muted">
                 {d}
               </div>
             ))}

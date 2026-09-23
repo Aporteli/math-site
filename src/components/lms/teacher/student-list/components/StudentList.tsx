@@ -300,7 +300,7 @@ export function StudentList({
           <>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted">
+                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
                   <Users className="h-3 w-3" /> სულ
                 </p>
                 <p className="mt-1 text-xl font-bold text-ink">
@@ -308,7 +308,7 @@ export function StudentList({
                 </p>
               </div>
               <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted">
+                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
                   <CalendarClock className="h-3 w-3" /> დღეს
                 </p>
                 <p className="mt-1 text-xl font-bold text-navy">
@@ -316,7 +316,7 @@ export function StudentList({
                 </p>
               </div>
               <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted">
+                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
                   <Wallet className="h-3 w-3" /> უნდა
                 </p>
                 <p className="mt-1 text-xl font-bold text-ink">
@@ -324,7 +324,7 @@ export function StudentList({
                 </p>
               </div>
               <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-                <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted">
+                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
                   <Wallet className="h-3 w-3" /> დავალიანება
                 </p>
                 <p className="mt-1 text-xl font-bold text-loss">
@@ -334,7 +334,7 @@ export function StudentList({
             </div>
 
             <div className="custom-scrollbar flex items-center gap-1.5 overflow-x-auto pb-0.5">
-              <span className="flex shrink-0 items-center gap-1 pr-1 text-[10px] font-bold uppercase tracking-wide text-muted">
+              <span className="flex shrink-0 items-center gap-1 pr-1 text-[10px] font-bold tracking-wide text-muted">
                 <Filter className="h-3 w-3" /> ჯგუფი
               </span>
               <button
