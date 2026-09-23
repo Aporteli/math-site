@@ -59,7 +59,7 @@ export function WorkspaceHub({ locale, copy, tools }: WorkspaceHubProps) {
   const isEmpty = modules.length === 0 && lookup.length === 0 && extras.length === 0;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
       <PageHero
         icon={Compass}
         title={copy.index.title}
@@ -84,39 +84,51 @@ export function WorkspaceHub({ locale, copy, tools }: WorkspaceHubProps) {
       />
 
       {isEmpty ? (
-        <p className="mt-10 rounded-xl border border-hairline bg-white px-5 py-10 text-center text-body">
-          {copy.index.empty}
-        </p>
+        <div className="mt-8 rounded-2xl border border-dashed border-hairline bg-surface px-5 py-14 text-center">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-paper-deep text-muted">
+            <Search className="size-5" aria-hidden="true" />
+          </span>
+          <p className="mt-4 font-medium text-body">{copy.index.empty}</p>
+        </div>
       ) : (
         <>
           {modules.length > 0 && (
             <section aria-labelledby="modules-title" className="mt-10">
-              <h2 id="modules-title" className="sr-only">
-                {copy.modules.title}
-              </h2>
-              <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="mb-4 flex items-center gap-4">
+                <h2 id="modules-title" className="text-lg font-bold tracking-tight text-ink sm:text-xl">
+                  {copy.modules.title}
+                </h2>
+                <div className="h-px flex-1 bg-hairline" aria-hidden="true" />
+              </div>
+              <ul className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {modules.map(({ module, item, links }) => {
                   const Icon = module.icon;
                   return (
-                    <li key={module.id} className="rounded-xl border border-hairline bg-white p-5 shadow-sm">
+                    <li
+                      key={module.id}
+                      className="group rounded-2xl border border-hairline bg-surface p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md sm:p-6">
                       <Link
                         href={localePath(locale, module.href)}
-                        className="flex items-center gap-3 text-ink hover:text-navy">
-                        <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
-                          <Icon className="size-5" aria-hidden="true" />
+                        className="flex items-center gap-4 rounded-lg text-ink outline-none focus-visible:ring-3 focus-visible:ring-navy/20">
+                        <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-navy-tint text-navy transition-colors group-hover:bg-navy group-hover:text-white">
+                          <Icon className="size-5.5" aria-hidden="true" />
                         </span>
-                        <h3 className="min-w-0 text-base font-semibold leading-snug">{item.title}</h3>
+                        <h3 className="min-w-0 flex-1 text-base font-bold leading-snug sm:text-lg">{item.title}</h3>
+                        <ArrowUpRight
+                          className="size-4.5 shrink-0 text-muted transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-navy"
+                          aria-hidden="true"
+                        />
                       </Link>
-                      <ul className="mt-4 space-y-1.5 border-t border-hairline pt-3">
+                      <ul className="mt-5 grid gap-1 border-t border-hairline pt-3">
                         {links.map((link) => (
                           <li key={link.id}>
                             <Link
                               href={localePath(locale, link.href)}
-                              className="flex items-start justify-between gap-3 rounded-lg px-1 py-1.5 text-sm text-body hover:bg-paper-deep hover:text-ink">
-                              <span className="min-w-0 break-words">
+                              className="flex items-start gap-3 rounded-lg px-2 py-2 text-sm leading-relaxed text-body transition-colors hover:bg-paper-deep hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/20">
+                              <span className="mt-2 size-1.5 shrink-0 rounded-full bg-navy/55" aria-hidden="true" />
+                              <span className="min-w-0 flex-1 break-words">
                                 {item.links[link.id as keyof typeof item.links]}
                               </span>
-                              <ArrowUpRight className="mt-0.5 size-3.5 shrink-0 text-muted" aria-hidden="true" />
                             </Link>
                           </li>
                         ))}
@@ -130,54 +142,48 @@ export function WorkspaceHub({ locale, copy, tools }: WorkspaceHubProps) {
 
           {(lookup.length > 0 || extras.length > 0) && (
             <section aria-labelledby="lookup-title" className="mt-10">
-              <h2 id="lookup-title" className="text-sm font-semibold tracking-wide text-muted">
-                {copy.lookup.title}
-              </h2>
-              <div className="mt-3 overflow-x-auto rounded-xl border border-hairline bg-white shadow-sm">
-                <table className="w-full min-w-[36rem] text-left text-sm">
-                  <thead className="border-b border-hairline bg-paper-deep text-xs font-semibold tracking-wide text-muted">
-                    <tr>
-                      <th scope="col" className="px-4 py-3">
-                        {copy.lookup.columns.name}
-                      </th>
-                      <th scope="col" className="px-4 py-3">
-                        {copy.lookup.columns.kind}
-                      </th>
-                      <th scope="col" className="px-4 py-3 text-right">
-                        {copy.lookup.columns.action}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lookup.map((row) => (
-                      <tr key={row.id} className="border-b border-hairline last:border-0">
-                        <td className="px-4 py-3 font-medium text-ink">{copy.lookup.rows[row.id]}</td>
-                        <td className="px-4 py-3 text-body">{copy.lookup.kinds[row.kind]}</td>
-                        <td className="px-4 py-3 text-right">
-                          <Link
-                            href={localePath(locale, row.href)}
-                            className="inline-flex items-center justify-center rounded-lg bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
-                            {copy.lookup.launch}
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                    {extras.map((tool) => (
-                      <tr key={tool.id} className="border-b border-hairline last:border-0">
-                        <td className="px-4 py-3 font-medium text-ink">{tools[tool.id].title}</td>
-                        <td className="px-4 py-3 text-body">{tools[tool.id].badge}</td>
-                        <td className="px-4 py-3 text-right">
-                          <Link
-                            href={localePath(locale, tool.href)}
-                            className="inline-flex items-center justify-center rounded-lg bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
-                            {copy.lookup.launch}
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="mb-4 flex items-center gap-4">
+                <h2 id="lookup-title" className="text-lg font-bold tracking-tight text-ink sm:text-xl">
+                  {copy.lookup.title}
+                </h2>
+                <div className="h-px flex-1 bg-hairline" aria-hidden="true" />
               </div>
+              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {lookup.map((row) => (
+                  <li key={row.id}>
+                    <Link
+                      href={localePath(locale, row.href)}
+                      className="group flex h-full items-center gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-sm transition hover:border-navy/30 hover:bg-surface-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-navy/20">
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold leading-snug text-ink">{copy.lookup.rows[row.id]}</span>
+                        <span className="mt-1 block text-xs font-medium text-muted">{copy.lookup.kinds[row.kind]}</span>
+                      </span>
+                      <ArrowUpRight
+                        className="size-4 shrink-0 text-muted transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-navy"
+                        aria-hidden="true"
+                      />
+                      <span className="sr-only">{copy.lookup.launch}</span>
+                    </Link>
+                  </li>
+                ))}
+                {extras.map((tool) => (
+                  <li key={tool.id}>
+                    <Link
+                      href={localePath(locale, tool.href)}
+                      className="group flex h-full items-center gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-sm transition hover:border-navy/30 hover:bg-surface-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-navy/20">
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold leading-snug text-ink">{tools[tool.id].title}</span>
+                        <span className="mt-1 block text-xs font-medium text-muted">{tools[tool.id].badge}</span>
+                      </span>
+                      <ArrowUpRight
+                        className="size-4 shrink-0 text-muted transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-navy"
+                        aria-hidden="true"
+                      />
+                      <span className="sr-only">{copy.lookup.launch}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
         </>

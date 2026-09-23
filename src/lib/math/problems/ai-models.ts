@@ -27,10 +27,8 @@ export type AiProviderId =
 export interface AiModelDef {
   id: AiModelId;
   provider: AiProviderId;
-  /** API model name sent to the provider. */
   apiModel: string;
   env: readonly string[];
-  /** Conservative daily request cap (free-tier style). 0 = unlimited. */
   dailyLimit: number;
 }
 

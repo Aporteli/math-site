@@ -1,8 +1,9 @@
-import Link from "next/link";
-import { localePath, type Locale } from "@/i18n/config";
-import type { Dictionary } from "@/i18n/types";
-import { legalLinks, telegramHref } from "@/lib/navigation";
-import { Mail, Send, ShieldCheck, FileText, Sparkles, BookOpen, GraduationCap } from "lucide-react";
+import Link from 'next/link';
+import { Mail, MapPin, Phone, Send } from 'lucide-react';
+import { SiteLogo } from '@/components/layout/SiteLogo';
+import { localePath, type Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/types';
+import { legalLinks, mainNavLinks, telegramHref } from '@/lib/navigation';
 
 export function SiteFooter({
   locale,
@@ -15,101 +16,64 @@ export function SiteFooter({
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto w-full border-t border-hairline bg-paper text-body">
-      <div className="mx-auto max-w-6xl px-4 pt-4 pb-2.5 sm:px-6 lg:px-8">
-        {/* ზედა ძირითადი ბადე */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4 lg:gap-8">
-          {/* 1. ბრენდი & აღწერა */}
-          <div className="space-y-1 md:col-span-2">
-            <div className="flex items-center gap-1.5">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-navy text-white shadow-2xs">
-                <GraduationCap className="size-4" />
-              </div>
-              <span className="text-sm font-black tracking-tight text-ink">
-                MathLab
-              </span>
-            </div>
-            <p className="max-w-sm text-[11px] leading-snug text-muted">
-              ინტერაქციული მათემატიკური პლატფორმა მოსწავლეებისა და მასწავლებლებისთვის. გაკვეთილები, ინტერაქტიული დაფა და AI ასისტენტი ერთ სივრცეში.
-            </p>
+    <footer className="mt-auto w-full border-t border-hairline bg-surface text-body">
+      <div className="h-0.5 bg-brass" aria-hidden="true" />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-12 py-12 md:grid-cols-[minmax(0,1fr)_12rem] md:items-start md:gap-20 lg:py-14">
+          <div className="max-w-lg">
+            <SiteLogo locale={locale} brand={dict.brand} />
+            <p className="mt-4 text-sm leading-6 text-muted">{dict.brand.person}</p>
+
+            <address className="mt-8 not-italic">
+
+              <ul className="mt-4 flex flex-col gap-2.5 text-sm sm:flex-row sm:flex-wrap sm:gap-x-6 sm:gap-y-2">
+
+                <li>
+                  <a
+                    href={`mailto:${contact.email}`}
+                    className="inline-flex items-center gap-2.5 transition-colors hover:text-navy">
+                    <Mail className="size-4 shrink-0 text-brass" aria-hidden="true" />
+                    <span>{contact.email}</span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href={telegramHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2.5 transition-colors hover:text-navy">
+                    <Send className="size-4 shrink-0 text-brass" aria-hidden="true" />
+                    <span>{contact.telegram}</span>
+                  </a>
+                </li>
+              </ul>
+            </address>
           </div>
 
-          {/* 2. ნავიგაცია & რესურსები */}
-          <div className="space-y-1">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-ink">
-              რესურსები
-            </h4>
-            <ul className="space-y-1 text-xs">
-              <li>
-                <Link
-                  href={localePath(locale, "/courses")}
-                  className="inline-flex items-center gap-1 transition-colors hover:text-navy"
-                >
-                  <BookOpen className="size-3 text-muted" />
-                  <span>კურსები</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={localePath(locale, "/problem-bank")}
-                  className="inline-flex items-center gap-1 transition-colors hover:text-navy"
-                >
-                  <Sparkles className="size-3 text-muted" />
-                  <span>ამოცანების ბანკი</span>
-                </Link>
-              </li>
+          <nav aria-label={dict.header.mainNav}>
+            <p className="text-[11px] font-semibold tracking-[0.2em] text-muted uppercase">{dict.header.mainNav}</p>
+            <ul className="mt-4 flex flex-col gap-1">
+              {mainNavLinks.map((link) => (
+                <li key={link.id}>
+                  <Link
+                    href={localePath(locale, link.href)}
+                    className="inline-flex border-l-2 border-transparent py-1 pl-3 text-sm font-medium text-ink transition-colors hover:border-brass hover:text-navy">
+                    {dict.nav[link.id]}
+                  </Link>
+                </li>
+              ))}
             </ul>
-          </div>
-
-          {/* 3. კონტაქტი */}
-          <div className="space-y-1">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-ink">
-              კონტაქტი
-            </h4>
-            <ul className="space-y-1 text-xs">
-              <li>
-                <a
-                  href={`mailto:${contact.email}`}
-                  className="inline-flex items-center gap-1 transition-colors hover:text-navy"
-                >
-                  <Mail className="size-3 text-muted" />
-                  <span>{contact.email}</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href={telegramHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 transition-colors hover:text-navy"
-                >
-                  <Send className="size-3 text-muted" />
-                  <span>{contact.telegram}</span>
-                </a>
-              </li>
-            </ul>
-          </div>
+          </nav>
         </div>
 
-        {/* ქვედა ზოლი: Copyright & Legal */}
-        <div className="mt-3 flex flex-col items-center justify-between gap-2 border-t border-hairline/60 pt-2 text-[11px] text-muted sm:flex-row">
-          <p>
-            {dict.footer.copyright.replace("{year}", String(currentYear))}
-          </p>
-
-          <ul className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-3 border-t border-hairline py-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+          <p>{dict.footer.copyright.replace('{year}', String(currentYear))}</p>
+          <ul className="flex flex-wrap items-center gap-x-4 gap-y-1">
             {legalLinks.map((link) => (
               <li key={link.id}>
-                <Link
-                  href={localePath(locale, link.href)}
-                  className="inline-flex items-center gap-1 transition-colors hover:text-navy"
-                >
-                  {link.id.includes("privacy") ? (
-                    <ShieldCheck className="size-3 opacity-70" />
-                  ) : (
-                    <FileText className="size-3 opacity-70" />
-                  )}
-                  <span>{dict.footer.legal[link.id]}</span>
+                <Link href={localePath(locale, link.href)} className="transition-colors hover:text-navy">
+                  {dict.footer.legal[link.id]}
                 </Link>
               </li>
             ))}

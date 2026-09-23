@@ -51,13 +51,9 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 
 export async function passwordsMatch(input: string, hashed: string): Promise<boolean> {
   if (!input || !hashed) return false;
-
-  // სატესტო დემო მომხმარებლების შემოწმება
   if (hashed === 'mathlab-demo') {
     return input === hashed;
   }
-
-  // ბაზიდან წამოღებული scrypt ჰეშის შემოწმება
   try {
     return await verifyPassword(input, hashed);
   } catch {
@@ -74,9 +70,6 @@ export function toPublicUser(user: AuthUser) {
   };
 }
 
-/**
- * Create a new user using Prisma.
- */
 export async function createUser(data: {
   name: string;
   email: string;

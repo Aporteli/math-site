@@ -61,7 +61,7 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
         )}
 
         <span
-          className={`absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold shadow-sm ${
+          className={`absolute left-2 top-2 mb-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold shadow-sm ${
             isGraded ? 'border-win/20 bg-win-tint text-win' : 'border-navy/15 bg-surface text-navy'
           }`}
         >
