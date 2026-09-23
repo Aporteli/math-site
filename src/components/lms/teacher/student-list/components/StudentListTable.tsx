@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock3, Phone, Wallet, Pencil } from 'lucide-react';
+import { Clock3, Phone, Wallet } from 'lucide-react';
 import { EditableAmount } from './EditableAmount';
 import { DAY_SHORT, getGroupName, paymentStatus } from '../studentList.helpers';
 import { sumPaymentsForMonth } from '../paymentCalendar.helpers';
@@ -35,16 +35,16 @@ export function StudentListTable({
 }: Props) {
   return (
     <div className="hidden overflow-hidden rounded-2xl border border-hairline bg-surface shadow-sm lg:block">
-      <div className="custom-scrollbar overflow-x-auto">
-        <table className="w-full min-w-[1000px] border-collapse text-left">
-          <thead className="bg-paper">
+      <div className="custom-scrollbar overflow-x-auto overscroll-x-contain">
+        <table className="w-full min-w-[52rem] border-collapse text-left">
+          <thead className="sticky top-0 z-10 bg-paper">
             <tr className="border-b border-hairline text-[11px] font-bold tracking-wide text-muted">
-              <th className="px-4 py-3">მოსწავლე</th>
-              <th className="px-4 py-3">ტელეფონი</th>
-              <th className="px-4 py-3">ჯგუფები</th>
-              <th className="px-4 py-3">თვის ფასი / გადახდილი</th>
-              <th className="px-4 py-3">გაკვეთილის დრო</th>
-              <th className="px-4 py-3">სტატუსი</th>
+              <th className="px-4 py-3 font-bold">მოსწავლე</th>
+              <th className="px-4 py-3 font-bold">ტელეფონი</th>
+              <th className="px-4 py-3 font-bold">ჯგუფები</th>
+              <th className="px-4 py-3 font-bold">თვის ფასი / გადახდილი</th>
+              <th className="px-4 py-3 font-bold">გაკვეთილის დრო</th>
+              <th className="whitespace-nowrap px-4 py-3 font-bold">სტატუსი</th>
             </tr>
           </thead>
           <tbody>
@@ -128,7 +128,7 @@ export function StudentListTable({
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-1.5">
                         <Wallet className="h-3 w-3 shrink-0 text-brass-strong" />
-                        <span className="text-[10px] font-medium text-muted">უნდა:</span>
+                        <span className="text-[10px] font-medium text-muted">ფასი:</span>
                         <EditableAmount
                           value={student.monthlyPrice}
                           onSave={(v) =>
@@ -137,7 +137,7 @@ export function StudentListTable({
                         />
                       </div>
                       <div className="flex items-center gap-1.5 pl-4.5">
-                        <span className="text-[10px] font-medium text-muted">გადა:</span>
+                        <span className="text-[10px] font-medium text-muted">გადახდა:</span>
                         <EditableAmount
                           value={paid}
                           onSave={(v) => onSetPaid(student.id, monthKey, v)}
@@ -148,10 +148,15 @@ export function StudentListTable({
                   </td>
 
                   <td className="px-4 py-3">
-                    <div className="flex items-start gap-2 cursor-pointer hover:bg-navy-tint rounded-md p-1" onClick={(e) => {
-                          e.stopPropagation();
-                          onEditLessons(student);
-                        }}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditLessons(student);
+                      }}
+                      title="გაკვეთილის დროების რედაქტირება"
+                      className="flex w-full cursor-pointer items-start gap-2 rounded-lg p-1.5 text-left transition hover:bg-navy-tint"
+                    >
                       <div className="min-w-0 flex-1">
                         {student.lessons.length === 0 ? (
                           <span className="text-[11px] text-muted">—</span>
@@ -179,7 +184,7 @@ export function StudentListTable({
                           </div>
                         )}
                       </div>
-                    </div>
+                    </button>
                   </td>
 
                   <td className="px-4 py-3">

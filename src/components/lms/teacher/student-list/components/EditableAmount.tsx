@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Pencil } from 'lucide-react';
 
 interface Props {
   value: number;
@@ -88,7 +87,8 @@ export function EditableAmount({
             }
           }}
           onBlur={handleBlur}
-          className="w-20 rounded-lg border border-navy/40 bg-surface px-2 py-0.5 text-xs font-bold text-ink outline-none focus:ring-2 focus:ring-navy/20"
+          inputMode="decimal"
+          className="w-24 max-w-full rounded-lg border border-navy/40 bg-surface px-2 py-1.5 text-base font-bold text-ink outline-none focus:ring-2 focus:ring-navy/20 sm:py-1 sm:text-xs"
         />
         <span className="text-xs font-bold text-muted">{suffix}</span>
       </span>
@@ -108,9 +108,9 @@ export function EditableAmount({
         if (!editing) setEditing(true);
       }}
       title="დააწკაპუნეთ რედაქტირებისთვის"
-      className={`group inline-flex cursor-pointer items-center gap-1 rounded-lg px-1.5 py-0.5 text-xs font-bold text-ink transition hover:bg-navy-tint ${className}`}
+      className={`group inline-flex max-w-full cursor-pointer items-center gap-1 rounded-lg px-1.5 py-1 text-xs font-bold text-ink transition hover:bg-navy-tint ${className}`}
     >
-      <span>{value > 0 ? `${value.toLocaleString('ka-GE')} ${suffix}` : placeholder}</span>
+      <span className="truncate">{value > 0 ? `${value.toLocaleString('ka-GE')} ${suffix}` : placeholder}</span>
     </button>
   );
 }

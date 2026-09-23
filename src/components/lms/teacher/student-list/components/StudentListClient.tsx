@@ -133,14 +133,16 @@ export function StudentListClient({
   };
 
   return (
-    <StudentList
-      students={students}
-      groups={groups}
-      initialPayments={payments}
-      onUpdateStudent={handleUpdateStudent}
-      onUpdatePayments={handleUpdatePayments}
-      onUpdatePhones={handleUpdatePhones}
-      onSelectStudent={(s) => console.log('selected', s)}
-    />
+    <div className="min-w-0">
+      <StudentList
+        students={students}
+        groups={groups}
+        initialPayments={payments}
+        onUpdateStudent={handleUpdateStudent}
+        onUpdatePayments={handleUpdatePayments}
+        onUpdatePhones={handleUpdatePhones}
+        onSelectStudent={(s) => console.log('selected', s)}
+      />
+    </div>
   );
 }

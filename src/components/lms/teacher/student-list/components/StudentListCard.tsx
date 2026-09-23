@@ -55,20 +55,25 @@ export function StudentListCard({
   return (
     <div
       onClick={() => onSelect(student)}
-      className="group flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md"
+      className={`group flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition hover:border-navy/30 hover:shadow-md sm:hover:-translate-y-0.5 ${
+        view === 'grid' ? 'h-full' : ''
+      }`}
     >
-      {/* ─── Header ─── */}
-      <div className="flex items-start gap-3 p-4 pb-3">
+      <div className="flex items-start gap-3 p-3.5 pb-3 sm:p-4">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-navy-tint text-base font-bold text-navy">
           {initial}
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold leading-tight text-ink">
-            {student.firstName} {student.lastName}
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="min-w-0 truncate text-sm font-bold leading-tight text-ink">
+              {student.firstName} {student.lastName}
+            </p>
+            <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${badge.cls}`}>
+              {badge.label}
+            </span>
+          </div>
 
-          {/* ⬇️ ტელეფონის ღილაკი — click-ზე იხსნება editor */}
           <button
             type="button"
             onClick={(e) => {
@@ -76,30 +81,21 @@ export function StudentListCard({
               onEditPhones(student);
             }}
             title="ტელეფონის რედაქტირება"
-            className="mt-1 inline-flex max-w-full cursor-pointer items-center gap-1 rounded-md px-1 py-0.5 text-[11px] font-medium text-muted transition hover:bg-navy-tint hover:text-navy"
+            className="mt-1 inline-flex max-w-full cursor-pointer items-center gap-1 rounded-lg px-1 py-1 text-[11px] font-medium text-muted transition hover:bg-navy-tint hover:text-navy"
           >
-            <Phone className="h-3 w-3 shrink-0" />
+            <Phone className="size-3 shrink-0" />
             <span className="truncate">
               {student.phone || 'ტელეფონი არ არის'}
             </span>
-            <Pencil className="h-2.5 w-2.5 shrink-0 opacity-0 transition group-hover:opacity-60" />
           </button>
 
           {student.parentPhone ? (
-            <p className="mt-0.5 flex items-center gap-1 truncate pl-1 text-[10px] font-medium text-muted">
-              <User2 className="h-2.5 w-2.5 shrink-0" />
+            <p className="mt-0.5 flex items-center gap-1 pl-1 text-[10px] font-medium text-muted">
+              <User2 className="size-3 shrink-0" />
               <span className="truncate">მშობელი: {student.parentPhone}</span>
             </p>
           ) : null}
         </div>
-
-        <span
-          className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${badge.cls} ${
-            view === 'grid' ? 'hidden' : ''
-          }`}
-        >
-          {badge.label}
-        </span>
       </div>
 
       {/* ─── Groups ─── */}
@@ -124,13 +120,13 @@ export function StudentListCard({
 
       {/* ─── Payment ─── */}
       <div className="border-t border-hairline bg-paper/50 px-4 py-3">
-        <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-muted">
+        {/* <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-muted">
           <Wallet className="h-3 w-3" /> გადახდა
-        </p>
+        </p> */}
 
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[10px] font-medium text-muted">უნდა გადაიხადოს</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="min-w-0 rounded-xl bg-surface/70 px-2 py-1.5">
+            <p className="text-[10px] font-medium text-muted">ფასი</p>
             <div className="mt-0.5">
               <EditableAmount
                 value={student.monthlyPrice}
@@ -139,10 +135,8 @@ export function StudentListCard({
             </div>
           </div>
 
-          <div className="h-8 w-px bg-hairline" />
-
-          <div className="min-w-0 text-right">
-            <p className="text-[10px] font-medium text-muted">გადახდილია</p>
+          <div className="min-w-0 rounded-xl bg-surface/70 px-2 py-1.5 text-right">
+            <p className="text-[10px] font-medium text-muted">გადახდა</p>
             <div className="mt-0.5 flex justify-end">
               <EditableAmount
                 value={paid}
@@ -180,7 +174,7 @@ export function StudentListCard({
               onEditLessons(student);
             }}
             title="გაკვეთილის დროების რედაქტირება"
-            className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-hairline bg-surface px-2 py-0.5 text-[10px] font-bold text-navy transition hover:border-navy/40 hover:bg-navy-tint"
+            className="inline-flex min-h-8 cursor-pointer items-center gap-1 rounded-lg border border-hairline bg-surface px-2.5 py-1 text-[10px] font-bold text-navy transition hover:border-navy/40 hover:bg-navy-tint"
           >
             <Pencil className="h-2.5 w-2.5" />
             <span>რედაქტირება</span>
@@ -227,7 +221,7 @@ export function StudentListCard({
       </div>
 
       {/* ─── Footer ─── */}
-      <div className="flex items-center justify-between border-t border-hairline bg-paper/40 px-4 py-2 text-[10px] font-medium text-muted">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline bg-paper/40 px-4 py-2.5 text-[10px] font-medium text-muted">
         <span className="flex items-center gap-1">
           <User2 className="h-3 w-3" />
           {student.status === 'active'

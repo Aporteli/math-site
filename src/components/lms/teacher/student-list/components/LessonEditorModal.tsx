@@ -85,22 +85,24 @@ export function LessonEditorModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/45 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="lesson-editor-title"
+        className="flex max-h-[min(92dvh,100%)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-hairline bg-surface shadow-xl sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ═══ Header ═══ */}
-        <div className="flex items-center justify-between border-b border-hairline px-5 py-4">
+        <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
           <div className="flex items-center gap-2.5">
             <span className="inline-flex size-9 items-center justify-center rounded-xl border border-hairline bg-navy-tint text-navy">
               <Clock3 className="h-4 w-4" />
             </span>
-            <div>
-              <h2 className="text-sm font-bold text-ink">გაკვეთილის დროები</h2>
-              <p className="text-[11px] font-medium text-muted">
+            <div className="min-w-0">
+              <h2 id="lesson-editor-title" className="text-sm font-bold text-ink">გაკვეთილის დროები</h2>
+              <p className="truncate text-[11px] font-medium text-muted">
                 {student.firstName} {student.lastName}
               </p>
             </div>
@@ -108,14 +110,14 @@ export function LessonEditorModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-8 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-paper hover:text-ink"
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-paper hover:text-ink"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* ═══ Body ═══ */}
-        <div className="custom-scrollbar flex-1 overflow-y-auto p-5">
+        <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-5">
           {/* არსებული გაკვეთილები */}
           <div className="mb-4">
             <p className="mb-2 text-[11px] font-bold tracking-wide text-muted">
@@ -191,7 +193,7 @@ export function LessonEditorModal({
                 <select
                   value={groupId}
                   onChange={(e) => setGroupId(e.target.value)}
-                  className="w-full rounded-xl border border-hairline bg-surface px-3 py-2 text-xs font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15"
+                  className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
                 >
                   {student.groupIds.map((gid) => (
                     <option key={gid} value={gid}>
@@ -212,7 +214,7 @@ export function LessonEditorModal({
                       key={d}
                       type="button"
                       onClick={() => setDayOfWeek(d)}
-                      className={`cursor-pointer rounded-lg border py-1.5 text-[10px] font-bold transition ${
+                      className={`min-h-10 cursor-pointer rounded-lg border px-0.5 py-2 text-[10px] font-bold transition sm:text-[11px] ${
                         dayOfWeek === d
                           ? 'border-navy bg-navy text-white'
                           : 'border-hairline bg-surface text-body hover:border-navy/40'
@@ -234,7 +236,7 @@ export function LessonEditorModal({
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full rounded-xl border border-hairline bg-surface px-3 py-2 text-xs font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15"
+                    className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
                   />
                 </div>
                 <div>
@@ -245,7 +247,7 @@ export function LessonEditorModal({
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full rounded-xl border border-hairline bg-surface px-3 py-2 text-xs font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15"
+                    className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
                   />
                 </div>
               </div>
@@ -260,7 +262,7 @@ export function LessonEditorModal({
                 type="button"
                 onClick={handleAdd}
                 disabled={isPending}
-                className="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-xs font-bold text-white transition hover:bg-navy-strong disabled:opacity-50"
+                className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50"
               >
                 <Plus className="h-3.5 w-3.5" />
                 {isPending ? 'ინახება...' : 'დამატება'}

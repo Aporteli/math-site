@@ -221,126 +221,121 @@ export function StudentList({
 
   const isListView = view === 'table' || view === 'grid';
 
+  const viewButtonClass = (active: boolean) =>
+    `inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-xl px-1.5 py-2 text-xs font-bold transition sm:px-3 ${
+      active
+        ? 'bg-navy text-white shadow-sm'
+        : 'text-body hover:bg-surface hover:text-ink'
+    }`;
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 bg-paper p-3 sm:p-4">
-      {/* ════════════ Header ════════════ */}
-      <div className="flex flex-col gap-3 rounded-3xl border border-hairline bg-surface p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex size-10 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
+    <div className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
+      <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-hairline bg-surface p-3 shadow-sm sm:rounded-3xl sm:p-5">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
               <Users className="size-5" />
             </span>
-            <div>
-              <h1 className="text-lg font-bold text-ink">მოსწავლეები</h1>
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-bold text-ink sm:text-lg">მოსწავლეები</h1>
               <p className="text-xs font-medium text-muted">
                 {localStudents.length} მოსწავლე სულ
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="grid grid-cols-3 gap-1 rounded-2xl border border-hairline bg-paper p-1">
-              <button
-                type="button"
-                onClick={() => setView('table')}
-                title="ცხრილის ხედი"
-                className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${
-                  view === 'table'
-                    ? 'bg-navy text-white shadow-sm'
-                    : 'text-body hover:bg-surface hover:text-ink'
-                }`}
-              >
-                <TableIcon className="h-3.5 w-3.5 shrink-0" />
-                <span>ცხრილი</span>
-              </button>
+          <div className="grid w-full grid-cols-3 gap-1 rounded-2xl border border-hairline bg-paper p-1 sm:w-auto sm:min-w-72">
+            <button
+              type="button"
+              onClick={() => setView('table')}
+              title="ცხრილის ხედი"
+              aria-pressed={view === 'table'}
+              className={viewButtonClass(view === 'table')}
+            >
+              <TableIcon className="size-4 shrink-0" />
+              <span className="truncate text-[11px] sm:text-xs">ცხრილი</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => setView('grid')}
-                title="ბარათების ხედი"
-                className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${
-                  view === 'grid'
-                    ? 'bg-navy text-white shadow-sm'
-                    : 'text-body hover:bg-surface hover:text-ink'
-                }`}
-              >
-                <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
-                <span>ბარათები</span>
-              </button>
+            <button
+              type="button"
+              onClick={() => setView('grid')}
+              title="ბარათების ხედი"
+              aria-pressed={view === 'grid'}
+              className={viewButtonClass(view === 'grid')}
+            >
+              <LayoutGrid className="size-4 shrink-0" />
+              <span className="truncate text-[11px] sm:text-xs">ბარათები</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => setView('calendar')}
-                title="კალენდრის ხედი"
-                className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${
-                  view === 'calendar'
-                    ? 'bg-navy text-white shadow-sm'
-                    : 'text-body hover:bg-surface hover:text-ink'
-                }`}
-              >
-                <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                <span>კალენდარი</span>
-              </button>
-            </div>
-
-            <div className="relative hidden w-64 sm:block">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="ძებნა..."
-                className="w-full rounded-xl border border-hairline bg-paper py-2.5 pl-9 pr-3 text-xs font-medium text-ink outline-none transition placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
-              />
-            </div>
+            <button
+              type="button"
+              onClick={() => setView('calendar')}
+              title="კალენდრის ხედი"
+              aria-pressed={view === 'calendar'}
+              className={viewButtonClass(view === 'calendar')}
+            >
+              <CalendarDays className="size-4 shrink-0" />
+              <span className="truncate text-[11px] sm:text-xs">კალენდარი</span>
+            </button>
           </div>
         </div>
 
         {isListView ? (
           <>
+            <div className="relative w-full">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="სახელი, ტელეფონი ან ელფოსტა"
+                className="w-full rounded-xl border border-hairline bg-paper py-2.5 pl-10 pr-3 text-base font-medium text-ink outline-none transition placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <Users className="h-3 w-3" /> სულ
+                  <Users className="size-3 shrink-0" /> სულ
                 </p>
-                <p className="mt-1 text-xl font-bold text-ink">
+                <p className="mt-1 truncate text-lg font-bold tabular-nums text-ink sm:text-xl">
                   {localStudents.length}
                 </p>
               </div>
-              <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <CalendarClock className="h-3 w-3" /> დღეს
+                  <CalendarClock className="size-3 shrink-0" /> დღეს
                 </p>
-                <p className="mt-1 text-xl font-bold text-navy">
+                <p className="mt-1 truncate text-lg font-bold tabular-nums text-navy sm:text-xl">
                   {stats.todayCount}
                 </p>
               </div>
-              <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <Wallet className="h-3 w-3" /> უნდა
+                  <Wallet className="size-3 shrink-0" /> სულ შემოსავალი
                 </p>
-                <p className="mt-1 text-xl font-bold text-ink">
+                <p className="mt-1 truncate text-base font-bold tabular-nums text-ink sm:text-xl">
                   {formatPrice(stats.totalPrice)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <Wallet className="h-3 w-3" /> დავალიანება
+                  <Wallet className="size-3 shrink-0" /> გადასახდელი
                 </p>
-                <p className="mt-1 text-xl font-bold text-loss">
+                <p className="mt-1 truncate text-base font-bold tabular-nums text-loss sm:text-xl">
                   {formatPrice(stats.debt)}
                 </p>
               </div>
             </div>
 
-            <div className="custom-scrollbar flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <div className="custom-scrollbar -mx-1 flex items-center gap-1.5 overflow-x-auto px-1 pb-0.5">
               <span className="flex shrink-0 items-center gap-1 pr-1 text-[10px] font-bold tracking-wide text-muted">
-                <Filter className="h-3 w-3" /> ჯგუფი
+                <Filter className="size-3" /> ჯგუფი
               </span>
               <button
                 type="button"
                 onClick={() => setActiveGroupId('all')}
-                className={`shrink-0 cursor-pointer rounded-full border px-3 py-1 text-[11px] font-bold transition ${
+                className={`shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
                   activeGroupId === 'all'
                     ? 'border-navy bg-navy text-white shadow-sm'
                     : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
@@ -358,7 +353,7 @@ export function StudentList({
                     key={g.id}
                     type="button"
                     onClick={() => setActiveGroupId(g.id)}
-                    className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold transition ${
+                    className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
                       active
                         ? 'border-navy bg-navy text-white shadow-sm'
                         : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
@@ -392,7 +387,7 @@ export function StudentList({
           onSelectStudent={onSelectStudent}
         />
       ) : (
-        <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto pe-1">
+        <div className="custom-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto">
           {filtered.length === 0 ? (
             <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-hairline bg-surface px-6 py-16 text-center">
               <span className="mb-3 inline-flex size-12 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
@@ -404,7 +399,7 @@ export function StudentList({
               </p>
             </div>
           ) : view === 'grid' ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {filtered.map((student) => (
                 <StudentListCard
                   key={student.id}

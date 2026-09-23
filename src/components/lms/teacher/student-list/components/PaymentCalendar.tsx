@@ -54,67 +54,69 @@ export function PaymentCalendar({
   const selectedLessons = selectedDay ? lessonsMap.get(selectedDay) ?? [] : [];
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex flex-col gap-3 rounded-3xl border border-hairline bg-surface p-4 shadow-sm sm:p-5">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 sm:gap-4">
+      <div className="flex flex-col gap-3 rounded-2xl border border-hairline bg-surface p-3 shadow-sm sm:rounded-3xl sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex size-10 items-center justify-center rounded-2xl border border-hairline bg-brass-tint text-brass-strong">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-hairline bg-brass-tint text-brass-strong">
               <CalendarDays className="size-5" />
             </span>
-            <div>
-              <h1 className="text-lg font-bold text-ink">გადახდების კალენდარი</h1>
+            <div className="min-w-0">
+              <h2 className="truncate text-base font-bold text-ink sm:text-lg">გადახდების კალენდარი</h2>
               <p className="text-xs font-medium text-muted">თვის მიხედვით კონტროლი</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 rounded-full border border-hairline bg-paper p-1">
+          <div className="flex w-full items-center gap-1 rounded-full border border-hairline bg-paper p-1 sm:w-auto">
             <button
               type="button"
               onClick={() => onMonthChange(shiftMonth(monthKey, -1))}
-              className="flex size-8 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink"
+              aria-label="წინა თვე"
+              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink sm:size-8"
             >
               <ChevronLeft className="size-4" />
             </button>
-            <span className="min-w-[10rem] px-2 text-center text-sm font-bold text-ink">
+            <span className="min-w-0 flex-1 truncate px-2 text-center text-sm font-bold text-ink sm:min-w-40 sm:flex-none">
               {formatMonthLabel(monthKey)}
             </span>
             <button
               type="button"
               onClick={() => onMonthChange(shiftMonth(monthKey, 1))}
-              className="flex size-8 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink"
+              aria-label="შემდეგი თვე"
+              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink sm:size-8"
             >
               <ChevronRight className="size-4" />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+        <div className="grid grid-cols-1 gap-2 min-[480px]:grid-cols-3">
+          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-              <Users className="size-3" /> უნდა
+              <Users className="size-3 shrink-0" /> დადასახდელი
             </p>
-            <p className="mt-1 text-lg font-bold text-ink sm:text-xl">{formatPrice(monthStats.expected)}</p>
+            <p className="mt-1 truncate text-lg font-bold tabular-nums text-ink sm:text-xl">{formatPrice(monthStats.expected)}</p>
           </div>
-          <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-              <TrendingUp className="size-3" /> გადახდილი
+              <TrendingUp className="size-3 shrink-0" /> გადახდილი
             </p>
-            <p className="mt-1 text-lg font-bold text-win sm:text-xl">{formatPrice(monthStats.paid)}</p>
+            <p className="mt-1 truncate text-lg font-bold tabular-nums text-win sm:text-xl">{formatPrice(monthStats.paid)}</p>
           </div>
-          <div className="rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-              <AlertCircle className="size-3" /> დავალიანება
+              <AlertCircle className="size-3 shrink-0" /> დავალიანება
             </p>
-            <p className="mt-1 text-lg font-bold text-loss sm:text-xl">{formatPrice(monthStats.debt)}</p>
+            <p className="mt-1 truncate text-lg font-bold tabular-nums text-loss sm:text-xl">{formatPrice(monthStats.debt)}</p>
           </div>
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="flex flex-col rounded-3xl border border-hairline bg-surface p-3 shadow-sm sm:p-4">
+      <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-4">
+        <div className="flex min-w-0 flex-col rounded-2xl border border-hairline bg-surface p-2.5 shadow-sm sm:rounded-3xl sm:p-4">
           <div className="grid grid-cols-7 gap-1 pb-2">
             {WEEKDAYS_KA.map((d) => (
-              <div key={d} className="text-center text-[10px] font-bold tracking-wide text-muted">
+              <div key={d} className="truncate text-center text-[10px] font-bold tracking-wide text-muted sm:text-[11px]">
                 {d}
               </div>
             ))}
@@ -122,7 +124,7 @@ export function PaymentCalendar({
 
           <div className="grid grid-cols-7 gap-1">
             {Array.from({ length: leadingBlanks }).map((_, i) => (
-              <div key={`b-${i}`} className="aspect-square" />
+              <div key={`b-${i}`} className="aspect-square min-h-11" />
             ))}
 
             {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -147,7 +149,7 @@ export function PaymentCalendar({
                   key={day}
                   type="button"
                   onClick={() => setSelectedDay(isSelected ? null : day)}
-                  className={`group relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border transition ${
+                  className={`group relative flex aspect-square min-h-11 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border transition sm:rounded-xl ${
                     isSelected
                       ? 'border-navy bg-navy text-white shadow-md'
                       : isToday
@@ -158,7 +160,7 @@ export function PaymentCalendar({
                   }`}
                 >
                   <span
-                    className={`text-sm font-bold ${
+                    className={`text-xs font-bold sm:text-sm ${
                       isSelected ? 'text-white' : isToday ? 'text-brass-strong' : hasLessons ? 'text-ink' : 'text-muted'
                     }`}
                   >
@@ -166,7 +168,7 @@ export function PaymentCalendar({
                   </span>
 
                   {hasLessons ? (
-                    <span className={`mt-0.5 flex items-center gap-0.5 text-[9px] font-bold ${isSelected ? 'text-white/90' : 'text-navy'}`}>
+                    <span className={`mt-0.5 hidden items-center gap-0.5 text-[9px] font-bold min-[420px]:flex ${isSelected ? 'text-white/90' : 'text-navy'}`}>
                       <Clock3 className="size-2.5" />
                       {dayLessons.length}
                     </span>
@@ -191,10 +193,10 @@ export function PaymentCalendar({
           </div>
         </div>
 
-        <div className="flex min-h-0 flex-col rounded-3xl border border-hairline bg-surface shadow-sm">
-          <div className="flex shrink-0 items-center justify-between border-b border-hairline px-4 py-3">
+        <div className="flex min-h-0 flex-col rounded-2xl border border-hairline bg-surface shadow-sm sm:rounded-3xl">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-hairline px-4 py-3">
             <div>
-              <p className="text-xs font-bold text-ink">
+              <p className="text-xs font-bold text-ink sm:text-sm">
                 {selectedDay ? `${selectedDay} ${formatMonthLabel(monthKey)}` : 'აირჩიე დღე'}
               </p>
               <p className="text-[11px] font-medium text-muted">
@@ -249,10 +251,10 @@ export function PaymentCalendar({
                         </span>
                       </div>
 
-                      <div className="mt-2 flex items-center justify-between gap-2 border-t border-hairline pt-2">
-                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted">
-                          <Wallet className="size-3 text-brass-strong" />
-                          <span>უნდა: {formatPrice(student.monthlyPrice)}</span>
+                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-hairline pt-2">
+                        <div className="flex min-w-0 items-center gap-2 text-[10px] font-bold text-muted">
+                          <Wallet className="size-3 shrink-0 text-brass-strong" />
+                          <span className="truncate">ფასი: {formatPrice(student.monthlyPrice)}</span>
                         </div>
                         <EditableAmount
                           value={paid}
