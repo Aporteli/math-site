@@ -17,10 +17,11 @@ interface Props {
   onDeletePage: (idx: number) => void;
   onDeleteSelectedPages: () => void;
   onAddNewPage: () => void;
+  assignedNames?: string[][];
 }
 
 export const PagesTray = forwardRef<HTMLDivElement, Props>(function PagesTray(
-  {pages, currentPageIndex, selectedPages, isDark, onClose, onSelectAll, onSwitchPage, onTogglePageSelect, onDeletePage, onDeleteSelectedPages, onAddNewPage },
+  {pages, currentPageIndex, selectedPages, isDark, onClose, onSelectAll, onSwitchPage, onTogglePageSelect, onDeletePage, onDeleteSelectedPages, onAddNewPage, assignedNames },
   ref,
 ) {
   return (
@@ -57,8 +58,8 @@ export const PagesTray = forwardRef<HTMLDivElement, Props>(function PagesTray(
 
       <div className="flex items-center gap-3 overflow-x-auto pb-1.5 pt-1 px-1 custom-scrollbar">
         {pages.map((pageElems, idx) => (
+          <div key={idx} className="flex shrink-0 flex-col items-center gap-1">
           <BoardThumbnail
-            key={idx}
             pageIndex={idx}
             elements={pageElems}
             isActive={currentPageIndex === idx}
@@ -69,6 +70,12 @@ export const PagesTray = forwardRef<HTMLDivElement, Props>(function PagesTray(
             onDelete={() => onDeletePage(idx)}
             canDelete={pages.length > 1}
           />
+          {assignedNames?.[idx] && assignedNames[idx].length > 0 && (
+            <p className="max-w-24 truncate text-[10px] font-medium text-indigo-600 dark:text-indigo-300" title={assignedNames[idx].join(', ')}>
+              {assignedNames[idx].join(', ')}
+            </p>
+          )}
+          </div>
         ))}
 
         <button

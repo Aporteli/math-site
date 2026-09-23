@@ -29,6 +29,14 @@ import { useAssign } from './hooks/useAssign';
 import { useAskAI } from './hooks/useAskAI';
 import { useBoardViewStream } from './hooks/useBoardViewStream';
 import { useBoardControlContext } from '../ClassroomRoomModal/components/BoardControlContext';
+import { useBreakout } from '../ClassroomRoomModal/breakout/BreakoutContext';
+import {
+  assignedFullSyncPayload,
+  destinationsForPage,
+  identitiesForStudent,
+  sharedFullSyncPayload,
+} from '@/lib/livekit/board-assignment';
+import { isStaffParticipant } from '@/lib/livekit/participant-identity';
 
 import { ClearConfirmDialog } from './components/ClearConfirmDialog';
 import { ConfirmDialog } from './components/ConfirmDialog';
@@ -106,9 +114,34 @@ export function ClassWhiteboard({
 
   // --- Publish data ---
   const publishDataSafe = usePublishDataSafe(room);
+  const {
+    lockedStudentIds,
+    setPageCount,
+    assignedPageByStudent,
+    clearBoardAssignments,
+  } = useBoardControlContext();
+  const breakout = useBreakout();
+  const [assignedPageIndex, setAssignedPageIndex] = useState<number | null>(null);
+
+  const getSyncDestinations = useCallback(
+    (pageIndex: number) => destinationsForPage(room, assignedPageByStudent, pageIndex),
+    [room, assignedPageByStudent],
+  );
+
+  const broadcastImplRef = useRef(() => {});
+  const broadcastBoard = useCallback(() => {
+    broadcastImplRef.current();
+  }, []);
 
   // --- Whiteboard pages & history ---
-  const wb = useWhiteboardState({ courseId, isTeacher, isDark, publishDataSafe });
+  const wb = useWhiteboardState({
+    courseId,
+    isTeacher,
+    isDark,
+    publishDataSafe,
+    getSyncDestinations,
+    broadcastBoard,
+  });
   const {
     pages,
     setPages,
@@ -136,6 +169,58 @@ export function ClassWhiteboard({
     togglePageSelect,
     selectAllPages,
   } = wb;
+
+  broadcastImplRef.current = () => {
+    if (!isTeacher || !room) return;
+    const sent = new Set<string>();
+    for (const [studentId, pageIndex] of Object.entries(assignedPageByStudent)) {
+      const dest = identitiesForStudent(room, studentId);
+      if (dest.length === 0) continue;
+      dest.forEach((identity) => sent.add(identity));
+      void publishDataSafe(assignedFullSyncPayload(pagesRef.current, pageIndex), true, dest);
+    }
+    const rest = [...room.remoteParticipants.values()]
+      .filter((participant) => !isStaffParticipant(participant) && !sent.has(participant.identity))
+      .map((participant) => participant.identity);
+    if (Object.keys(assignedPageByStudent).length === 0) {
+      void publishDataSafe(sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current), true);
+      return;
+    }
+    if (rest.length > 0) {
+      void publishDataSafe(
+        sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current),
+        true,
+        rest,
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (isTeacher) setPageCount(pages.length);
+  }, [isTeacher, pages.length, setPageCount]);
+
+  const assignedSnapshot = JSON.stringify(assignedPageByStudent);
+  useEffect(() => {
+    if (!isTeacher) return;
+    broadcastImplRef.current();
+  }, [assignedSnapshot, isTeacher]);
+
+  const breakoutWasActive = useRef(breakout.breakout.active);
+  useEffect(() => {
+    if (!isTeacher) return;
+    if (breakoutWasActive.current && !breakout.breakout.active) {
+      clearBoardAssignments();
+    }
+    breakoutWasActive.current = breakout.breakout.active;
+  }, [breakout.breakout.active, clearBoardAssignments, isTeacher]);
+
+  useEffect(() => {
+    if (isTeacher || assignedPageIndex === null) return;
+    if (currentPageIndex !== assignedPageIndex) {
+      setCurrentPageIndex(assignedPageIndex);
+      currentPageIndexRef.current = assignedPageIndex;
+    }
+  }, [assignedPageIndex, currentPageIndex, isTeacher, setCurrentPageIndex, currentPageIndexRef]);
 
   // --- Stylus actions ---
   const { applyStylusAction, previousToolRef, isTemporaryEraserRef } = useStylusActions({
@@ -174,11 +259,12 @@ export function ClassWhiteboard({
     (view: BoardView) => {
       setZoomScale(view.scale);
       setStagePos({ x: view.x, y: view.y });
+      if (assignedPageIndex !== null) return;
       if (Number.isInteger(view.pageIndex) && view.pageIndex >= 0 && view.pageIndex < pagesRef.current.length) {
         setCurrentPageIndex(view.pageIndex);
       }
     },
-    [setZoomScale, setCurrentPageIndex, pagesRef],
+    [assignedPageIndex, setZoomScale, setCurrentPageIndex, pagesRef],
   );
 
   // Students are view-only. Pan is allowed when unlocked; drawing tools stay off.
@@ -187,15 +273,19 @@ export function ClassWhiteboard({
   }, [isTeacher, activeTool, setActiveTool]);
 
   // --- Laser pointer ---
-  const handleLaserMove = useLaserPointer({ publishDataSafe, currentPageIndexRef });
-
-  // --- Board lock/sync control (teacher side) ---
-  const { presentStudents, lockedStudentIds, toggleStudentLock } = useBoardControlContext();
+  const handleLaserMove = useLaserPointer({
+    publishDataSafe: (payload, reliable) => {
+      const destinations = getSyncDestinations(currentPageIndexRef.current);
+      return publishDataSafe(payload, reliable, destinations);
+    },
+    currentPageIndexRef,
+  });
 
   useBoardViewStream({
     room,
     isTeacher,
     lockedStudentIds,
+    assignedPageByStudent,
     publishDataSafe,
     zoomScale,
     stagePos,
@@ -273,7 +363,7 @@ export function ClassWhiteboard({
   });
   useUndoRedoEvents(handleUndo, handleRedo);
   useKeyboardShortcuts({ handleUndo, handleRedo, handleZoomIn, handleZoomOut, handleZoomReset, isLocked });
-  useFullSyncOnJoin(isTeacher, room, publishDataSafe, pagesRef, currentPageIndexRef);
+  useFullSyncOnJoin(isTeacher, room, publishDataSafe, pagesRef, currentPageIndexRef, assignedPageByStudent);
   useWhiteboardDataChannel({
     room,
     isTeacher,
@@ -291,10 +381,15 @@ export function ClassWhiteboard({
     setCurrentPageIndex,
     setIsLocked,
     applyBoardView,
+    assignedPageIndex,
+    setAssignedPageIndex,
+    assignedPageByStudent,
   });
 
   // --- Derived ---
   const effectiveStroke = adaptStrokeForTheme(strokeColor, isDark);
+
+  const pageLocked = !isTeacher && assignedPageIndex !== null;
 
   const openSendModal = () => {
     const pagesToAssign = selectedPages.length > 0 ? selectedPages : [currentPageIndex];
@@ -423,6 +518,11 @@ export function ClassWhiteboard({
       <div
         className="relative flex-1 w-full min-h-0 min-w-0 overflow-hidden"
         style={{ backgroundColor: isDark ? '#020617' : '#ffffff' }}>
+        {pageLocked && (
+          <div className="pointer-events-none absolute top-2 left-2 z-10 rounded-lg bg-indigo-600/90 px-2 py-1 text-[11px] font-bold text-white">
+            დაფა {assignedPageIndex + 1}
+          </div>
+        )}
         <KonvaCanvas
           ref={canvasRef}
           key={currentPageIndex}
@@ -463,7 +563,7 @@ export function ClassWhiteboard({
         isFullscreen={isFullscreen}
         onToggleFullscreen={onToggleFullscreen}
         isTeacher={isTeacher}
-        disabled={isLocked}
+        disabled={isLocked || pageLocked}
         zoomPercent={zoomPercent}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
@@ -488,6 +588,11 @@ export function ClassWhiteboard({
           currentPageIndex={currentPageIndex}
           selectedPages={selectedPages}
           isDark={isDark}
+          assignedNames={pages.map((_, idx) =>
+            students
+              .filter((student) => assignedPageByStudent[student.identity] === idx)
+              .map((student) => student.name),
+          )}
           onClose={() => setIsPagesTrayOpen(false)}
           onSelectAll={selectAllPages}
           onSwitchPage={handleSwitchPage}

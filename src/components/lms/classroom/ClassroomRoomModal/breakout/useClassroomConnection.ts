@@ -108,11 +108,7 @@ export function useClassroomConnection(courseId: string, isTeacher: boolean) {
         joinedRef.current = null;
         setJoined(null);
       }
-      const target: BreakoutRoomKey = !next.active
-        ? 'main'
-        : isTeacher
-          ? (joinedRef.current ?? 'main')
-          : data.selfRoom;
+      const target: BreakoutRoomKey = !next.active ? 'main' : isTeacher ? (joinedRef.current ?? 'main') : data.selfRoom;
       if (target !== roomKeyRef.current) {
         try {
           await connectMedia(target);

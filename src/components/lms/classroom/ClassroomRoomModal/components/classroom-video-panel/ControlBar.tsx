@@ -37,6 +37,7 @@ export function ControlBar({
   const breakout = useBreakout();
   const [activeMenu, setActiveMenu] = useState<MenuId | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
+  const moreAnchorRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(navRef, () => setActiveMenu(null));
 
@@ -99,7 +100,7 @@ export function ControlBar({
             />
           )}
 
-          <div className="relative">
+          <div ref={moreAnchorRef} className="relative">
             <ControlButton
               icon={MoreVertical}
               title="პარამეტრები"
@@ -112,6 +113,7 @@ export function ControlBar({
             />
             {activeMenu === 'more' && (
               <MoreMenu
+                anchorRef={moreAnchorRef}
                 courseId={courseId}
                 isTeacher={isTeacher}
                 isolatedIdentities={isolatedIdentities}

@@ -3,12 +3,18 @@
 'use client';
 
 import { useCallback, useEffect, useRef, type MutableRefObject, type RefObject } from 'react';
-import type { Room } from 'livekit-client';
+import type { RemoteParticipant, Room } from 'livekit-client';
 import { ConnectionState, RoomEvent } from 'livekit-client';
 import type { CanvasElement, KonvaCanvasHandle } from '../../KonvaCanvas/utils/types';
 import { ChunkAssembler } from '../utils/chunk';
 import { adaptElementsForTheme } from '../utils/theme';
 import type { BoardView, HistoryMap } from '../utils/types';
+import {
+  assignedFullSyncPayload,
+  sharedFullSyncPayload,
+  type BoardAssignmentMap,
+} from '@/lib/livekit/board-assignment';
+import { participantUserId } from '@/lib/livekit/participant-identity';
 
 const TRACK_STUDENT_HISTORY = false;
 
@@ -21,7 +27,7 @@ const SYNC_REQUEST_THROTTLE_MS = 500;
 interface Options {
   room: Room | null;
   isTeacher: boolean;
-  publishDataSafe?: (payload: any, reliable?: boolean) => Promise<void>;
+  publishDataSafe?: (payload: any, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>;
   isDark: boolean;
   updateUndoRedoState: () => void;
   canvasRef: RefObject<KonvaCanvasHandle | null>;
@@ -35,6 +41,9 @@ interface Options {
   setCurrentPageIndex: (idx: number) => void;
   setIsLocked: (locked: boolean) => void;
   applyBoardView: (view: BoardView) => void;
+  assignedPageIndex: number | null;
+  setAssignedPageIndex: (pageIndex: number | null) => void;
+  assignedPageByStudent?: BoardAssignmentMap;
 }
 
 export function useWhiteboardDataChannel(opts: Options) {
@@ -55,6 +64,9 @@ export function useWhiteboardDataChannel(opts: Options) {
     setCurrentPageIndex,
     setIsLocked,
     applyBoardView,
+    assignedPageIndex,
+    setAssignedPageIndex,
+    assignedPageByStudent,
   } = opts;
 
   const publishRef = useRef<Options['publishDataSafe']>(publishDataSafe);
@@ -102,7 +114,10 @@ export function useWhiteboardDataChannel(opts: Options) {
   useEffect(() => {
     if (!room) return;
 
-    const handleData = (payload: Uint8Array) => {
+    const handleData = (
+      payload: Uint8Array,
+      participant?: RemoteParticipant,
+    ) => {
       try {
         const fullPayload = chunkAssemblerRef.current.push(payload);
         if (!fullPayload) return;
@@ -114,23 +129,46 @@ export function useWhiteboardDataChannel(opts: Options) {
           return;
         }
 
+        if (data.type === 'BOARD_ASSIGN' && !isTeacher) {
+          const next =
+            typeof data.pageIndex === 'number' && Number.isFinite(data.pageIndex)
+              ? Math.max(0, Math.floor(data.pageIndex))
+              : null;
+          setAssignedPageIndex(next);
+          if (next === null) {
+            fullSyncReceivedRef.current = null;
+            sendSyncRequest();
+          } else {
+            const updated = [...pagesRef.current];
+            while (updated.length <= next) updated.push([]);
+            setPages(updated);
+            pagesRef.current = updated;
+            setCurrentPageIndex(next);
+            currentPageIndexRef.current = next;
+          }
+          return;
+        }
+
         if (data.type === 'BOARD_VIEW' && data.view) {
-          applyBoardView(data.view as BoardView);
+          const view = data.view as BoardView;
+          if (assignedPageIndex !== null) {
+            applyBoardView({ ...view, pageIndex: assignedPageIndex });
+          } else {
+            applyBoardView(view);
+          }
           return;
         }
 
         if (data.type === 'WHITEBOARD_REQUEST_SYNC' && isTeacher) {
           const publish = publishRef.current;
-          if (typeof publish === 'function') {
-            void publish(
-              {
-                type: 'WHITEBOARD_FULL_SYNC',
-                pages: pagesRef.current,
-                currentPageIndex: currentPageIndexRef.current,
-              },
-              true,
-            );
-          }
+          if (typeof publish !== 'function' || !participant) return;
+          const requesterId = participantUserId(participant);
+          const assigned = assignedPageByStudent?.[requesterId];
+          const payloadToSend =
+            typeof assigned === 'number'
+              ? assignedFullSyncPayload(pagesRef.current, assigned)
+              : sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current);
+          void publish(payloadToSend, true, [participant.identity]);
           return;
         }
 
@@ -143,8 +181,18 @@ export function useWhiteboardDataChannel(opts: Options) {
               syncRetryTimerRef.current = null;
             }
 
+            if (!isTeacher && typeof data.assignedPageIndex === 'number') {
+              setAssignedPageIndex(data.assignedPageIndex);
+            } else if (!isTeacher && data.assignedPageIndex === null) {
+              setAssignedPageIndex(null);
+            }
+
             const newPages = (data.pages as CanvasElement[][]).map((page) => adaptElementsForTheme(page || [], isDark));
-            const rawIndex = data.currentPageIndex ?? 0;
+            const assigned =
+              !isTeacher && typeof data.assignedPageIndex === 'number'
+                ? data.assignedPageIndex
+                : assignedPageIndex;
+            const rawIndex = assigned ?? data.currentPageIndex ?? 0;
             const newPageIndex = Math.min(Math.max(0, rawIndex), Math.max(0, newPages.length - 1));
             historyMapRef.current = new Map();
             newPages.forEach((p, idx) => {
@@ -161,6 +209,11 @@ export function useWhiteboardDataChannel(opts: Options) {
 
         if (data.type === 'WHITEBOARD_PAGE_INDEX') {
           if (typeof data.pageIndex === 'number') {
+            if (assignedPageIndex !== null) {
+              setCurrentPageIndex(assignedPageIndex);
+              currentPageIndexRef.current = assignedPageIndex;
+              return;
+            }
             setCurrentPageIndex(data.pageIndex);
             currentPageIndexRef.current = data.pageIndex;
           }
@@ -170,6 +223,7 @@ export function useWhiteboardDataChannel(opts: Options) {
         if (data.type === 'WHITEBOARD_SYNC' && Array.isArray(data.elements)) {
           if (isTeacher) return;
           const pageIndex = typeof data.pageIndex === 'number' ? data.pageIndex : 0;
+          if (assignedPageIndex !== null && pageIndex !== assignedPageIndex) return;
           isRemoteUpdateRef.current = true;
           if (hasAppliedLiveSyncRef) hasAppliedLiveSyncRef.current = true;
           const adaptedElements = adaptElementsForTheme(data.elements, isDark);
@@ -200,6 +254,7 @@ export function useWhiteboardDataChannel(opts: Options) {
             pagesRef.current = newPages;
           }
         } else if (data.type === 'WHITEBOARD_LASER') {
+          if (assignedPageIndex !== null && data.pageIndex !== assignedPageIndex) return;
           if (data.pageIndex === undefined || data.pageIndex === currentPageIndexRef.current) {
             canvasRef.current?.renderRemoteLaser(data.point);
           }
@@ -251,5 +306,8 @@ export function useWhiteboardDataChannel(opts: Options) {
     setIsLocked,
     applyBoardView,
     sendSyncRequest,
+    assignedPageIndex,
+    setAssignedPageIndex,
+    assignedPageByStudent,
   ]);
 }

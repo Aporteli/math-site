@@ -7,6 +7,7 @@ import type { Room } from 'livekit-client';
 import { RoomEvent } from 'livekit-client';
 import { liveIdentitiesFor, participantUserId } from '@/lib/livekit/participant-identity';
 import type { Student } from '../utils/types';
+import type { BoardAssignmentMap } from '@/lib/livekit/board-assignment';
 
 interface Options {
   room: Room | null;
@@ -18,9 +19,13 @@ interface Options {
 export function useBoardControlState({ room, isTeacher, students, publishDataSafe }: Options) {
   const [connectedIds, setConnectedIds] = useState<string[]>([]);
   const [lockedStudentIds, setLockedStudentIds] = useState<Set<string>>(new Set());
+  const [pageCount, setPageCount] = useState(1);
+  const [assignedPageByStudent, setAssignedPageByStudent] = useState<BoardAssignmentMap>({});
 
   const lockedIdsRef = useRef(lockedStudentIds);
   lockedIdsRef.current = lockedStudentIds;
+  const assignedRef = useRef(assignedPageByStudent);
+  assignedRef.current = assignedPageByStudent;
 
   useEffect(() => {
     if (!isTeacher || !room) return;
@@ -62,11 +67,14 @@ export function useBoardControlState({ room, isTeacher, students, publishDataSaf
     const handleConnected = () => {
       const participants = Array.from(room.remoteParticipants.values());
       for (const id of lockedIdsRef.current) {
-        // Locked boards are addressed by account id; every live connection of
-        // that student must receive the state.
         const destinations = liveIdentitiesFor(participants, id);
         if (destinations.length === 0) continue;
         void publishDataSafe({ type: 'BOARD_CONTROL', enabled: true }, true, destinations);
+      }
+      for (const [studentId, pageIndex] of Object.entries(assignedRef.current)) {
+        const destinations = liveIdentitiesFor(participants, studentId);
+        if (destinations.length === 0) continue;
+        void publishDataSafe({ type: 'BOARD_ASSIGN', pageIndex }, true, destinations);
       }
     };
 
@@ -103,5 +111,45 @@ export function useBoardControlState({ room, isTeacher, students, publishDataSaf
     [isTeacher, lockedStudentIds, publishDataSafe, room],
   );
 
-  return { presentStudents, lockedStudentIds, toggleStudentLock };
+  const assignStudentPage = useCallback(
+    (studentId: string, pageIndex: number | null) => {
+      if (!isTeacher) return;
+      setAssignedPageByStudent((prev) => {
+        const next = { ...prev };
+        if (pageIndex === null || pageIndex < 0) delete next[studentId];
+        else next[studentId] = pageIndex;
+        return next;
+      });
+      const destinations = room
+        ? liveIdentitiesFor(room.remoteParticipants.values(), studentId)
+        : [];
+      if (destinations.length > 0) {
+        void publishDataSafe({ type: 'BOARD_ASSIGN', pageIndex }, true, destinations);
+      }
+    },
+    [isTeacher, publishDataSafe, room],
+  );
+
+  const clearBoardAssignments = useCallback(() => {
+    if (!isTeacher) return;
+    const previous = assignedRef.current;
+    setAssignedPageByStudent({});
+    if (!room) return;
+    for (const studentId of Object.keys(previous)) {
+      const destinations = liveIdentitiesFor(room.remoteParticipants.values(), studentId);
+      if (destinations.length === 0) continue;
+      void publishDataSafe({ type: 'BOARD_ASSIGN', pageIndex: null }, true, destinations);
+    }
+  }, [isTeacher, publishDataSafe, room]);
+
+  return {
+    presentStudents,
+    lockedStudentIds,
+    toggleStudentLock,
+    pageCount,
+    setPageCount,
+    assignedPageByStudent,
+    assignStudentPage,
+    clearBoardAssignments,
+  };
 }

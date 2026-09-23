@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Search,
   Users,
@@ -61,11 +61,15 @@ export function StudentList({
   const [localStudents, setLocalStudents] = useState(students);
   const [payments, setPayments] = useState<PaymentRecord[]>(initialPayments);
 
+  // ⬇️ ყოველთვის უახლესი payments — closure-ის ძველი მნიშვნელობის თავიდან ასაცილებლად
+  const paymentsRef = useRef(payments);
+  paymentsRef.current = payments;
+
   // გაკვეთილების რედაქტორის state
   const [lessonEditorStudent, setLessonEditorStudent] =
     useState<StudentRecord | null>(null);
 
-  // ⬇️ ტელეფონის რედაქტორის state
+  // ტელეფონის რედაქტორის state
   const [phoneEditorStudent, setPhoneEditorStudent] =
     useState<StudentRecord | null>(null);
 
@@ -81,27 +85,32 @@ export function StudentList({
     onUpdateStudent?.(id, patch);
   };
 
+  /** გადახდის განახლება — side effect აღარ არის state updater-ის შიგნით */
   const handleSetPaid = (studentId: string, mk: string, amount: number) => {
-    setPayments((prev) => {
-      const withoutThis = prev.filter(
-        (p) => !(p.studentId === studentId && p.monthKey === mk),
-      );
-      const next =
-        amount > 0
-          ? [
-              ...withoutThis,
-              {
-                id: `pay-${studentId}-${mk}`,
-                studentId,
-                monthKey: mk,
-                amount,
-                paidAt: new Date().toISOString(),
-              },
-            ]
-          : withoutThis;
-      onUpdatePayments?.(next);
-      return next;
-    });
+    // 1. უახლესი state-იდან გამოთვალე ახალი მასივი (updater-ის გარეთ)
+    const prev = paymentsRef.current;
+    const withoutThis = prev.filter(
+      (p) => !(p.studentId === studentId && p.monthKey === mk),
+    );
+    const next =
+      amount > 0
+        ? [
+            ...withoutThis,
+            {
+              id: `pay-${studentId}-${mk}`,
+              studentId,
+              monthKey: mk,
+              amount,
+              paidAt: new Date().toISOString(),
+            },
+          ]
+        : withoutThis;
+
+    // 2. ჯერ ლოკალური state განაახლე
+    setPayments(next);
+
+    // 3. მერე მშობელს აცნობე (updater-ის გარეთ!)
+    onUpdatePayments?.(next);
   };
 
   /** გაკვეთილის დამატება */
@@ -178,7 +187,6 @@ export function StudentList({
 
     const res = await onUpdatePhones(studentId, phone, parentPhone);
     if (!res.ok) {
-      // rollback სურვილისამებრ
       console.error('[updatePhones]', res.error);
     }
     return res;

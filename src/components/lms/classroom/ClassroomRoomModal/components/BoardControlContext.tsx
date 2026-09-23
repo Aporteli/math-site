@@ -10,12 +10,24 @@ export interface BoardControlContextValue {
   lockedStudentIds: Set<string>;
   /** Lock/unlock the board view of a single student. */
   toggleStudentLock: (identity: string) => void;
+  /** How many teacher boards currently exist. */
+  pageCount: number;
+  setPageCount: (count: number) => void;
+  /** Student account id → board index they are allowed to see. */
+  assignedPageByStudent: Record<string, number>;
+  assignStudentPage: (studentId: string, pageIndex: number | null) => void;
+  clearBoardAssignments: () => void;
 }
 
 export const BoardControlContext = createContext<BoardControlContextValue>({
   presentStudents: [],
   lockedStudentIds: new Set(),
   toggleStudentLock: () => {},
+  pageCount: 1,
+  setPageCount: () => {},
+  assignedPageByStudent: {},
+  assignStudentPage: () => {},
+  clearBoardAssignments: () => {},
 });
 
 export const BoardControlContextProvider = BoardControlContext.Provider;

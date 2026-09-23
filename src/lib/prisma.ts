@@ -1,8 +1,8 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
-const PRISMA_GENERATION = "course-whiteboard-v1";
+const PRISMA_GENERATION = 'course-whiteboard-v1';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -12,7 +12,7 @@ const globalForPrisma = globalThis as unknown as {
 function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL;
   if (!url) {
-    throw new Error("DATABASE_URL is not set");
+    throw new Error('DATABASE_URL is not set');
   }
 
   const pool = new Pool({ connectionString: url });
@@ -24,7 +24,7 @@ function createPrismaClient(): PrismaClient {
 function hasCurrentDelegates(client: PrismaClient | undefined) {
   if (!client) return false;
   const family = (client as { problemFamily?: { findMany?: unknown } }).problemFamily;
-  if (typeof family?.findMany !== "function") return false;
+  if (typeof family?.findMany !== 'function') return false;
   const dmmf = (
     client as {
       _runtimeDataModel?: { models?: { Problem?: { fields?: { name: string }[] } } };
@@ -32,14 +32,13 @@ function hasCurrentDelegates(client: PrismaClient | undefined) {
   )._runtimeDataModel?.models?.Problem?.fields;
   if (!Array.isArray(dmmf)) return true;
   const names = new Set(dmmf.map((field) => field.name));
-  return names.has("collection") && names.has("originId");
+  return names.has('collection') && names.has('originId');
 }
 
 if (
-  process.env.NODE_ENV !== "production" &&
+  process.env.NODE_ENV !== 'production' &&
   globalForPrisma.prisma &&
-  (globalForPrisma.prismaGeneration !== PRISMA_GENERATION ||
-    !hasCurrentDelegates(globalForPrisma.prisma))
+  (globalForPrisma.prismaGeneration !== PRISMA_GENERATION || !hasCurrentDelegates(globalForPrisma.prisma))
 ) {
   void globalForPrisma.prisma.$disconnect();
   globalForPrisma.prisma = undefined;
@@ -47,7 +46,7 @@ if (
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
   globalForPrisma.prismaGeneration = PRISMA_GENERATION;
 }

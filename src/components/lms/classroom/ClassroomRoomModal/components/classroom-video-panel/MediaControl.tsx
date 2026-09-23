@@ -1,8 +1,26 @@
 'use client';
 
+import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocalParticipant, useMediaDeviceSelect } from '@livekit/components-react';
 import { ChevronUp, Mic, MicOff, Video, VideoOff } from 'lucide-react';
 import type { MenuId } from './types';
+
+/** Matches Tailwind `bottom-11`: sit just above the toolbar control. */
+const MENU_GAP_PX = 44;
+
+interface MenuPosition {
+  left: number;
+  bottom: number;
+}
+
+function readMenuPosition(anchor: HTMLElement): MenuPosition {
+  const rect = anchor.getBoundingClientRect();
+  return {
+    left: rect.left,
+    bottom: window.innerHeight - rect.bottom + MENU_GAP_PX,
+  };
+}
 
 interface MediaControlProps {
   kind: 'audioinput' | 'videoinput';
@@ -32,6 +50,7 @@ export function MediaControl({
 }: MediaControlProps) {
   const { localParticipant } = useLocalParticipant();
   const { devices, activeDeviceId, setActiveMediaDevice } = useMediaDeviceSelect({ kind });
+  const anchorRef = useRef<HTMLDivElement>(null);
 
   const isMic = kind === 'audioinput';
   const muted = locked || (isMic
@@ -55,7 +74,10 @@ export function MediaControl({
   }
 
   return (
-    <div className="relative flex items-center rounded-xl border border-white/10 bg-white/5 p-0.5">
+    <div
+      ref={anchorRef}
+      className="relative flex items-center rounded-xl border border-white/10 bg-white/5 p-0.5"
+    >
       <button
         type="button"
         onClick={() =>
@@ -83,6 +105,7 @@ export function MediaControl({
 
       {activeMenu === menuId && (
         <DeviceMenu
+          anchorRef={anchorRef}
           devices={devices}
           activeDeviceId={activeDeviceId}
           onSelect={(id) => {
@@ -100,20 +123,65 @@ export function MediaControl({
 /* ───────── local helper (not exported) ───────── */
 
 function DeviceMenu({
+  anchorRef,
   devices,
   activeDeviceId,
   onSelect,
   label,
   fallbackPrefix,
 }: {
+  anchorRef: RefObject<HTMLElement | null>;
   devices: MediaDeviceInfo[];
   activeDeviceId: string | undefined;
   onSelect: (id: string) => void;
   label: string;
   fallbackPrefix: string;
 }) {
-  return (
-    <div className="absolute bottom-11 left-0 z-50 w-52 rounded-2xl border border-white/10 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-xl">
+  const [position, setPosition] = useState<MenuPosition | null>(() => {
+    const anchor = anchorRef.current;
+    return anchor ? readMenuPosition(anchor) : null;
+  });
+
+  useLayoutEffect(() => {
+    const anchor = anchorRef.current;
+    if (!anchor) return;
+
+    const update = () => {
+      const next = readMenuPosition(anchor);
+      setPosition((prev) =>
+        prev && prev.left === next.left && prev.bottom === next.bottom ? prev : next,
+      );
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    let node: HTMLElement | null = anchor;
+    while (node) {
+      observer.observe(node);
+      node = node.parentElement;
+    }
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [anchorRef]);
+
+  if (!position || typeof document === 'undefined') return null;
+
+  const portalRoot =
+    anchorRef.current?.closest('[data-classroom-root]') ?? document.body;
+
+  return createPortal(
+    <div
+      className="fixed z-[200] w-52 rounded-2xl border border-white/10 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-xl"
+      style={{ left: position.left, bottom: position.bottom }}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
       <div className="px-2 py-1 text-[10px] font-semibold text-white/40 uppercase">
         {label}
       </div>
@@ -131,6 +199,7 @@ function DeviceMenu({
           {d.label || `${fallbackPrefix} ${d.deviceId.slice(0, 5)}`}
         </button>
       ))}
-    </div>
+    </div>,
+    portalRoot,
   );
 }

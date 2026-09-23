@@ -8,6 +8,7 @@ import { Lock, LockOpen, Shield, ShieldAlert, Volume2 } from 'lucide-react';
 import { participantUserId } from '@/lib/livekit/participant-identity';
 import type { StudentModalProps } from './types';
 import { useBoardControlContext } from '../../BoardControlContext';
+import { BoardAssignSelect } from '../../BoardAssignSelect';
 import { useAudioVolume } from '../AudioVolumeContext';
 
 export function StudentModal({
@@ -118,6 +119,12 @@ export function StudentModal({
               <LockOpen className="size-3.5 text-white/40" />
             )}
           </button>
+        )}
+
+        {isTeacher && studentUserId && (
+          <div className="rounded-lg bg-white/5 px-2 py-1.5">
+            <BoardAssignSelect studentId={studentUserId} />
+          </div>
         )}
 
         <div className="flex items-center gap-2 rounded-lg bg-white/5 px-2 py-1.5">

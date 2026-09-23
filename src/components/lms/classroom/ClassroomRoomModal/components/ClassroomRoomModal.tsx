@@ -69,8 +69,22 @@ export function ClassroomRoomModal({
       presentStudents: boardControl.presentStudents,
       lockedStudentIds: boardControl.lockedStudentIds,
       toggleStudentLock: boardControl.toggleStudentLock,
+      pageCount: boardControl.pageCount,
+      setPageCount: boardControl.setPageCount,
+      assignedPageByStudent: boardControl.assignedPageByStudent,
+      assignStudentPage: boardControl.assignStudentPage,
+      clearBoardAssignments: boardControl.clearBoardAssignments,
     }),
-    [boardControl.presentStudents, boardControl.lockedStudentIds, boardControl.toggleStudentLock],
+    [
+      boardControl.presentStudents,
+      boardControl.lockedStudentIds,
+      boardControl.toggleStudentLock,
+      boardControl.pageCount,
+      boardControl.setPageCount,
+      boardControl.assignedPageByStudent,
+      boardControl.assignStudentPage,
+      boardControl.clearBoardAssignments,
+    ],
   );
 
   if (connection.loading) return <ClassroomLoading />;
@@ -81,6 +95,7 @@ export function ClassroomRoomModal({
     <BoardControlContextProvider value={boardControlValue}>
       <div
         ref={classroomRootRef}
+        data-classroom-root
         className={`fixed inset-0 z-50 flex h-[100dvh] w-screen flex-col overflow-hidden bg-slate-950 ${
           isBoardFullscreen
             ? 'p-0'

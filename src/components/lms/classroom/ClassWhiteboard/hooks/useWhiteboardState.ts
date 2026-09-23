@@ -12,12 +12,14 @@ interface Options {
   courseId: string;
   isTeacher: boolean;
   isDark: boolean;
-  publishDataSafe: (payload: any, reliable?: boolean) => Promise<void>;
+  publishDataSafe: (payload: any, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>;
+  getSyncDestinations?: (pageIndex: number) => string[] | undefined;
+  broadcastBoard?: () => void;
 }
 
 const SAVE_DEBOUNCE_MS = 1500;
 
-export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSafe }: Options) {
+export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSafe, getSyncDestinations, broadcastBoard }: Options) {
   const isRemoteUpdateRef = useRef(false);
   // True once the initial DB read has completed (whether or not a saved board
   // existed). Prevents the teacher from overwriting a saved board with the
@@ -178,13 +180,19 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
         updateUndoRedoState();
       }
 
-      void publishDataSafe({
-        type: 'WHITEBOARD_SYNC',
-        pageIndex: pIndex,
-        elements: newElems,
-      });
+      const destinations = getSyncDestinations?.(pIndex);
+      if (destinations && destinations.length === 0) return;
+      void publishDataSafe(
+        {
+          type: 'WHITEBOARD_SYNC',
+          pageIndex: pIndex,
+          elements: newElems,
+        },
+        true,
+        destinations,
+      );
     },
-    [isTeacher, publishDataSafe, updateUndoRedoState],
+    [isTeacher, publishDataSafe, updateUndoRedoState, getSyncDestinations],
   );
 
   const handleUndo = useCallback(() => {
@@ -202,8 +210,14 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     pagesRef.current = updated;
 
     updateUndoRedoState();
-    void publishDataSafe({ type: 'WHITEBOARD_SYNC', pageIndex: pIndex, elements: targetElements });
-  }, [isTeacher, publishDataSafe, updateUndoRedoState]);
+    const destinations = getSyncDestinations?.(pIndex);
+    if (destinations && destinations.length === 0) return;
+    void publishDataSafe(
+      { type: 'WHITEBOARD_SYNC', pageIndex: pIndex, elements: targetElements },
+      true,
+      destinations,
+    );
+  }, [isTeacher, publishDataSafe, updateUndoRedoState, getSyncDestinations]);
 
   const handleRedo = useCallback(() => {
     const pIndex = currentPageIndexRef.current;
@@ -219,14 +233,24 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     pagesRef.current = updated;
 
     updateUndoRedoState();
-    void publishDataSafe({ type: 'WHITEBOARD_SYNC', pageIndex: pIndex, elements: targetElements });
-  }, [publishDataSafe, updateUndoRedoState]);
+    const destinations = getSyncDestinations?.(pIndex);
+    if (destinations && destinations.length === 0) return;
+    void publishDataSafe(
+      { type: 'WHITEBOARD_SYNC', pageIndex: pIndex, elements: targetElements },
+      true,
+      destinations,
+    );
+  }, [publishDataSafe, updateUndoRedoState, getSyncDestinations]);
 
   const handleClearPage = useCallback(() => {
     handleElementsChange([]);
   }, [handleElementsChange]);
 
   const publishFullSync = useCallback(() => {
+    if (broadcastBoard) {
+      broadcastBoard();
+      return;
+    }
     void publishDataSafe(
       {
         type: 'WHITEBOARD_FULL_SYNC',
@@ -235,7 +259,7 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
       },
       true,
     );
-  }, [publishDataSafe]);
+  }, [broadcastBoard, publishDataSafe]);
 
   const handleAddNewPage = useCallback(() => {
     const updated = [...pagesRef.current, []];

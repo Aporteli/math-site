@@ -1,6 +1,8 @@
+import type { RefObject } from 'react';
 import type { RemoteParticipant } from 'livekit-client';
 
 export interface MoreMenuProps {
+  anchorRef: RefObject<HTMLElement | null>;
   courseId: string;
   isTeacher: boolean;
   isolatedIdentities: string[];

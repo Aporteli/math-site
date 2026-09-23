@@ -4,6 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth/session";
 import { YearGroup, EnrollmentStatus } from "@prisma/client";
 
+function toPlainCourse<T extends { defaultMonthlyPrice: unknown }>(course: T) {
+  return {
+    ...course,
+    defaultMonthlyPrice: Number(course.defaultMonthlyPrice ?? 0),
+  };
+}
+
 export async function getAdminCoursesAction() {
   await requireRole("ka", ["ADMIN"]);
   try {
@@ -14,7 +21,7 @@ export async function getAdminCoursesAction() {
       },
       orderBy: { createdAt: "desc" },
     });
-    return { success: true, data: courses };
+    return { success: true, data: courses.map(toPlainCourse) };
   } catch (error) {
     console.error("Failed to fetch courses:", error);
     return { success: false, error: "კურსების წამოღება ვერ მოხერხდა" };
@@ -134,7 +141,7 @@ export async function createAdminCourseAction({
         teacherId,
       },
     });
-    return { success: true, data: newCourse };
+    return { success: true, data: toPlainCourse(newCourse) };
   } catch (error) {
     console.error("Failed to create course:", error);
     return { success: false, error: "კურსის შექმნა ვერ მოხერხდა" };
@@ -177,7 +184,7 @@ export async function updateAdminCourseAction(
         ...(data.yearGroup ? { yearGroup: data.yearGroup } : {}),
       },
     });
-    return { success: true, data: updatedCourse };
+    return { success: true, data: toPlainCourse(updatedCourse) };
   } catch (error) {
     console.error("Failed to update course:", error);
     return { success: false, error: "კურსის განახლება ვერ მოხერხდა" };

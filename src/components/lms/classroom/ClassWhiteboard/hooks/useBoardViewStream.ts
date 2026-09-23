@@ -8,6 +8,7 @@ interface Options {
   room: Room | null;
   isTeacher: boolean;
   lockedStudentIds: Set<string>;
+  assignedPageByStudent: Record<string, number>;
   publishDataSafe: (payload: any, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>;
   zoomScale: number;
   stagePos: { x: number; y: number };
@@ -26,6 +27,7 @@ export function useBoardViewStream({
   room,
   isTeacher,
   lockedStudentIds,
+  assignedPageByStudent,
   publishDataSafe,
   zoomScale,
   stagePos,
@@ -37,7 +39,10 @@ export function useBoardViewStream({
   useEffect(() => {
     if (!isTeacher || !room || lockedStudentIds.size === 0) return;
 
-    const ids = Array.from(lockedStudentIds);
+    const ids = Array.from(lockedStudentIds).filter((id) => {
+      const assigned = assignedPageByStudent[id];
+      return assigned === undefined || assigned === currentPageIndex;
+    });
     let raf = 0;
     let lastSent = 0;
 
@@ -59,5 +64,5 @@ export function useBoardViewStream({
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [isTeacher, room, lockedStudentIds, publishDataSafe]);
+  }, [isTeacher, room, lockedStudentIds, assignedPageByStudent, currentPageIndex, publishDataSafe]);
 }
