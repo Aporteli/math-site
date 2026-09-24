@@ -127,11 +127,8 @@ export function IndividualStudentModal({
             </span>
             <div className="min-w-0">
               <h2 className="text-sm font-bold text-ink">
-                {isEdit ? 'ინდივიდუალური მოსწავლის რედაქტირება' : 'ინდივიდუალური მოსწავლის დამატება'}
+                {isEdit ? ' მოსწავლის რედაქტირება' : ' მოსწავლის დამატება'}
               </h2>
-              <p className="truncate text-[11px] font-medium text-muted">
-                ჯგუფის გარეშე, ბაზაში რეგისტრაციის გარეშე
-              </p>
             </div>
           </div>
           <button
@@ -146,22 +143,20 @@ export function IndividualStudentModal({
         <div className="custom-scrollbar space-y-3 overflow-y-auto p-4 sm:p-5">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-muted">სახელი *</label>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="ნიკა"
+                placeholder="სახელი"
                 className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
               />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-muted">გვარი *</label>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="ბერიძე"
+                placeholder="გვარი"
                 className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
               />
             </div>
@@ -169,46 +164,40 @@ export function IndividualStudentModal({
 
           <div>
             <label className="mb-1 flex items-center gap-1.5 text-[10px] font-bold text-muted">
-              <Phone className="h-3 w-3" /> მოსწავლის ტელეფონი
             </label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+995 555 12 34 56"
+              placeholder="ტელეფონი"
               className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
             />
           </div>
 
           <div>
             <label className="mb-1 flex items-center gap-1.5 text-[10px] font-bold text-muted">
-              <Users className="h-3 w-3" /> მშობლის ტელეფონი
             </label>
             <input
               type="tel"
               value={parentPhone}
               onChange={(e) => setParentPhone(e.target.value)}
-              placeholder="+995 599 98 76 54"
+              placeholder="მშობლის ტელეფონი"
               className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-muted">ფასი (₾)</label>
               <input
                 type="number"
                 min={0}
                 value={monthlyPrice}
                 onChange={(e) => setMonthlyPrice(e.target.value)}
-                placeholder="0"
+                placeholder="ფასი"
                 className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
               />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] font-bold text-muted">
-                ფასის ტიპი
-              </label>
               <select
                 value={priceType}
                 onChange={(e) => setPriceType(e.target.value as PriceType)}
@@ -224,23 +213,21 @@ export function IndividualStudentModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-muted">ელფოსტა</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@example.com"
+              placeholder="ელფოსტა"
               className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-[10px] font-bold text-muted">შენიშვნა</label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
-              placeholder="მაგ. მოდის ორშაბათს, ბინაზე"
+              placeholder="შენიშვნა"
               className="w-full resize-none rounded-xl border border-hairline bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
             />
           </div>

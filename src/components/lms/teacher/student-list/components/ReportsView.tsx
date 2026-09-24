@@ -231,9 +231,6 @@ export function ReportsView({
               <h2 className="truncate text-base font-bold text-ink sm:text-lg">
                 ანგარიში
               </h2>
-              <p className="text-xs font-medium text-muted">
-                {mode === 'monthly' ? 'თვიური' : 'წლიური'} შემოსავლის ანალიტიკა
-              </p>
             </div>
           </div>
 
@@ -610,11 +607,7 @@ function MonthlyReport({
                       <p className="min-w-0 truncate text-sm font-bold text-ink">
                         {student.firstName} {student.lastName}
                       </p>
-                      {isIndividual && (
-                        <span className="shrink-0 rounded-full border border-brass/30 bg-brass-tint px-1.5 py-0.5 text-[9px] font-bold text-brass-strong">
-                          ინდ.
-                        </span>
-                      )}
+                  
                     </div>
                     <div className="mt-1 flex items-center gap-2">
                       <div className="relative h-1.5 w-full max-w-[140px] overflow-hidden rounded-full bg-paper-deep">
@@ -690,7 +683,7 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
           </div>
           {data.best.total > 0 && (
             <div className="rounded-full border border-brass/30 bg-brass-tint px-2.5 py-1 text-[10px] font-bold text-brass-strong">
-              🏆 საუკეთესო: {data.best.label} ({formatPrice(data.best.total)})
+              საუკეთესო: {data.best.label} ({formatPrice(data.best.total)})
             </div>
           )}
         </div>
@@ -904,9 +897,8 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
       {/* ─── Top students of the year ─── */}
       <div className="rounded-2xl border border-hairline bg-surface shadow-sm sm:rounded-3xl">
         <div className="flex items-center gap-2 border-b border-hairline px-4 py-3">
-          <Award className="size-4 text-brass-strong" />
           <p className="text-sm font-bold text-ink">
-            ტოპ მოსწავლეები ({data.byStudent.length})
+             მოსწავლეები ({data.byStudent.length})
           </p>
         </div>
 
@@ -943,11 +935,6 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
                       <p className="min-w-0 truncate text-sm font-bold text-ink">
                         {student.firstName} {student.lastName}
                       </p>
-                      {isIndividual && (
-                        <span className="shrink-0 rounded-full border border-brass/30 bg-brass-tint px-1.5 py-0.5 text-[9px] font-bold text-brass-strong">
-                          ინდ.
-                        </span>
-                      )}
                     </div>
                   </div>
                   <div className="shrink-0 text-right">

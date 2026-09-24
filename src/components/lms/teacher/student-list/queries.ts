@@ -2,10 +2,31 @@ import 'server-only';
 
 import { prisma } from '@/lib/prisma';
 import type {
+  MissedLesson,
   PaymentRecord,
   StudentGroup,
   StudentRecord,
 } from '@/components/lms/teacher/student-list/studentList.types';
+
+/* ─── JSON → MissedLesson[] (safe cast) ─── */
+function parseMissedLessons(raw: unknown): MissedLesson[] {
+  if (!Array.isArray(raw)) return [];
+  const out: MissedLesson[] = [];
+  for (const m of raw) {
+    if (
+      m &&
+      typeof m === 'object' &&
+      typeof (m as { lessonId?: unknown }).lessonId === 'string' &&
+      typeof (m as { date?: unknown }).date === 'string'
+    ) {
+      out.push({
+        lessonId: (m as { lessonId: string }).lessonId,
+        date: (m as { date: string }).date,
+      });
+    }
+  }
+  return out;
+}
 
 export async function getTeacherGroups(
   teacherId: string,
@@ -55,6 +76,7 @@ export async function getTeacherStudents(
   for (const e of enrollments) {
     const u = e.user;
     const price = Number(e.monthlyPrice ?? e.course.defaultMonthlyPrice ?? 0);
+    const missed = parseMissedLessons(e.missedLessons);
 
     const lessons = e.lessons
       .map((l) => ({
@@ -74,6 +96,7 @@ export async function getTeacherStudents(
       existing.groupIds.push(e.course.id);
       existing.monthlyPrice += price;
       existing.lessons.push(...lessons);
+      existing.missedLessons = [...(existing.missedLessons ?? []), ...missed];
     } else {
       const parts = u.name.trim().split(/\s+/);
       const firstName = parts[0] ?? u.name;
@@ -93,6 +116,7 @@ export async function getTeacherStudents(
         paidAmount: 0,
         lessons,
         status: 'active',
+        missedLessons: missed,
       });
     }
   }
@@ -109,7 +133,7 @@ export async function getTeacherIndividualStudents(
     orderBy: { createdAt: 'asc' },
   });
 
-  return rows.map((s) => ({
+  const mapped = rows.map((s) => ({
     id: s.id,
     kind: 'individual' as const,
     firstName: s.firstName,
@@ -136,7 +160,10 @@ export async function getTeacherIndividualStudents(
       ),
     status: (s.status as 'active' | 'paused' | 'finished') ?? 'active',
     note: s.note ?? undefined,
+    missedLessons: parseMissedLessons(s.missedLessons),
   }));
+
+  return mapped;
 }
 
 export async function getTeacherPayments(

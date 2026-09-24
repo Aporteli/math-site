@@ -37,7 +37,7 @@ export function formatPriceWithPeriod(
   priceType: PriceType = 'MONTHLY',
 ): string {
   const suffix = PRICE_TYPE_SHORT[priceType];
-  return `${amount.toLocaleString('ka-GE')} ₾ / ${suffix}`;
+  return `${formatPrice(amount)} / ${suffix}`;
 }
 
 /* ═══════════════════ Lessons ═══════════════════ */
@@ -54,8 +54,90 @@ export function getGroupName(groupId: string, groups: StudentGroup[]): string {
   return groups.find((g) => g.id === groupId)?.name ?? '—';
 }
 
+export interface StudentListSection {
+  key: string;
+  title: string;
+  kind: 'group' | 'individual';
+  groupId?: string;
+  students: StudentRecord[];
+}
+
+export function sectionStudents(
+  students: StudentRecord[],
+  groups: StudentGroup[],
+  preferredGroupId?: string,
+): StudentListSection[] {
+  const byGroup = new Map<string, StudentRecord[]>();
+  const individuals: StudentRecord[] = [];
+  const ungrouped: StudentRecord[] = [];
+
+  for (const student of students) {
+    if (student.kind === 'individual') {
+      individuals.push(student);
+      continue;
+    }
+    const groupId =
+      (preferredGroupId && student.groupIds.includes(preferredGroupId)
+        ? preferredGroupId
+        : student.groupIds.find((id) => groups.some((g) => g.id === id))) ??
+      student.groupIds[0];
+    if (!groupId) {
+      ungrouped.push(student);
+      continue;
+    }
+    const list = byGroup.get(groupId) ?? [];
+    list.push(student);
+    byGroup.set(groupId, list);
+  }
+
+  const sections: StudentListSection[] = [];
+  for (const group of groups) {
+    const list = byGroup.get(group.id);
+    if (!list?.length) continue;
+    sections.push({
+      key: group.id,
+      title: group.name,
+      kind: 'group',
+      groupId: group.id,
+      students: list,
+    });
+  }
+
+  for (const [groupId, list] of byGroup) {
+    if (groups.some((g) => g.id === groupId)) continue;
+    sections.push({
+      key: groupId,
+      title: 'ჯგუფი',
+      kind: 'group',
+      groupId,
+      students: list,
+    });
+  }
+
+  if (ungrouped.length) {
+    sections.push({
+      key: '__none',
+      title: 'ჯგუფის გარეშე',
+      kind: 'group',
+      students: ungrouped,
+    });
+  }
+  if (individuals.length) {
+    sections.push({
+      key: '__individual',
+      title: 'სახლში',
+      kind: 'individual',
+      students: individuals,
+    });
+  }
+
+  return sections;
+}
+
 export function formatPrice(amount: number): string {
-  return `${amount.toLocaleString('ka-GE')} ₾`;
+  const n = Number.isFinite(amount) ? Math.round(amount) : 0;
+  const grouped = String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${grouped} ₾`;
 }
 
 export function paymentStatus(student: StudentRecord): 'paid' | 'partial' | 'unpaid' {

@@ -13,8 +13,10 @@ import {
   deleteIndividualPaymentAction,
   addStudentPaymentAction,
   deleteStudentPaymentAction,
+  toggleMissedLessonAction,
 } from '@/components/lms/teacher/student-list/actions';
 import type {
+  MissedLesson,
   PaymentRecord,
   PriceType,
   StudentGroup,
@@ -61,15 +63,19 @@ export function StudentListClient({
         const res = await updateIndividualStudentAction({
           studentId: id,
           patch: {
-            firstName: patch.firstName,
-            lastName: patch.lastName,
-            phone: patch.phone ?? null,
-            parentPhone: patch.parentPhone ?? null,
-            email: patch.email ?? null,
-            monthlyPrice: patch.monthlyPrice,
-            priceType: patch.priceType,
-            note: patch.note ?? null,
-            status: patch.status,
+            ...(patch.firstName !== undefined && { firstName: patch.firstName }),
+            ...(patch.lastName !== undefined && { lastName: patch.lastName }),
+            ...(patch.phone !== undefined && { phone: patch.phone ?? null }),
+            ...(patch.parentPhone !== undefined && {
+              parentPhone: patch.parentPhone ?? null,
+            }),
+            ...(patch.email !== undefined && { email: patch.email ?? null }),
+            ...(patch.monthlyPrice !== undefined && {
+              monthlyPrice: patch.monthlyPrice,
+            }),
+            ...(patch.priceType !== undefined && { priceType: patch.priceType }),
+            ...(patch.note !== undefined && { note: patch.note ?? null }),
+            ...(patch.status !== undefined && { status: patch.status }),
           },
         });
         if (!res.ok) console.error('[updateIndividualStudent]', res.error);
@@ -188,6 +194,7 @@ export function StudentListClient({
         lessons: [],
         status: 'active',
         note: input.note,
+        missedLessons: [],
       },
     ]);
     return { ok: true, id: res.id };
@@ -204,15 +211,19 @@ export function StudentListClient({
     const res = await updateIndividualStudentAction({
       studentId,
       patch: {
-        firstName: patch.firstName,
-        lastName: patch.lastName,
-        phone: patch.phone ?? null,
-        parentPhone: patch.parentPhone ?? null,
-        email: patch.email ?? null,
-        monthlyPrice: patch.monthlyPrice,
-        priceType: patch.priceType,
-        note: patch.note ?? null,
-        status: patch.status,
+        ...(patch.firstName !== undefined && { firstName: patch.firstName }),
+        ...(patch.lastName !== undefined && { lastName: patch.lastName }),
+        ...(patch.phone !== undefined && { phone: patch.phone ?? null }),
+        ...(patch.parentPhone !== undefined && {
+          parentPhone: patch.parentPhone ?? null,
+        }),
+        ...(patch.email !== undefined && { email: patch.email ?? null }),
+        ...(patch.monthlyPrice !== undefined && {
+          monthlyPrice: patch.monthlyPrice,
+        }),
+        ...(patch.priceType !== undefined && { priceType: patch.priceType }),
+        ...(patch.note !== undefined && { note: patch.note ?? null }),
+        ...(patch.status !== undefined && { status: patch.status }),
       },
     });
     if (!res.ok) return { ok: false, error: res.error };
@@ -302,6 +313,41 @@ export function StudentListClient({
     return { ok: true };
   };
 
+  /* ════════════ გამოტოვებული გაკვეთილი ════════════ */
+  const handleToggleMissed = async (
+    studentId: string,
+    lessonId: string,
+    date: string,
+    missed: boolean,
+  ): Promise<void> => {
+    const apply = (s: StudentRecord, m: boolean): StudentRecord => {
+      if (s.id !== studentId) return s;
+      const current = s.missedLessons ?? [];
+      const filtered = current.filter(
+        (x) => !(x.lessonId === lessonId && x.date === date),
+      );
+      const next: MissedLesson[] = m
+        ? [...filtered, { lessonId, date }]
+        : filtered;
+      return { ...s, missedLessons: next };
+    };
+
+    // optimistic update
+    setStudents((prev) => prev.map((s) => apply(s, missed)));
+
+    const res = await toggleMissedLessonAction({
+      studentId,
+      lessonId,
+      date,
+      missed,
+    });
+    if (!res.ok) {
+      // revert on failure
+      setStudents((prev) => prev.map((s) => apply(s, !missed)));
+      console.error('[toggleMissed]', res.error);
+    }
+  };
+
   return (
     <div className="min-w-0">
       <StudentList
@@ -311,7 +357,6 @@ export function StudentListClient({
         onUpdateStudent={handleUpdateStudent}
         onUpdatePayments={handleUpdatePayments}
         onUpdatePhones={handleUpdatePhones}
-        onSelectStudent={(s) => console.log('selected', s)}
         onCreateIndividual={handleCreateIndividual}
         onUpdateIndividual={handleUpdateIndividual}
         onDeleteIndividual={handleDeleteIndividual}
@@ -319,6 +364,7 @@ export function StudentListClient({
         onDeleteGroupPayment={handleDeleteGroupPayment}
         onAddIndividualPayment={handleAddIndividualPayment}
         onDeleteIndividualPayment={handleDeleteIndividualPayment}
+        onToggleMissed={handleToggleMissed}
       />
     </div>
   );

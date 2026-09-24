@@ -5,16 +5,24 @@ import { getSession } from '@/lib/auth/session';
 
 export type VirtualEventSource = 'group' | 'individual';
 
+export interface VirtualScheduleStudent {
+  id: string;
+  name: string;
+}
+
 export interface VirtualScheduleEvent {
   id: string;
   source: VirtualEventSource;
-  studentId: string;
-  studentName: string;
+  students: VirtualScheduleStudent[];
   courseId?: string;
   courseTitle?: string;
   dayOfWeek: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   startTime: string;
   endTime: string;
+}
+
+function sortStudents(students: VirtualScheduleStudent[]): VirtualScheduleStudent[] {
+  return [...students].sort((a, b) => a.name.localeCompare(b.name, 'ka'));
 }
 
 export async function getScheduleLessonsAction(): Promise<{
@@ -30,7 +38,6 @@ export async function getScheduleLessonsAction(): Promise<{
 
     const teacherId = session.user.id;
 
-    /* ─── ჯგუფური გაკვეთილები ─── */
     const groupLessons = await prisma.lessonSlot.findMany({
       where: {
         enrollment: {
@@ -48,7 +55,6 @@ export async function getScheduleLessonsAction(): Promise<{
       },
     });
 
-    /* ─── ინდივიდუალური გაკვეთილები ─── */
     const individualLessons = await prisma.individualLesson.findMany({
       where: {
         student: { teacherId, status: 'active' },
@@ -58,30 +64,54 @@ export async function getScheduleLessonsAction(): Promise<{
       },
     });
 
-    const events: VirtualScheduleEvent[] = [
-      ...groupLessons.map((l) => ({
-        id: `schedule-group-${l.id}`,
-        source: 'group' as const,
-        studentId: l.enrollment.user.id,
-        studentName: l.enrollment.user.name,
-        courseId: l.enrollment.course.id,
-        courseTitle: l.enrollment.course.title,
-        dayOfWeek: l.dayOfWeek as 1 | 2 | 3 | 4 | 5 | 6 | 7,
-        startTime: l.startTime,
-        endTime: l.endTime,
-      })),
-      ...individualLessons.map((l) => ({
-        id: `schedule-individual-${l.id}`,
-        source: 'individual' as const,
-        studentId: l.student.id,
-        studentName: `${l.student.firstName} ${l.student.lastName}`.trim(),
-        dayOfWeek: l.dayOfWeek as 1 | 2 | 3 | 4 | 5 | 6 | 7,
-        startTime: l.startTime,
-        endTime: l.endTime,
-      })),
-    ];
+    const grouped = new Map<string, VirtualScheduleEvent>();
 
-    return { success: true, events };
+    for (const lesson of groupLessons) {
+      const courseId = lesson.enrollment.course.id;
+      const key = `${courseId}|${lesson.dayOfWeek}|${lesson.startTime}|${lesson.endTime}`;
+      const student: VirtualScheduleStudent = {
+        id: lesson.enrollment.user.id,
+        name: lesson.enrollment.user.name,
+      };
+      const existing = grouped.get(key);
+      if (existing) {
+        if (!existing.students.some((s) => s.id === student.id)) {
+          existing.students.push(student);
+        }
+        continue;
+      }
+      grouped.set(key, {
+        id: `schedule-group-${key}`,
+        source: 'group',
+        students: [student],
+        courseId,
+        courseTitle: lesson.enrollment.course.title,
+        dayOfWeek: lesson.dayOfWeek as 1 | 2 | 3 | 4 | 5 | 6 | 7,
+        startTime: lesson.startTime,
+        endTime: lesson.endTime,
+      });
+    }
+
+    const groupEvents = Array.from(grouped.values()).map((event) => ({
+      ...event,
+      students: sortStudents(event.students),
+    }));
+
+    const individualEvents: VirtualScheduleEvent[] = individualLessons.map((lesson) => ({
+      id: `schedule-individual-${lesson.id}`,
+      source: 'individual',
+      students: [
+        {
+          id: lesson.student.id,
+          name: `${lesson.student.firstName} ${lesson.student.lastName}`.trim(),
+        },
+      ],
+      dayOfWeek: lesson.dayOfWeek as 1 | 2 | 3 | 4 | 5 | 6 | 7,
+      startTime: lesson.startTime,
+      endTime: lesson.endTime,
+    }));
+
+    return { success: true, events: [...groupEvents, ...individualEvents] };
   } catch (error) {
     console.error('Failed to load schedule lessons:', error);
     return {

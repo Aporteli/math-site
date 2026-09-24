@@ -180,6 +180,7 @@ model Enrollment {
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   lessons LessonSlot[]
+  missedLessons Json @default("[]")
 
   @@unique([userId, courseId])
   @@index([courseId])
@@ -536,6 +537,7 @@ model IndividualStudent {
   teacher  User                @relation("TeacherIndividualStudents", fields: [teacherId], references: [id], onDelete: Cascade)
   lessons  IndividualLesson[]
   payments IndividualPayment[]
+  missedLessons Json @default("[]")
 
   @@index([teacherId])
   @@map("individual_students")

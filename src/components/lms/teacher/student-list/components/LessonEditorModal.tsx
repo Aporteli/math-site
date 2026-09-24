@@ -12,6 +12,7 @@ import type {
 interface Props {
   student: StudentRecord;
   groups: StudentGroup[];
+  groupMemberCounts?: Record<string, number>;
   open: boolean;
   onClose: () => void;
   onAdd: (input: {
@@ -30,6 +31,7 @@ const DAY_SHORT_KA = ['ორშ', 'სამ', 'ოთხ', 'ხუთ', 'პ�
 export function LessonEditorModal({
   student,
   groups,
+  groupMemberCounts = {},
   open,
   onClose,
   onAdd,
@@ -104,12 +106,23 @@ export function LessonEditorModal({
             </span>
             <div className="min-w-0">
               <h2 id="lesson-editor-title" className="text-sm font-bold text-ink">
-                გაკვეთილის დროები
+                {isIndividual ? 'გაკვეთილის დროები' : 'ჯგუფის განრიგი'}
               </h2>
               <p className="truncate text-[11px] font-medium text-muted">
-                {student.firstName} {student.lastName}
-                {isIndividual && (
-                  <span className="ml-1 text-brass-strong">· ინდივიდუალური</span>
+                {isIndividual ? (
+                  <>
+                    {student.firstName} {student.lastName}
+                    <span className="ml-1 text-brass-strong">· ინდივიდუალური</span>
+                  </>
+                ) : (
+                  <>
+                    {groups.find((g) => g.id === (groupId || student.groupIds[0]))?.name ?? 'ჯგუფი'}
+                    {groupMemberCounts[groupId || student.groupIds[0]] ? (
+                      <span className="ml-1 text-navy">
+                        · {groupMemberCounts[groupId || student.groupIds[0]]} მოსწავლე
+                      </span>
+                    ) : null}
+                  </>
                 )}
               </p>
             </div>
@@ -193,6 +206,11 @@ export function LessonEditorModal({
             <p className="mb-3 flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-navy">
               <Plus className="h-3 w-3" /> ახალი გაკვეთილი
             </p>
+            {!isIndividual ? (
+              <p className="mb-3 rounded-xl border border-navy/15 bg-surface px-2.5 py-2 text-[11px] font-medium leading-snug text-muted">
+                ეს დრო დაემატება ჯგუფის ყველა მოსწავლეს. გადახდები რჩება ცალ-ცალკე.
+              </p>
+            ) : null}
 
             <div className="space-y-2.5">
               {/* ჯგუფი — მხოლოდ ჯგუფურისთვის */}

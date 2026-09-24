@@ -77,9 +77,6 @@ export function DebtTracker({
               <h2 className="truncate text-base font-bold text-ink sm:text-lg">
                 დავალიანებები
               </h2>
-              <p className="text-xs font-medium text-muted">
-                ვინ რამდენი უნდა გადაიხადოს
-              </p>
             </div>
           </div>
 
@@ -234,11 +231,11 @@ export function DebtTracker({
                       <p className="min-w-0 truncate text-sm font-bold text-ink">
                         {student.firstName} {student.lastName}
                       </p>
-                      {isIndividual && (
+                      {isIndividual ? (
                         <span className="shrink-0 rounded-full border border-brass/30 bg-brass-tint px-2 py-0.5 text-[9px] font-bold text-brass-strong">
-                          ინდ.
+                          სახლში
                         </span>
-                      )}
+                      ) : null}
                     </div>
 
                     {/* Groups */}

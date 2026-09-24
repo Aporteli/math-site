@@ -149,7 +149,7 @@ export function PaymentHistoryModal({
       const res = await onAddPayment({
         studentId: student.id,
         amount: value,
-        paidAt: new Date(paidAt).toISOString(),
+        paidAt: new Date(`${paidAt}T12:00:00`).toISOString(),
         method,
         note: note.trim() || undefined,
       });

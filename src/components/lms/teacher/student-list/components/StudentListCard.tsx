@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock3, Phone, Wallet, User2, Pencil, Receipt } from 'lucide-react';
+import { Clock3, Phone, Wallet, User2, Pencil, Receipt, UserX } from 'lucide-react';
 import {
   getGroupName,
   getTodayLessons,
@@ -11,6 +11,7 @@ import {
   sumPaymentsForMonth,
   computeExpectedInfo,
   parseMonthKey,
+  countMissedInMonth,
 } from '../paymentCalendar.helpers';
 import type {
   PaymentRecord,
@@ -29,6 +30,7 @@ interface Props {
   onEditPhones: (student: StudentRecord) => void;
   onManagePayments?: (student: StudentRecord) => void;
   onEditIndividual?: (student: StudentRecord) => void;
+  classmateCount?: number;
 }
 
 export function StudentListCard({
@@ -42,12 +44,14 @@ export function StudentListCard({
   onEditPhones,
   onManagePayments,
   onEditIndividual,
+  classmateCount,
 }: Props) {
   const { year, month } = parseMonthKey(monthKey);
   const info = computeExpectedInfo(student, year, month);
   const expected = info.amount;
   const paid = sumPaymentsForMonth(payments, student.id, monthKey);
   const owed = Math.max(0, expected - paid);
+  const missedCount = countMissedInMonth(student, year, month);
 
   const status: 'paid' | 'partial' | 'unpaid' =
     paid >= expected ? 'paid' : paid > 0 ? 'partial' : 'unpaid';
@@ -65,7 +69,7 @@ export function StudentListCard({
   return (
     <div
       onClick={() => onSelect(student)}
-      className={`group flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition hover:border-navy/30 hover:shadow-md sm:hover:-translate-y-0.5 ${
+      className={`group flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition hover:border-navy/35 hover:shadow-md sm:hover:-translate-y-0.5 ${
         view === 'grid' ? 'h-full' : ''
       }`}
     >
@@ -79,11 +83,16 @@ export function StudentListCard({
             <p className="min-w-0 truncate text-sm font-bold leading-tight text-ink">
               {student.firstName} {student.lastName}
             </p>
-            {isIndividual ? (
-              <span className="shrink-0 rounded-full border border-brass/30 bg-brass-tint px-2 py-0.5 text-[9px] font-bold text-brass-strong">
-                ინდივიდუალური
+            <div className="flex shrink-0 items-center gap-1">
+              {isIndividual ? (
+                <span className="rounded-full border border-brass/30 bg-brass-tint px-2 py-0.5 text-[9px] font-bold text-brass-strong">
+                  სახლში
+                </span>
+              ) : null}
+              <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${badge.cls}`}>
+                {badge.label}
               </span>
-            ) : null}
+            </div>
           </div>
 
           <button
@@ -111,7 +120,7 @@ export function StudentListCard({
       </div>
 
       {isIndividual ? (
-        <div className="px-4 pb-3">
+        <div className="flex items-center gap-1.5 px-4 pb-3">
           <button
             type="button"
             onClick={(e) => {
@@ -122,9 +131,15 @@ export function StudentListCard({
           >
             რედაქტირება
           </button>
+          {missedCount > 0 ? (
+            <span className="inline-flex items-center gap-0.5 rounded-full border border-loss/20 bg-loss-tint px-1.5 py-0.5 text-[9px] font-bold text-loss">
+              <UserX className="size-2.5" />
+              {missedCount} გამოტ.
+            </span>
+          ) : null}
         </div>
       ) : student.groupIds.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+        <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3">
           {student.groupIds.map((gid) => (
             <span
               key={gid}
@@ -133,23 +148,36 @@ export function StudentListCard({
               {getGroupName(gid, groups)}
             </span>
           ))}
+          {missedCount > 0 ? (
+            <span className="inline-flex items-center gap-0.5 rounded-full border border-loss/20 bg-loss-tint px-1.5 py-0.5 text-[9px] font-bold text-loss">
+              <UserX className="size-2.5" />
+              {missedCount} გამოტ.
+            </span>
+          ) : null}
         </div>
       ) : (
-        <div className="px-4 pb-3">
+        <div className="flex items-center gap-1.5 px-4 pb-3">
           <span className="rounded-full bg-paper-deep px-2 py-0.5 text-[10px] font-bold text-muted">
             ჯგუფის გარეშე
           </span>
+          {missedCount > 0 ? (
+            <span className="inline-flex items-center gap-0.5 rounded-full border border-loss/20 bg-loss-tint px-1.5 py-0.5 text-[9px] font-bold text-loss">
+              <UserX className="size-2.5" />
+              {missedCount} გამოტ.
+            </span>
+          ) : null}
         </div>
       )}
 
       {/* ─── Payment ─── */}
       <div className="border-t border-hairline bg-paper/50 px-4 py-3">
         <div className="grid grid-cols-2 gap-2">
-          <div className="min-w-0 rounded-xl bg-surface/70 px-2 py-1.5">
-            <p className="text-[10px] font-medium text-muted">
+          <div className="min-w-0 rounded-xl border border-hairline/80 bg-surface px-2.5 py-2">
+            <p className="flex items-center gap-1 text-[10px] font-medium text-muted">
+              <Wallet className="h-2.5 w-2.5 text-brass-strong" />
               ფასი
               {student.priceType && (
-                <span className="ml-1 text-[9px] text-muted/80">
+                <span className="ml-0.5 text-[9px] text-muted/80">
                   / {PRICE_TYPE_SHORT[student.priceType]}
                 </span>
               )}
@@ -172,7 +200,7 @@ export function StudentListCard({
               e.stopPropagation();
               onManagePayments?.(student);
             }}
-            className="min-w-0 cursor-pointer rounded-xl bg-surface/70 px-2 py-1.5 text-right transition hover:bg-win-tint"
+            className="min-w-0 cursor-pointer rounded-xl border border-hairline/80 bg-surface px-2.5 py-2 text-right transition hover:border-win/30 hover:bg-win-tint"
           >
             <p className="flex items-center justify-end gap-1 text-[10px] font-medium text-muted">
               <Receipt className="h-2.5 w-2.5" /> გადახდილი
@@ -204,7 +232,11 @@ export function StudentListCard({
       <div className="border-t border-hairline px-4 py-3">
         <div className="mb-2 flex items-center justify-between gap-2">
           <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-muted">
-            <Clock3 className="h-3 w-3" /> გაკვეთილები
+            <Clock3 className="h-3 w-3" />
+            {isIndividual ? 'გაკვეთილები' : 'ჯგუფის განრიგი'}
+            {!isIndividual && classmateCount && classmateCount > 1 ? (
+              <span className="font-medium text-navy">· {classmateCount} მოსწავლე</span>
+            ) : null}
           </p>
 
           <button
@@ -239,8 +271,8 @@ export function StudentListCard({
               return (
                 <div
                   key={l.id}
-                  className={`flex items-center justify-between rounded-lg px-2 py-1 text-[11px] ${
-                    isToday ? 'bg-navy-tint font-bold text-navy' : 'text-body'
+                  className={`flex items-center justify-between rounded-lg px-2 py-1.5 text-[11px] ${
+                    isToday ? 'bg-navy-tint font-bold text-navy' : 'bg-paper text-body'
                   }`}
                 >
                   <span className="font-bold">{DAY_SHORT[l.dayOfWeek]}</span>

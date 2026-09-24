@@ -1,6 +1,7 @@
 'use client';
 
-import { Clock3, Phone, Wallet, Receipt } from 'lucide-react';
+import { Fragment } from 'react';
+import { Clock3, Phone, Wallet, Receipt, UserX } from 'lucide-react';
 import {
   DAY_SHORT,
   PRICE_TYPE_SHORT,
@@ -10,18 +11,21 @@ import {
   sumPaymentsForMonth,
   computeExpectedInfo,
   parseMonthKey,
+  countMissedInMonth,
 } from '../paymentCalendar.helpers';
 import type {
   PaymentRecord,
   StudentGroup,
   StudentRecord,
 } from '../studentList.types';
+import type { StudentListSection } from '../studentList.helpers';
 
 interface Props {
-  students: StudentRecord[];
+  sections: StudentListSection[];
   groups: StudentGroup[];
   payments: PaymentRecord[];
   monthKey: string;
+  groupMemberCounts: Record<string, number>;
   onSelect: (student: StudentRecord) => void;
   onEditLessons: (student: StudentRecord) => void;
   onEditPhones: (student: StudentRecord) => void;
@@ -30,10 +34,11 @@ interface Props {
 }
 
 export function StudentListTable({
-  students,
+  sections,
   groups,
   payments,
   monthKey,
+  groupMemberCounts,
   onSelect,
   onEditLessons,
   onEditPhones,
@@ -47,7 +52,7 @@ export function StudentListTable({
       <div className="custom-scrollbar overflow-x-auto overscroll-x-contain">
         <table className="w-full min-w-[52rem] border-collapse text-left">
           <thead className="sticky top-0 z-10 bg-paper">
-            <tr className="border-b border-hairline text-[11px] font-bold tracking-wide text-muted">
+            <tr className="border-b border-hairline text-[10px] font-bold uppercase tracking-wider text-muted">
               <th className="px-4 py-3 font-bold">მოსწავლე</th>
               <th className="px-4 py-3 font-bold">ტელეფონი</th>
               <th className="px-4 py-3 font-bold">ჯგუფები</th>
@@ -59,10 +64,31 @@ export function StudentListTable({
             </tr>
           </thead>
           <tbody>
-            {students.map((student) => {
+            {sections.map((section) => (
+              <Fragment key={section.key}>
+                <tr className="bg-navy-tint/35">
+                  <td colSpan={8} className="px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`} />
+                      <span className="text-[11px] font-bold tracking-wide text-ink">
+                        {section.title}
+                      </span>
+                      <span className="rounded-full bg-surface px-1.5 py-0.5 text-[9px] font-bold text-muted">
+                        {section.students.length}
+                      </span>
+                      {section.kind === 'group' ? (
+                        <span className="text-[10px] font-medium text-muted">
+                          საერთო განრიგი · გადახდა ცალ-ცალკე
+                        </span>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+                {section.students.map((student) => {
               const info = computeExpectedInfo(student, year, month);
               const expected = info.amount;
               const paid = sumPaymentsForMonth(payments, student.id, monthKey);
+              const missedCount = countMissedInMonth(student, year, month);
               const status: 'paid' | 'partial' | 'unpaid' =
                 paid >= expected ? 'paid' : paid > 0 ? 'partial' : 'unpaid';
               const badge = {
@@ -72,12 +98,15 @@ export function StudentListTable({
               }[status];
               const initial = student.firstName.charAt(0) || '?';
               const isIndividual = student.kind === 'individual';
+              const sharedCount = student.groupIds[0]
+                ? groupMemberCounts[student.groupIds[0]]
+                : undefined;
 
               return (
                 <tr
                   key={student.id}
                   onClick={() => onSelect(student)}
-                  className="cursor-pointer border-b border-hairline last:border-b-0 transition hover:bg-paper/70"
+                  className="cursor-pointer border-b border-hairline last:border-b-0 transition hover:bg-navy-tint/25"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -131,7 +160,7 @@ export function StudentListTable({
                         }}
                         className="cursor-pointer rounded-full border border-brass/30 bg-brass-tint px-2 py-0.5 text-[10px] font-bold text-brass-strong transition hover:bg-brass/20"
                       >
-                        ინდივიდუალური
+                        სახლში
                       </button>
                     ) : (
                       <div className="flex flex-wrap gap-1.5">
@@ -174,6 +203,12 @@ export function StudentListTable({
                           {PRICE_TYPE_SHORT[student.priceType]}
                         </span>
                       )}
+                      {missedCount > 0 ? (
+                        <span className="mt-0.5 inline-flex w-fit items-center gap-0.5 rounded-full border border-loss/20 bg-loss-tint px-1.5 py-0.5 text-[9px] font-bold text-loss">
+                          <UserX className="h-2.5 w-2.5" />
+                          {missedCount} გამოტ.
+                        </span>
+                      ) : null}
                     </button>
                   </td>
 
@@ -242,6 +277,11 @@ export function StudentListTable({
                                 +{student.lessons.length - 2} კიდევ
                               </p>
                             ) : null}
+                            {!isIndividual && sharedCount && sharedCount > 1 ? (
+                              <p className="pl-4.5 text-[10px] font-medium text-navy">
+                                საერთო · {sharedCount} მოსწავლე
+                              </p>
+                            ) : null}
                           </div>
                         )}
                       </div>
@@ -257,7 +297,9 @@ export function StudentListTable({
                   </td>
                 </tr>
               );
-            })}
+                })}
+              </Fragment>
+            ))}
           </tbody>
         </table>
       </div>

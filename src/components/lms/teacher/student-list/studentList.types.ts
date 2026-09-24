@@ -14,9 +14,14 @@ export interface StudentGroup {
   monthlyPrice: number;
 }
 
+/** გამოტოვებული გაკვეთილი — კონკრეტული lesson slot კონკრეტულ თარიღზე */
+export interface MissedLesson {
+  lessonId: string;
+  date: string; // "YYYY-MM-DD"
+}
+
 export interface StudentRecord {
   id: string;
-  /** 'group' = ჯგუფის მოსწავლე (User + Enrollment) — 'individual' = ცალკე მოსწავლე ბაზაში რეგისტრაციის გარეშე */
   kind: 'group' | 'individual';
   firstName: string;
   lastName: string;
@@ -30,12 +35,14 @@ export interface StudentRecord {
   lessons: LessonSlot[];
   status: 'active' | 'paused' | 'finished';
   note?: string;
+  /** გამოტოვებული გაკვეთილები (PER_LESSON-ისთვის) */
+  missedLessons?: MissedLesson[];
 }
 
 export interface PaymentRecord {
   id: string;
   studentId: string;
-  monthKey: string; // "2026-09"
+  monthKey: string;
   amount: number;
   paidAt: string;
   method?: 'cash' | 'card' | 'transfer';

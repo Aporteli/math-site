@@ -185,11 +185,14 @@ export async function addLessonSlotAction(input: {
   dayOfWeek: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   startTime: string;
   endTime: string;
-}): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+}): Promise<
+  | { ok: true; id: string; copies: { studentId: string; lessonId: string }[] }
+  | { ok: false; error: string }
+> {
   const user = await getSession();
   if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
 
-  const enrollment = await prisma.enrollment.findFirst({
+  const allowed = await prisma.enrollment.findFirst({
     where: {
       userId: input.studentId,
       courseId: input.groupId,
@@ -197,7 +200,7 @@ export async function addLessonSlotAction(input: {
     },
     select: { id: true },
   });
-  if (!enrollment) return { ok: false, error: 'Forbidden' };
+  if (!allowed) return { ok: false, error: 'Forbidden' };
 
   if (input.startTime >= input.endTime) {
     return { ok: false, error: 'დაწყების დრო უნდა იყოს დასრულების დროზე ადრე' };
@@ -209,22 +212,78 @@ export async function addLessonSlotAction(input: {
     return { ok: false, error: 'დროის ფორმატი არასწორია' };
   }
 
-  const lesson = await prisma.lessonSlot.create({
-    data: {
-      enrollmentId: enrollment.id,
-      dayOfWeek: input.dayOfWeek,
-      startTime: input.startTime,
-      endTime: input.endTime,
+  const enrollments = await prisma.enrollment.findMany({
+    where: {
+      courseId: input.groupId,
+      course: { teacherId: user.user.id },
+      OR: [{ status: 'ACTIVE' }, { userId: input.studentId }],
+    },
+    select: {
+      id: true,
+      userId: true,
+      lessons: {
+        where: {
+          dayOfWeek: input.dayOfWeek,
+          startTime: input.startTime,
+          endTime: input.endTime,
+        },
+        select: { id: true },
+        take: 1,
+      },
     },
   });
 
+  const copies: { studentId: string; lessonId: string }[] = [];
+  let triggerId: string | null = null;
+
+  const creates = enrollments.filter((enrollment) => {
+    const existingId = enrollment.lessons[0]?.id;
+    if (existingId) {
+      if (enrollment.userId === input.studentId) triggerId = existingId;
+      return false;
+    }
+    return true;
+  });
+
+  if (creates.length > 0) {
+    const created = await prisma.$transaction(
+      creates.map((enrollment) =>
+        prisma.lessonSlot.create({
+          data: {
+            enrollmentId: enrollment.id,
+            dayOfWeek: input.dayOfWeek,
+            startTime: input.startTime,
+            endTime: input.endTime,
+          },
+        }),
+      ),
+    );
+
+    created.forEach((lesson, index) => {
+      const enrollment = creates[index];
+      copies.push({ studentId: enrollment.userId, lessonId: lesson.id });
+      if (enrollment.userId === input.studentId) triggerId = lesson.id;
+    });
+  }
+
   revalidatePath('/[locale]/teacher/student-list', 'page');
-  return { ok: true, id: lesson.id };
+  return { ok: true, id: triggerId ?? copies[0]?.lessonId ?? allowed.id, copies };
 }
 
 export async function deleteLessonSlotAction(input: {
   lessonId: string;
-}): Promise<{ ok: true } | { ok: false; error: string }> {
+}): Promise<
+  | {
+      ok: true;
+      match: {
+        groupId: string;
+        dayOfWeek: number;
+        startTime: string;
+        endTime: string;
+      };
+    }
+  | { ok: false; error: string }
+> {
   const user = await getSession();
   if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
 
@@ -233,14 +292,36 @@ export async function deleteLessonSlotAction(input: {
       id: input.lessonId,
       enrollment: { course: { teacherId: user.user.id } },
     },
-    select: { id: true },
+    select: {
+      dayOfWeek: true,
+      startTime: true,
+      endTime: true,
+      enrollment: { select: { courseId: true } },
+    },
   });
   if (!lesson) return { ok: false, error: 'Forbidden' };
 
-  await prisma.lessonSlot.delete({ where: { id: lesson.id } });
+  const match = {
+    groupId: lesson.enrollment.courseId,
+    dayOfWeek: lesson.dayOfWeek,
+    startTime: lesson.startTime,
+    endTime: lesson.endTime,
+  };
+
+  await prisma.lessonSlot.deleteMany({
+    where: {
+      dayOfWeek: match.dayOfWeek,
+      startTime: match.startTime,
+      endTime: match.endTime,
+      enrollment: {
+        courseId: match.groupId,
+        course: { teacherId: user.user.id },
+      },
+    },
+  });
 
   revalidatePath('/[locale]/teacher/student-list', 'page');
-  return { ok: true };
+  return { ok: true, match };
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -528,3 +609,74 @@ export async function deleteIndividualPaymentAction(input: {
   revalidatePath('/[locale]/teacher/student-list', 'page');
   return { ok: true };
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   გამოტოვებული გაკვეთილის მონიშვნა/მოხსნა
+   ═══════════════════════════════════════════════════════════════ */
+
+   export async function toggleMissedLessonAction(input: {
+    studentId: string;
+    lessonId: string;
+    date: string; // "YYYY-MM-DD"
+    missed: boolean;
+  }): Promise<{ ok: true } | { ok: false; error: string }> {
+    const user = await getSession();
+    if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
+  
+    /* ─── ჯგუფური მოსწავლე (Enrollment) ─── */
+    const enrollment = await prisma.enrollment.findFirst({
+      where: {
+        userId: input.studentId,
+        course: { teacherId: user.user.id },
+        lessons: { some: { id: input.lessonId } },
+      },
+      select: { id: true, missedLessons: true },
+    });
+  
+    if (enrollment) {
+      const current =
+        (enrollment.missedLessons as { lessonId: string; date: string }[] | null) ?? [];
+      const filtered = current.filter(
+        (m) => !(m.lessonId === input.lessonId && m.date === input.date),
+      );
+      const next = input.missed
+        ? [...filtered, { lessonId: input.lessonId, date: input.date }]
+        : filtered;
+  
+      await prisma.enrollment.update({
+        where: { id: enrollment.id },
+        data: { missedLessons: next },
+      });
+  
+      revalidatePath('/[locale]/teacher/student-list', 'page');
+      return { ok: true };
+    }
+  
+    /* ─── ინდივიდუალური მოსწავლე ─── */
+    const individual = await prisma.individualStudent.findFirst({
+      where: {
+        id: input.studentId,
+        teacherId: user.user.id,
+        lessons: { some: { id: input.lessonId } },
+      },
+      select: { id: true, missedLessons: true },
+    });
+    if (!individual) return { ok: false, error: 'Forbidden' };
+  
+    const current =
+      (individual.missedLessons as { lessonId: string; date: string }[] | null) ?? [];
+    const filtered = current.filter(
+      (m) => !(m.lessonId === input.lessonId && m.date === input.date),
+    );
+    const next = input.missed
+      ? [...filtered, { lessonId: input.lessonId, date: input.date }]
+      : filtered;
+  
+    await prisma.individualStudent.update({
+      where: { id: individual.id },
+      data: { missedLessons: next },
+    });
+  
+    revalidatePath('/[locale]/teacher/student-list', 'page');
+    return { ok: true };
+  }

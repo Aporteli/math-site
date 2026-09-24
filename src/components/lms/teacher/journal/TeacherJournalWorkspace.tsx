@@ -736,6 +736,20 @@ export function TeacherJournalWorkspace() {
       ? 'bg-sky-500 text-sky-950 border-l-[3px] border-sky-500'
       : 'bg-emerald-500 text-emerald-950 border-l-[3px] border-emerald-500';
 
+  const virtualTitle = (v: VirtualScheduleEvent) =>
+    v.source === 'group' && v.courseTitle
+      ? v.courseTitle
+      : v.students.map((s) => s.name).join(', ') || 'გაკვეთილი';
+
+  const virtualStudentsLabel = (v: VirtualScheduleEvent) =>
+    v.students.map((s) => s.name).join(', ');
+
+  const virtualTooltip = (v: VirtualScheduleEvent) => {
+    const names = virtualStudentsLabel(v);
+    const course = v.courseTitle ? ` · ${v.courseTitle}` : '';
+    return `${names} · ${v.startTime}–${v.endTime}${course}`;
+  };
+
   const renderMonthDayCell = (date: Date, inMonth: boolean) => {
     const dateKey = toDateKey(date);
     const dayEvents = eventsByDate[dateKey] || [];
@@ -786,12 +800,18 @@ export function TeacherJournalWorkspace() {
           {dayVirtual.map((v) => (
             <div
               key={v.id}
-              title={`${v.studentName} · ${v.startTime}–${v.endTime}${v.courseTitle ? ` · ${v.courseTitle}` : ''}`}
+              title={virtualTooltip(v)}
               className={`relative truncate rounded-sm px-1.5 py-0.5 text-[10px] font-medium leading-tight shrink-0 flex items-center gap-1.5 pointer-events-none ${virtualChipClass(v.source)}`}>
               <span className="opacity-70 font-normal tabular-nums shrink-0">
                 {v.startTime}
               </span>
-              <span className="truncate">{v.studentName}</span>
+              <span className="truncate">{virtualTitle(v)}</span>
+              {v.students.length > 1 ? (
+                <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] opacity-80 shrink-0">
+                  <Users className="size-2.5" />
+                  {v.students.length}
+                </span>
+              ) : null}
             </div>
           ))}
         </div>
@@ -845,19 +865,25 @@ export function TeacherJournalWorkspace() {
             <div
               key={v.id}
               style={{ top: `${top}px`, height: `${height}px` }}
-              title={`${v.studentName} · ${v.startTime}–${v.endTime}${v.courseTitle ? ` · ${v.courseTitle}` : ''}`}
+              title={virtualTooltip(v)}
               className={`absolute inset-x-1 z-[5] overflow-hidden rounded-md p-1.5 text-xs leading-tight pointer-events-none ${virtualChipClass(v.source)}`}>
               <div className="flex items-center gap-1 font-semibold">
-                <span className="truncate text-[12px]">{v.studentName}</span>
+                <span className="truncate text-[12px]">{virtualTitle(v)}</span>
+                {v.students.length > 1 ? (
+                  <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] opacity-80 shrink-0">
+                    <Users className="size-3" />
+                    {v.students.length}
+                  </span>
+                ) : null}
               </div>
               <div className="text-[10px] opacity-70 font-normal tabular-nums mt-0.5">
                 {v.startTime} – {v.endTime}
               </div>
-              {v.courseTitle && (
-                <div className="text-[10px] opacity-60 font-normal truncate mt-0.5">
-                  {v.courseTitle}
+              {v.source === 'group' ? (
+                <div className="text-[10px] opacity-70 font-normal truncate mt-0.5">
+                  {virtualStudentsLabel(v)}
                 </div>
-              )}
+              ) : null}
             </div>
           );
         })}
@@ -1192,13 +1218,21 @@ export function TeacherJournalWorkspace() {
                         <div
                           key={v.id}
                           className={`flex items-center gap-4 p-3 rounded-md pointer-events-none ${virtualChipClass(v.source)}`}>
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
-                              <h4 className="text-xs font-semibold">{v.studentName}</h4>
-                              {v.courseTitle && (
-                                <span className="text-[10px] opacity-70">· {v.courseTitle}</span>
-                              )}
+                              <h4 className="text-xs font-semibold truncate">{virtualTitle(v)}</h4>
+                              {v.students.length > 1 ? (
+                                <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] opacity-80 shrink-0">
+                                  <Users className="size-3" />
+                                  {v.students.length}
+                                </span>
+                              ) : null}
                             </div>
+                            {v.source === 'group' ? (
+                              <p className="mt-1 truncate text-[11px] opacity-80 font-medium">
+                                {virtualStudentsLabel(v)}
+                              </p>
+                            ) : null}
                             <div className="flex gap-3 mt-1 text-[11px] opacity-75 font-medium">
                               <span className="flex items-center gap-1 tabular-nums">
                                 <Clock className="size-3" /> {v.startTime} - {v.endTime}

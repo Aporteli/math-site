@@ -23,7 +23,7 @@ import { LessonEditorModal } from './LessonEditorModal';
 import { PhoneEditorModal } from './PhoneEditorModal';
 import { IndividualStudentModal } from './IndividualStudentModal';
 import { PaymentHistoryModal } from './PaymentHistoryModal';
-import { formatPrice, getTodayLessons } from '../studentList.helpers';
+import { formatPrice, getTodayLessons, sectionStudents } from '../studentList.helpers';
 import {
   getMonthKey,
   sumPaymentsForMonth,
@@ -87,6 +87,14 @@ interface Props {
   onDeleteIndividualPayment?: (
     paymentId: string,
   ) => Promise<{ ok: boolean; error?: string }>;
+
+  /* Missed lesson toggle */
+  onToggleMissed?: (
+    studentId: string,
+    lessonId: string,
+    date: string,
+    missed: boolean,
+  ) => void;
 }
 
 type View = 'table' | 'grid' | 'calendar' | 'debt' | 'reports';
@@ -106,14 +114,17 @@ export function StudentList({
   onDeleteGroupPayment,
   onAddIndividualPayment,
   onDeleteIndividualPayment,
+  onToggleMissed,
 }: Props) {
   const [view, setView] = useState<View>('table');
   const [query, setQuery] = useState('');
   const [activeGroupId, setActiveGroupId] = useState<string | 'all'>('all');
   const [monthKey, setMonthKey] = useState(() => getMonthKey(new Date()));
 
-  const [localStudents, setLocalStudents] = useState(students);
   const [payments, setPayments] = useState<PaymentRecord[]>(initialPayments);
+
+  const studentsRef = useRef(students);
+  studentsRef.current = students;
 
   const paymentsRef = useRef(payments);
   paymentsRef.current = payments;
@@ -125,41 +136,39 @@ export function StudentList({
   const [editingIndividual, setEditingIndividual] = useState<StudentRecord | null>(null);
   const [paymentHistoryStudent, setPaymentHistoryStudent] = useState<StudentRecord | null>(null);
 
-  useEffect(() => setLocalStudents(students), [students]);
   useEffect(() => setPayments(initialPayments), [initialPayments]);
 
   /* ════════════ FRESH STUDENT ობიექტი მოდალისთვის ════════════ */
   const currentPaymentStudent = useMemo(() => {
     if (!paymentHistoryStudent) return null;
     return (
-      localStudents.find((s) => s.id === paymentHistoryStudent.id) ??
+      students.find((s) => s.id === paymentHistoryStudent.id) ??
       paymentHistoryStudent
     );
-  }, [paymentHistoryStudent, localStudents]);
+  }, [paymentHistoryStudent, students]);
 
   const currentEditingIndividual = useMemo(() => {
     if (!editingIndividual) return null;
     return (
-      localStudents.find((s) => s.id === editingIndividual.id) ?? editingIndividual
+      students.find((s) => s.id === editingIndividual.id) ?? editingIndividual
     );
-  }, [editingIndividual, localStudents]);
+  }, [editingIndividual, students]);
 
   const currentLessonStudent = useMemo(() => {
     if (!lessonEditorStudent) return null;
     return (
-      localStudents.find((s) => s.id === lessonEditorStudent.id) ?? lessonEditorStudent
+      students.find((s) => s.id === lessonEditorStudent.id) ?? lessonEditorStudent
     );
-  }, [lessonEditorStudent, localStudents]);
+  }, [lessonEditorStudent, students]);
 
   const currentPhoneStudent = useMemo(() => {
     if (!phoneEditorStudent) return null;
     return (
-      localStudents.find((s) => s.id === phoneEditorStudent.id) ?? phoneEditorStudent
+      students.find((s) => s.id === phoneEditorStudent.id) ?? phoneEditorStudent
     );
-  }, [phoneEditorStudent, localStudents]);
+  }, [phoneEditorStudent, students]);
 
   const handleUpdateStudent = (id: string, patch: Partial<StudentRecord>) => {
-    setLocalStudents((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
     onUpdateStudent?.(id, patch);
   };
 
@@ -194,7 +203,7 @@ export function StudentList({
     method?: 'cash' | 'card' | 'transfer';
     note?: string;
   }): Promise<{ ok: boolean; error?: string }> => {
-    const student = localStudents.find((s) => s.id === input.studentId);
+    const student = students.find((s) => s.id === input.studentId);
     if (!student) return { ok: false, error: 'მოსწავლე ვერ მოიძებნა' };
 
     const res =
@@ -204,20 +213,6 @@ export function StudentList({
         : await (onAddGroupPayment?.(input) ??
             Promise.resolve({ ok: false, error: 'Not configured' }));
 
-    if (res.ok) {
-      setPayments((prev) => [
-        ...prev,
-        {
-          id: `pay-${input.studentId}-${Date.now()}`,
-          studentId: input.studentId,
-          monthKey: input.paidAt.slice(0, 7),
-          amount: input.amount,
-          paidAt: input.paidAt,
-          method: input.method,
-          note: input.note,
-        },
-      ]);
-    }
     return res;
   };
 
@@ -226,7 +221,7 @@ export function StudentList({
   ): Promise<{ ok: boolean; error?: string }> => {
     const payment = payments.find((p) => p.id === paymentId);
     if (!payment) return { ok: false, error: 'გადახდა ვერ მოიძებნა' };
-    const student = localStudents.find((s) => s.id === payment.studentId);
+    const student = students.find((s) => s.id === payment.studentId);
     if (!student) return { ok: false, error: 'მოსწავლე ვერ მოიძებნა' };
 
     const res =
@@ -236,9 +231,6 @@ export function StudentList({
         : await (onDeleteGroupPayment?.(paymentId) ??
             Promise.resolve({ ok: false, error: 'Not configured' }));
 
-    if (res.ok) {
-      setPayments((prev) => prev.filter((p) => p.id !== paymentId));
-    }
     return res;
   };
 
@@ -249,46 +241,75 @@ export function StudentList({
     startTime: string;
     endTime: string;
   }): Promise<{ ok: boolean; error?: string }> => {
-    const student = localStudents.find((s) => s.id === input.studentId);
+    const student = students.find((s) => s.id === input.studentId);
     const isIndividual = student?.kind === 'individual';
 
-    const res = isIndividual
-      ? await addIndividualLessonAction({
-          studentId: input.studentId,
-          dayOfWeek: input.dayOfWeek,
-          startTime: input.startTime,
-          endTime: input.endTime,
-        })
-      : await addLessonSlotAction(input);
+    if (isIndividual) {
+      const res = await addIndividualLessonAction({
+        studentId: input.studentId,
+        dayOfWeek: input.dayOfWeek,
+        startTime: input.startTime,
+        endTime: input.endTime,
+      });
+      if (!res.ok) return { ok: false, error: res.error };
 
-    if (res.ok) {
-      setLocalStudents((prev) =>
-        prev.map((s) =>
-          s.id === input.studentId
-            ? {
-                ...s,
-                lessons: [
-                  ...s.lessons,
-                  {
-                    id: res.id,
-                    dayOfWeek: input.dayOfWeek,
-                    startTime: input.startTime,
-                    endTime: input.endTime,
-                    groupId: isIndividual ? '' : input.groupId,
-                  },
-                ],
-              }
-            : s,
-        ),
-      );
+      const current = studentsRef.current.find((s) => s.id === input.studentId);
+      handleUpdateStudent(input.studentId, {
+        lessons: [
+          ...(current?.lessons ?? []),
+          {
+            id: res.id,
+            dayOfWeek: input.dayOfWeek,
+            startTime: input.startTime,
+            endTime: input.endTime,
+            groupId: '',
+          },
+        ],
+      });
       return { ok: true };
     }
-    return { ok: false, error: res.error };
+
+    const res = await addLessonSlotAction(input);
+    if (!res.ok) return { ok: false, error: res.error };
+
+    const copies =
+      res.copies.length > 0
+        ? res.copies
+        : [{ studentId: input.studentId, lessonId: res.id }];
+
+    for (const copy of copies) {
+      const current = studentsRef.current.find((s) => s.id === copy.studentId);
+      if (
+        current?.lessons.some(
+          (l) =>
+            l.id === copy.lessonId ||
+            (l.groupId === input.groupId &&
+              l.dayOfWeek === input.dayOfWeek &&
+              l.startTime === input.startTime &&
+              l.endTime === input.endTime),
+        )
+      ) {
+        continue;
+      }
+      handleUpdateStudent(copy.studentId, {
+        lessons: [
+          ...(current?.lessons ?? []),
+          {
+            id: copy.lessonId,
+            dayOfWeek: input.dayOfWeek,
+            startTime: input.startTime,
+            endTime: input.endTime,
+            groupId: input.groupId,
+          },
+        ],
+      });
+    }
+    return { ok: true };
   };
 
   const handleDeleteLesson = async (lessonId: string): Promise<{ ok: boolean; error?: string }> => {
     let lessonOwner: StudentRecord | undefined;
-    for (const s of localStudents) {
+    for (const s of students) {
       if (s.lessons.some((l) => l.id === lessonId)) {
         lessonOwner = s;
         break;
@@ -297,20 +318,40 @@ export function StudentList({
 
     const isIndividual = lessonOwner?.kind === 'individual';
 
-    const res = isIndividual
-      ? await deleteIndividualLessonAction({ lessonId })
-      : await deleteLessonSlotAction({ lessonId });
+    if (isIndividual) {
+      const res = await deleteIndividualLessonAction({ lessonId });
+      if (!res.ok) return { ok: false, error: res.error };
 
-    if (res.ok) {
-      setLocalStudents((prev) =>
-        prev.map((s) => ({
-          ...s,
-          lessons: s.lessons.filter((l) => l.id !== lessonId),
-        })),
+      const owner = studentsRef.current.find((s) =>
+        s.lessons.some((l) => l.id === lessonId),
       );
+      if (owner) {
+        handleUpdateStudent(owner.id, {
+          lessons: owner.lessons.filter((l) => l.id !== lessonId),
+        });
+      }
       return { ok: true };
     }
-    return { ok: false, error: res.error };
+
+    const res = await deleteLessonSlotAction({ lessonId });
+    if (!res.ok) return { ok: false, error: res.error };
+
+    const { groupId, dayOfWeek, startTime, endTime } = res.match;
+    for (const owner of studentsRef.current) {
+      const next = owner.lessons.filter(
+        (l) =>
+          !(
+            l.groupId === groupId &&
+            l.dayOfWeek === dayOfWeek &&
+            l.startTime === startTime &&
+            l.endTime === endTime
+          ),
+      );
+      if (next.length !== owner.lessons.length) {
+        handleUpdateStudent(owner.id, { lessons: next });
+      }
+    }
+    return { ok: true };
   };
 
   const handleSavePhones = async (
@@ -318,18 +359,6 @@ export function StudentList({
     phone: string | null,
     parentPhone: string | null,
   ): Promise<{ ok: boolean; error?: string }> => {
-    setLocalStudents((prev) =>
-      prev.map((s) =>
-        s.id === studentId
-          ? {
-              ...s,
-              phone: phone ?? '',
-              parentPhone: parentPhone ?? undefined,
-            }
-          : s,
-      ),
-    );
-
     if (!onUpdatePhones) return { ok: true };
 
     const res = await onUpdatePhones(studentId, phone, parentPhone);
@@ -341,7 +370,7 @@ export function StudentList({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return localStudents.filter((s) => {
+    return students.filter((s) => {
       const matchesQuery =
         !q ||
         `${s.firstName} ${s.lastName}`.toLowerCase().includes(q) ||
@@ -352,19 +381,37 @@ export function StudentList({
         activeGroupId === 'all' || s.groupIds.includes(activeGroupId);
       return matchesQuery && matchesGroup;
     });
-  }, [localStudents, query, activeGroupId]);
+  }, [students, query, activeGroupId]);
+
+  const listSections = useMemo(
+    () =>
+      sectionStudents(
+        filtered,
+        groups,
+        activeGroupId === 'all' ? undefined : activeGroupId,
+      ),
+    [filtered, groups, activeGroupId],
+  );
+
+  const groupMemberCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const group of groups) {
+      counts[group.id] = students.filter((s) => s.groupIds.includes(group.id)).length;
+    }
+    return counts;
+  }, [students, groups]);
 
   const stats = useMemo(() => {
     const { year, month } = parseMonthKey(monthKey);
-    const totalPrice = localStudents.reduce(
+    const totalPrice = students.reduce(
       (sum, s) => sum + computeExpectedForMonth(s, year, month),
       0,
     );
-    const totalPaid = localStudents.reduce(
+    const totalPaid = students.reduce(
       (sum, s) => sum + sumPaymentsForMonth(payments, s.id, monthKey),
       0,
     );
-    const todayCount = localStudents.reduce(
+    const todayCount = students.reduce(
       (sum, s) => sum + getTodayLessons(s.lessons).length,
       0,
     );
@@ -374,12 +421,12 @@ export function StudentList({
       todayCount,
       debt: Math.max(0, totalPrice - totalPaid),
     };
-  }, [localStudents, payments, monthKey]);
+  }, [students, payments, monthKey]);
 
   const isListView = view === 'table' || view === 'grid';
 
   const viewButtonClass = (active: boolean) =>
-    `inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-xl px-1.5 py-2 text-xs font-bold transition sm:px-3 ${
+    `inline-flex min-h-9 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-xl px-1.5 py-2 text-xs font-bold transition sm:min-h-10 sm:px-3 ${
       active ? 'bg-navy text-white shadow-sm' : 'text-body hover:bg-surface hover:text-ink'
     }`;
 
@@ -393,7 +440,7 @@ export function StudentList({
             </span>
             <div className="min-w-0">
               <h1 className="truncate text-base font-bold text-ink sm:text-lg">მოსწავლეები</h1>
-              <p className="text-xs font-medium text-muted">{localStudents.length} მოსწავლე სულ</p>
+              <p className="text-xs font-medium text-muted">{students.length} მოსწავლე სულ</p>
             </div>
           </div>
 
@@ -460,7 +507,7 @@ export function StudentList({
               className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-brass-strong px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brass"
             >
               <UserPlus className="size-4 shrink-0" />
-              <span className="truncate">ინდივიდუალური</span>
+              <span className="truncate">სახლში</span>
             </button>
           </div>
         </div>
@@ -481,15 +528,15 @@ export function StudentList({
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <Users className="size-3 shrink-0" /> სულ
+                  <Users className="size-3 shrink-0 text-navy" /> სულ
                 </p>
                 <p className="mt-1 truncate text-lg font-bold tabular-nums text-ink sm:text-xl">
-                  {localStudents.length}
+                  {students.length}
                 </p>
               </div>
               <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <CalendarClock className="size-3 shrink-0" /> დღეს
+                  <CalendarClock className="size-3 shrink-0 text-brass-strong" /> დღეს
                 </p>
                 <p className="mt-1 truncate text-lg font-bold tabular-nums text-navy sm:text-xl">
                   {stats.todayCount}
@@ -497,7 +544,7 @@ export function StudentList({
               </div>
               <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <Wallet className="size-3 shrink-0" /> ჯამში
+                  <Wallet className="size-3 shrink-0 text-brass-strong" /> ჯამში
                 </p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-ink sm:text-xl">
                   {formatPrice(stats.totalPrice)}
@@ -505,7 +552,7 @@ export function StudentList({
               </div>
               <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <Wallet className="size-3 shrink-0" /> გადასახდელი
+                  <Wallet className="size-3 shrink-0 text-loss" /> გადასახდელი
                 </p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-loss sm:text-xl">
                   {formatPrice(stats.debt)}
@@ -529,7 +576,7 @@ export function StudentList({
               </button>
               {groups.map((g) => {
                 const active = activeGroupId === g.id;
-                const count = localStudents.filter((s) => s.groupIds.includes(g.id)).length;
+                const count = students.filter((s) => s.groupIds.includes(g.id)).length;
                 return (
                   <button
                     key={g.id}
@@ -557,17 +604,18 @@ export function StudentList({
 
       {view === 'calendar' ? (
         <PaymentCalendar
-          students={localStudents}
+          students={students}
           groups={groups}
           payments={payments}
           monthKey={monthKey}
           onMonthChange={setMonthKey}
           onSetPaid={handleSetPaid}
           onSelectStudent={onSelectStudent}
+          onToggleMissed={onToggleMissed}
         />
       ) : view === 'debt' ? (
         <DebtTracker
-          students={localStudents}
+          students={students}
           groups={groups}
           payments={payments}
           monthKey={monthKey}
@@ -577,7 +625,7 @@ export function StudentList({
         />
       ) : view === 'reports' ? (
         <ReportsView
-          students={localStudents}
+          students={students}
           groups={groups}
           payments={payments}
           monthKey={monthKey}
@@ -594,33 +642,59 @@ export function StudentList({
               <p className="mt-1 max-w-xs text-xs text-muted">სცადეთ სხვა საძიებო სიტყვა ან შეცვალეთ ჯგუფის ფილტრი.</p>
             </div>
           ) : view === 'grid' ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {filtered.map((student) => (
-                <StudentListCard
-                  key={student.id}
-                  view="grid"
-                  student={student}
-                  groups={groups}
-                  payments={payments}
-                  monthKey={monthKey}
-                  onSelect={(s) => onSelectStudent?.(s)}
-                  onEditLessons={(s) => setLessonEditorStudent(s)}
-                  onEditPhones={(s) => setPhoneEditorStudent(s)}
-                  onManagePayments={(s) => setPaymentHistoryStudent(s)}
-                  onEditIndividual={(s) => {
-                    setEditingIndividual(s);
-                    setIndividualModalOpen(true);
-                  }}
-                />
+            <div className="space-y-5">
+              {listSections.map((section) => (
+                <section key={section.key} className="space-y-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-hairline bg-paper px-3 py-2">
+                    <span className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`} />
+                    <h2 className="text-xs font-bold tracking-wide text-ink">
+                      {section.title}
+                    </h2>
+                    <span className="rounded-full bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
+                      {section.students.length}
+                    </span>
+                    {section.kind === 'group' ? (
+                      <span className="hidden text-[10px] font-medium text-muted sm:inline">
+                        საერთო განრიგი · გადახდა ცალ-ცალკე
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                    {section.students.map((student) => (
+                      <StudentListCard
+                        key={student.id}
+                        view="grid"
+                        student={student}
+                        groups={groups}
+                        payments={payments}
+                        monthKey={monthKey}
+                        classmateCount={
+                          section.groupId
+                            ? groupMemberCounts[section.groupId]
+                            : undefined
+                        }
+                        onSelect={(s) => onSelectStudent?.(s)}
+                        onEditLessons={(s) => setLessonEditorStudent(s)}
+                        onEditPhones={(s) => setPhoneEditorStudent(s)}
+                        onManagePayments={(s) => setPaymentHistoryStudent(s)}
+                        onEditIndividual={(s) => {
+                          setEditingIndividual(s);
+                          setIndividualModalOpen(true);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           ) : (
             <>
               <StudentListTable
-                students={filtered}
+                sections={listSections}
                 groups={groups}
                 payments={payments}
                 monthKey={monthKey}
+                groupMemberCounts={groupMemberCounts}
                 onSelect={(s) => onSelectStudent?.(s)}
                 onEditLessons={(s) => setLessonEditorStudent(s)}
                 onEditPhones={(s) => setPhoneEditorStudent(s)}
@@ -630,24 +704,44 @@ export function StudentList({
                   setIndividualModalOpen(true);
                 }}
               />
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:hidden">
-                {filtered.map((student) => (
-                  <StudentListCard
-                    key={student.id}
-                    view="table"
-                    student={student}
-                    groups={groups}
-                    payments={payments}
-                    monthKey={monthKey}
-                    onSelect={(s) => onSelectStudent?.(s)}
-                    onEditLessons={(s) => setLessonEditorStudent(s)}
-                    onEditPhones={(s) => setPhoneEditorStudent(s)}
-                    onManagePayments={(s) => setPaymentHistoryStudent(s)}
-                    onEditIndividual={(s) => {
-                      setEditingIndividual(s);
-                      setIndividualModalOpen(true);
-                    }}
-                  />
+              <div className="space-y-5 lg:hidden">
+                {listSections.map((section) => (
+                  <section key={section.key} className="space-y-3">
+                    <div className="flex items-center gap-2 rounded-xl border border-hairline bg-paper px-3 py-2">
+                      <span className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`} />
+                      <h2 className="text-xs font-bold tracking-wide text-ink">
+                        {section.title}
+                      </h2>
+                      <span className="rounded-full bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
+                        {section.students.length}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {section.students.map((student) => (
+                        <StudentListCard
+                          key={student.id}
+                          view="table"
+                          student={student}
+                          groups={groups}
+                          payments={payments}
+                          monthKey={monthKey}
+                          classmateCount={
+                            section.groupId
+                              ? groupMemberCounts[section.groupId]
+                              : undefined
+                          }
+                          onSelect={(s) => onSelectStudent?.(s)}
+                          onEditLessons={(s) => setLessonEditorStudent(s)}
+                          onEditPhones={(s) => setPhoneEditorStudent(s)}
+                          onManagePayments={(s) => setPaymentHistoryStudent(s)}
+                          onEditIndividual={(s) => {
+                            setEditingIndividual(s);
+                            setIndividualModalOpen(true);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </section>
                 ))}
               </div>
             </>
@@ -660,6 +754,7 @@ export function StudentList({
         <LessonEditorModal
           student={currentLessonStudent}
           groups={groups}
+          groupMemberCounts={groupMemberCounts}
           open={true}
           onClose={() => setLessonEditorStudent(null)}
           onAdd={handleAddLesson}
