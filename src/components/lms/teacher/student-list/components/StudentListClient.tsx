@@ -6,9 +6,17 @@ import {
   setStudentPaymentAction,
   updateStudentPriceAction,
   updateStudentPhonesAction,
-} from '@/lib/teacher/actions';
+  createIndividualStudentAction,
+  updateIndividualStudentAction,
+  deleteIndividualStudentAction,
+  addIndividualPaymentAction,
+  deleteIndividualPaymentAction,
+  addStudentPaymentAction,
+  deleteStudentPaymentAction,
+} from '@/components/lms/teacher/student-list/actions';
 import type {
   PaymentRecord,
+  PriceType,
   StudentGroup,
   StudentRecord,
 } from '../studentList.types';
@@ -28,36 +36,67 @@ export function StudentListClient({
   const [payments, setPayments] = useState<PaymentRecord[]>(initialPayments);
   const [, startTransition] = useTransition();
 
-  /* ════════════ მოსწავლის ფასი ════════════ */
+  /* ════════════ მოსწავლის განახლება (ჯგუფური + ინდივიდუალური) ════════════ */
   const handleUpdateStudent = (id: string, patch: Partial<StudentRecord>) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-    );
+    setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
 
-    if (typeof patch.monthlyPrice === 'number') {
-      const student = students.find((s) => s.id === id);
-      const groupId = student?.groupIds[0];
-      if (groupId) {
-        startTransition(async () => {
-          const res = await updateStudentPriceAction({
-            studentId: id,
-            groupId,
-            monthlyPrice: patch.monthlyPrice!,
-          });
-          if (!res.ok) console.error('[updateStudentPrice]', res.error);
+    const student = students.find((s) => s.id === id);
+    if (!student) return;
+
+    if (student.kind === 'individual') {
+      const hasSomething =
+        patch.monthlyPrice !== undefined ||
+        patch.priceType !== undefined ||
+        patch.firstName !== undefined ||
+        patch.lastName !== undefined ||
+        patch.phone !== undefined ||
+        patch.parentPhone !== undefined ||
+        patch.email !== undefined ||
+        patch.note !== undefined ||
+        patch.status !== undefined;
+
+      if (!hasSomething) return;
+
+      startTransition(async () => {
+        const res = await updateIndividualStudentAction({
+          studentId: id,
+          patch: {
+            firstName: patch.firstName,
+            lastName: patch.lastName,
+            phone: patch.phone ?? null,
+            parentPhone: patch.parentPhone ?? null,
+            email: patch.email ?? null,
+            monthlyPrice: patch.monthlyPrice,
+            priceType: patch.priceType,
+            note: patch.note ?? null,
+            status: patch.status,
+          },
         });
-      }
+        if (!res.ok) console.error('[updateIndividualStudent]', res.error);
+      });
+      return;
+    }
+
+    const groupId = student.groupIds[0];
+    if (!groupId) return;
+
+    if (patch.monthlyPrice !== undefined || patch.priceType !== undefined) {
+      startTransition(async () => {
+        const res = await updateStudentPriceAction({
+          studentId: id,
+          groupId,
+          monthlyPrice: patch.monthlyPrice,
+          priceType: patch.priceType,
+        });
+        if (!res.ok) console.error('[updateStudentPrice]', res.error);
+      });
     }
   };
 
-  /* ════════════ გადახდები ════════════ */
+  /* ════════════ კალენდრის set-paid (ჯგუფური) ════════════ */
   const handleUpdatePayments = (next: PaymentRecord[]) => {
-    const prevMap = new Map(
-      payments.map((p) => [`${p.studentId}|${p.monthKey}`, p]),
-    );
-    const nextMap = new Map(
-      next.map((p) => [`${p.studentId}|${p.monthKey}`, p]),
-    );
+    const prevMap = new Map(payments.map((p) => [`${p.studentId}|${p.monthKey}`, p]));
+    const nextMap = new Map(next.map((p) => [`${p.studentId}|${p.monthKey}`, p]));
 
     const changed: PaymentRecord[] = [];
     const removed: { studentId: string; monthKey: string }[] = [];
@@ -65,16 +104,12 @@ export function StudentListClient({
     next.forEach((p) => {
       const key = `${p.studentId}|${p.monthKey}`;
       const old = prevMap.get(key);
-      if (!old || old.amount !== p.amount) {
-        changed.push(p);
-      }
+      if (!old || old.amount !== p.amount) changed.push(p);
     });
 
     payments.forEach((p) => {
       const key = `${p.studentId}|${p.monthKey}`;
-      if (!nextMap.has(key)) {
-        removed.push({ studentId: p.studentId, monthKey: p.monthKey });
-      }
+      if (!nextMap.has(key)) removed.push({ studentId: p.studentId, monthKey: p.monthKey });
     });
 
     setPayments(next);
@@ -106,29 +141,164 @@ export function StudentListClient({
     phone: string | null,
     parentPhone: string | null,
   ): Promise<{ ok: boolean; error?: string }> => {
-    // optimistic
     setStudents((prev) =>
       prev.map((s) =>
         s.id === studentId
-          ? {
-              ...s,
-              phone: phone ?? '',
-              parentPhone: parentPhone ?? undefined,
-            }
+          ? { ...s, phone: phone ?? '', parentPhone: parentPhone ?? undefined }
           : s,
       ),
     );
 
-    const res = await updateStudentPhonesAction({
-      studentId,
-      phone,
-      parentPhone,
-    });
-
+    const res = await updateStudentPhonesAction({ studentId, phone, parentPhone });
     if (!res.ok) {
       console.error('[updateStudentPhones]', res.error);
       return { ok: false, error: res.error };
     }
+    return { ok: true };
+  };
+
+  /* ════════════ ინდივიდუალური მოსწავლეები ════════════ */
+  const handleCreateIndividual = async (input: {
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    parentPhone?: string;
+    email?: string;
+    monthlyPrice?: number;
+    priceType?: PriceType;
+    note?: string;
+  }): Promise<{ ok: boolean; error?: string; id?: string }> => {
+    const res = await createIndividualStudentAction(input);
+    if (!res.ok) return { ok: false, error: res.error };
+
+    setStudents((prev) => [
+      ...prev,
+      {
+        id: res.id,
+        kind: 'individual',
+        firstName: input.firstName,
+        lastName: input.lastName,
+        phone: input.phone ?? '',
+        parentPhone: input.parentPhone,
+        email: input.email,
+        groupIds: [],
+        monthlyPrice: input.monthlyPrice ?? 0,
+        priceType: input.priceType ?? 'MONTHLY',
+        paidAmount: 0,
+        lessons: [],
+        status: 'active',
+        note: input.note,
+      },
+    ]);
+    return { ok: true, id: res.id };
+  };
+
+  const handleUpdateIndividual = async (
+    studentId: string,
+    patch: Partial<StudentRecord>,
+  ): Promise<{ ok: boolean; error?: string }> => {
+    setStudents((prev) =>
+      prev.map((s) => (s.id === studentId ? { ...s, ...patch } : s)),
+    );
+
+    const res = await updateIndividualStudentAction({
+      studentId,
+      patch: {
+        firstName: patch.firstName,
+        lastName: patch.lastName,
+        phone: patch.phone ?? null,
+        parentPhone: patch.parentPhone ?? null,
+        email: patch.email ?? null,
+        monthlyPrice: patch.monthlyPrice,
+        priceType: patch.priceType,
+        note: patch.note ?? null,
+        status: patch.status,
+      },
+    });
+    if (!res.ok) return { ok: false, error: res.error };
+    return { ok: true };
+  };
+
+  const handleDeleteIndividual = async (
+    studentId: string,
+  ): Promise<{ ok: boolean; error?: string }> => {
+    const res = await deleteIndividualStudentAction({ studentId });
+    if (!res.ok) return { ok: false, error: res.error };
+
+    setStudents((prev) => prev.filter((s) => s.id !== studentId));
+    setPayments((prev) => prev.filter((p) => p.studentId !== studentId));
+    return { ok: true };
+  };
+
+  /* ════════════ ჯგუფური გადახდები (add/delete) ════════════ */
+  const handleAddGroupPayment = async (input: {
+    studentId: string;
+    amount: number;
+    paidAt: string;
+    method?: 'cash' | 'card' | 'transfer';
+    note?: string;
+  }): Promise<{ ok: boolean; error?: string }> => {
+    const res = await addStudentPaymentAction(input);
+    if (!res.ok) return { ok: false, error: res.error };
+
+    setPayments((prev) => [
+      ...prev,
+      {
+        id: res.id,
+        studentId: input.studentId,
+        monthKey: res.monthKey,
+        amount: input.amount,
+        paidAt: res.paidAt,
+        method: input.method,
+        note: input.note,
+      },
+    ]);
+    return { ok: true };
+  };
+
+  const handleDeleteGroupPayment = async (
+    paymentId: string,
+  ): Promise<{ ok: boolean; error?: string }> => {
+    const res = await deleteStudentPaymentAction({ paymentId });
+    if (!res.ok) return { ok: false, error: res.error };
+
+    setPayments((prev) => prev.filter((p) => p.id !== paymentId));
+    return { ok: true };
+  };
+
+  /* ════════════ ინდივიდუალური გადახდები (add/delete) ════════════ */
+  const handleAddIndividualPayment = async (input: {
+    studentId: string;
+    amount: number;
+    paidAt: string;
+    method?: 'cash' | 'card' | 'transfer';
+    note?: string;
+  }): Promise<{ ok: boolean; error?: string }> => {
+    const res = await addIndividualPaymentAction(input);
+    if (!res.ok) return { ok: false, error: res.error };
+
+    setPayments((prev) => [
+      ...prev,
+      {
+        id: res.id,
+        studentId: input.studentId,
+        monthKey: res.monthKey,
+        amount: input.amount,
+        paidAt: res.paidAt,
+        method: input.method,
+        note: input.note,
+      },
+    ]);
+    return { ok: true };
+  };
+
+  const handleDeleteIndividualPayment = async (
+    paymentId: string,
+  ): Promise<{ ok: boolean; error?: string }> => {
+    const res = await deleteIndividualPaymentAction({ paymentId });
+    if (!res.ok) return { ok: false, error: res.error };
+
+    setPayments((prev) => prev.filter((p) => p.id !== paymentId));
     return { ok: true };
   };
 
@@ -142,6 +312,13 @@ export function StudentListClient({
         onUpdatePayments={handleUpdatePayments}
         onUpdatePhones={handleUpdatePhones}
         onSelectStudent={(s) => console.log('selected', s)}
+        onCreateIndividual={handleCreateIndividual}
+        onUpdateIndividual={handleUpdateIndividual}
+        onDeleteIndividual={handleDeleteIndividual}
+        onAddGroupPayment={handleAddGroupPayment}
+        onDeleteGroupPayment={handleDeleteGroupPayment}
+        onAddIndividualPayment={handleAddIndividualPayment}
+        onDeleteIndividualPayment={handleDeleteIndividualPayment}
       />
     </div>
   );

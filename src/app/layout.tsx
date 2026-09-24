@@ -1,6 +1,5 @@
 import type { Viewport } from 'next';
 import './globals.css';
-import { ThemeProvider } from '@/components/layout/ThemeProvider';
 import { Noto_Sans_Georgian } from 'next/font/google';
 
 const notoGeorgian = Noto_Sans_Georgian({
@@ -26,14 +25,7 @@ export default function RootLayout({
       className={`${notoGeorgian.variable} ${notoGeorgian.className}`}
     >
       <body className="flex min-h-screen flex-col bg-paper font-sans text-ink">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        {children}
       </body>
     </html>
   );

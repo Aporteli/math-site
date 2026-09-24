@@ -1,14 +1,17 @@
 'use client';
 
-import { Clock3, Phone, Wallet, User2, Pencil } from 'lucide-react';
-import { EditableAmount } from './EditableAmount';
+import { Clock3, Phone, Wallet, User2, Pencil, Receipt } from 'lucide-react';
 import {
   getGroupName,
   getTodayLessons,
-  paymentStatus,
   DAY_SHORT,
+  PRICE_TYPE_SHORT,
 } from '../studentList.helpers';
-import { sumPaymentsForMonth } from '../paymentCalendar.helpers';
+import {
+  sumPaymentsForMonth,
+  computeExpectedInfo,
+  parseMonthKey,
+} from '../paymentCalendar.helpers';
 import type {
   PaymentRecord,
   StudentGroup,
@@ -22,10 +25,10 @@ interface Props {
   payments: PaymentRecord[];
   monthKey: string;
   onSelect: (student: StudentRecord) => void;
-  onUpdateStudent: (id: string, patch: Partial<StudentRecord>) => void;
-  onSetPaid: (studentId: string, monthKey: string, amount: number) => void;
   onEditLessons: (student: StudentRecord) => void;
   onEditPhones: (student: StudentRecord) => void;
+  onManagePayments?: (student: StudentRecord) => void;
+  onEditIndividual?: (student: StudentRecord) => void;
 }
 
 export function StudentListCard({
@@ -35,16 +38,23 @@ export function StudentListCard({
   payments,
   monthKey,
   onSelect,
-  onUpdateStudent,
-  onSetPaid,
   onEditLessons,
   onEditPhones,
+  onManagePayments,
+  onEditIndividual,
 }: Props) {
+  const { year, month } = parseMonthKey(monthKey);
+  const info = computeExpectedInfo(student, year, month);
+  const expected = info.amount;
   const paid = sumPaymentsForMonth(payments, student.id, monthKey);
-  const status = paymentStatus({ ...student, paidAmount: paid });
+  const owed = Math.max(0, expected - paid);
+
+  const status: 'paid' | 'partial' | 'unpaid' =
+    paid >= expected ? 'paid' : paid > 0 ? 'partial' : 'unpaid';
+
   const todayLessons = getTodayLessons(student.lessons);
   const initial = student.firstName.charAt(0) || '?';
-  const owed = Math.max(0, student.monthlyPrice - paid);
+  const isIndividual = student.kind === 'individual';
 
   const badge = {
     paid: { label: 'გადახდილია', cls: 'border-win/20 bg-win-tint text-win' },
@@ -69,6 +79,11 @@ export function StudentListCard({
             <p className="min-w-0 truncate text-sm font-bold leading-tight text-ink">
               {student.firstName} {student.lastName}
             </p>
+            {isIndividual ? (
+              <span className="shrink-0 rounded-full border border-brass/30 bg-brass-tint px-2 py-0.5 text-[9px] font-bold text-brass-strong">
+                ინდივიდუალური
+              </span>
+            ) : null}
           </div>
 
           <button
@@ -95,8 +110,20 @@ export function StudentListCard({
         </div>
       </div>
 
-      {/* ─── Groups ─── */}
-      {student.groupIds.length > 0 ? (
+      {isIndividual ? (
+        <div className="px-4 pb-3">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditIndividual?.(student);
+            }}
+            className="cursor-pointer rounded-full border border-hairline bg-paper px-2 py-0.5 text-[10px] font-bold text-navy transition hover:bg-navy-tint"
+          >
+            რედაქტირება
+          </button>
+        </div>
+      ) : student.groupIds.length > 0 ? (
         <div className="flex flex-wrap gap-1.5 px-4 pb-3">
           {student.groupIds.map((gid) => (
             <span
@@ -117,31 +144,47 @@ export function StudentListCard({
 
       {/* ─── Payment ─── */}
       <div className="border-t border-hairline bg-paper/50 px-4 py-3">
-        {/* <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-muted">
-          <Wallet className="h-3 w-3" /> გადახდა
-        </p> */}
-
         <div className="grid grid-cols-2 gap-2">
           <div className="min-w-0 rounded-xl bg-surface/70 px-2 py-1.5">
-            <p className="text-[10px] font-medium text-muted">ფასი</p>
-            <div className="mt-0.5">
-              <EditableAmount
-                value={student.monthlyPrice}
-                onSave={(v) => onUpdateStudent(student.id, { monthlyPrice: v })}
-              />
-            </div>
+            <p className="text-[10px] font-medium text-muted">
+              ფასი
+              {student.priceType && (
+                <span className="ml-1 text-[9px] text-muted/80">
+                  / {PRICE_TYPE_SHORT[student.priceType]}
+                </span>
+              )}
+            </p>
+            <p className="mt-0.5 truncate text-xs font-bold tabular-nums text-ink">
+              {student.monthlyPrice > 0
+                ? `${student.monthlyPrice.toLocaleString('ka-GE')} ₾`
+                : '—'}
+            </p>
+            <p className="mt-1 text-[9px] font-bold text-navy">
+              {info.unitLabel === 'თვე'
+                ? `${expected} ₾ / თვე`
+                : `${info.units} ${info.unitLabel} · ${expected} ₾`}
+            </p>
           </div>
 
-          <div className="min-w-0 rounded-xl bg-surface/70 px-2 py-1.5 text-right">
-            <p className="text-[10px] font-medium text-muted">გადახდა</p>
-            <div className="mt-0.5 flex justify-end">
-              <EditableAmount
-                value={paid}
-                onSave={(v) => onSetPaid(student.id, monthKey, v)}
-                className={status === 'paid' ? 'text-win hover:bg-win-tint' : 'text-ink'}
-              />
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onManagePayments?.(student);
+            }}
+            className="min-w-0 cursor-pointer rounded-xl bg-surface/70 px-2 py-1.5 text-right transition hover:bg-win-tint"
+          >
+            <p className="flex items-center justify-end gap-1 text-[10px] font-medium text-muted">
+              <Receipt className="h-2.5 w-2.5" /> გადახდილი
+            </p>
+            <p
+              className={`mt-0.5 truncate text-xs font-bold ${
+                paid > 0 ? 'text-win' : 'text-muted'
+              }`}
+            >
+              {paid > 0 ? `${paid} ₾` : '—'}
+            </p>
+          </button>
         </div>
 
         {owed > 0 ? (
@@ -217,7 +260,6 @@ export function StudentListCard({
         )}
       </div>
 
-      {/* ─── Footer ─── */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline bg-paper/40 px-4 py-2.5 text-[10px] font-medium text-muted">
         <span className="flex items-center gap-1">
           <User2 className="h-3 w-3" />

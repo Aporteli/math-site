@@ -10,17 +10,30 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  GraduationCap,
   Loader2,
   MapPin,
   PanelLeftOpen,
   Plus,
   Repeat,
+  Search,
   Trash2,
+  User as UserIcon,
   Users,
   X,
   List,
 } from 'lucide-react';
 import { getJournalEventsAction, saveJournalEventAction, deleteJournalEventAction } from '@/lib/actions/journal';
+import {
+  getJournalParticipantOptionsAction,
+  type ParticipantGroup,
+  type ParticipantOption,
+  type ParticipantRef,
+} from '@/lib/actions/journal-participants';
+import {
+  getScheduleLessonsAction,
+  type VirtualScheduleEvent,
+} from '@/lib/actions/journal-schedule';
 import { useDashboardFrame } from '@/components/layout/DashboardFrame';
 
 type EventColor = 'navy' | 'sky' | 'emerald' | 'amber' | 'rose' | 'violet';
@@ -38,6 +51,7 @@ interface JournalEvent {
   location: string;
   description: string;
   guests: string[];
+  participants?: ParticipantRef[];
   color: EventColor;
   repeat: RepeatOption;
   reminder: ReminderOption;
@@ -77,18 +91,8 @@ type DragPreview = {
 
 const WEEKDAY_LABELS = ['ორშ', 'სამ', 'ოთხ', 'ხუთ', 'პარ', 'შაბ', 'კვ'];
 const MONTH_LABELS = [
-  'იანვარი',
-  'თებერვალი',
-  'მარტი',
-  'აპრილი',
-  'მაისი',
-  'ივნისი',
-  'ივლისი',
-  'აგვისტო',
-  'სექტემბერი',
-  'ოქტომბერი',
-  'ნოემბერი',
-  'დეკემბერი',
+  'იანვარი','თებერვალი','მარტი','აპრილი','მაისი','ივნისი',
+  'ივლისი','აგვისტო','სექტემბერი','ოქტომბერი','ნოემბერი','დეკემბერი',
 ];
 
 const COLOR_OPTIONS: EventColor[] = ['navy', 'sky', 'emerald', 'amber', 'rose', 'violet'];
@@ -167,6 +171,7 @@ function emptyDraft(dateKey: string, startH = 9, endH = 10): JournalEvent {
     location: '',
     description: '',
     guests: [],
+    participants: [],
     color: 'navy',
     repeat: 'none',
     reminder: '30',
@@ -185,17 +190,9 @@ function isEventOnDay(ev: JournalEvent, targetDate: Date): boolean {
     return isSameDay(evDate, targetDate);
   }
 
-  if (ev.repeat === 'daily') {
-    return true;
-  }
-
-  if (ev.repeat === 'weekly') {
-    return evDate.getDay() === targetDate.getDay();
-  }
-
-  if (ev.repeat === 'monthly') {
-    return evDate.getDate() === targetDate.getDate();
-  }
+  if (ev.repeat === 'daily') return true;
+  if (ev.repeat === 'weekly') return evDate.getDay() === targetDate.getDay();
+  if (ev.repeat === 'monthly') return evDate.getDate() === targetDate.getDate();
 
   return false;
 }
@@ -212,11 +209,18 @@ export function TeacherJournalWorkspace() {
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
 
   const [events, setEvents] = useState<JournalEvent[]>([]);
+  const [virtualEvents, setVirtualEvents] = useState<VirtualScheduleEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [guestDraft, setGuestDraft] = useState('');
+
+  /* ── Participant picker state ── */
+  const [participantGroups, setParticipantGroups] = useState<ParticipantGroup[]>([]);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
+  const [participantSearch, setParticipantSearch] = useState('');
 
   const dragRef = useRef<DragState | null>(null);
   const didDragRef = useRef(false);
@@ -224,17 +228,44 @@ export function TeacherJournalWorkspace() {
   const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
 
   const today = useMemo(() => new Date(), []);
+  const todayKey = useMemo(() => toDateKey(today), [today]);
 
+  /* ── Load manual events ── */
   useEffect(() => {
     async function loadEvents() {
       setLoading(true);
       const res = await getJournalEventsAction();
       if (res.success && res.events) {
-        setEvents(res.events as JournalEvent[]);
+        setEvents(
+          (res.events as JournalEvent[]).map((e) => ({
+            ...e,
+            participants: (e.participants as ParticipantRef[] | undefined) ?? [],
+          }))
+        );
       }
       setLoading(false);
     }
     loadEvents();
+  }, []);
+
+  /* ── Load virtual schedule lessons ── */
+  useEffect(() => {
+    async function loadSchedule() {
+      const res = await getScheduleLessonsAction();
+      if (res.success) setVirtualEvents(res.events);
+    }
+    loadSchedule();
+  }, []);
+
+  /* ── Load participant options ── */
+  useEffect(() => {
+    async function loadParticipantOptions() {
+      setParticipantsLoading(true);
+      const res = await getJournalParticipantOptionsAction();
+      if (res.success) setParticipantGroups(res.groups);
+      setParticipantsLoading(false);
+    }
+    loadParticipantOptions();
   }, []);
 
   useEffect(() => {
@@ -319,6 +350,44 @@ export function TeacherJournalWorkspace() {
     return map;
   }, [events, view, monthGrid, weekGrid, currentDate, today]);
 
+  /* ─── Virtual lessons (Schedule → Journal) ─── */
+  const virtualByDate = useMemo(() => {
+    const map: Record<string, VirtualScheduleEvent[]> = {};
+
+    const targetDates: Date[] = [];
+    if (view === 'month') {
+      monthGrid.forEach((c) => targetDates.push(c.date));
+    } else if (view === 'week') {
+      weekGrid.forEach((c) => targetDates.push(c.date));
+    } else if (view === 'day') {
+      targetDates.push(currentDate);
+    } else {
+      for (let i = 0; i < 90; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() + i);
+        targetDates.push(d);
+      }
+    }
+
+    for (const d of targetDates) {
+      const dKey = toDateKey(d);
+
+      /* წარსულ დღეებში არ ვაჩვენებთ */
+      if (dKey < todayKey) continue;
+
+      const jsDay = d.getDay();
+      const dow = jsDay === 0 ? 7 : jsDay;
+
+      const matches = virtualEvents.filter((s) => s.dayOfWeek === dow);
+      if (matches.length > 0) {
+        matches.sort((a, b) => a.startTime.localeCompare(b.startTime));
+        map[dKey] = matches;
+      }
+    }
+
+    return map;
+  }, [virtualEvents, view, monthGrid, weekGrid, currentDate, today, todayKey]);
+
   useEffect(() => {
     if (!popover) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -332,6 +401,8 @@ export function TeacherJournalWorkspace() {
     setPopover(null);
     setExpanded(false);
     setGuestDraft('');
+    setParticipantsOpen(false);
+    setParticipantSearch('');
   }
 
   function clampPosition(rawTop: number, rawLeft: number, width: number, isExp = false) {
@@ -365,7 +436,11 @@ export function TeacherJournalWorkspace() {
     const rect = e.currentTarget.getBoundingClientRect();
     const pos = clampPosition(rect.top, rect.left, POPOVER_FULL_WIDTH, true);
     setExpanded(true);
-    setPopover({ mode: 'edit', anchor: pos, draft: { ...ev } });
+    setPopover({
+      mode: 'edit',
+      anchor: pos,
+      draft: { ...ev, participants: ev.participants ?? [] },
+    });
   }
 
   function handleAddClick(e: React.MouseEvent<HTMLButtonElement>) {
@@ -401,7 +476,10 @@ export function TeacherJournalWorkspace() {
     });
     closePopover();
 
-    const res = await saveJournalEventAction(draft);
+    const res = await saveJournalEventAction({
+      ...draft,
+      participants: draft.participants ?? [],
+    });
     if (!res.success) console.error('შეცდომა შენახვისას');
     setIsSaving(false);
   }
@@ -424,6 +502,38 @@ export function TeacherJournalWorkspace() {
   function removeGuest(name: string) {
     if (!popover) return;
     updateDraft({ guests: popover.draft.guests.filter((g) => g !== name) });
+  }
+
+  function isParticipantSelected(id: string) {
+    return popover?.draft.participants?.some((p) => p.id === id) ?? false;
+  }
+
+  function toggleParticipant(option: ParticipantOption) {
+    if (!popover) return;
+    const current = popover.draft.participants ?? [];
+    const exists = current.some((p) => p.id === option.id);
+    const next: ParticipantRef[] = exists
+      ? current.filter((p) => p.id !== option.id)
+      : [
+          ...current,
+          {
+            id: option.id,
+            name: option.name,
+            type: option.type,
+            userId: option.userId,
+            individualStudentId: option.individualStudentId,
+            courseId: option.courseId,
+            courseTitle: option.courseTitle,
+          },
+        ];
+    updateDraft({ participants: next });
+  }
+
+  function removeParticipant(id: string) {
+    if (!popover) return;
+    updateDraft({
+      participants: (popover.draft.participants ?? []).filter((p) => p.id !== id),
+    });
   }
 
   function goToPrev() {
@@ -458,7 +568,6 @@ export function TeacherJournalWorkspace() {
         return;
       }
 
-      // Auto-scroll near the container edges every frame.
       const sc = d.scrollContainer;
       if (sc && d.moved) {
         const r = sc.getBoundingClientRect();
@@ -590,7 +699,10 @@ export function TeacherJournalWorkspace() {
     const next: JournalEvent = { ...current, date, startTime, endTime, allDay: false };
 
     setEvents((prev) => prev.map((e) => (e.id === id ? next : e)));
-    const res = await saveJournalEventAction(next);
+    const res = await saveJournalEventAction({
+      ...next,
+      participants: next.participants ?? [],
+    });
     if (!res.success) {
       setEvents((prev) => prev.map((e) => (e.id === id ? current : e)));
     }
@@ -618,9 +730,16 @@ export function TeacherJournalWorkspace() {
     }
   }, [currentDate, view, weekGrid]);
 
+  /* ─── Google Calendar სტილი: ღია ფონი + მარცხენა ფერადი ზოლი ─── */
+  const virtualChipClass = (source: 'group' | 'individual') =>
+    source === 'group'
+      ? 'bg-sky-500 text-sky-950 border-l-[3px] border-sky-500'
+      : 'bg-emerald-500 text-emerald-950 border-l-[3px] border-emerald-500';
+
   const renderMonthDayCell = (date: Date, inMonth: boolean) => {
     const dateKey = toDateKey(date);
     const dayEvents = eventsByDate[dateKey] || [];
+    const dayVirtual = virtualByDate[dateKey] || [];
     const isToday = isSameDay(date, today);
 
     return (
@@ -645,6 +764,7 @@ export function TeacherJournalWorkspace() {
         </div>
 
         <div className="flex flex-1 flex-col gap-1 min-w-0 overflow-y-auto no-scrollbar">
+          {/* ─── Manual events ─── */}
           {dayEvents.map((ev) => (
             <div
               key={`${ev.id}-${dateKey}`}
@@ -653,6 +773,25 @@ export function TeacherJournalWorkspace() {
               {ev.repeat !== 'none' && <Repeat className="size-2.5 shrink-0 opacity-75 text-brass-strong" />}
               {!ev.allDay && <span className="opacity-80 font-normal">{ev.startTime}</span>}
               <span className="truncate">{ev.title || '(უსათაურო)'}</span>
+              {(ev.participants?.length ?? 0) > 0 && (
+                <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] opacity-90 shrink-0">
+                  <Users className="size-2.5" />
+                  {ev.participants!.length}
+                </span>
+              )}
+            </div>
+          ))}
+
+          {/* ─── Virtual schedule lessons (Google Calendar style) ─── */}
+          {dayVirtual.map((v) => (
+            <div
+              key={v.id}
+              title={`${v.studentName} · ${v.startTime}–${v.endTime}${v.courseTitle ? ` · ${v.courseTitle}` : ''}`}
+              className={`relative truncate rounded-sm px-1.5 py-0.5 text-[10px] font-medium leading-tight shrink-0 flex items-center gap-1.5 pointer-events-none ${virtualChipClass(v.source)}`}>
+              <span className="opacity-70 font-normal tabular-nums shrink-0">
+                {v.startTime}
+              </span>
+              <span className="truncate">{v.studentName}</span>
             </div>
           ))}
         </div>
@@ -663,6 +802,7 @@ export function TeacherJournalWorkspace() {
   const renderHourlyColumn = (date: Date, dayIndex: number, isLast = false) => {
     const dateKey = toDateKey(date);
     const dayEvents = eventsByDate[dateKey] || [];
+    const dayVirtual = virtualByDate[dateKey] || [];
     const isToday = isSameDay(date, today);
     const currentMinutes = today.getHours() * 60 + today.getMinutes();
 
@@ -694,6 +834,35 @@ export function TeacherJournalWorkspace() {
           </div>
         )}
 
+        {/* ─── Virtual schedule lessons (Google Calendar style, below manual) ─── */}
+        {dayVirtual.map((v) => {
+          const startMin = timeToMinutes(v.startTime);
+          const endMin = Math.max(startMin + 30, timeToMinutes(v.endTime));
+          const top = (startMin / 60) * HOUR_HEIGHT;
+          const height = Math.max(26, ((endMin - startMin) / 60) * HOUR_HEIGHT - 2);
+
+          return (
+            <div
+              key={v.id}
+              style={{ top: `${top}px`, height: `${height}px` }}
+              title={`${v.studentName} · ${v.startTime}–${v.endTime}${v.courseTitle ? ` · ${v.courseTitle}` : ''}`}
+              className={`absolute inset-x-1 z-[5] overflow-hidden rounded-md p-1.5 text-xs leading-tight pointer-events-none ${virtualChipClass(v.source)}`}>
+              <div className="flex items-center gap-1 font-semibold">
+                <span className="truncate text-[12px]">{v.studentName}</span>
+              </div>
+              <div className="text-[10px] opacity-70 font-normal tabular-nums mt-0.5">
+                {v.startTime} – {v.endTime}
+              </div>
+              {v.courseTitle && (
+                <div className="text-[10px] opacity-60 font-normal truncate mt-0.5">
+                  {v.courseTitle}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* ─── Manual events (above) ─── */}
         {dayEvents.map((ev) => {
           if (ev.allDay) return null;
           const startMin = timeToMinutes(ev.startTime);
@@ -702,9 +871,9 @@ export function TeacherJournalWorkspace() {
           const height = Math.max(26, ((endMin - startMin) / 60) * HOUR_HEIGHT - 2);
           const isDragging = dragPreview?.id === ev.id;
 
-          // While dragging, show the live preview time right on the chip.
           const displayStart = isDragging ? dragPreview!.startTime : ev.startTime;
           const displayEnd = isDragging ? dragPreview!.endTime : ev.endTime;
+          const participantCount = ev.participants?.length ?? 0;
 
           return (
             <div
@@ -726,13 +895,18 @@ export function TeacherJournalWorkspace() {
                   : 'hover:z-30 hover:scale-[1.01]'
               } ${COLOR_CHIP[ev.color]}`}>
               <div className="flex items-center gap-1">
-                {ev.repeat !== 'none' && <Repeat className=" text-black size-3 shrink-0 opacity-75" />}
-                <span className="text-black text-[15px]">{ev.title || '(უსათაურო)'}</span>
+                {ev.repeat !== 'none' && <Repeat className="text-black size-3 shrink-0 opacity-75" />}
+                <span className="text-black text-[15px] truncate">{ev.title || '(უსათაურო)'}</span>
+                {participantCount > 0 && (
+                  <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] text-black/80 shrink-0">
+                    <Users className="size-3" />
+                    {participantCount}
+                  </span>
+                )}
               </div>
               <div className="text-[12px] opacity-80 font-normal tabular-nums text-black">
                 {displayStart} - {displayEnd}
               </div>
-         
             </div>
           );
         })}
@@ -844,6 +1018,26 @@ export function TeacherJournalWorkspace() {
         </div>
       </div>
 
+      {/* Legend — Google Calendar style */}
+      <div className="flex shrink-0 flex-wrap items-center gap-4 border-b border-hairline bg-white px-4 py-2 text-[11px] font-medium text-muted">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block size-3 rounded-sm bg-navy" />
+          <span className="text-ink">ჟურნალის ღონისძიება</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block size-3 rounded-sm bg-sky-500" />
+          <span className="text-ink">ჯგუფური გაკვეთილი</span>
+        </span>
+        <span className="flex items-center gap-1.5 ">
+          <span className="inline-block size-3 rounded-sm bg-emerald-500" />
+          <span className="text-ink">ინდივიდუალური გაკვეთილი</span>
+        </span>
+        <span className="ml-auto flex items-center gap-1.5 text-navy">
+          <Repeat className="size-3" />
+          <span>ავტომატური სინქრონიზაცია</span>
+        </span>
+      </div>
+
       {/* 1. თვის ხედი */}
       {view === 'month' && (
         <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
@@ -862,11 +1056,10 @@ export function TeacherJournalWorkspace() {
         </div>
       )}
 
-      {/* 2. კვირის ხედი: ერთიანი Sticky Grid ხაზების 100%-ით გასწორებისთვის */}
+      {/* 2. კვირის ხედი */}
       {view === 'week' && (
         <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar relative">
           <div className="grid grid-cols-[3.5rem_repeat(7,minmax(0,1fr))] min-w-full">
-            {/* Sticky სათაურების რიგი */}
             <div className="sticky top-0 z-30 bg-paper/95 backdrop-blur-xs border-b border-r border-hairline h-14" />
             {weekGrid.map(({ date }, idx) => {
               const isToday = isSameDay(date, today);
@@ -890,7 +1083,6 @@ export function TeacherJournalWorkspace() {
               );
             })}
 
-            {/* საათების სვეტი */}
             <div className="border-r border-hairline select-none bg-paper/10">
               {HOURS.map((hour) => (
                 <div
@@ -902,7 +1094,6 @@ export function TeacherJournalWorkspace() {
               ))}
             </div>
 
-            {/* 7 დღის საათობრივი სვეტები */}
             {weekGrid.map(({ date }, idx) => renderHourlyColumn(date, idx, idx === weekGrid.length - 1))}
           </div>
         </div>
@@ -912,7 +1103,6 @@ export function TeacherJournalWorkspace() {
       {view === 'day' && (
         <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar relative">
           <div className="grid grid-cols-[3.5rem_1fr] min-w-full">
-            {/* Sticky Header */}
             <div className="sticky top-0 z-30 bg-paper/95 backdrop-blur-xs border-b border-r border-hairline h-14" />
             <div className="sticky top-0 z-30 bg-paper/95 backdrop-blur-xs py-2.5 px-4 flex items-center gap-3 border-b border-hairline h-14">
               <span
@@ -926,7 +1116,6 @@ export function TeacherJournalWorkspace() {
               </span>
             </div>
 
-            {/* საათების სვეტი */}
             <div className="border-r border-hairline select-none bg-paper/10">
               {HOURS.map((hour) => (
                 <div
@@ -938,7 +1127,6 @@ export function TeacherJournalWorkspace() {
               ))}
             </div>
 
-            {/* დღის სვეტი */}
             <div>{renderHourlyColumn(currentDate, 0, true)}</div>
           </div>
         </div>
@@ -974,6 +1162,12 @@ export function TeacherJournalWorkspace() {
                             <div className="flex items-center gap-1.5">
                               <h4 className="text-xs font-bold text-ink">{ev.title || '(უსათაურო)'}</h4>
                               {ev.repeat !== 'none' && <Repeat className=" text-brass-strong size-3 " />}
+                              {(ev.participants?.length ?? 0) > 0 && (
+                                <span className="ml-1 inline-flex items-center gap-0.5 text-[10px] text-navy font-bold">
+                                  <Users className="size-3" />
+                                  {ev.participants!.length}
+                                </span>
+                              )}
                             </div>
                             <div className="flex gap-3 mt-1 text-[11px] text-muted font-medium">
                               {ev.allDay ? (
@@ -992,11 +1186,32 @@ export function TeacherJournalWorkspace() {
                           </div>
                         </div>
                       ))}
+
+                      {/* ─── Virtual schedule lessons (Google Calendar style) ─── */}
+                      {(virtualByDate[dateKey] ?? []).map((v) => (
+                        <div
+                          key={v.id}
+                          className={`flex items-center gap-4 p-3 rounded-md pointer-events-none ${virtualChipClass(v.source)}`}>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="text-xs font-semibold">{v.studentName}</h4>
+                              {v.courseTitle && (
+                                <span className="text-[10px] opacity-70">· {v.courseTitle}</span>
+                              )}
+                            </div>
+                            <div className="flex gap-3 mt-1 text-[11px] opacity-75 font-medium">
+                              <span className="flex items-center gap-1 tabular-nums">
+                                <Clock className="size-3" /> {v.startTime} - {v.endTime}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );
               })}
-            {Object.keys(eventsByDate).length === 0 && (
+            {Object.keys(eventsByDate).length === 0 && Object.keys(virtualByDate).length === 0 && (
               <div className="text-center py-20 text-muted font-medium flex flex-col items-center gap-3">
                 <List className="size-8 opacity-20" />
                 მომავალი ღონისძიებები არ მოიძებნა
@@ -1006,7 +1221,7 @@ export function TeacherJournalWorkspace() {
         </div>
       )}
 
-      {/* Popover */}
+      {/* Popover — unchanged */}
       {popover && draft && (
         <>
           <div className="fixed inset-0 z-40" onClick={closePopover} />
@@ -1102,6 +1317,126 @@ export function TeacherJournalWorkspace() {
 
               {expanded && (
                 <>
+                  <div className="flex items-start gap-3">
+                    <GraduationCap className="mt-2 size-4 shrink-0 text-brass-strong" />
+                    <div className="flex-1 space-y-2">
+                      {(draft.participants ?? []).length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {(draft.participants ?? []).map((p) => (
+                            <span
+                              key={p.id}
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold border ${
+                                p.type === 'group'
+                                  ? 'bg-navy/10 border-navy/20 text-navy'
+                                  : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                              }`}>
+                              {p.type === 'group' ? (
+                                <Users className="size-3" />
+                              ) : (
+                                <UserIcon className="size-3" />
+                              )}
+                              <span className="truncate max-w-[140px]">{p.name}</span>
+                              {p.courseTitle && (
+                                <span className="opacity-60 font-normal truncate max-w-[100px]">
+                                  · {p.courseTitle}
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => removeParticipant(p.id)}
+                                className="hover:text-rose-600">
+                                <X className="size-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setParticipantsOpen((v) => !v)}
+                        className="w-full flex items-center justify-between rounded-lg border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-medium text-ink hover:border-navy/30 transition-colors">
+                        <span className="flex items-center gap-1.5 text-muted">
+                          <Search className="size-3" />
+                          მოსწავლის დამატება...
+                        </span>
+                        <ChevronDown
+                          className={`size-3.5 transition-transform ${participantsOpen ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+
+                      {participantsOpen && (
+                        <div className="rounded-lg border border-hairline bg-white shadow-sm overflow-hidden">
+                          <div className="p-1.5 border-b border-hairline/60">
+                            <input
+                              value={participantSearch}
+                              onChange={(e) => setParticipantSearch(e.target.value)}
+                              placeholder="ძებნა..."
+                              className="w-full rounded-md border border-hairline bg-paper/40 px-2 py-1 text-[11px] font-medium text-ink outline-none focus:border-navy"
+                            />
+                          </div>
+
+                          <div className="max-h-56 overflow-y-auto thin-scrollbar">
+                            {participantsLoading ? (
+                              <div className="p-3 text-center text-xs text-muted">
+                                <Loader2 className="size-3.5 animate-spin inline" />
+                              </div>
+                            ) : participantGroups.length === 0 ? (
+                              <div className="p-3 text-center text-xs text-muted">
+                                მოსწავლეები ვერ მოიძებნა
+                              </div>
+                            ) : (
+                              participantGroups.map((g) => {
+                                const filtered = g.students.filter((s) =>
+                                  s.name.toLowerCase().includes(participantSearch.toLowerCase())
+                                );
+                                if (filtered.length === 0) return null;
+                                return (
+                                  <div
+                                    key={g.label}
+                                    className="border-b border-hairline/60 last:border-b-0">
+                                    <div
+                                      className={`px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
+                                        g.type === 'group'
+                                          ? 'bg-navy/5 text-navy'
+                                          : 'bg-emerald-50 text-emerald-700'
+                                      }`}>
+                                      {g.type === 'group' ? (
+                                        <Users className="size-3 inline mr-1" />
+                                      ) : (
+                                        <UserIcon className="size-3 inline mr-1" />
+                                      )}
+                                      {g.label}
+                                    </div>
+                                    {filtered.map((s) => {
+                                      const selected = isParticipantSelected(s.id);
+                                      return (
+                                        <button
+                                          key={s.id}
+                                          type="button"
+                                          onClick={() => toggleParticipant(s)}
+                                          className={`flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-xs transition-colors ${
+                                            selected
+                                              ? 'bg-navy/5 text-navy font-bold'
+                                              : 'text-ink hover:bg-paper'
+                                          }`}>
+                                          <span className="truncate">{s.name}</span>
+                                          {selected && (
+                                            <Check className="size-3.5 text-brass-strong shrink-0" />
+                                          )}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="flex items-center gap-3">
                     <MapPin className="size-4 shrink-0 text-brass-strong" />
                     <input
@@ -1125,7 +1460,7 @@ export function TeacherJournalWorkspace() {
                               addGuest();
                             }
                           }}
-                          placeholder="დაამატეთ მონაწილე..."
+                          placeholder="დაამატეთ სტუმარი (თავისუფალი ტექსტი)..."
                           className="flex-1 rounded-lg border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-medium text-ink outline-none focus:border-navy placeholder:text-muted/60"
                         />
                         <button

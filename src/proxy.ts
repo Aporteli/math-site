@@ -37,15 +37,11 @@ function withLocalePrefix(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasLocale = locales.some((locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`));
-
   if (!hasLocale) return withLocalePrefix(request);
-
   const { locale, path } = splitLocalePath(pathname);
   if (!locale) return NextResponse.next();
-
   const needsAuth = isTeacherPath(path) || isStudentPath(path) || isLoginPath(path);
   if (!needsAuth) return NextResponse.next();
-
   const isSecure = process.env.NODE_ENV === 'production' || request.url.startsWith('https://');
   const token = await getToken({
     req: request,

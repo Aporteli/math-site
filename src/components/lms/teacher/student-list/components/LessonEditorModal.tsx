@@ -44,10 +44,12 @@ export function LessonEditorModal({
 
   if (!open) return null;
 
+  const isIndividual = student.kind === 'individual';
+
   const handleAdd = () => {
     setError(null);
 
-    if (!groupId) {
+    if (!isIndividual && !groupId) {
       setError('აირჩიე ჯგუფი');
       return;
     }
@@ -59,7 +61,7 @@ export function LessonEditorModal({
     startTransition(async () => {
       const res = await onAdd({
         studentId: student.id,
-        groupId,
+        groupId: isIndividual ? '' : groupId,
         dayOfWeek,
         startTime,
         endTime,
@@ -101,9 +103,14 @@ export function LessonEditorModal({
               <Clock3 className="h-4 w-4" />
             </span>
             <div className="min-w-0">
-              <h2 id="lesson-editor-title" className="text-sm font-bold text-ink">გაკვეთილის დროები</h2>
+              <h2 id="lesson-editor-title" className="text-sm font-bold text-ink">
+                გაკვეთილის დროები
+              </h2>
               <p className="truncate text-[11px] font-medium text-muted">
                 {student.firstName} {student.lastName}
+                {isIndividual && (
+                  <span className="ml-1 text-brass-strong">· ინდივიდუალური</span>
+                )}
               </p>
             </div>
           </div>
@@ -144,8 +151,9 @@ export function LessonEditorModal({
                       </p>
                       <div className="space-y-1">
                         {dayLessons.map((l) => {
-                          const gName =
-                            groups.find((g) => g.id === l.groupId)?.name ?? '—';
+                          const gName = isIndividual
+                            ? null
+                            : groups.find((g) => g.id === l.groupId)?.name ?? '—';
                           return (
                             <div
                               key={l.id}
@@ -155,9 +163,11 @@ export function LessonEditorModal({
                                 <span className="text-xs font-bold text-ink">
                                   {l.startTime}–{l.endTime}
                                 </span>
-                                <span className="truncate text-[10px] font-medium text-muted">
-                                  {gName}
-                                </span>
+                                {gName && (
+                                  <span className="truncate text-[10px] font-medium text-muted">
+                                    {gName}
+                                  </span>
+                                )}
                               </div>
                               <button
                                 type="button"
@@ -185,23 +195,25 @@ export function LessonEditorModal({
             </p>
 
             <div className="space-y-2.5">
-              {/* ჯგუფი */}
-              <div>
-                <label className="mb-1 block text-[10px] font-bold text-muted">
-                  ჯგუფი
-                </label>
-                <select
-                  value={groupId}
-                  onChange={(e) => setGroupId(e.target.value)}
-                  className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
-                >
-                  {student.groupIds.map((gid) => (
-                    <option key={gid} value={gid}>
-                      {groups.find((g) => g.id === gid)?.name ?? gid}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* ჯგუფი — მხოლოდ ჯგუფურისთვის */}
+              {!isIndividual && (
+                <div>
+                  <label className="mb-1 block text-[10px] font-bold text-muted">
+                    ჯგუფი
+                  </label>
+                  <select
+                    value={groupId}
+                    onChange={(e) => setGroupId(e.target.value)}
+                    className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                  >
+                    {student.groupIds.map((gid) => (
+                      <option key={gid} value={gid}>
+                        {groups.find((g) => g.id === gid)?.name ?? gid}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* დღე */}
               <div>

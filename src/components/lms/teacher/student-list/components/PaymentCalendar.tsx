@@ -7,7 +7,7 @@ import {
 import { EditableAmount } from './EditableAmount';
 import {
   WEEKDAYS_KA, formatMonthLabel, lessonsByDayOfMonth, parseMonthKey,
-  shiftMonth, sumPaymentsForMonth,
+  shiftMonth, sumPaymentsForMonth, computeExpectedForMonth,
 } from '../paymentCalendar.helpers';
 import { formatPrice, getGroupName } from '../studentList.helpers';
 import type { PaymentRecord, StudentGroup, StudentRecord } from '../studentList.types';
@@ -45,11 +45,11 @@ export function PaymentCalendar({
   const monthStats = useMemo(() => {
     let expected = 0, paid = 0;
     students.forEach((s) => {
-      expected += s.monthlyPrice;
+      expected += computeExpectedForMonth(s, year, month);
       paid += sumPaymentsForMonth(payments, s.id, monthKey);
     });
     return { expected, paid, debt: Math.max(0, expected - paid) };
-  }, [students, payments, monthKey]);
+  }, [students, payments, monthKey, year, month]);
 
   const selectedLessons = selectedDay ? lessonsMap.get(selectedDay) ?? [] : [];
 
@@ -138,9 +138,16 @@ export function PaymentCalendar({
                 (sum, { student }) => sum + sumPaymentsForMonth(payments, student.id, monthKey),
                 0,
               );
-              const dayExpected = dayLessons.reduce(
-                (sum, { student }) => sum + student.monthlyPrice, 0,
-              );
+              const dayExpected = dayLessons.reduce((sum, { student }) => {
+                const type = student.priceType ?? 'MONTHLY';
+                if (type === 'PER_LESSON') {
+                  return sum + student.monthlyPrice;
+                }
+                const monthly = computeExpectedForMonth(student, year, month);
+                const dim = new Date(year, month, 0).getDate();
+                const dailyShare = dim > 0 ? monthly / dim : 0;
+                return sum + dailyShare;
+              }, 0);
               const fullPaid = dayExpected > 0 && dayPaid >= dayExpected;
               const partialPaid = dayPaid > 0 && dayPaid < dayExpected;
 
@@ -216,8 +223,9 @@ export function PaymentCalendar({
             ) : (
               <div className="space-y-2">
                 {selectedLessons.map(({ student, startTime, endTime, groupId }, idx) => {
+                  const expected = computeExpectedForMonth(student, year, month);
                   const paid = sumPaymentsForMonth(payments, student.id, monthKey);
-                  const owed = Math.max(0, student.monthlyPrice - paid);
+                  const owed = Math.max(0, expected - paid);
                   const isPaid = owed === 0;
 
                   return (
@@ -254,7 +262,18 @@ export function PaymentCalendar({
                       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-hairline pt-2">
                         <div className="flex min-w-0 items-center gap-2 text-[10px] font-bold text-muted">
                           <Wallet className="size-3 shrink-0 text-brass-strong" />
-                          <span className="truncate">ფასი: {formatPrice(student.monthlyPrice)}</span>
+                          <span className="truncate">
+                            ფასი: {formatPrice(student.monthlyPrice)}
+                            {student.priceType === 'PER_LESSON' && (
+                              <span className="text-[9px] font-normal"> / გაკვეთილი</span>
+                            )}
+                            {student.priceType === 'WEEKLY' && (
+                              <span className="text-[9px] font-normal"> / კვირა</span>
+                            )}
+                            {student.priceType === 'BIWEEKLY' && (
+                              <span className="text-[9px] font-normal"> / 2 კვირა</span>
+                            )}
+                          </span>
                         </div>
                         <EditableAmount
                           value={paid}

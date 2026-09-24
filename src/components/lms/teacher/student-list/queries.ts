@@ -7,9 +7,6 @@ import type {
   StudentRecord,
 } from '@/components/lms/teacher/student-list/studentList.types';
 
-/**
- * მასწავლებლის ყველა ჯგუფი (Course) — StudentGroup[] ფორმატში
- */
 export async function getTeacherGroups(
   teacherId: string,
 ): Promise<StudentGroup[]> {
@@ -26,11 +23,6 @@ export async function getTeacherGroups(
   }));
 }
 
-/**
- * მასწავლებლის ყველა აქტიური მოსწავლე.
- * თუ მოსწავლე რამდენიმე ჯგუფშია — გაერთიანდება ერთ StudentRecord-ად:
- * groupIds[] მასივში იქნება ყველა ჯგუფის id, lessons[] ყველა გაკვეთილი.
- */
 export async function getTeacherStudents(
   teacherId: string,
 ): Promise<StudentRecord[]> {
@@ -89,6 +81,7 @@ export async function getTeacherStudents(
 
       map.set(u.id, {
         id: u.id,
+        kind: 'group',
         firstName,
         lastName,
         phone: u.phone ?? '',
@@ -96,6 +89,7 @@ export async function getTeacherStudents(
         email: u.email ?? undefined,
         groupIds: [e.course.id],
         monthlyPrice: price,
+        priceType: e.priceType,
         paidAmount: 0,
         lessons,
         status: 'active',
@@ -106,10 +100,45 @@ export async function getTeacherStudents(
   return Array.from(map.values());
 }
 
-/**
- * მასწავლებლის ყველა მოსწავლის გადახდა.
- * თუ monthKeys მიეცი — მხოლოდ იმ თვეების ჩანაწერები მოვა.
- */
+export async function getTeacherIndividualStudents(
+  teacherId: string,
+): Promise<StudentRecord[]> {
+  const rows = await prisma.individualStudent.findMany({
+    where: { teacherId },
+    include: { lessons: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  return rows.map((s) => ({
+    id: s.id,
+    kind: 'individual' as const,
+    firstName: s.firstName,
+    lastName: s.lastName,
+    phone: s.phone ?? '',
+    parentPhone: s.parentPhone ?? undefined,
+    email: s.email ?? undefined,
+    groupIds: [],
+    monthlyPrice: Number(s.monthlyPrice),
+    priceType: s.priceType,
+    paidAmount: 0,
+    lessons: s.lessons
+      .map((l) => ({
+        id: l.id,
+        dayOfWeek: l.dayOfWeek as 1 | 2 | 3 | 4 | 5 | 6 | 7,
+        startTime: l.startTime,
+        endTime: l.endTime,
+        groupId: '',
+      }))
+      .sort(
+        (a, b) =>
+          a.dayOfWeek - b.dayOfWeek ||
+          a.startTime.localeCompare(b.startTime),
+      ),
+    status: (s.status as 'active' | 'paused' | 'finished') ?? 'active',
+    note: s.note ?? undefined,
+  }));
+}
+
 export async function getTeacherPayments(
   teacherId: string,
   monthKeys?: string[],
@@ -119,6 +148,33 @@ export async function getTeacherPayments(
       student: {
         enrollments: { some: { course: { teacherId } } },
       },
+      ...(monthKeys && monthKeys.length > 0
+        ? { monthKey: { in: monthKeys } }
+        : {}),
+    },
+    orderBy: { paidAt: 'desc' },
+  });
+
+  return rows.map((p) => ({
+    id: p.id,
+    studentId: p.studentId,
+    monthKey: p.monthKey,
+    amount: Number(p.amount),
+    paidAt: p.paidAt.toISOString(),
+    method: p.method
+      ? (p.method.toLowerCase() as 'cash' | 'card' | 'transfer')
+      : undefined,
+    note: p.note ?? undefined,
+  }));
+}
+
+export async function getTeacherIndividualPayments(
+  teacherId: string,
+  monthKeys?: string[],
+): Promise<PaymentRecord[]> {
+  const rows = await prisma.individualPayment.findMany({
+    where: {
+      student: { teacherId },
       ...(monthKeys && monthKeys.length > 0
         ? { monthKey: { in: monthKeys } }
         : {}),

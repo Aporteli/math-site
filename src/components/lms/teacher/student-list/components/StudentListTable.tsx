@@ -1,9 +1,16 @@
 'use client';
 
-import { Clock3, Phone, Wallet } from 'lucide-react';
-import { EditableAmount } from './EditableAmount';
-import { DAY_SHORT, getGroupName, paymentStatus } from '../studentList.helpers';
-import { sumPaymentsForMonth } from '../paymentCalendar.helpers';
+import { Clock3, Phone, Wallet, Receipt } from 'lucide-react';
+import {
+  DAY_SHORT,
+  PRICE_TYPE_SHORT,
+  getGroupName,
+} from '../studentList.helpers';
+import {
+  sumPaymentsForMonth,
+  computeExpectedInfo,
+  parseMonthKey,
+} from '../paymentCalendar.helpers';
 import type {
   PaymentRecord,
   StudentGroup,
@@ -16,10 +23,10 @@ interface Props {
   payments: PaymentRecord[];
   monthKey: string;
   onSelect: (student: StudentRecord) => void;
-  onUpdateStudent: (id: string, patch: Partial<StudentRecord>) => void;
-  onSetPaid: (studentId: string, monthKey: string, amount: number) => void;
   onEditLessons: (student: StudentRecord) => void;
   onEditPhones: (student: StudentRecord) => void;
+  onManagePayments?: (student: StudentRecord) => void;
+  onEditIndividual?: (student: StudentRecord) => void;
 }
 
 export function StudentListTable({
@@ -28,11 +35,13 @@ export function StudentListTable({
   payments,
   monthKey,
   onSelect,
-  onUpdateStudent,
-  onSetPaid,
   onEditLessons,
   onEditPhones,
+  onManagePayments,
+  onEditIndividual,
 }: Props) {
+  const { year, month } = parseMonthKey(monthKey);
+
   return (
     <div className="hidden overflow-hidden rounded-2xl border border-hairline bg-surface shadow-sm lg:block">
       <div className="custom-scrollbar overflow-x-auto overscroll-x-contain">
@@ -42,21 +51,27 @@ export function StudentListTable({
               <th className="px-4 py-3 font-bold">მოსწავლე</th>
               <th className="px-4 py-3 font-bold">ტელეფონი</th>
               <th className="px-4 py-3 font-bold">ჯგუფები</th>
-              <th className="px-4 py-3 font-bold">თვის ფასი / გადახდილი</th>
+              <th className="px-4 py-3 font-bold">ფასი / ტიპი</th>
+              <th className="px-4 py-3 font-bold">თვის ჯამი</th>
+              <th className="px-4 py-3 font-bold">გადახდილი</th>
               <th className="px-4 py-3 font-bold">გაკვეთილის დრო</th>
               <th className="whitespace-nowrap px-4 py-3 font-bold">სტატუსი</th>
             </tr>
           </thead>
           <tbody>
             {students.map((student) => {
+              const info = computeExpectedInfo(student, year, month);
+              const expected = info.amount;
               const paid = sumPaymentsForMonth(payments, student.id, monthKey);
-              const status = paymentStatus({ ...student, paidAmount: paid });
+              const status: 'paid' | 'partial' | 'unpaid' =
+                paid >= expected ? 'paid' : paid > 0 ? 'partial' : 'unpaid';
               const badge = {
                 paid: { label: 'გადახდილია', cls: 'border-win/20 bg-win-tint text-win' },
                 partial: { label: 'ნაწილობრივ', cls: 'border-brass/30 bg-brass-tint text-brass-strong' },
                 unpaid: { label: 'გადაუხდელი', cls: 'border-loss/20 bg-loss-tint text-loss' },
               }[status];
               const initial = student.firstName.charAt(0) || '?';
+              const isIndividual = student.kind === 'individual';
 
               return (
                 <tr
@@ -82,7 +97,6 @@ export function StudentListTable({
                     </div>
                   </td>
 
-                  {/* ⬇️ ტელეფონის სვეტი — clickable, editor-ით */}
                   <td className="px-4 py-3">
                     <button
                       type="button"
@@ -108,43 +122,90 @@ export function StudentListTable({
                   </td>
 
                   <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1.5">
-                      {student.groupIds.length === 0 ? (
-                        <span className="text-[11px] text-muted">—</span>
-                      ) : (
-                        student.groupIds.map((gid) => (
-                          <span
-                            key={gid}
-                            className="rounded-full border border-hairline bg-paper px-2 py-0.5 text-[10px] font-bold text-body"
-                          >
-                            {getGroupName(gid, groups)}
-                          </span>
-                        ))
+                    {isIndividual ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditIndividual?.(student);
+                        }}
+                        className="cursor-pointer rounded-full border border-brass/30 bg-brass-tint px-2 py-0.5 text-[10px] font-bold text-brass-strong transition hover:bg-brass/20"
+                      >
+                        ინდივიდუალური
+                      </button>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5">
+                        {student.groupIds.length === 0 ? (
+                          <span className="text-[11px] text-muted">—</span>
+                        ) : (
+                          student.groupIds.map((gid) => (
+                            <span
+                              key={gid}
+                              className="rounded-full border border-hairline bg-paper px-2 py-0.5 text-[10px] font-bold text-body"
+                            >
+                              {getGroupName(gid, groups)}
+                            </span>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </td>
+
+                  {/* ─── ფასი / ტიპი — READ-ONLY (click → modal) ─── */}
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onManagePayments?.(student);
+                      }}
+                      className="flex w-full cursor-pointer flex-col gap-0.5 rounded-md px-1.5 py-0.5 text-left transition hover:bg-navy-tint"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Wallet className="h-3 w-3 shrink-0 text-brass-strong" />
+                        <span className="text-xs font-bold text-ink">
+                          {student.monthlyPrice > 0
+                            ? `${student.monthlyPrice.toLocaleString('ka-GE')} ₾`
+                            : '—'}
+                        </span>
+                      </div>
+                      {student.priceType && (
+                        <span className="text-[10px] font-medium text-muted">
+                          {PRICE_TYPE_SHORT[student.priceType]}
+                        </span>
                       )}
+                    </button>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-bold tabular-nums text-ink">
+                        {expected} ₾
+                      </span>
+                      <span className="text-[10px] font-medium text-muted">
+                        {info.unitLabel === 'თვე'
+                          ? '1 თვე'
+                          : `${info.units} ${info.unitLabel}`}
+                      </span>
                     </div>
                   </td>
 
                   <td className="px-4 py-3">
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1.5">
-                        <Wallet className="h-3 w-3 shrink-0 text-brass-strong" />
-                        <span className="text-[10px] font-medium text-muted">ფასი:</span>
-                        <EditableAmount
-                          value={student.monthlyPrice}
-                          onSave={(v) =>
-                            onUpdateStudent(student.id, { monthlyPrice: v })
-                          }
-                        />
-                      </div>
-                      <div className="flex items-center gap-1.5 pl-4.5">
-                        <span className="text-[10px] font-medium text-muted">გადახდა:</span>
-                        <EditableAmount
-                          value={paid}
-                          onSave={(v) => onSetPaid(student.id, monthKey, v)}
-                          className="text-win hover:bg-win-tint"
-                        />
-                      </div>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onManagePayments?.(student);
+                      }}
+                      className="flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-left transition hover:bg-win-tint"
+                    >
+                      <Receipt className="h-3 w-3 shrink-0 text-win" />
+                      <span
+                        className={`text-xs font-bold ${paid > 0 ? 'text-win' : 'text-muted'}`}
+                      >
+                        {paid > 0 ? `${paid} ₾` : '—'}
+                      </span>
+                    </button>
                   </td>
 
                   <td className="px-4 py-3">
@@ -159,7 +220,7 @@ export function StudentListTable({
                     >
                       <div className="min-w-0 flex-1">
                         {student.lessons.length === 0 ? (
-                          <span className="text-[11px] text-muted">—</span>
+                          <span className="text-[11px] text-muted">+ დამატება</span>
                         ) : (
                           <div className="space-y-0.5">
                             {student.lessons.slice(0, 2).map((l) => (
