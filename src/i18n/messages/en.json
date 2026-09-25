@@ -2250,6 +2250,27 @@
       "Empty z(t) → plane (2D) curve"
     ]
   },
+  "systemSolverTool": {
+    "meta": {
+      "title": "System of equations solver",
+      "description": "Solve systems of equations with up to 3 variables."
+    },
+    "back": "Back to Tools",
+    " eyebrow": "Math Tool",
+    "inputTitle": "System of equations",
+    "reset": "Reset",
+    "invalidEquation": "Invalid equation. Check the syntax.",
+    "solveButton": "Solve",
+    "syntaxTitle": "Syntax Guide",
+    "resultTitle": "Solution",
+    "emptyResult": "Enter an equation to see the solution here.",
+    "solveFor": "Solve for:",
+    "keyboard": "Keyboard",
+    "history": "Recent solutions",
+    "clearHistory": "Clear",
+    "graphTitle": "Graph visualisation",
+    "liveError": "Syntax is incomplete..."
+  },
   "equations": {
     "back": "Back to Tools",
     "eyebrow": "Math Tool",

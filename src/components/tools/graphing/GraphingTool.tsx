@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Copy, Download, LineChart, Minus, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import type { Chart, FunctionPlotDatum, FunctionPlotDatumScope } from 'function-plot';
@@ -41,6 +41,13 @@ import {
 type Copy = Dictionary['graphingTool'];
 type IntegralMode = 'single' | 'between';
 
+interface DomainInput {
+  min: string;
+  max: string;
+}
+
+type DomainMap = Record<string, DomainInput>;
+
 interface GraphingToolProps {
   locale: Locale;
   copy: Copy;
@@ -51,6 +58,9 @@ interface GraphingToolProps {
 const fieldClass =
   'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
+const domainFieldClass =
+  'w-full min-w-0 rounded-lg border border-hairline bg-white px-2 py-1 font-mono text-xs text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+
 const panelClass = 'rounded-3xl border border-hairline/40 bg-surface/30 p-4 shadow-sm sm:p-5';
 
 const iconBtnClass =
@@ -60,6 +70,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 
 export function GraphingTool({ locale, copy, title, description }: GraphingToolProps) {
   const [functions, setFunctions] = useState(() => functionsFromExprs(GRAPH_PRESETS.parabola));
+  const [domains, setDomains] = useState<DomainMap>({});
   const [showDerivative, setShowDerivative] = useState(false);
   const [showTangent, setShowTangent] = useState(true);
   const [showMarkers, setShowMarkers] = useState(true);
@@ -81,6 +92,21 @@ export function GraphingTool({ locale, copy, title, description }: GraphingToolP
   const upper = visible.find((row) => row.id === upperId) ?? visible[0];
   const lower =
     visible.find((row) => row.id === lowerId && row.id !== upper?.id) ?? visible.find((row) => row.id !== upper?.id);
+
+  // Parse per-function domain inputs and produce only the valid, resolved ranges.
+  const resolvedDomains = useMemo<Record<string, [number, number]>>(() => {
+    const out: Record<string, [number, number]> = {};
+    for (const row of functions) {
+      const d = domains[row.id];
+      if (!d) continue;
+      if (d.min.trim() === '' && d.max.trim() === '') continue;
+      const min = Number(d.min);
+      const max = Number(d.max);
+      if (!Number.isFinite(min) || !Number.isFinite(max) || min >= max) continue;
+      out[row.id] = [min, max];
+    }
+    return out;
+  }, [functions, domains]);
 
   function updateFunction(id: string, patch: Partial<GraphFunction>) {
     setFunctions((rows) =>
@@ -106,16 +132,30 @@ export function GraphingTool({ locale, copy, title, description }: GraphingToolP
     );
   }
 
+  function updateDomain(id: string, patch: Partial<DomainInput>) {
+    setDomains((prev) => {
+      const current = prev[id] ?? { min: '', max: '' };
+      return { ...prev, [id]: { ...current, ...patch } };
+    });
+  }
+
   function addFunction() {
     setFunctions((rows) => [...rows, makeGraphFunction('x', nextCurveColor(rows.length))]);
   }
 
   function removeFunction(id: string) {
     setFunctions((rows) => (rows.length <= 1 ? rows : rows.filter((row) => row.id !== id)));
+    setDomains((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   }
 
   function applyPreset(id: GraphPresetId) {
     setFunctions(functionsFromExprs(GRAPH_PRESETS[id]));
+    setDomains({});
     setXDomain([...DEFAULT_DOMAIN]);
     setYDomain([...DEFAULT_DOMAIN]);
     setDomainTick((value) => value + 1);
@@ -205,8 +245,10 @@ export function GraphingTool({ locale, copy, title, description }: GraphingToolP
                       index={index}
                       copy={copy}
                       canRemove={functions.length > 1}
+                      domain={domains[row.id] ?? { min: '', max: '' }}
                       onChange={updateFunction}
                       onRemove={removeFunction}
+                      onDomainChange={updateDomain}
                     />
                   </li>
                 ))}
@@ -265,6 +307,7 @@ export function GraphingTool({ locale, copy, title, description }: GraphingToolP
             <GraphCanvas
               copy={copy}
               functions={functions}
+              domains={resolvedDomains}
               showDerivative={showDerivative}
               showTangent={showTangent}
               showMarkers={showMarkers}
@@ -323,18 +366,31 @@ function FunctionRow({
   index,
   copy,
   canRemove,
+  domain,
   onChange,
   onRemove,
+  onDomainChange,
 }: {
   row: GraphFunction;
   index: number;
   copy: Copy;
   canRemove: boolean;
+  domain: DomainInput;
   onChange: (id: string, patch: Partial<GraphFunction>) => void;
   onRemove: (id: string) => void;
+  onDomainChange: (id: string, patch: Partial<DomainInput>) => void;
 }) {
   const colorId = useId();
   const params = detectParameters(row.expr);
+
+  const minValid = domain.min.trim() === '' || Number.isFinite(Number(domain.min));
+  const maxValid = domain.max.trim() === '' || Number.isFinite(Number(domain.max));
+  const minN = Number(domain.min);
+  const maxN = Number(domain.max);
+  const rangeInvalid =
+    domain.min.trim() !== '' &&
+    domain.max.trim() !== '' &&
+    (!Number.isFinite(minN) || !Number.isFinite(maxN) || minN >= maxN);
 
   return (
     <div className="rounded-xl border border-hairline bg-paper/60 p-3">
@@ -404,6 +460,34 @@ function FunctionRow({
           <KatexPreview tex={`y = ${row.tex}`} />
         </p>
       ) : null}
+
+      {/* Function domain restriction */}
+      <div className="mt-2 flex items-center gap-1.5 text-xs">
+        <span className="font-mono text-muted whitespace-nowrap" title="Function domain">
+          x ∈ [
+        </span>
+        <input
+          value={domain.min}
+          onChange={(event) => onDomainChange(row.id, { min: event.target.value })}
+          placeholder="−∞"
+          inputMode="decimal"
+          spellCheck={false}
+          aria-label="domain min"
+          className={`${domainFieldClass} ${!minValid || rangeInvalid ? 'border-brass/70' : ''}`}
+        />
+        <span className="font-mono text-muted">,</span>
+        <input
+          value={domain.max}
+          onChange={(event) => onDomainChange(row.id, { max: event.target.value })}
+          placeholder="∞"
+          inputMode="decimal"
+          spellCheck={false}
+          aria-label="domain max"
+          className={`${domainFieldClass} ${!maxValid || rangeInvalid ? 'border-brass/70' : ''}`}
+        />
+        <span className="font-mono text-muted">]</span>
+      </div>
+
       {params.length > 0 ? (
         <ul className="mt-3 space-y-2">
           {params.map((name) => {
@@ -703,6 +787,7 @@ function ValuesTable({
 function GraphCanvas({
   copy,
   functions,
+  domains,
   showDerivative,
   showTangent,
   showMarkers,
@@ -718,6 +803,7 @@ function GraphCanvas({
 }: {
   copy: Copy;
   functions: GraphFunction[];
+  domains: Record<string, [number, number]>;
   showDerivative: boolean;
   showTangent: boolean;
   showMarkers: boolean;
@@ -736,6 +822,7 @@ function GraphCanvas({
   const markersRef = useRef<GraphMarker[]>([]);
   const configRef = useRef({
     functions,
+    domains,
     showDerivative,
     showTangent,
     showMarkers,
@@ -749,6 +836,7 @@ function GraphCanvas({
   });
   configRef.current = {
     functions,
+    domains,
     showDerivative,
     showTangent,
     showMarkers,
@@ -809,7 +897,7 @@ function GraphCanvas({
 
         const width = Math.max(320, host.clientWidth);
         const height = Math.max(360, Math.round(width * 0.58));
-        const data = buildPlotData(config.functions, config.showDerivative);
+        const data = buildPlotData(config.functions, config.showDerivative, config.domains);
         const xAxis = { domain: [...config.xDomain], position: 'sticky' as const };
         const yAxis = { domain: [...config.yDomain], position: 'sticky' as const };
 
@@ -905,6 +993,7 @@ function GraphCanvas({
   }, [
     plotReady,
     functions,
+    domains,
     showDerivative,
     showTangent,
     showMarkers,
@@ -1124,14 +1213,24 @@ function markerColor(kind: MarkerKind, fallback: string) {
   }
 }
 
-function buildPlotData(functions: GraphFunction[], showDerivative: boolean): FunctionPlotDatum[] {
+function buildPlotData(
+  functions: GraphFunction[],
+  showDerivative: boolean,
+  domains: Record<string, [number, number]>,
+): FunctionPlotDatum[] {
   const visible = visibleFunctions(functions);
 
   return visible.flatMap((row) => {
     try {
       const fn = compileEvaluator(row.expr, row.params);
+      const range = domains[row.id];
+      const clip = (x: number): number => {
+        if (range && (x < range[0] || x > range[1])) return Number.NaN;
+        const y = fn(x);
+        return y === null ? Number.NaN : y;
+      };
       const datum: FunctionPlotDatum = {
-        fn: (scope: FunctionPlotDatumScope) => fn(Number(scope.x)) ?? Number.NaN,
+        fn: (scope: FunctionPlotDatumScope) => clip(Number(scope.x)),
         color: row.color,
         graphType: 'polyline',
         sampler: 'builtIn',
@@ -1141,7 +1240,12 @@ function buildPlotData(functions: GraphFunction[], showDerivative: boolean): Fun
       if (showDerivative) {
         const derived = compileDerivative(row.expr, row.params);
         extra.push({
-          fn: (scope: FunctionPlotDatumScope) => derived(Number(scope.x)) ?? Number.NaN,
+          fn: (scope: FunctionPlotDatumScope) => {
+            const x = Number(scope.x);
+            if (range && (x < range[0] || x > range[1])) return Number.NaN;
+            const y = derived(x);
+            return y === null ? Number.NaN : y;
+          },
           color: row.color,
           graphType: 'polyline',
           sampler: 'builtIn',

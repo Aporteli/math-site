@@ -73,6 +73,15 @@ function renderKatex(tex: string, node: HTMLElement, displayMode: boolean) {
       displayMode,
       errorColor: "currentColor",
     });
+    // Force the whole formula into one atomic, non-wrapping unit so long
+    // expressions overflow horizontally (with scroll) instead of breaking
+    // into a vertical pile of symbols.
+    const katexEl = node.querySelector(".katex") as HTMLElement | null;
+    if (katexEl) {
+      katexEl.style.display = "inline-block";
+      katexEl.style.whiteSpace = "nowrap";
+      katexEl.style.maxWidth = "100%";
+    }
   } catch {
     node.textContent = tex;
   }
@@ -93,9 +102,9 @@ export function KatexPreview({
     const node = ref.current;
     if (!node) return;
     node.replaceChildren();
-    const prepared = polishStudentTex(tex).replace(/\\text\{([^{}]*)\}/g, '$1')
-    .replace(/\\mathrm\{([^{}]*)\}/g, '$1');
-    
+    const prepared = polishStudentTex(tex)
+      .replace(/\\text\{([^{}]*)\}/g, "$1")
+      .replace(/\\mathrm\{([^{}]*)\}/g, "$1");
 
     if (!looksLikeProse(prepared)) {
       renderKatex(prepared, node, displayMode);
@@ -122,7 +131,9 @@ export function KatexPreview({
       const math = document.createElement("span");
       math.className = segment.display
         ? "block my-2 overflow-x-auto hide-scrollbar"
-        : "inline";
+        : "inline-block";
+      math.style.whiteSpace = "nowrap";
+      math.style.maxWidth = "100%";
       renderKatex(segment.value, math, segment.display);
       node.appendChild(math);
     }
