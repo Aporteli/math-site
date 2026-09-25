@@ -1,23 +1,17 @@
 'use client';
 
-import { Clock3, Phone, Wallet, User2, Pencil, Receipt, UserX } from 'lucide-react';
-import {
-  getGroupName,
-  getTodayLessons,
-  DAY_SHORT,
-  PRICE_TYPE_SHORT,
-} from '../studentList.helpers';
+import { Clock3, User2, Pencil, UserX, ChevronRight } from 'lucide-react';
+
+import { getGroupName, getTodayLessons, DAY_SHORT } from '../studentList.helpers';
+
 import {
   sumPaymentsForMonth,
   computeExpectedInfo,
   parseMonthKey,
   countMissedInMonth,
 } from '../paymentCalendar.helpers';
-import type {
-  PaymentRecord,
-  StudentGroup,
-  StudentRecord,
-} from '../studentList.types';
+
+import type { PaymentRecord, StudentGroup, StudentRecord } from '../studentList.types';
 
 interface Props {
   view: 'grid' | 'table';
@@ -47,197 +41,122 @@ export function StudentListCard({
   classmateCount,
 }: Props) {
   const { year, month } = parseMonthKey(monthKey);
+
   const info = computeExpectedInfo(student, year, month);
   const expected = info.amount;
+
   const paid = sumPaymentsForMonth(payments, student.id, monthKey);
   const owed = Math.max(0, expected - paid);
+
   const missedCount = countMissedInMonth(student, year, month);
-
-  const status: 'paid' | 'partial' | 'unpaid' =
-    paid >= expected ? 'paid' : paid > 0 ? 'partial' : 'unpaid';
-
   const todayLessons = getTodayLessons(student.lessons);
+
   const initial = student.firstName.charAt(0) || '?';
   const isIndividual = student.kind === 'individual';
 
-  const badge = {
-    paid: { label: 'გადახდილია', cls: 'border-win/20 bg-win-tint text-win' },
-    partial: { label: 'ნაწილობრივ', cls: 'border-brass/30 bg-brass-tint text-brass-strong' },
-    unpaid: { label: 'გადაუხდელი', cls: 'border-loss/20 bg-loss-tint text-loss' },
-  }[status];
+  const hasLessonToday = todayLessons.length > 0;
 
   return (
     <div
       onClick={() => onSelect(student)}
-      className={`group flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition hover:border-navy/35 hover:shadow-md sm:hover:-translate-y-0.5 ${
+      className={`group flex w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition-all duration-200 hover:border-navy/40 hover:shadow-md ${
         view === 'grid' ? 'h-full' : ''
-      }`}
-    >
-      <div className="flex items-start gap-3 p-3.5 pb-3 sm:p-4">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-navy-tint text-base font-bold text-navy">
+      }`}>
+      {/* ─── Header: Info & Avatar ─── */}
+      <div className="flex items-start gap-3 p-4 pb-3">
+        <span
+          className={`flex size-11 shrink-0 items-center justify-center rounded-full text-base font-bold shadow-inner transition-colors ${
+            hasLessonToday ? 'animate-pulse bg-yellow-200 text-yellow-800' : 'bg-navy-tint text-navy'
+          }`}>
           {initial}
         </span>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <p className="min-w-0 truncate text-sm font-bold leading-tight text-ink">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="truncate text-sm font-bold leading-snug text-ink transition-colors group-hover:text-navy">
               {student.firstName} {student.lastName}
-            </p>
-            <div className="flex shrink-0 items-center gap-1">
-              {isIndividual ? (
-                <span className="rounded-full border border-brass/30 bg-brass-tint px-2 py-0.5 text-[9px] font-bold text-brass-strong">
-                  სახლში
-                </span>
-              ) : null}
-              <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${badge.cls}`}>
-                {badge.label}
-              </span>
-            </div>
+            </h3>
           </div>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditPhones(student);
-            }}
-            title="ტელეფონის რედაქტირება"
-            className="mt-1 inline-flex max-w-full cursor-pointer items-center gap-1 rounded-lg px-1 py-1 text-[11px] font-medium text-muted transition hover:bg-navy-tint hover:text-navy"
-          >
-            <Phone className="size-3 shrink-0" />
-            <span className="truncate">
-              {student.phone || 'ტელეფონი არ არის'}
-            </span>
-          </button>
-
-          {student.parentPhone ? (
-            <p className="mt-0.5 flex items-center gap-1 pl-1 text-[10px] font-medium text-muted">
-              <User2 className="size-3 shrink-0" />
-              <span className="truncate">მშობელი: {student.parentPhone}</span>
-            </p>
-          ) : null}
         </div>
       </div>
 
-      {isIndividual ? (
-        <div className="flex items-center gap-1.5 px-4 pb-3">
+      {/* ─── Groups & Badges ─── */}
+      <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3">
+        {isIndividual ? (
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onEditIndividual?.(student);
             }}
-            className="cursor-pointer rounded-full border border-hairline bg-paper px-2 py-0.5 text-[10px] font-bold text-navy transition hover:bg-navy-tint"
-          >
+            className="rounded-lg border border-hairline bg-paper px-2.5 py-0.5 text-[10px] font-bold transition hover:border-navy/30 hover:bg-navy-tint">
             რედაქტირება
           </button>
-          {missedCount > 0 ? (
-            <span className="inline-flex items-center gap-0.5 rounded-full border border-loss/20 bg-loss-tint px-1.5 py-0.5 text-[9px] font-bold text-loss">
-              <UserX className="size-2.5" />
-              {missedCount} გამოტ.
-            </span>
-          ) : null}
-        </div>
-      ) : student.groupIds.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-1.5 px-4 pb-3">
-          {student.groupIds.map((gid) => (
+        ) : student.groupIds.length > 0 ? (
+          student.groupIds.map((gid) => (
             <span
               key={gid}
-              className="rounded-full border border-hairline bg-paper px-2 py-0.5 text-[10px] font-bold text-body"
-            >
+              className="rounded-lg border border-hairline bg-paper px-2.5 py-0.5 text-[10px] font-bold text-body">
               {getGroupName(gid, groups)}
             </span>
-          ))}
-          {missedCount > 0 ? (
-            <span className="inline-flex items-center gap-0.5 rounded-full border border-loss/20 bg-loss-tint px-1.5 py-0.5 text-[9px] font-bold text-loss">
-              <UserX className="size-2.5" />
-              {missedCount} გამოტ.
-            </span>
-          ) : null}
-        </div>
-      ) : (
-        <div className="flex items-center gap-1.5 px-4 pb-3">
-          <span className="rounded-full bg-paper-deep px-2 py-0.5 text-[10px] font-bold text-muted">
+          ))
+        ) : (
+          <span className="rounded-lg bg-paper-deep px-2.5 py-0.5 text-[10px] font-medium text-muted">
             ჯგუფის გარეშე
           </span>
-          {missedCount > 0 ? (
-            <span className="inline-flex items-center gap-0.5 rounded-full border border-loss/20 bg-loss-tint px-1.5 py-0.5 text-[9px] font-bold text-loss">
-              <UserX className="size-2.5" />
-              {missedCount} გამოტ.
-            </span>
-          ) : null}
-        </div>
-      )}
+        )}
 
-      {/* ─── Payment ─── */}
-      <div className="border-t border-hairline bg-paper/50 px-4 py-3">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="min-w-0 rounded-xl border border-hairline/80 bg-surface px-2.5 py-2">
-            <p className="flex items-center gap-1 text-[10px] font-medium text-muted">
-              <Wallet className="h-2.5 w-2.5 text-brass-strong" />
-              ფასი
-              {student.priceType && (
-                <span className="ml-0.5 text-[9px] text-muted/80">
-                  / {PRICE_TYPE_SHORT[student.priceType]}
-                </span>
-              )}
-            </p>
-            <p className="mt-0.5 truncate text-xs font-bold tabular-nums text-ink">
-              {student.monthlyPrice > 0
-                ? `${student.monthlyPrice.toLocaleString('ka-GE')} ₾`
-                : '—'}
-            </p>
-            <p className="mt-1 text-[9px] font-bold text-navy">
-              {info.unitLabel === 'თვე'
-                ? `${expected} ₾ / თვე`
-                : `${info.units} ${info.unitLabel} · ${expected} ₾`}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onManagePayments?.(student);
-            }}
-            className="min-w-0 cursor-pointer rounded-xl border border-hairline/80 bg-surface px-2.5 py-2 text-right transition hover:border-win/30 hover:bg-win-tint"
-          >
-            <p className="flex items-center justify-end gap-1 text-[10px] font-medium text-muted">
-              <Receipt className="h-2.5 w-2.5" /> გადახდილი
-            </p>
-            <p
-              className={`mt-0.5 truncate text-xs font-bold ${
-                paid > 0 ? 'text-win' : 'text-muted'
-              }`}
-            >
-              {paid > 0 ? `${paid} ₾` : '—'}
-            </p>
-          </button>
-        </div>
-
-        {owed > 0 ? (
-          <div className="mt-2 flex items-center justify-between rounded-lg bg-loss-tint px-2 py-1">
-            <span className="text-[10px] font-bold text-loss">დარჩენილი</span>
-            <span className="text-[11px] font-bold text-loss">{owed} ₾</span>
-          </div>
-        ) : (
-          <div className="mt-2 flex items-center justify-between rounded-lg bg-win-tint px-2 py-1">
-            <span className="text-[10px] font-bold text-win">სრულად გადახდილია</span>
-            <span className="text-[11px] font-bold text-win">✓</span>
-          </div>
+        {missedCount > 0 && (
+          <span className="inline-flex items-center gap-1 rounded-lg border border-loss/20 bg-loss-tint px-2 py-0.5 text-[10px] font-bold text-loss">
+            <UserX className="size-3" />
+            {missedCount} გამოტ.
+          </span>
         )}
       </div>
 
-      {/* ─── Schedule ─── */}
-      <div className="border-t border-hairline px-4 py-3">
+      {/* ─── Payment Section ─── */}
+      <div className="mt-auto border-t border-hairline bg-paper/40 p-3">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onManagePayments?.(student);
+          }}
+          className="w-full rounded-xl border border-hairline/60 bg-surface p-3 text-left transition hover:border-navy/30 hover:bg-navy-tint/30 active:scale-[0.99]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold text-muted">ფასი / მოსალოდნელი</p>
+
+              <div className="mt-0.5 flex items-baseline gap-2">
+                <span className="text-sm font-bold tabular-nums text-ink">
+                  {student.monthlyPrice > 0 ? `${student.monthlyPrice.toLocaleString('ka-GE')} ₾` : '—'}
+                </span>
+
+                <span className="truncate text-[10px] font-semibold text-navy">
+                  {info.unitLabel === 'თვე' ? `${expected} ₾ / თვე` : `${info.units} ${info.unitLabel} · ${expected} ₾`}
+                </span>
+              </div>
+            </div>
+
+            <div className="shrink-0 border-l border-hairline pl-3 text-right">
+              <p className="text-[10px] font-medium text-muted">გადახდილი</p>
+
+              <p className={`mt-0.5 text-sm font-bold tabular-nums ${paid > 0 ? 'text-win' : 'text-muted'}`}>
+                {paid > 0 ? `${paid} ₾` : '—'}
+              </p>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* ─── Schedule Section ─── */}
+      <div className="h-[155px] overflow-y-auto border-t border-hairline px-4 py-3 thin-scrollbar">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-muted">
-            <Clock3 className="h-3 w-3" />
-            {isIndividual ? 'გაკვეთილები' : 'ჯგუფის განრიგი'}
+          <span className="text-[10px] font-semibold">
             {!isIndividual && classmateCount && classmateCount > 1 ? (
-              <span className="font-medium text-navy">· {classmateCount} მოსწავლე</span>
+              <span className="font-semibold">{classmateCount} მოსწავლე</span>
             ) : null}
-          </p>
+          </span>
 
           <button
             type="button"
@@ -246,10 +165,9 @@ export function StudentListCard({
               onEditLessons(student);
             }}
             title="გაკვეთილის დროების რედაქტირება"
-            className="inline-flex min-h-8 cursor-pointer items-center gap-1 rounded-lg border border-hairline bg-surface px-2.5 py-1 text-[10px] font-bold text-navy transition hover:border-navy/40 hover:bg-navy-tint"
-          >
-            <Pencil className="h-2.5 w-2.5" />
-            <span>რედაქტირება</span>
+            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-bold transition active:scale-[0.97] hover:border-navy/40 hover:bg-navy-tint">
+            <span>შეცვლა</span>
+            <ChevronRight className="size-3" />
           </button>
         </div>
 
@@ -260,53 +178,34 @@ export function StudentListCard({
               e.stopPropagation();
               onEditLessons(student);
             }}
-            className="w-full cursor-pointer rounded-lg border border-dashed border-hairline bg-paper px-3 py-2 text-center text-[11px] font-bold text-muted transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy"
-          >
+            className="w-full rounded-lg border border-dashed border-hairline bg-paper/60 py-2 text-center text-xs font-semibold text-muted transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy">
             + გაკვეთილის დამატება
           </button>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {student.lessons.slice(0, 3).map((l) => {
               const isToday = todayLessons.some((tl) => tl.id === l.id);
+
               return (
                 <div
                   key={l.id}
-                  className={`flex items-center justify-between rounded-lg px-2 py-1.5 text-[11px] ${
-                    isToday ? 'bg-navy-tint font-bold text-navy' : 'bg-paper text-body'
-                  }`}
-                >
-                  <span className="font-bold">{DAY_SHORT[l.dayOfWeek]}</span>
-                  <span>
+                  className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs ${
+                    isToday ? 'bg-navy-tint font-bold text-navy shadow-sm' : 'bg-paper text-body'
+                  }`}>
+                  <span>{DAY_SHORT[l.dayOfWeek]}</span>
+
+                  <span className="tabular-nums font-medium">
                     {l.startTime}–{l.endTime}
                   </span>
                 </div>
               );
             })}
 
-            {student.lessons.length > 3 ? (
-              <p className="px-2 pt-0.5 text-[10px] font-medium text-muted">
-                +{student.lessons.length - 3} კიდევ
-              </p>
-            ) : null}
+            {student.lessons.length > 3 && (
+              <p className="px-1 pt-0.5 text-[10px] font-medium text-muted">+{student.lessons.length - 3} კიდევ</p>
+            )}
           </div>
         )}
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-hairline bg-paper/40 px-4 py-2.5 text-[10px] font-medium text-muted">
-        <span className="flex items-center gap-1">
-          <User2 className="h-3 w-3" />
-          {student.status === 'active'
-            ? 'აქტიური'
-            : student.status === 'paused'
-              ? 'შეჩერებული'
-              : 'დასრულებული'}
-        </span>
-        {todayLessons.length > 0 ? (
-          <span className="flex items-center gap-1 font-bold text-navy">
-            <Clock3 className="h-3 w-3" />
-            დღეს {todayLessons.length}
-          </span>
-        ) : null}
       </div>
     </div>
   );

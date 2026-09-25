@@ -23,13 +23,8 @@ import { LessonEditorModal } from './LessonEditorModal';
 import { PhoneEditorModal } from './PhoneEditorModal';
 import { IndividualStudentModal } from './IndividualStudentModal';
 import { PaymentHistoryModal } from './PaymentHistoryModal';
-import { formatPrice, getTodayLessons, sectionStudents } from '../studentList.helpers';
-import {
-  getMonthKey,
-  sumPaymentsForMonth,
-  computeExpectedForMonth,
-  parseMonthKey,
-} from '../paymentCalendar.helpers';
+import { formatPrice, countTodayLessonSessions, sectionStudents } from '../studentList.helpers';
+import { getMonthKey, sumPaymentsForMonth, computeExpectedForMonth, parseMonthKey } from '../paymentCalendar.helpers';
 import {
   addLessonSlotAction,
   deleteLessonSlotAction,
@@ -60,10 +55,7 @@ interface Props {
     monthlyPrice?: number;
     note?: string;
   }) => Promise<{ ok: boolean; error?: string; id?: string }>;
-  onUpdateIndividual?: (
-    studentId: string,
-    patch: Partial<StudentRecord>,
-  ) => Promise<{ ok: boolean; error?: string }>;
+  onUpdateIndividual?: (studentId: string, patch: Partial<StudentRecord>) => Promise<{ ok: boolean; error?: string }>;
   onDeleteIndividual?: (studentId: string) => Promise<{ ok: boolean; error?: string }>;
 
   /* Group payments (add/delete) */
@@ -84,17 +76,10 @@ interface Props {
     method?: 'cash' | 'card' | 'transfer';
     note?: string;
   }) => Promise<{ ok: boolean; error?: string }>;
-  onDeleteIndividualPayment?: (
-    paymentId: string,
-  ) => Promise<{ ok: boolean; error?: string }>;
+  onDeleteIndividualPayment?: (paymentId: string) => Promise<{ ok: boolean; error?: string }>;
 
   /* Missed lesson toggle */
-  onToggleMissed?: (
-    studentId: string,
-    lessonId: string,
-    date: string,
-    missed: boolean,
-  ) => void;
+  onToggleMissed?: (studentId: string, lessonId: string, date: string, missed: boolean) => void;
 }
 
 type View = 'table' | 'grid' | 'calendar' | 'debt' | 'reports';
@@ -135,37 +120,29 @@ export function StudentList({
   const [individualModalOpen, setIndividualModalOpen] = useState(false);
   const [editingIndividual, setEditingIndividual] = useState<StudentRecord | null>(null);
   const [paymentHistoryStudent, setPaymentHistoryStudent] = useState<StudentRecord | null>(null);
+  const [showTodayOnly, setShowTodayOnly] = useState(false);
 
   useEffect(() => setPayments(initialPayments), [initialPayments]);
 
   /* ════════════ FRESH STUDENT ობიექტი მოდალისთვის ════════════ */
   const currentPaymentStudent = useMemo(() => {
     if (!paymentHistoryStudent) return null;
-    return (
-      students.find((s) => s.id === paymentHistoryStudent.id) ??
-      paymentHistoryStudent
-    );
+    return students.find((s) => s.id === paymentHistoryStudent.id) ?? paymentHistoryStudent;
   }, [paymentHistoryStudent, students]);
 
   const currentEditingIndividual = useMemo(() => {
     if (!editingIndividual) return null;
-    return (
-      students.find((s) => s.id === editingIndividual.id) ?? editingIndividual
-    );
+    return students.find((s) => s.id === editingIndividual.id) ?? editingIndividual;
   }, [editingIndividual, students]);
 
   const currentLessonStudent = useMemo(() => {
     if (!lessonEditorStudent) return null;
-    return (
-      students.find((s) => s.id === lessonEditorStudent.id) ?? lessonEditorStudent
-    );
+    return students.find((s) => s.id === lessonEditorStudent.id) ?? lessonEditorStudent;
   }, [lessonEditorStudent, students]);
 
   const currentPhoneStudent = useMemo(() => {
     if (!phoneEditorStudent) return null;
-    return (
-      students.find((s) => s.id === phoneEditorStudent.id) ?? phoneEditorStudent
-    );
+    return students.find((s) => s.id === phoneEditorStudent.id) ?? phoneEditorStudent;
   }, [phoneEditorStudent, students]);
 
   const handleUpdateStudent = (id: string, patch: Partial<StudentRecord>) => {
@@ -174,9 +151,7 @@ export function StudentList({
 
   const handleSetPaid = (studentId: string, mk: string, amount: number) => {
     const prev = paymentsRef.current;
-    const withoutThis = prev.filter(
-      (p) => !(p.studentId === studentId && p.monthKey === mk),
-    );
+    const withoutThis = prev.filter((p) => !(p.studentId === studentId && p.monthKey === mk));
     const next =
       amount > 0
         ? [
@@ -208,17 +183,13 @@ export function StudentList({
 
     const res =
       student.kind === 'individual'
-        ? await (onAddIndividualPayment?.(input) ??
-            Promise.resolve({ ok: false, error: 'Not configured' }))
-        : await (onAddGroupPayment?.(input) ??
-            Promise.resolve({ ok: false, error: 'Not configured' }));
+        ? await (onAddIndividualPayment?.(input) ?? Promise.resolve({ ok: false, error: 'Not configured' }))
+        : await (onAddGroupPayment?.(input) ?? Promise.resolve({ ok: false, error: 'Not configured' }));
 
     return res;
   };
 
-  const handleDeletePaymentForModal = async (
-    paymentId: string,
-  ): Promise<{ ok: boolean; error?: string }> => {
+  const handleDeletePaymentForModal = async (paymentId: string): Promise<{ ok: boolean; error?: string }> => {
     const payment = payments.find((p) => p.id === paymentId);
     if (!payment) return { ok: false, error: 'გადახდა ვერ მოიძებნა' };
     const student = students.find((s) => s.id === payment.studentId);
@@ -226,10 +197,8 @@ export function StudentList({
 
     const res =
       student.kind === 'individual'
-        ? await (onDeleteIndividualPayment?.(paymentId) ??
-            Promise.resolve({ ok: false, error: 'Not configured' }))
-        : await (onDeleteGroupPayment?.(paymentId) ??
-            Promise.resolve({ ok: false, error: 'Not configured' }));
+        ? await (onDeleteIndividualPayment?.(paymentId) ?? Promise.resolve({ ok: false, error: 'Not configured' }))
+        : await (onDeleteGroupPayment?.(paymentId) ?? Promise.resolve({ ok: false, error: 'Not configured' }));
 
     return res;
   };
@@ -272,10 +241,7 @@ export function StudentList({
     const res = await addLessonSlotAction(input);
     if (!res.ok) return { ok: false, error: res.error };
 
-    const copies =
-      res.copies.length > 0
-        ? res.copies
-        : [{ studentId: input.studentId, lessonId: res.id }];
+    const copies = res.copies.length > 0 ? res.copies : [{ studentId: input.studentId, lessonId: res.id }];
 
     for (const copy of copies) {
       const current = studentsRef.current.find((s) => s.id === copy.studentId);
@@ -322,9 +288,7 @@ export function StudentList({
       const res = await deleteIndividualLessonAction({ lessonId });
       if (!res.ok) return { ok: false, error: res.error };
 
-      const owner = studentsRef.current.find((s) =>
-        s.lessons.some((l) => l.id === lessonId),
-      );
+      const owner = studentsRef.current.find((s) => s.lessons.some((l) => l.id === lessonId));
       if (owner) {
         handleUpdateStudent(owner.id, {
           lessons: owner.lessons.filter((l) => l.id !== lessonId),
@@ -340,12 +304,7 @@ export function StudentList({
     for (const owner of studentsRef.current) {
       const next = owner.lessons.filter(
         (l) =>
-          !(
-            l.groupId === groupId &&
-            l.dayOfWeek === dayOfWeek &&
-            l.startTime === startTime &&
-            l.endTime === endTime
-          ),
+          !(l.groupId === groupId && l.dayOfWeek === dayOfWeek && l.startTime === startTime && l.endTime === endTime),
       );
       if (next.length !== owner.lessons.length) {
         handleUpdateStudent(owner.id, { lessons: next });
@@ -368,8 +327,12 @@ export function StudentList({
     return res;
   };
 
+  const today = new Date();
+  const todayDayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+
     return students.filter((s) => {
       const matchesQuery =
         !q ||
@@ -377,19 +340,17 @@ export function StudentList({
         s.phone.includes(q) ||
         (s.parentPhone?.includes(q) ?? false) ||
         (s.email?.toLowerCase().includes(q) ?? false);
-      const matchesGroup =
-        activeGroupId === 'all' || s.groupIds.includes(activeGroupId);
-      return matchesQuery && matchesGroup;
+
+      const matchesGroup = activeGroupId === 'all' || s.groupIds.includes(activeGroupId);
+
+      const matchesToday = !showTodayOnly || s.lessons.some((lesson) => lesson.dayOfWeek === todayDayOfWeek);
+
+      return matchesQuery && matchesGroup && matchesToday;
     });
-  }, [students, query, activeGroupId]);
+  }, [students, query, activeGroupId, showTodayOnly, todayDayOfWeek]);
 
   const listSections = useMemo(
-    () =>
-      sectionStudents(
-        filtered,
-        groups,
-        activeGroupId === 'all' ? undefined : activeGroupId,
-      ),
+    () => sectionStudents(filtered, groups, activeGroupId === 'all' ? undefined : activeGroupId),
     [filtered, groups, activeGroupId],
   );
 
@@ -403,18 +364,10 @@ export function StudentList({
 
   const stats = useMemo(() => {
     const { year, month } = parseMonthKey(monthKey);
-    const totalPrice = students.reduce(
-      (sum, s) => sum + computeExpectedForMonth(s, year, month),
-      0,
-    );
-    const totalPaid = students.reduce(
-      (sum, s) => sum + sumPaymentsForMonth(payments, s.id, monthKey),
-      0,
-    );
-    const todayCount = students.reduce(
-      (sum, s) => sum + getTodayLessons(s.lessons).length,
-      0,
-    );
+    const totalPrice = students.reduce((sum, s) => sum + computeExpectedForMonth(s, year, month), 0);
+    const totalPaid = students.reduce((sum, s) => sum + sumPaymentsForMonth(payments, s.id, monthKey), 0);
+    const todayCount = countTodayLessonSessions(students);
+
     return {
       totalPrice,
       totalPaid,
@@ -438,10 +391,6 @@ export function StudentList({
             <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
               <Users className="size-5" />
             </span>
-            <div className="min-w-0">
-              <h1 className="truncate text-base font-bold text-ink sm:text-lg">მოსწავლეები</h1>
-              <p className="text-xs font-medium text-muted">{students.length} მოსწავლე სულ</p>
-            </div>
           </div>
 
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
@@ -504,8 +453,7 @@ export function StudentList({
                 setIndividualModalOpen(true);
               }}
               title="ინდივიდუალური მოსწავლის დამატება"
-              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-brass-strong px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brass"
-            >
+              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-brass-strong px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brass">
               <UserPlus className="size-4 shrink-0" />
               <span className="truncate">სახლში</span>
             </button>
@@ -527,33 +475,21 @@ export function StudentList({
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <Users className="size-3 shrink-0 text-navy" /> სულ
-                </p>
-                <p className="mt-1 truncate text-lg font-bold tabular-nums text-ink sm:text-xl">
-                  {students.length}
-                </p>
+                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">მოსწავლეები</p>
+                <p className="mt-1 truncate text-lg font-bold tabular-nums text-ink sm:text-xl">{students.length}</p>
               </div>
               <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <CalendarClock className="size-3 shrink-0 text-brass-strong" /> დღეს
-                </p>
-                <p className="mt-1 truncate text-lg font-bold tabular-nums text-navy sm:text-xl">
-                  {stats.todayCount}
-                </p>
+                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">გაკვეთილები</p>
+                <p className="mt-1 truncate text-lg font-bold tabular-nums text-navy sm:text-xl">{stats.todayCount}</p>
               </div>
               <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <Wallet className="size-3 shrink-0 text-brass-strong" /> ჯამში
-                </p>
+                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">ჯამში</p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-ink sm:text-xl">
                   {formatPrice(stats.totalPrice)}
                 </p>
               </div>
               <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
-                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-                  <Wallet className="size-3 shrink-0 text-loss" /> გადასახდელი
-                </p>
+                <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">გადასახდელი</p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-loss sm:text-xl">
                   {formatPrice(stats.debt)}
                 </p>
@@ -561,18 +497,29 @@ export function StudentList({
             </div>
 
             <div className="custom-scrollbar -mx-1 flex items-center gap-1.5 overflow-x-auto px-1 pb-0.5">
-              <span className="flex shrink-0 items-center gap-1 pr-1 text-[10px] font-bold tracking-wide text-muted">
-                <Filter className="size-3" /> ჯგუფი
-              </span>
               <button
                 type="button"
-                onClick={() => setActiveGroupId('all')}
+                onClick={() => {
+                  setActiveGroupId('all');
+                  setShowTodayOnly(false);
+                }}
                 className={`shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
-                  activeGroupId === 'all'
+                  activeGroupId === 'all' && !showTodayOnly
                     ? 'border-navy bg-navy text-white shadow-sm'
                     : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
                 }`}>
                 ყველა
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowTodayOnly(true)}
+                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                  showTodayOnly
+                    ? 'border-navy bg-navy text-white shadow-sm'
+                    : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
+                }`}>
+                <span>დღეს</span>
               </button>
               {groups.map((g) => {
                 const active = activeGroupId === g.id;
@@ -581,7 +528,10 @@ export function StudentList({
                   <button
                     key={g.id}
                     type="button"
-                    onClick={() => setActiveGroupId(g.id)}
+                    onClick={() => {
+                      setActiveGroupId(g.id);
+                      setShowTodayOnly(false);
+                    }}
                     className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
                       active
                         ? 'border-navy bg-navy text-white shadow-sm'
@@ -646,18 +596,13 @@ export function StudentList({
               {listSections.map((section) => (
                 <section key={section.key} className="space-y-3">
                   <div className="flex items-center gap-2 rounded-xl border border-hairline bg-paper px-3 py-2">
-                    <span className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`} />
-                    <h2 className="text-xs font-bold tracking-wide text-ink">
-                      {section.title}
-                    </h2>
+                    <span
+                      className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`}
+                    />
+                    <h2 className="text-xs font-bold tracking-wide text-ink">{section.title}</h2>
                     <span className="rounded-full bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
                       {section.students.length}
                     </span>
-                    {section.kind === 'group' ? (
-                      <span className="hidden text-[10px] font-medium text-muted sm:inline">
-                        საერთო განრიგი · გადახდა ცალ-ცალკე
-                      </span>
-                    ) : null}
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                     {section.students.map((student) => (
@@ -668,11 +613,7 @@ export function StudentList({
                         groups={groups}
                         payments={payments}
                         monthKey={monthKey}
-                        classmateCount={
-                          section.groupId
-                            ? groupMemberCounts[section.groupId]
-                            : undefined
-                        }
+                        classmateCount={section.groupId ? groupMemberCounts[section.groupId] : undefined}
                         onSelect={(s) => onSelectStudent?.(s)}
                         onEditLessons={(s) => setLessonEditorStudent(s)}
                         onEditPhones={(s) => setPhoneEditorStudent(s)}
@@ -699,6 +640,7 @@ export function StudentList({
                 onEditLessons={(s) => setLessonEditorStudent(s)}
                 onEditPhones={(s) => setPhoneEditorStudent(s)}
                 onManagePayments={(s) => setPaymentHistoryStudent(s)}
+                onUpdateStudent={handleUpdateStudent}
                 onEditIndividual={(s) => {
                   setEditingIndividual(s);
                   setIndividualModalOpen(true);
@@ -708,10 +650,10 @@ export function StudentList({
                 {listSections.map((section) => (
                   <section key={section.key} className="space-y-3">
                     <div className="flex items-center gap-2 rounded-xl border border-hairline bg-paper px-3 py-2">
-                      <span className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`} />
-                      <h2 className="text-xs font-bold tracking-wide text-ink">
-                        {section.title}
-                      </h2>
+                      <span
+                        className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`}
+                      />
+                      <h2 className="text-xs font-bold tracking-wide text-ink">{section.title}</h2>
                       <span className="rounded-full bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
                         {section.students.length}
                       </span>
@@ -725,11 +667,7 @@ export function StudentList({
                           groups={groups}
                           payments={payments}
                           monthKey={monthKey}
-                          classmateCount={
-                            section.groupId
-                              ? groupMemberCounts[section.groupId]
-                              : undefined
-                          }
+                          classmateCount={section.groupId ? groupMemberCounts[section.groupId] : undefined}
                           onSelect={(s) => onSelectStudent?.(s)}
                           onEditLessons={(s) => setLessonEditorStudent(s)}
                           onEditPhones={(s) => setPhoneEditorStudent(s)}
@@ -781,7 +719,9 @@ export function StudentList({
           setEditingIndividual(null);
         }}
         onCreate={async (input) => (await onCreateIndividual?.(input)) ?? { ok: false, error: 'Not configured' }}
-        onUpdate={async (id, patch) => (await onUpdateIndividual?.(id, patch)) ?? { ok: false, error: 'Not configured' }}
+        onUpdate={async (id, patch) =>
+          (await onUpdateIndividual?.(id, patch)) ?? { ok: false, error: 'Not configured' }
+        }
         onDelete={async (id) => (await onDeleteIndividual?.(id)) ?? { ok: false, error: 'Not configured' }}
       />
 

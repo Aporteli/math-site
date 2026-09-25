@@ -97,6 +97,9 @@ export async function getTeacherStudents(
       existing.monthlyPrice += price;
       existing.lessons.push(...lessons);
       existing.missedLessons = [...(existing.missedLessons ?? []), ...missed];
+      if (!existing.paymentDate && e.paymentDate) {
+        existing.paymentDate = e.paymentDate;
+      }
     } else {
       const parts = u.name.trim().split(/\s+/);
       const firstName = parts[0] ?? u.name;
@@ -113,6 +116,7 @@ export async function getTeacherStudents(
         groupIds: [e.course.id],
         monthlyPrice: price,
         priceType: e.priceType,
+        paymentDate: e.paymentDate ?? undefined,
         paidAmount: 0,
         lessons,
         status: 'active',
@@ -144,6 +148,7 @@ export async function getTeacherIndividualStudents(
     groupIds: [],
     monthlyPrice: Number(s.monthlyPrice),
     priceType: s.priceType,
+    paymentDate: s.paymentDate ?? undefined,
     paidAmount: 0,
     lessons: s.lessons
       .map((l) => ({

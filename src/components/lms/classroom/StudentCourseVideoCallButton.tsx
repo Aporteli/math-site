@@ -12,17 +12,12 @@ interface StudentCourseVideoCallButtonProps {
   label?: string;
 }
 
-export function StudentCourseVideoCallButton({
-  courseId,
-  courseTitle,
-  label,
-}: StudentCourseVideoCallButtonProps) {
+export function StudentCourseVideoCallButton({ courseId, courseTitle, label }: StudentCourseVideoCallButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isTeacherPresent, setIsTeacherPresent] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(true);
 
-  /** Teacher was in the room at least once during the current call. */
   const teacherSeenRef = useRef(false);
   const handleTeacherLeftRef = useRef<() => void>(() => {});
 
@@ -50,9 +45,6 @@ export function StudentCourseVideoCallButton({
         return;
       }
 
-      // ზარი მხოლოდ მაშინ იხურება, თუ მასწავლებელი ოთახში ნამდვილად იყო და
-      // უკვე ორი შემოწმებაა აღარ ჩანს — მოწყობილობის შეცვლისას ხანმოკლე
-      // წყვეტა სტუდენტს ზარიდან არ აგდებს.
       missingPolls += 1;
       if (teacherSeenRef.current && missingPolls >= 2) handleTeacherLeftRef.current();
     }
@@ -96,11 +88,8 @@ export function StudentCourseVideoCallButton({
         }}
         disabled={disabled}
         className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-bold text-white shadow-sm transition-all active:scale-[0.99] ${
-          disabled
-            ? 'cursor-not-allowed bg-slate-400 hover:bg-slate-400'
-            : 'bg-navy hover:bg-navy-strong'
-        }`}
-      >
+          disabled ? 'cursor-not-allowed bg-slate-400 hover:bg-slate-400' : 'bg-navy hover:bg-navy-strong'
+        }`}>
         {checking ? (
           <Loader2 className="size-5 animate-spin" />
         ) : isTeacherPresent === false ? (
@@ -113,7 +102,8 @@ export function StudentCourseVideoCallButton({
         )}
       </button>
 
-      {isOpen && mounted &&
+      {isOpen &&
+        mounted &&
         createPortal(
           <div className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen overflow-hidden bg-slate-900/90 backdrop-blur-sm">
             <ClassroomRoomModal

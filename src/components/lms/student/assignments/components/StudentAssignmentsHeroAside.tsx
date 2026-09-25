@@ -48,7 +48,6 @@ export function StudentAssignmentsHeroAside({
               courseId={course.id}
               courseTitle={course.title}
               label="ვიდეო გაკვეთილი"
-              showFullscreen
             />
           ))}
         </div>

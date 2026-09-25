@@ -35,8 +35,6 @@ export async function checkTeacherInRoom(courseId: string): Promise<boolean> {
   const httpUrl = livekitUrl.replace('wss://', 'https://').replace('ws://', 'http://');
   const roomService = new RoomServiceClient(httpUrl, apiKey, apiSecret);
 
-  // The teacher is still in the class when they move from the main room into
-  // Room A or Room B. Any of their connections counts.
   for (const key of CLASS_ROOMS) {
     try {
       const participants = await roomService.listParticipants(courseRoomName(courseId, key));

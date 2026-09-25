@@ -176,6 +176,57 @@ export async function updateStudentPriceAction(input: {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   გადახდის თარიღი (ჯგუფის + ინდივიდუალური)
+   ═══════════════════════════════════════════════════════════════ */
+
+export async function updateStudentPaymentDateAction(input: {
+  studentId: string;
+  paymentDate: string | null;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const user = await getSession();
+  if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
+
+  const paymentDate = input.paymentDate?.trim() || null;
+  if (paymentDate && !/^\d{4}-\d{2}-\d{2}$/.test(paymentDate)) {
+    return { ok: false, error: 'თარიღი არასწორია' };
+  }
+
+  const individual = await prisma.individualStudent.findFirst({
+    where: { id: input.studentId, teacherId: user.user.id },
+    select: { id: true },
+  });
+
+  if (individual) {
+    await prisma.individualStudent.update({
+      where: { id: individual.id },
+      data: { paymentDate },
+    });
+    revalidatePath('/[locale]/teacher/student-list', 'page');
+    return { ok: true };
+  }
+
+  const enrollment = await prisma.enrollment.findFirst({
+    where: {
+      userId: input.studentId,
+      course: { teacherId: user.user.id },
+    },
+    select: { id: true },
+  });
+  if (!enrollment) return { ok: false, error: 'Forbidden' };
+
+  await prisma.enrollment.updateMany({
+    where: {
+      userId: input.studentId,
+      course: { teacherId: user.user.id },
+    },
+    data: { paymentDate },
+  });
+
+  revalidatePath('/[locale]/teacher/student-list', 'page');
+  return { ok: true };
+}
+
+/* ═══════════════════════════════════════════════════════════════
    გაკვეთილის დროები (ჯგუფის)
    ═══════════════════════════════════════════════════════════════ */
 

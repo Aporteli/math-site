@@ -108,7 +108,7 @@ export function DebtTracker({
         <div className="mt-3 grid grid-cols-2 gap-2 min-[480px]:grid-cols-4">
           <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-              <Users className="size-3 shrink-0" /> დადასახდელი
+              გადასახდელი
             </p>
             <p className="mt-1 truncate text-lg font-bold tabular-nums text-ink sm:text-xl">
               {formatPrice(stats.totalExpected)}
@@ -116,7 +116,7 @@ export function DebtTracker({
           </div>
           <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-              <TrendingUp className="size-3 shrink-0" /> გადახდილი
+               გადახდილი
             </p>
             <p className="mt-1 truncate text-lg font-bold tabular-nums text-win sm:text-xl">
               {formatPrice(stats.totalPaid)}
@@ -124,7 +124,7 @@ export function DebtTracker({
           </div>
           <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-              <AlertCircle className="size-3 shrink-0" /> დავალიანება
+               დავალიანება
             </p>
             <p className="mt-1 truncate text-lg font-bold tabular-nums text-loss sm:text-xl">
               {formatPrice(stats.totalDebt)}
@@ -132,7 +132,7 @@ export function DebtTracker({
           </div>
           <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
-              <UserIcon className="size-3 shrink-0" /> მოვალეები
+              მოვალეები
             </p>
             <p className="mt-1 truncate text-lg font-bold tabular-nums text-loss sm:text-xl">
               {stats.debtorsCount}

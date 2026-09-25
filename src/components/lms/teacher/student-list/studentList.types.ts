@@ -31,6 +31,8 @@ export interface StudentRecord {
   groupIds: string[];
   monthlyPrice: number;
   priceType?: PriceType;
+  /** მოსალოდნელი გადახდის თარიღი, "YYYY-MM-DD" */
+  paymentDate?: string;
   paidAmount: number;
   lessons: LessonSlot[];
   status: 'active' | 'paused' | 'finished';

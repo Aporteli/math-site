@@ -190,7 +190,6 @@ export function PaymentHistoryModal({
               <h2 className="text-sm font-bold text-ink">გადახდა</h2>
               <p className="truncate text-[11px] font-medium text-muted">
                 {student.firstName} {student.lastName}
-                {isIndividual && <span className="ml-1 text-brass-strong">· ინდივიდუალური</span>}
               </p>
             </div>
           </div>
@@ -215,7 +214,6 @@ export function PaymentHistoryModal({
             </button>
             <div className="min-w-0 flex-1 text-center">
               <p className="truncate text-sm font-bold text-ink">{formatMonthLabel(monthKey)}</p>
-              <p className="text-[11px] font-bold text-win">გადახდილი: {monthPaid} ₾</p>
             </div>
             <button
               type="button"
@@ -274,7 +272,7 @@ export function PaymentHistoryModal({
               </span>
             </button>
 
-            {/* collapsible body */}
+           
             {priceSectionOpen && (
               <div className="space-y-2.5 border-t border-brass/20 p-3.5">
                 <div className="grid grid-cols-2 gap-2">

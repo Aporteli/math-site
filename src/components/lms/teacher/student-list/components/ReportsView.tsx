@@ -45,9 +45,9 @@ const METHOD_ICON = {
 } as const;
 
 const METHOD_COLOR = {
-  cash: 'text-emerald-600 bg-emerald-50 border-emerald-200',
-  card: 'text-sky-600 bg-sky-50 border-sky-200',
-  transfer: 'text-violet-600 bg-violet-50 border-violet-200',
+  cash: 'text-emerald-600 bg-paper border-navy-tint',
+  card: 'text-sky-600 bg-paper border-navy-tint',
+  transfer: 'text-violet-600 bg-paper border-navy-tint',
 } as const;
 
 /* ═══════════════════════════════════════════════════════════

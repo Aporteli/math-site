@@ -50,6 +50,21 @@ export function getTodayLessons(lessons: LessonSlot[]): LessonSlot[] {
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 }
 
+export function countTodayLessonSessions(students: StudentRecord[]): number {
+  const keys = new Set<string>();
+  for (const student of students) {
+    for (const lesson of getTodayLessons(student.lessons)) {
+      keys.add(
+        student.kind === 'individual'
+          ? `individual:${student.id}:${lesson.id}`
+          : `group:${lesson.groupId}:${lesson.dayOfWeek}:${lesson.startTime}:${lesson.endTime}`,
+      );
+    }
+  }
+  return keys.size;
+}
+
+
 export function getGroupName(groupId: string, groups: StudentGroup[]): string {
   return groups.find((g) => g.id === groupId)?.name ?? '—';
 }

@@ -173,6 +173,7 @@ model Enrollment {
   courseId      String
   monthlyPrice  Decimal?         @db.Decimal(10, 2)
   priceType     PriceType        @default(MONTHLY)   // ← ახალი
+  paymentDate   String?          @db.VarChar(10)
   status        EnrollmentStatus @default(ACTIVE)
   enrolledAt    DateTime         @default(now())
 
@@ -529,6 +530,7 @@ model IndividualStudent {
   email         String?
   monthlyPrice  Decimal   @default(0) @db.Decimal(10, 2)
   priceType     PriceType @default(MONTHLY)
+  paymentDate   String?   @db.VarChar(10)
   note          String?   @db.Text
   status        String    @default("active")
   createdAt     DateTime  @default(now())

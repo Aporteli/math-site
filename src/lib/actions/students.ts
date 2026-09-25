@@ -1,9 +1,9 @@
-"use server";
+'use server';
 
-import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth/session";
-import { AssignmentStatus, AssignmentType } from "@prisma/client";
-import { resolveAttachmentUrl } from "@/lib/storage/blob";
+import { prisma } from '@/lib/prisma';
+import { getSession } from '@/lib/auth/session';
+import { AssignmentStatus, AssignmentType } from '@prisma/client';
+import { resolveAttachmentUrl } from '@/lib/storage/blob';
 
 export interface StudentData {
   id: string;
@@ -32,8 +32,8 @@ export interface ProblemPayloadInput {
 async function assertTeacherSession() {
   const session = await getSession();
   const role = (session?.user as any)?.role;
-  if (!session?.user?.id || (role !== "TEACHER" && role !== "ADMIN")) {
-    throw new Error("წვდომა უარყოფილია: საჭიროა მასწავლებლის უფლებები");
+  if (!session?.user?.id || (role !== 'TEACHER' && role !== 'ADMIN')) {
+    throw new Error('წვდომა უარყოფილია: საჭიროა მასწავლებლის უფლებები');
   }
   return session;
 }
@@ -47,24 +47,24 @@ export async function getStudentsAction(): Promise<StudentData[]> {
 
     const students = await prisma.user.findMany({
       where: {
-        role: "STUDENT",
+        role: 'STUDENT',
       },
       select: {
         id: true,
         name: true,
       },
       orderBy: {
-        name: "asc",
+        name: 'asc',
       },
     });
 
     return students.map((s) => ({
       id: s.id,
-      name: s.name || "სახელის გარეშე",
-      grade: "მოსწავლე",
+      name: s.name || 'სახელის გარეშე',
+      grade: 'მოსწავლე',
     }));
   } catch (error) {
-    console.error("Failed to fetch students:", error);
+    console.error('Failed to fetch students:', error);
     return [];
   }
 }
@@ -76,26 +76,26 @@ export async function getEnrolledCourseStudentsAction(courseId: string): Promise
     const enrollments = await prisma.enrollment.findMany({
       where: {
         courseId,
-        status: "ACTIVE",
-        user: { role: "STUDENT" },
+        status: 'ACTIVE',
+        user: { role: 'STUDENT' },
       },
       select: {
         user: {
           select: { id: true, name: true },
         },
       },
-      orderBy: { user: { name: "asc" } },
+      orderBy: { user: { name: 'asc' } },
     });
 
     return enrollments
       .filter((e) => e.user)
       .map((e) => ({
         id: e.user.id,
-        name: e.user.name || "სახელის გარეშე",
-        grade: "მოსწავლე",
+        name: e.user.name || 'სახელის გარეშე',
+        grade: 'მოსწავლე',
       }));
   } catch (error) {
-    console.error("Failed to fetch enrolled course students:", error);
+    console.error('Failed to fetch enrolled course students:', error);
     return [];
   }
 }
@@ -116,14 +116,14 @@ export async function getTeacherClassesAction(): Promise<ClassData[]> {
           select: {
             enrollments: {
               where: {
-                user: { role: "STUDENT" },
-                status: "ACTIVE",
+                user: { role: 'STUDENT' },
+                status: 'ACTIVE',
               },
             },
           },
         },
       },
-      orderBy: { title: "asc" },
+      orderBy: { title: 'asc' },
     });
 
     return courses.map((c) => ({
@@ -132,7 +132,7 @@ export async function getTeacherClassesAction(): Promise<ClassData[]> {
       studentCount: c._count.enrollments,
     }));
   } catch (error) {
-    console.error("Failed to fetch classes:", error);
+    console.error('Failed to fetch classes:', error);
     return [];
   }
 }
@@ -162,7 +162,7 @@ export async function sendProblemToStudentAction({
     const enrollment = await prisma.enrollment.findFirst({
       where: {
         userId: studentId,
-        status: "ACTIVE",
+        status: 'ACTIVE',
       },
       select: { courseId: true },
     });
@@ -173,7 +173,7 @@ export async function sendProblemToStudentAction({
         select: { id: true },
       });
       if (!anyCourse) {
-        return { success: false, error: "სისტემაში კურსი არ მოიძებნა" };
+        return { success: false, error: 'სისტემაში კურსი არ მოიძებნა' };
       }
       courseId = anyCourse.id;
     }
@@ -185,8 +185,8 @@ export async function sendProblemToStudentAction({
         type: AssignmentType.PROBLEM,
         status: AssignmentStatus.PUBLISHED,
         publishedAt: new Date(),
-        title: problem.topic ? `ამოცანა: ${problem.topic}` : "ინდივიდუალური ამოცანა",
-        instructions: instructions?.trim() || "",
+        title: problem.topic ? `ამოცანა: ${problem.topic}` : 'ინდივიდუალური ამოცანა',
+        instructions: instructions?.trim() || '',
         attachmentUrl: resolvedAttachmentUrl,
         customPayload: {
           problemId: problem.id,
@@ -203,14 +203,14 @@ export async function sendProblemToStudentAction({
       data: {
         assignmentId: assignment.id,
         studentId: studentId,
-        status: "DRAFT",
+        status: 'DRAFT',
       },
     });
 
     return { success: true, assignmentId: assignment.id };
   } catch (error: any) {
-    console.error("Failed to send problem to student:", error);
-    return { success: false, error: error.message || "ამოცანის გაგზავნა ვერ მოხერხდა" };
+    console.error('Failed to send problem to student:', error);
+    return { success: false, error: error.message || 'ამოცანის გაგზავნა ვერ მოხერხდა' };
   }
 }
 
@@ -243,8 +243,8 @@ export async function sendProblemToClassAction({
         type: AssignmentType.PROBLEM,
         status: AssignmentStatus.PUBLISHED,
         publishedAt: new Date(),
-        title: problem.topic ? `ამოცანა: ${problem.topic}` : "საკლასო ამოცანა",
-        instructions: instructions?.trim() || "",
+        title: problem.topic ? `ამოცანა: ${problem.topic}` : 'საკლასო ამოცანა',
+        instructions: instructions?.trim() || '',
         attachmentUrl: resolvedAttachmentUrl,
         customPayload: {
           problemId: problem.id,
@@ -260,8 +260,8 @@ export async function sendProblemToClassAction({
     const enrollments = await prisma.enrollment.findMany({
       where: {
         courseId: courseId,
-        status: "ACTIVE",
-        user: { role: "STUDENT" },
+        status: 'ACTIVE',
+        user: { role: 'STUDENT' },
       },
       select: { userId: true },
     });
@@ -271,7 +271,7 @@ export async function sendProblemToClassAction({
         data: enrollments.map((e) => ({
           assignmentId: assignment.id,
           studentId: e.userId,
-          status: "DRAFT",
+          status: 'DRAFT',
         })),
         skipDuplicates: true,
       });
@@ -279,8 +279,8 @@ export async function sendProblemToClassAction({
 
     return { success: true, assignmentId: assignment.id };
   } catch (error: any) {
-    console.error("Failed to send problem to class:", error);
-    return { success: false, error: error.message || "კლასისთვის ამოცანის გაგზავნა ვერ მოხერხდა" };
+    console.error('Failed to send problem to class:', error);
+    return { success: false, error: error.message || 'კლასისთვის ამოცანის გაგზავნა ვერ მოხერხდა' };
   }
 }
 
@@ -293,17 +293,14 @@ export async function getStudentAssignmentsAction() {
     if (!session?.user?.id) return [];
 
     const enrollments = await prisma.enrollment.findMany({
-      where: { userId: session.user.id, status: "ACTIVE" },
+      where: { userId: session.user.id, status: 'ACTIVE' },
       select: { courseId: true },
     });
     const enrolledCourseIds = enrollments.map((e) => e.courseId);
 
     const rawAssignments = await prisma.assignment.findMany({
       where: {
-        OR: [
-          { targetUserId: session.user.id },
-          { targetUserId: null, courseId: { in: enrolledCourseIds } },
-        ],
+        OR: [{ targetUserId: session.user.id }, { targetUserId: null, courseId: { in: enrolledCourseIds } }],
       },
       include: {
         course: { select: { title: true } },
@@ -312,20 +309,20 @@ export async function getStudentAssignmentsAction() {
           include: { grade: true },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     return rawAssignments.map((a) => {
       const payload = (a.customPayload as Record<string, any>) || {};
       const submission = a.submissions[0];
 
-      let problemStatus: "notStarted" | "uploaded" | "submitted" | "graded" = "notStarted";
+      let problemStatus: 'notStarted' | 'uploaded' | 'submitted' | 'graded' = 'notStarted';
       if (submission?.grade) {
-        problemStatus = "graded";
-      } else if (submission?.status === "SUBMITTED" || submission?.status === "RETURNED") {
-        problemStatus = "submitted";
+        problemStatus = 'graded';
+      } else if (submission?.status === 'SUBMITTED' || submission?.status === 'RETURNED') {
+        problemStatus = 'submitted';
       } else if (submission?.attachmentUrl) {
-        problemStatus = "uploaded";
+        problemStatus = 'uploaded';
       }
 
       const teacherImage =
@@ -333,13 +330,15 @@ export async function getStudentAssignmentsAction() {
         payload.imageUrl ||
         payload.attachmentUrl ||
         payload.image ||
-        (typeof payload.promptTex === "string" && payload.promptTex.startsWith("data:image/") ? payload.promptTex : null) ||
+        (typeof payload.promptTex === 'string' && payload.promptTex.startsWith('data:image/')
+          ? payload.promptTex
+          : null) ||
         null;
 
       return {
         id: a.id,
         title: a.title,
-        course: a.course?.title || "ზოგადი კურსი",
+        course: a.course?.title || 'ზოგადი კურსი',
         createdAt: a.createdAt ? a.createdAt.toISOString() : undefined,
         publishedAt: a.publishedAt ? a.publishedAt.toISOString() : undefined,
         dueLabel: a.dueAt ? a.dueAt.toISOString() : undefined,
@@ -351,9 +350,9 @@ export async function getStudentAssignmentsAction() {
         problems: [
           {
             id: a.id,
-            topic: payload.topic || a.title || "მათემატიკა",
-            difficulty: (payload.difficulty || "medium") as "easy" | "medium" | "hard" | "olympiad",
-            promptTex: payload.promptTex || payload.text || a.instructions || "",
+            topic: payload.topic || a.title || 'მათემატიკა',
+            difficulty: (payload.difficulty || 'medium') as 'easy' | 'medium' | 'hard' | 'olympiad',
+            promptTex: payload.promptTex || payload.text || a.instructions || '',
             status: problemStatus,
             fileName: submission?.attachmentUrl || undefined,
             previewUrl: submission?.attachmentUrl || undefined,
@@ -365,7 +364,7 @@ export async function getStudentAssignmentsAction() {
       };
     });
   } catch (error) {
-    console.error("Failed to load student assignments:", error);
+    console.error('Failed to load student assignments:', error);
     return [];
   }
 }
@@ -384,7 +383,7 @@ export async function getStudentCoursesAction(): Promise<StudentCourse[]> {
     if (!session?.user?.id) return [];
 
     const enrollments = await prisma.enrollment.findMany({
-      where: { userId: session.user.id, status: "ACTIVE" },
+      where: { userId: session.user.id, status: 'ACTIVE' },
       select: {
         course: { select: { id: true, title: true } },
       },
@@ -395,7 +394,7 @@ export async function getStudentCoursesAction(): Promise<StudentCourse[]> {
       .filter((course): course is StudentCourse => course !== null)
       .sort((a, b) => a.title.localeCompare(b.title));
   } catch (error) {
-    console.error("Failed to load student courses:", error);
+    console.error('Failed to load student courses:', error);
     return [];
   }
 }

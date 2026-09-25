@@ -5,6 +5,7 @@ import { StudentList } from './StudentList';
 import {
   setStudentPaymentAction,
   updateStudentPriceAction,
+  updateStudentPaymentDateAction,
   updateStudentPhonesAction,
   createIndividualStudentAction,
   updateIndividualStudentAction,
@@ -44,6 +45,16 @@ export function StudentListClient({
 
     const student = students.find((s) => s.id === id);
     if (!student) return;
+
+    if (patch.paymentDate !== undefined) {
+      startTransition(async () => {
+        const res = await updateStudentPaymentDateAction({
+          studentId: id,
+          paymentDate: patch.paymentDate?.trim() ? patch.paymentDate.trim() : null,
+        });
+        if (!res.ok) console.error('[updateStudentPaymentDate]', res.error);
+      });
+    }
 
     if (student.kind === 'individual') {
       const hasSomething =

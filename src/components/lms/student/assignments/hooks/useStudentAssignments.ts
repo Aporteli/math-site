@@ -16,7 +16,6 @@ import {
 import { useAssignmentSubmissions } from './useAssignmentSubmissions';
 
 export function useStudentAssignments(locale: Locale) {
-  // --- მდგომარეობები (State) ---
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [courses, setCourses] = useState<StudentCourse[]>([]);
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
