@@ -14,7 +14,7 @@ import {
   sharedFullSyncPayload,
   type BoardAssignmentMap,
 } from '@/lib/livekit/board-assignment';
-import { participantUserId } from '@/lib/livekit/participant-identity';
+import { isStaffParticipant, participantUserId } from '@/lib/livekit/participant-identity';
 
 const TRACK_STUDENT_HISTORY = false;
 
@@ -82,9 +82,15 @@ export function useWhiteboardDataChannel(opts: Options) {
   // Send the request only when we know the room is connected — otherwise
   // usePublishDataSafe silently drops it (see its ConnectionState guard).
   const sendSyncRequest = useCallback(() => {
-    if (isTeacher || !room) return;
+    if (!room) return;
     if (fullSyncReceivedRef.current === room) return;
     if (room.state !== ConnectionState.Connected) return;
+    // The device already teaching must not ask a newly joined teacher device
+    // for a snapshot. Only a teacher who can already see another staff
+    // connection requests the live board.
+    if (isTeacher && ![...room.remoteParticipants.values()].some((participant) => isStaffParticipant(participant))) {
+      return;
+    }
 
     const publish = publishRef.current;
     if (typeof publish !== 'function') return;
@@ -163,6 +169,14 @@ export function useWhiteboardDataChannel(opts: Options) {
         if (data.type === 'WHITEBOARD_REQUEST_SYNC' && isTeacher) {
           const publish = publishRef.current;
           if (typeof publish !== 'function' || !participant) return;
+          // A second teacher device asks for the live board on join. An empty
+          // local board must not answer, or it would wipe the device that is
+          // already teaching.
+          if (isStaffParticipant(participant)) {
+            const board = pagesRef.current;
+            const pristine = board.length <= 1 && (board[0]?.length ?? 0) === 0;
+            if (pristine) return;
+          }
           const requesterId = participantUserId(participant);
           const assigned = assignedPageByStudent?.[requesterId];
           const payloadToSend =
@@ -222,9 +236,8 @@ export function useWhiteboardDataChannel(opts: Options) {
         }
 
         if (data.type === 'WHITEBOARD_SYNC' && Array.isArray(data.elements)) {
-          if (isTeacher) return;
           const pageIndex = typeof data.pageIndex === 'number' ? data.pageIndex : 0;
-          if (assignedPageIndex !== null && pageIndex !== assignedPageIndex) return;
+          if (!isTeacher && assignedPageIndex !== null && pageIndex !== assignedPageIndex) return;
           isRemoteUpdateRef.current = true;
           if (hasAppliedLiveSyncRef) hasAppliedLiveSyncRef.current = true;
           const adaptedElements = adaptElementsForTheme(data.elements, isDark);
@@ -234,9 +247,15 @@ export function useWhiteboardDataChannel(opts: Options) {
           setPages(updated);
           pagesRef.current = updated;
 
-          // სტუდენტის ისტორია დროებით გამორთულია — მეხსიერების ოპტიმიზაცია.
-          // ჩართე, თუ სტუდენტსაც მისცემ undo-ს.
-          if (TRACK_STUDENT_HISTORY) {
+          // The other teacher device must treat the incoming page as the current
+          // history tip. Otherwise a local undo would republish the pre-sync
+          // page and erase the strokes drawn on the first device.
+          if (isTeacher) {
+            historyMapRef.current.set(pageIndex, { states: [adaptedElements], index: 0 });
+            updateUndoRedoState();
+          } else if (TRACK_STUDENT_HISTORY) {
+            // სტუდენტის ისტორია დროებით გამორთულია — მეხსიერების ოპტიმიზაცია.
+            // ჩართე, თუ სტუდენტსაც მისცემ undo-ს.
             const pHist = historyMapRef.current.get(pageIndex) || { states: [], index: -1 };
             pHist.states.push(adaptedElements);
             pHist.index = pHist.states.length - 1;
@@ -273,9 +292,21 @@ export function useWhiteboardDataChannel(opts: Options) {
     room.on(RoomEvent.Connected, sendSyncRequest);
     room.on(RoomEvent.Reconnected, sendSyncRequest);
 
-    // If a student connects before the teacher is ready to answer, re-request
-    // as soon as a participant appears (e.g. the teacher joins after us).
-    room.on(RoomEvent.ParticipantConnected, sendSyncRequest);
+    // Students re-request when someone joins, in case the teacher arrived
+    // after them. A teacher device requests only while its own board is still
+    // empty, so the session that is already teaching does not pull a snapshot
+    // back from the device that just joined.
+    const handleParticipantConnected = (participant: RemoteParticipant) => {
+      if (!isTeacher) {
+        sendSyncRequest();
+        return;
+      }
+      if (!isStaffParticipant(participant)) return;
+      const board = pagesRef.current;
+      const pristine = board.length <= 1 && (board[0]?.length ?? 0) === 0;
+      if (pristine) sendSyncRequest();
+    };
+    room.on(RoomEvent.ParticipantConnected, handleParticipantConnected);
 
     // Also try immediately — the room may already be connected when this
     // effect runs (e.g. hot reload, remount while connected).
@@ -285,7 +316,7 @@ export function useWhiteboardDataChannel(opts: Options) {
       room.off(RoomEvent.DataReceived, handleData);
       room.off(RoomEvent.Connected, sendSyncRequest);
       room.off(RoomEvent.Reconnected, sendSyncRequest);
-      room.off(RoomEvent.ParticipantConnected, sendSyncRequest);
+      room.off(RoomEvent.ParticipantConnected, handleParticipantConnected);
       if (syncRetryTimerRef.current) {
         clearTimeout(syncRetryTimerRef.current);
         syncRetryTimerRef.current = null;

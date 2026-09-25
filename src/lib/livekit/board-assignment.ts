@@ -43,7 +43,12 @@ export function destinationsForPage(
 
   const destinations: string[] = [];
   for (const participant of room.remoteParticipants.values()) {
-    if (isStaffParticipant(participant)) continue;
+    // Another device of the same teacher must see the board too. Students are
+    // filtered by assignment; staff always receive the page being drawn.
+    if (isStaffParticipant(participant)) {
+      destinations.push(participant.identity);
+      continue;
+    }
     const userId = participantUserId(participant);
     const assigned = assignedPageByStudent[userId];
     if (assigned === pageIndex || assigned === undefined) {

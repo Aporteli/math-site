@@ -25,33 +25,50 @@ export function useImageInput({
       const img = new window.Image();
       img.src = dataUrl;
       img.onload = () => {
-        const maxW = 450;
-        const maxH = 450;
-        let w = img.width || 300;
-        let h = img.height || 200;
+        // How big the picture sits on the board. The stored bitmap stays sharper
+        // than this so text in a pasted screenshot is still readable.
+        const maxDisplay = 1200;
+        const maxBitmap = 2048;
+        const naturalW = img.naturalWidth || img.width || 300;
+        const naturalH = img.naturalHeight || img.height || 200;
 
-        if (w > maxW || h > maxH) {
-          const ratio = Math.min(maxW / w, maxH / h);
-          w = Math.round(w * ratio);
-          h = Math.round(h * ratio);
+        let displayW = naturalW;
+        let displayH = naturalH;
+        if (displayW > maxDisplay || displayH > maxDisplay) {
+          const ratio = Math.min(maxDisplay / displayW, maxDisplay / displayH);
+          displayW = Math.round(displayW * ratio);
+          displayH = Math.round(displayH * ratio);
         }
 
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, w, h);
-        const compressedSrc = canvas.toDataURL('image/jpeg', 0.82);
+        let src = dataUrl;
+        if (naturalW > maxBitmap || naturalH > maxBitmap) {
+          const ratio = Math.min(maxBitmap / naturalW, maxBitmap / naturalH);
+          const bitmapW = Math.max(1, Math.round(naturalW * ratio));
+          const bitmapH = Math.max(1, Math.round(naturalH * ratio));
+          const canvas = document.createElement('canvas');
+          canvas.width = bitmapW;
+          canvas.height = bitmapH;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          const keepPng = dataUrl.startsWith('data:image/png');
+          if (!keepPng) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, bitmapW, bitmapH);
+          }
+          ctx.drawImage(img, 0, 0, bitmapW, bitmapH);
+          src = keepPng ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.92);
+        }
 
         const newImageElem: CanvasElement = {
           id: `el_img_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
           type: 'image',
           x: pos ? pos.x : 100,
           y: pos ? pos.y : 100,
-          width: w,
-          height: h,
-          src: compressedSrc,
+          width: displayW,
+          height: displayH,
+          src,
           stroke: 'transparent',
           strokeWidth: 0,
         };

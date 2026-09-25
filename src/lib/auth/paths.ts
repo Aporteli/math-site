@@ -25,6 +25,7 @@ export function dashboardHomeForRole(role: UserRole) {
   }
 }
 
+// ავტორიზაციის შემდეგ წყვეტს, საით გადაამისამართოს მომხმარებელი (ამოწმებს callbackUrl-ს, ენასა და წვდომის უფლებებს)
 export function resolvePostLoginHref(role: UserRole, locale: Locale, callbackUrl?: string | null) {
   const home = localePath(locale, dashboardHomeForRole(role));
   const pathname = extractPathname(callbackUrl);

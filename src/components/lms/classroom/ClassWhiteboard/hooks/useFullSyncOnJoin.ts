@@ -29,6 +29,17 @@ export function useFullSyncOnJoin(
   useEffect(() => {
     if (!isTeacher || !room) return;
 
+    const sendLiveBoardToStaff = (participant: RemoteParticipant) => {
+      const board = pagesRef.current;
+      const pristine = board.length <= 1 && (board[0]?.length ?? 0) === 0;
+      if (pristine) return;
+      void publishRef.current(
+        sharedFullSyncPayload(board, currentPageIndexRef.current),
+        true,
+        [participant.identity],
+      );
+    };
+
     const sendToParticipant = (participant: RemoteParticipant) => {
       if (isStaffParticipant(participant)) return;
       const userId = participantUserId(participant);
@@ -43,6 +54,13 @@ export function useFullSyncOnJoin(
     };
 
     const handleParticipantConnected = (participant: RemoteParticipant) => {
+      // A second teacher device joins an existing session. Push the live board
+      // to that device only — do not let its own (often empty) snapshot fan
+      // back out to students from the mount-time sync below.
+      if (isStaffParticipant(participant)) {
+        sendLiveBoardToStaff(participant);
+        return;
+      }
       sendToParticipant(participant);
     };
 

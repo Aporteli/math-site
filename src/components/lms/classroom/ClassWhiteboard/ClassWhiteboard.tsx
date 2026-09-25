@@ -200,10 +200,20 @@ export function ClassWhiteboard({
   }, [isTeacher, pages.length, setPageCount]);
 
   const assignedSnapshot = JSON.stringify(assignedPageByStudent);
+  const didBroadcastRef = useRef(false);
   useEffect(() => {
     if (!isTeacher) return;
+    // The first broadcast runs on mount, often before the saved board has
+    // loaded. A second teacher device must not push that empty snapshot over
+    // the live board already being shown to the class.
+    if (!didBroadcastRef.current) {
+      didBroadcastRef.current = true;
+      const otherStaffPresent =
+        !!room && [...room.remoteParticipants.values()].some((participant) => isStaffParticipant(participant));
+      if (otherStaffPresent) return;
+    }
     broadcastImplRef.current();
-  }, [assignedSnapshot, isTeacher]);
+  }, [assignedSnapshot, isTeacher, room]);
 
   const breakoutWasActive = useRef(breakout.breakout.active);
   useEffect(() => {
