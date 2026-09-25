@@ -25,6 +25,9 @@ export function NavLinks({
 }: NavLinksProps) {
   const pathname = usePathname();
   const isMobile = variant === "mobile";
+  const [openMobileMenuId, setOpenMobileMenuId] = useState<NavMenuId | null>(
+    null,
+  );
 
   return (
     <ul
@@ -42,13 +45,23 @@ export function NavLinks({
         const menuItems = menuId ? Object.entries(menus[menuId]) : null;
 
         if (isMobile) {
+          const isMenuOpen = menuId ? openMobileMenuId === menuId : false;
+
           return (
             <li key={link.id}>
               <Link
                 href={href}
                 prefetch={false}
-                onClick={onNavigate}
+                onClick={(event) => {
+                  if (menuItems && menuId) {
+                    event.preventDefault();
+                    setOpenMobileMenuId(isMenuOpen ? null : menuId);
+                    return;
+                  }
+                  onNavigate?.();
+                }}
                 aria-current={active ? "page" : undefined}
+                aria-expanded={menuItems ? isMenuOpen : undefined}
                 className={[
                   "flex items-center gap-1 rounded-xl px-3 py-2.5 text-base transition-colors",
                   active
@@ -58,10 +71,15 @@ export function NavLinks({
               >
                 {labels[link.id]}
                 {menuItems && (
-                  <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
+                  <ChevronDown
+                    className={`size-3.5 shrink-0 transition-transform duration-200 ${
+                      isMenuOpen ? "rotate-180" : ""
+                    }`}
+                    aria-hidden="true"
+                  />
                 )}
               </Link>
-              {menuItems && menuId && (
+              {menuItems && menuId && isMenuOpen && (
                 <ul className="mb-1 ml-3 space-y-0.5 border-l border-hairline pl-3">
                   {menuItems.map(([itemId, itemLabel]) => {
                     const itemHref = localePath(
@@ -74,7 +92,10 @@ export function NavLinks({
                         <Link
                           href={itemHref}
                           prefetch={false}
-                          onClick={onNavigate}
+                          onClick={() => {
+                            setOpenMobileMenuId(null);
+                            onNavigate?.();
+                          }}
                           className={[
                             "block rounded-lg px-3 py-2 text-sm transition-colors duration-200",
                             pathname === itemHref

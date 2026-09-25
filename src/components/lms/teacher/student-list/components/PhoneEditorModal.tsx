@@ -36,11 +36,7 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
     }
 
     startTransition(async () => {
-      const res = await onSave(
-        student.id,
-        phone.trim() || null,
-        parentPhone.trim() || null,
-      );
+      const res = await onSave(student.id, phone.trim() || null, parentPhone.trim() || null);
       if (!res.ok) {
         setError(res.error ?? 'შეცდომა');
         return;
@@ -61,23 +57,23 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/45 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
-      onClick={onClose}
-    >
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-3 backdrop-blur-[2px] sm:p-4"
+      onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="phone-editor-title"
-        className="flex max-h-[min(92dvh,100%)] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-hairline bg-surface shadow-xl sm:rounded-3xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+        className="flex max-h-[min(92dvh,100%)] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-xl"
+        onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
           <div className="flex items-center gap-2.5">
             <span className="inline-flex size-9 items-center justify-center rounded-xl border border-hairline bg-navy-tint text-navy">
               <Phone className="h-4 w-4" />
             </span>
             <div className="min-w-0">
-              <h2 id="phone-editor-title" className="text-sm font-bold text-ink">ტელეფონის ნომრები</h2>
+              <h2 id="phone-editor-title" className="text-sm font-bold text-ink">
+                ტელეფონის ნომრები
+              </h2>
               <p className="truncate text-[11px] font-medium text-muted">
                 {student.firstName} {student.lastName}
               </p>
@@ -86,8 +82,7 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-paper hover:text-ink"
-          >
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-paper hover:text-ink">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -113,20 +108,15 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
                   type="button"
                   onClick={handleClearStudentPhone}
                   title="წაშლა"
-                  className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-loss-tint hover:text-loss"
-                >
+                  className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-loss-tint hover:text-loss">
                   <Trash2 className="h-3 w-3" />
                 </button>
               ) : null}
             </div>
             {student.phone ? (
-              <p className="mt-1 text-[10px] font-medium text-muted">
-                მიმდინარე: {student.phone}
-              </p>
+              <p className="mt-1 text-[10px] font-medium text-muted">მიმდინარე: {student.phone}</p>
             ) : (
-              <p className="mt-1 text-[10px] font-medium text-muted">
-                ჯერ არ არის დამატებული
-              </p>
+              <p className="mt-1 text-[10px] font-medium text-muted">ჯერ არ არის დამატებული</p>
             )}
           </div>
 
@@ -149,28 +139,19 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
                   type="button"
                   onClick={handleClearParentPhone}
                   title="წაშლა"
-                  className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-loss-tint hover:text-loss"
-                >
+                  className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-loss-tint hover:text-loss">
                   <Trash2 className="h-3 w-3" />
                 </button>
               ) : null}
             </div>
             {student.parentPhone ? (
-              <p className="mt-1 text-[10px] font-medium text-muted">
-                მიმდინარე: {student.parentPhone}
-              </p>
+              <p className="mt-1 text-[10px] font-medium text-muted">მიმდინარე: {student.parentPhone}</p>
             ) : (
-              <p className="mt-1 text-[10px] font-medium text-muted">
-                ჯერ არ არის დამატებული
-              </p>
+              <p className="mt-1 text-[10px] font-medium text-muted">ჯერ არ არის დამატებული</p>
             )}
           </div>
 
-          {error ? (
-            <p className="rounded-lg bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">
-              {error}
-            </p>
-          ) : null}
+          {error ? <p className="rounded-lg bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">{error}</p> : null}
         </div>
 
         {/* ═══ Footer ═══ */}
@@ -179,16 +160,14 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="min-h-10 cursor-pointer rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm font-bold text-body transition hover:bg-paper disabled:opacity-50"
-          >
+            className="min-h-10 cursor-pointer rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm font-bold text-body transition hover:bg-paper disabled:opacity-50">
             გაუქმება
           </button>
           <button
             type="button"
             onClick={handleSave}
             disabled={isPending}
-            className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong disabled:opacity-50"
-          >
+            className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong disabled:opacity-50">
             <Save className="h-3.5 w-3.5" />
             {isPending ? 'ინახება...' : 'შენახვა'}
           </button>

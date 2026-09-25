@@ -34,7 +34,7 @@
 
   /* Text / Ink */
   --color-ink: #1a1a1a; /* darker than c-font for headings; lichess's c-font-clearer is pure black */
-  --color-hero: #5e5e5e; /* c-font-page */
+  --color-hero: #bdbdbd; /* c-font-page */
   --color-body: #4c4c4c; /* c-font */
   --color-muted: #787878; /* c-font-dim */
 
