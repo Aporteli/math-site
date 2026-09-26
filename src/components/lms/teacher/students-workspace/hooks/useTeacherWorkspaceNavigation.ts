@@ -69,7 +69,6 @@ export function useTeacherWorkspaceNavigation({
     }
   }, [students, isReady, viewedKeys]);
 
-  // Selectors
   const filteredCourses = useMemo(
     () => courses.filter((c) => c.title.toLowerCase().includes(classSearchQuery.toLowerCase())),
     [courses, classSearchQuery],

@@ -3,7 +3,12 @@
 import { useState } from 'react';
 import { LiveKitRoom } from '@livekit/components-react';
 import { RefreshCw } from 'lucide-react';
-import { DisconnectReason } from 'livekit-client';
+import {
+  DisconnectReason,
+  VideoPresets,
+  type TrackPublishDefaults,
+  type VideoCaptureOptions,
+} from 'livekit-client';
 import { AudioIsolationListener } from '../AudioIsolationListener';
 import { ChatBackgroundListener } from '../ChatBackgroundListener';
 import { ConnectionStatusBadge } from '../ConnectionStatusBadge';
@@ -24,6 +29,30 @@ import { ReportPresence } from '../../breakout/ReportPresence';
 import { useBreakout } from '../../breakout/BreakoutContext';
 import type { ClassroomVideoPanelProps } from './types';
 import '@livekit/components-styles';
+
+const primaryVideoCapture: VideoCaptureOptions = {
+  resolution: { width: 1280, height: 720 },
+};
+
+/**
+ * The later device is the phone camera. Exact 1280×720 makes that camera scale
+ * a small native frame up, and simulcast then leaves students on the lowest
+ * layer, so the feed looks blurry. Ideal capture and one full-resolution
+ * encoding stay sharp. The first device is unchanged.
+ */
+const secondaryVideoCapture = {
+  resolution: { width: 1280, height: 720 },
+  width: { ideal: 1280, max: 1280 },
+  height: { ideal: 720, max: 720 },
+  frameRate: { ideal: 30 },
+} as VideoCaptureOptions;
+
+const secondaryPublishDefaults: TrackPublishDefaults = {
+  dtx: false,
+  simulcast: false,
+  degradationPreference: 'maintain-resolution',
+  videoEncoding: VideoPresets.h720.encoding,
+};
 
 /** Disconnects worth explaining instead of silently closing the whole classroom. */
 const DISCONNECT_NOTICE: Partial<Record<DisconnectReason, string>> = {
@@ -88,18 +117,11 @@ export function ClassroomVideoPanel({
       token={token}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
       options={{
-        videoCaptureDefaults: { resolution: { width: 1280, height: 720 } },
-        // LiveKit's defaults turn on experimental voice isolation and DTX.
-        // Voice isolation gates the mic; DTX then drops what it thinks is
-        // silence. The other person hears a quiet, chopped voice even when
-        // the microphone itself is fine. Echo cancellation, noise
-        // suppression, and auto gain stay on.
+        videoCaptureDefaults: secondary ? secondaryVideoCapture : primaryVideoCapture,
         audioCaptureDefaults: {
           voiceIsolation: false,
         },
-        publishDefaults: {
-          dtx: false,
-        },
+        publishDefaults: secondary ? secondaryPublishDefaults : { dtx: false },
       }}
       data-lk-theme="default"
       className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden"

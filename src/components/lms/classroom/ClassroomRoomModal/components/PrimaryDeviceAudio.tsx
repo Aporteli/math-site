@@ -2,19 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 import { RoomAudioRenderer, useLocalParticipant, useRoomContext } from '@livekit/components-react';
-import { RoomEvent } from 'livekit-client';
+import { RoomEvent, Track } from 'livekit-client';
 import { useAudioDeviceRole } from '../hooks/useAudioDeviceRole';
 
-/**
- * Plays remote audio only on the account's first connection. A later device
- * in the same room would otherwise rebroadcast that sound into the first
- * microphone and howl.
- */
 export function PrimaryRoomAudio({ preferSilence }: { preferSilence: boolean }) {
   const role = useAudioDeviceRole();
   if (role === 'secondary') return null;
-  // Join times are still settling, and this token was already marked as the
-  // later device — stay quiet so the phone speaker cannot feed the first mic.
   if (role === 'pending' && preferSilence) return null;
   return <RoomAudioRenderer />;
 }
@@ -52,6 +45,27 @@ export function SecondaryCaptureGuard() {
       void localParticipant.setCameraEnabled(false);
     }
   }, [role, localParticipant]);
+
+  useEffect(() => {
+    if (role !== 'secondary') return;
+
+    const preferDetail = () => {
+      const mediaTrack = localParticipant
+        .getTrackPublication(Track.Source.Camera)
+        ?.track?.mediaStreamTrack;
+      if (mediaTrack && mediaTrack.contentHint !== 'detail') {
+        mediaTrack.contentHint = 'detail';
+      }
+    };
+
+    preferDetail();
+    room.on(RoomEvent.LocalTrackPublished, preferDetail);
+    room.on(RoomEvent.TrackUnmuted, preferDetail);
+    return () => {
+      room.off(RoomEvent.LocalTrackPublished, preferDetail);
+      room.off(RoomEvent.TrackUnmuted, preferDetail);
+    };
+  }, [role, room, localParticipant]);
 
   return null;
 }

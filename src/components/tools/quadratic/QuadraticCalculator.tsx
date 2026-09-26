@@ -275,7 +275,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
   const graphExpr = graphMeta && solveFor === 'x' ? `${graphMeta.a}*x^2 + (${graphMeta.b})*x + (${graphMeta.c})` : '';
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6">
+    <div className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <BackButton href="/ka/tools" />
       <ToolHeader
         title="კვადრატული განტოლების ამომხსნელი"
@@ -286,7 +286,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
 
       {/* აქედან ეგრევე იწყება კალკულატორის Form / Input ბლოკი */}
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[1fr_1.15fr]">
+      <div className="mt-6 grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         {/* ─── Left: input ─── */}
         <div className="space-y-4">
           <section className={panelClass}>

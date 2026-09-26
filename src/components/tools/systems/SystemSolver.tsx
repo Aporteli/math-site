@@ -239,7 +239,7 @@ export function SystemSolver({ locale, copy, title, description }: Props) {
   const solveForLabel = variables.join(', ');
 
   return (
-    <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
+    <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
       <BackButton href={`/${locale}/tools`} />
       <ToolHeader
         title={title}
@@ -248,7 +248,7 @@ export function SystemSolver({ locale, copy, title, description }: Props) {
         icon={<Calculator className="size-4" />}
       />
 
-      <div className="grid gap-5 lg:grid-cols-[1.05fr_1fr]">
+      <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         {/* ══════════ Left: Input ══════════ */}
         <div className="space-y-4">
           <section className={panelClass}>
@@ -497,7 +497,7 @@ export function SystemSolver({ locale, copy, title, description }: Props) {
                 </section>
               )}
 
-              {/* Steps */}
+              {/* Steps — ყველა ღია, სქროლადი კონტეინერით */}
               {result.methods && result.methods.length > 0 && (
                 <section className={panelClass}>
                   <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
@@ -524,7 +524,7 @@ export function SystemSolver({ locale, copy, title, description }: Props) {
                   )}
 
                   {activeMethodData && (
-                    <div className="space-y-3">
+                    <div className="max-h-[70vh] space-y-3 overflow-y-auto pr-1 lg:max-h-[calc(100vh-320px)]">
                       {activeMethodData.steps.map((st, idx) => (
                         <div
                           key={idx}

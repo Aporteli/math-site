@@ -119,9 +119,7 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
               status: sub.status || a.status,
               createdAt: a.createdAt.toISOString(),
               promptTex: String(payload.promptTex || payload.text || a.instructions || ''),
-              // მასწავლებლის მიერ გაგზავნილი სურათი ან დაფის კადრი
               problemImageUrl: a.attachmentUrl || (typeof payload.imageUrl === 'string' ? payload.imageUrl : null),
-              // მოსწავლის მიერ ატვირთული პასუხი
               studentAttachmentUrl: sub.attachmentUrl || null,
               commentCount: a._count?.comments ?? 0,
             };
