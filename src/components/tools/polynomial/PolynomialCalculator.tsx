@@ -1,22 +1,7 @@
 'use client';
 
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from 'react';
-import {
-  Check,
-  Copy,
-  Delete,
-  Divide,
-  History,
-  Keyboard,
-  RotateCcw,
-  X,
-} from 'lucide-react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { Check, Copy, Delete, Divide, History, Keyboard, RotateCcw, X, Calculator, Sparkles } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 import type { Dictionary } from '@/i18n/types';
 import {
@@ -26,10 +11,13 @@ import {
   type PolynomialHistoryItem,
   type PolyResult,
 } from './polynomial';
+import { ToolHeader } from '@/components/ui/ToolHeader';
+import { BackButton } from '@/components/ui/BackButton';
 
 type Copy = Dictionary['polynomialTool'];
 
 interface Props {
+  locale: string;
   copy: Copy;
 }
 
@@ -51,7 +39,12 @@ function applyKey(current: string, key: string): string {
   return current + key;
 }
 
-export function PolynomialCalculator({ copy, title, description }: Props & { title: string; description: string }) {
+export function PolynomialCalculator({
+  locale,
+  copy,
+  title,
+  description,
+}: Props & { title: string; description: string }) {
   const [expression, setExpression] = useState('x^3 - 6x^2 + 11x - 6');
   const [divisor, setDivisor] = useState('x - 1');
   const [variable, setVariable] = useState('x');
@@ -70,8 +63,10 @@ export function PolynomialCalculator({ copy, title, description }: Props & { tit
   const expressionRef = useRef<HTMLInputElement>(null);
   const divisorRef = useRef<HTMLInputElement>(null);
 
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+  const panelClass =
+    'rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
 
   /* ── Load history on mount ── */
   useEffect(() => {
@@ -111,6 +106,14 @@ export function PolynomialCalculator({ copy, title, description }: Props & { tit
     e?.preventDefault();
     if (!expression.trim()) return;
 
+    // ── ვალიდაცია: გამყოფი ნულის ტოლია ──
+    const divClean = divisor.replace(/\s+/g, '');
+    if (divClean && /^[+\-]?0(\.0*)?$/.test(divClean)) {
+      setError(copy.divisorZeroError);
+      setResult(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -119,33 +122,20 @@ export function PolynomialCalculator({ copy, title, description }: Props & { tit
       const res = await fetch(`${API_BASE}/api/polynomial/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          expression,
-          variable,
-          divisor,
-        }),
+        body: JSON.stringify({ expression, variable, divisor }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || copy.invalidEquation);
 
       setResult(data);
-      setActiveTab(data.division ? 'factor' : 'factor');
+      setActiveTab('factor');
 
-      const item: PolynomialHistoryItem = {
-        expression,
-        variable,
-        divisor,
-      };
+      const item: PolynomialHistoryItem = { expression, variable, divisor };
       setHistory((prev) => {
         const next = [
           item,
           ...prev.filter(
-            (h) =>
-              !(
-                h.expression === item.expression &&
-                h.divisor === item.divisor &&
-                h.variable === item.variable
-              ),
+            (h) => !(h.expression === item.expression && h.divisor === item.divisor && h.variable === item.variable),
           ),
         ].slice(0, 10);
         try {
@@ -183,6 +173,13 @@ export function PolynomialCalculator({ copy, title, description }: Props & { tit
   }
 
   async function handleSolveWith(expr: string, v: string, div: string) {
+    const divClean = div.replace(/\s+/g, '');
+    if (divClean && /^[+\-]?0(\.0*)?$/.test(divClean)) {
+      setError(copy.divisorZeroError);
+      setResult(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -238,15 +235,10 @@ export function PolynomialCalculator({ copy, title, description }: Props & { tit
     setCopied(key);
   }
 
-  const activeSteps =
-    result && activeTab
-      ? result.operations[activeTab] ?? []
-      : [];
+  const activeSteps = result && activeTab ? (result.operations[activeTab] ?? []) : [];
 
   const availableTabs: TabId[] = result
-    ? (['factor', 'roots', 'division'] as TabId[]).filter(
-        (t) => (result.operations[t]?.length ?? 0) > 0,
-      )
+    ? (['factor', 'roots', 'division'] as TabId[]).filter((t) => (result.operations[t]?.length ?? 0) > 0)
     : [];
 
   const exampleButtons = (
@@ -257,7 +249,7 @@ export function PolynomialCalculator({ copy, title, description }: Props & { tit
           key={ex.label}
           type="button"
           onClick={() => applyExample(ex)}
-          className="text-xs font-semibold text-navy hover:text-navy-strong dark:text-sky-400">
+          className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
           {ex.label}
         </button>
       ))}
@@ -265,317 +257,311 @@ export function PolynomialCalculator({ copy, title, description }: Props & { tit
   );
 
   return (
-    <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
-      {/* ══════════ LEFT: Input ══════════ */}
-      <section
-        className="rounded-2xl border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800"
-        onKeyDown={onExpressionKeyDown}>
-        <div ref={keyboardRootRef}>
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-ink">{copy.inputTitle}</h2>
-            <button
-              type="button"
-              aria-expanded={showKeyboard}
-              aria-controls={keyboardTitleId}
-              aria-haspopup="true"
-              onClick={() => setShowKeyboard((o) => !o)}
-              className={
-                'inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ' +
-                (showKeyboard
-                  ? 'border-navy/30 bg-navy text-white hover:bg-navy-strong'
-                  : 'border-hairline bg-white text-ink hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800')
-              }>
-              <Keyboard className="size-3.5" aria-hidden="true" />
-              {copy.keyboard}
-            </button>
-          </div>
-
-          <form onSubmit={handleSolve} className="space-y-3">
-            {/* Variable */}
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-muted">
-                {copy.variableLabel}
-              </label>
-              <div className="flex flex-wrap gap-1">
-                {POLY_VARIABLES.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setVariable(v)}
-                    className={
-                      'rounded-lg border px-3 py-1.5 text-xs font-semibold font-mono transition-colors ' +
-                      (variable === v
-                        ? 'border-navy bg-navy text-white'
-                        : 'border-hairline bg-white text-muted hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800')
-                    }>
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* P(x) input */}
-            <div>
-              <label htmlFor="poly-expr" className="mb-1 block text-xs font-semibold text-muted">
-                P({variable})
-              </label>
-              <input
-                id="poly-expr"
-                ref={expressionRef}
-                value={expression}
-                onChange={(e) => setExpression(e.target.value)}
-                onFocus={() => setActiveField('expression')}
-                placeholder={copy.expressionPlaceholder}
-                spellCheck={false}
-                autoComplete="off"
-                inputMode={showKeyboard ? 'none' : 'text'}
-                className={fieldClass}
-              />
-            </div>
-
-            {/* Divisor input */}
-            <div>
-              <label htmlFor="poly-div" className="mb-1 block text-xs font-semibold text-muted">
-                {copy.divisorLabel}
-              </label>
-              <input
-                id="poly-div"
-                ref={divisorRef}
-                value={divisor}
-                onChange={(e) => setDivisor(e.target.value)}
-                onFocus={() => setActiveField('divisor')}
-                placeholder={copy.divisorPlaceholder}
-                spellCheck={false}
-                autoComplete="off"
-                inputMode={showKeyboard ? 'none' : 'text'}
-                className={fieldClass}
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-2 pt-1">
+    <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
+      <BackButton href={`/${locale}/tools`} />
+      <ToolHeader
+        title={title}
+        description={description}
+        category={copy.eyebrow}
+        icon={<Calculator className="size-4" />}
+      />
+      <div className="my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+        <section
+          className="rounded-2xl border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800"
+          onKeyDown={onExpressionKeyDown}>
+          <div ref={keyboardRootRef}>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-ink">{copy.inputTitle}</h2>
               <button
-                type="submit"
-                disabled={loading || !expression.trim()}
-                className="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-50">
-                <Divide className="size-4" aria-hidden="true" />
-                {loading ? copy.solving : copy.solveButton}
+                type="button"
+                aria-expanded={showKeyboard}
+                aria-controls={keyboardTitleId}
+                aria-haspopup="true"
+                onClick={() => setShowKeyboard((o) => !o)}
+                className={
+                  'inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ' +
+                  (showKeyboard
+                    ? 'border-navy/30 bg-navy text-white hover:bg-navy-strong'
+                    : 'border-hairline bg-white text-ink hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800')
+                }>
+                <Keyboard className="size-3.5" aria-hidden="true" />
+                {copy.keyboard}
               </button>
-              <button type="button" onClick={reset} className={chipClass}>
-                <RotateCcw className="size-3.5" aria-hidden="true" />
-                {copy.reset}
-              </button>
-            </div>
-          </form>
-
-          {/* Keyboard popup */}
-          {showKeyboard && (
-            <PolynomialKeyboard
-              copy={copy}
-              titleId={keyboardTitleId}
-              fieldLabel={
-                activeField === 'expression'
-                  ? `P(${variable})`
-                  : copy.divisorLabel
-              }
-              value={activeField === 'expression' ? expression : divisor}
-              onKey={insertKey}
-              onFieldChange={setActiveField}
-              activeField={activeField}
-              onClose={() => setShowKeyboard(false)}
-            />
-          )}
-
-          {/* Examples */}
-          <div className="mt-4 border-t border-hairline pt-3 dark:border-slate-800">
-            {exampleButtons}
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div className="mt-3 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
-              <span className="mt-0.5 shrink-0">⚠</span>
-              <span>{error}</span>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ══════════ RIGHT: Results ══════════ */}
-      <section className="rounded-2xl border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800">
-        {loading && (
-          <div className="flex min-h-[200px] items-center justify-center">
-            <span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-navy border-t-transparent" />
-          </div>
-        )}
-
-        {!loading && !result && (
-          <div className="space-y-3">
-            <p className="text-sm text-muted">{copy.emptyResult}</p>
-            {exampleButtons}
-          </div>
-        )}
-
-        {result && !loading && (
-          <div className="space-y-5">
-            {/* Summary card */}
-            <div>
-              <p className="mb-2 text-xs font-semibold text-muted">{copy.resultTitle}</p>
-              <div className="space-y-2">
-                <ResultRow
-                  label={copy.expandedForm}
-                  tex={result.expanded_latex}
-                  copyKey="expanded"
-                  copied={copied}
-                  onCopy={copyText}
-                  copyLabel={copy.copyLatex}
-                  copiedLabel={copy.copied}
-                />
-                <ResultRow
-                  label={copy.factoredForm}
-                  tex={result.factored_latex}
-                  copyKey="factored"
-                  copied={copied}
-                  onCopy={copyText}
-                  copyLabel={copy.copyLatex}
-                  copiedLabel={copy.copied}
-                />
-                <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
-                  <span>
-                    {copy.degree}:{' '}
-                    <span className="font-mono text-ink dark:text-slate-200">
-                      {result.degree}
-                    </span>
-                  </span>
-                  <span>
-                    {copy.leadingCoeff}:{' '}
-                    <span className="font-mono text-ink dark:text-slate-200">
-                      {result.leading_coeff}
-                    </span>
-                  </span>
-                </div>
-              </div>
             </div>
 
-            {/* Roots */}
-            {result.roots.length > 0 && (
+            <form onSubmit={handleSolve} className="space-y-3">
+              {/* Variable */}
               <div>
-                <p className="mb-2 text-xs font-semibold text-muted">
-                  {copy.rootsTitle}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {result.roots.map((r, i) => (
-                    <span
-                      key={i}
-                      className="rounded-lg border border-hairline bg-white px-3 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-700">
-                      <KatexPreview tex={`${variable} = ${r}`} />
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Division result */}
-            {result.division && (
-              <div>
-                <p className="mb-2 text-xs font-semibold text-muted">
-                  {copy.divisionTitle}
-                </p>
-                <div className="overflow-x-auto rounded-xl border border-hairline bg-white px-3 py-3 dark:bg-slate-900 dark:border-slate-700">
-                  <KatexPreview
-                    tex={`\\text{${copy.quotient}}:\\; ${result.division.quotient_latex}`}
-                  />
-                  <div className="mt-2">
-                    <KatexPreview
-                      tex={`\\text{${copy.remainder}}:\\; ${result.division.remainder_latex}`}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step tabs */}
-            {availableTabs.length > 0 && (
-              <div>
-                <p className="mb-2 text-xs font-semibold text-muted">
-                  {copy.stepsTitle}
-                </p>
-                <div className="mb-3 flex flex-wrap gap-1.5">
-                  {availableTabs.map((t) => (
+                <label className="mb-1 block text-xs font-semibold text-muted">{copy.variableLabel}</label>
+                <div className="flex flex-wrap gap-1">
+                  {POLY_VARIABLES.map((v) => (
                     <button
-                      key={t}
+                      key={v}
                       type="button"
-                      onClick={() => setActiveTab(t)}
+                      onClick={() => setVariable(v)}
                       className={
-                        'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ' +
-                        (activeTab === t
-                          ? 'bg-navy text-white dark:bg-sky-600'
-                          : 'border border-hairline text-muted hover:text-ink dark:border-slate-700')
+                        'rounded-lg border px-3 py-1.5 text-xs font-semibold font-mono transition-colors ' +
+                        (variable === v
+                          ? 'border-navy bg-navy text-white'
+                          : 'border-hairline bg-white text-muted hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800')
                       }>
-                      {t === 'factor'
-                        ? copy.tabFactor
-                        : t === 'roots'
-                          ? copy.tabRoots
-                          : copy.tabDivision}
+                      {v}
                     </button>
                   ))}
                 </div>
-                <div className="space-y-3">
-                  {activeSteps.map((st, idx) => (
-                    <div
-                      key={idx}
-                      className="rounded-xl border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
-                      <h3 className="text-xs font-bold text-navy dark:text-sky-400">
-                        {st.title}
-                      </h3>
-                      <p className="mt-1 text-xs leading-relaxed text-ink/80 dark:text-slate-300">
-                        {st.explanation}
-                      </p>
-                      {st.latex && (
-                        <div className="mt-2 overflow-x-auto rounded-lg border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
-                          <KatexPreview tex={st.latex} />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
               </div>
+
+              {/* P(x) input */}
+              <div>
+                <label htmlFor="poly-expr" className="mb-1 block text-xs font-semibold text-muted">
+                  P({variable})
+                </label>
+                <input
+                  id="poly-expr"
+                  ref={expressionRef}
+                  value={expression}
+                  onChange={(e) => setExpression(e.target.value)}
+                  onFocus={() => setActiveField('expression')}
+                  placeholder={copy.expressionPlaceholder}
+                  spellCheck={false}
+                  autoComplete="off"
+                  inputMode={showKeyboard ? 'none' : 'text'}
+                  className={fieldClass}
+                />
+              </div>
+
+              {/* Divisor input */}
+              <div>
+                <label htmlFor="poly-div" className="mb-1 block text-xs font-semibold text-muted">
+                  {copy.divisorLabel}
+                </label>
+                <input
+                  id="poly-div"
+                  ref={divisorRef}
+                  value={divisor}
+                  onChange={(e) => setDivisor(e.target.value)}
+                  onFocus={() => setActiveField('divisor')}
+                  placeholder={copy.divisorPlaceholder}
+                  spellCheck={false}
+                  autoComplete="off"
+                  inputMode={showKeyboard ? 'none' : 'text'}
+                  className={fieldClass}
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={loading || !expression.trim()}
+                  className="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-50">
+                  <Divide className="size-4" aria-hidden="true" />
+                  {loading ? copy.solving : copy.solveButton}
+                </button>
+                <button type="button" onClick={reset} className={chipClass}>
+                  <RotateCcw className="size-3.5" aria-hidden="true" />
+                  {copy.reset}
+                </button>
+              </div>
+            </form>
+
+            {/* Keyboard popup */}
+            {showKeyboard && (
+              <PolynomialKeyboard
+                copy={copy}
+                titleId={keyboardTitleId}
+                fieldLabel={activeField === 'expression' ? `P(${variable})` : copy.divisorLabel}
+                value={activeField === 'expression' ? expression : divisor}
+                onKey={insertKey}
+                onFieldChange={setActiveField}
+                activeField={activeField}
+                onClose={() => setShowKeyboard(false)}
+              />
             )}
 
-            {/* History */}
-            {history.length > 0 && (
-              <div className="border-t border-hairline pt-3 dark:border-slate-800">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold text-muted flex items-center gap-1.5">
-                    <History className="size-3.5" aria-hidden="true" />
-                    {copy.history}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={clearHistory}
-                    className="text-[11px] font-semibold text-muted hover:text-rose-500">
-                    {copy.clearHistory}
-                  </button>
-                </div>
-                <ul className="space-y-1">
-                  {history.slice(0, 5).map((h, i) => (
-                    <li key={i}>
-                      <button
-                        type="button"
-                        onClick={() => applyHistory(h)}
-                        className="w-full overflow-x-auto rounded-lg border border-hairline-soft bg-white px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:border-navy/30 hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800">
-                        {h.expression}
-                        {h.divisor ? ` ÷ ${h.divisor}` : ''}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            {/* Examples */}
+            <div className="mt-4 border-t border-hairline pt-3 dark:border-slate-800">{exampleButtons}</div>
+
+            {/* Error */}
+            {error && (
+              <div className="mt-3 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+                <span className="mt-0.5 shrink-0">⚠</span>
+                <span>{error}</span>
               </div>
             )}
           </div>
-        )}
-      </section>
-    </div>
+        </section>
+        {/* ══════════ RIGHT: Results ══════════ */}
+        <section className="rounded-2xl border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800">
+          {loading && (
+            <div className="flex min-h-[200px] items-center justify-center">
+              <span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-navy border-t-transparent" />
+            </div>
+          )}
+          {!result && !loading && (
+            <section
+              className={`${panelClass} flex min-h-[200px] flex-col items-center justify-center gap-3 text-center`}>
+              <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-navy-tint text-navy dark:bg-sky-950/40 dark:text-sky-400">
+                <Sparkles className="size-5" />
+              </span>
+              <p className="max-w-sm text-sm text-muted">{copy.emptyResult}</p>
+            </section>
+          )}
+
+          {result && !loading && (
+            <div className="space-y-5">
+              {/* Error banner (თუ backend-მა error დააბრუნა) */}
+              {result.operations?.division?.some((s) => s.title.toLowerCase().includes('ვერ')) && (
+                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                  <span className="mt-0.5 shrink-0">⚠</span>
+                  <span>{result.operations.division[0]?.explanation || 'გაყოფა ვერ შესრულდა'}</span>
+                </div>
+              )}
+              {/* Summary card */}
+              <div>
+                <p className="mb-2 text-xs font-semibold text-muted">{copy.resultTitle}</p>
+                <div className="space-y-2">
+                  <ResultRow
+                    label={copy.expandedForm}
+                    tex={result.expanded_latex}
+                    copyKey="expanded"
+                    copied={copied}
+                    onCopy={copyText}
+                    copyLabel={copy.copyLatex}
+                    copiedLabel={copy.copied}
+                  />
+                  <ResultRow
+                    label={copy.factoredForm}
+                    tex={result.factored_latex}
+                    copyKey="factored"
+                    copied={copied}
+                    onCopy={copyText}
+                    copyLabel={copy.copyLatex}
+                    copiedLabel={copy.copied}
+                  />
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
+                    <span>
+                      {copy.degree}: <span className="font-mono text-ink dark:text-slate-200">{result.degree}</span>
+                    </span>
+                    <span>
+                      {copy.leadingCoeff}:{' '}
+                      <span className="font-mono text-ink dark:text-slate-200">{result.leading_coeff}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Roots */}
+              {/* Roots */}
+              {result.roots.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-semibold text-muted">
+                    {copy.rootsTitle} <span className="text-[10px] font-normal">({result.roots.length})</span>
+                  </p>
+                  <div className="space-y-2">
+                    {result.roots.map((r, i) => (
+                      <div
+                        key={i}
+                        className="overflow-x-auto rounded-lg border border-hairline bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                        <div className="min-w-max">
+                          <KatexPreview tex={`${variable} = ${r}`} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Division result */}
+              {result.division && (
+                <div>
+                  <p className="mb-2 text-xs font-semibold text-muted">{copy.divisionTitle}</p>
+                  <div className="space-y-2 overflow-x-auto rounded-xl border border-hairline bg-white px-3 py-3 dark:bg-slate-900 dark:border-slate-700">
+                    <div className="flex items-baseline gap-2">
+                      <span className="shrink-0 text-xs font-semibold text-muted">{copy.quotient}:</span>
+                      <KatexPreview tex={result.division.quotient_latex} />
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="shrink-0 text-xs font-semibold text-muted">{copy.remainder}:</span>
+                      <KatexPreview tex={result.division.remainder_latex} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step tabs */}
+              {availableTabs.length > 0 && (
+                <div>
+                  <p className="mb-2 text-xs font-semibold text-muted">{copy.stepsTitle}</p>
+                  <div className="mb-3 flex flex-wrap gap-1.5">
+                    {availableTabs.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setActiveTab(t)}
+                        className={
+                          'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ' +
+                          (activeTab === t
+                            ? 'bg-navy text-white dark:bg-sky-600'
+                            : 'border border-hairline text-muted hover:text-ink dark:border-slate-700')
+                        }>
+                        {t === 'factor' ? copy.tabFactor : t === 'roots' ? copy.tabRoots : copy.tabDivision}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="space-y-3">
+                    {activeSteps.map((st, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded-xl border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                        <h3 className="text-xs font-bold text-navy dark:text-sky-400">{st.title}</h3>
+                        <p className="mt-1 text-xs leading-relaxed text-ink/80 dark:text-slate-300">{st.explanation}</p>
+                        {st.latex && (
+                          <div className="mt-2 overflow-x-auto rounded-lg border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                            <KatexPreview tex={st.latex} />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* History */}
+              {history.length > 0 && (
+                <div className="border-t border-hairline pt-3 dark:border-slate-800">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs font-semibold text-muted flex items-center gap-1.5">
+                      <History className="size-3.5" aria-hidden="true" />
+                      {copy.history}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={clearHistory}
+                      className="text-[11px] font-semibold text-muted hover:text-rose-500">
+                      {copy.clearHistory}
+                    </button>
+                  </div>
+                  <ul className="space-y-1">
+                    {history.slice(0, 5).map((h, i) => (
+                      <li key={i}>
+                        <button
+                          type="button"
+                          onClick={() => applyHistory(h)}
+                          className="w-full overflow-x-auto rounded-lg border border-hairline-soft bg-white px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:border-navy/30 hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800">
+                          {h.expression}
+                          {h.divisor ? ` ÷ ${h.divisor}` : ''}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
   );
 }
 
@@ -606,11 +592,7 @@ function ResultRow({
           type="button"
           onClick={() => onCopy(tex, copyKey)}
           className="text-[11px] font-semibold text-navy hover:text-navy-strong dark:text-sky-400">
-          {copied === copyKey ? (
-            <Check className="size-3.5 text-emerald-500" />
-          ) : (
-            <Copy className="size-3.5" />
-          )}
+          {copied === copyKey ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
         </button>
       </div>
       <div className="mt-1 overflow-x-auto">

@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import type { Dictionary } from '@/i18n/types';
 
 export interface PolynomialLoaderProps {
+  locale: string;
   copy: Dictionary['polynomialTool'];
   title: string;
   description: string;
@@ -15,7 +16,7 @@ const PolynomialCalculator = dynamic<PolynomialLoaderProps>(
 );
 
 export function PolynomialLoader(props: PolynomialLoaderProps) {
-  return <PolynomialCalculator {...props} />;
+  return <PolynomialCalculator locale={props.locale} copy={props.copy} title={props.title} description={props.description} />;
 }
 
 function PolynomialSkeleton() {

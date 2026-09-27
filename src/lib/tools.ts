@@ -152,6 +152,12 @@ export const TOOL_SECTIONS: ToolSection[] = [
         href: "/tools/logarithms",
       },
       {
+        id:"exponents",
+        icon: Superscript,
+        badgeColor: "navy",
+        href: "/tools/exponents",
+      },
+      {
         id: "triangle",
         icon: Triangle,
         badgeColor: "brass",
