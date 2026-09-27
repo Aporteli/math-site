@@ -1402,9 +1402,9 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                   </div>
                   <input
                     type="range"
-                    min={0.1}
+                    min={0.001}
                     max={1}
-                    step={0.05}
+                    step={0.005}
                     value={penSmoothIntensity}
                     onChange={(e) => {
                       const next = parseFloat(e.target.value);

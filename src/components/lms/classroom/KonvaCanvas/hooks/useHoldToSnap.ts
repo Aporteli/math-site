@@ -27,16 +27,18 @@ const HOLD_MS = 2000;
  *  ხაზი მარტივი ფორმაა, 2 წამი ლოდინი ზედმეტია. */
 const HOLD_MS_LINE = 2000;
 
-/** ამაზე ნაკლები „წვრილმანი" ძრავა ჩათვლით ადგილზე დგომად (ხელის კანკალი). */
-const JITTER_PX = 6;
+/** Max distance from the hold origin still counted as standing still. */
+const HOLD_DISPLACEMENT_PX = 14;
+
+/** Max ink length while still counted as standing still (not drawing). */
+const HOLD_PATH_PX = 32;
 
 export function useHoldToSnap(opts: Options) {
   const lineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shapeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
-  /** რამდენი წერტილი იყო ბოლო სრული შემოწმების დროს — იცავს
-   *  უსასრულო ციკლისგან, როცა მომხმარებელი რეალურად გაჩერდა. */
-  const lastPointCountRef = useRef(0);
+  const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const prevPosRef = useRef<{ x: number; y: number } | null>(null);
+  const pathAccRef = useRef(0);
 
   const clearTimers = useCallback(() => {
     if (lineTimerRef.current !== null) {
@@ -51,8 +53,9 @@ export function useHoldToSnap(opts: Options) {
 
   const cancelHold = useCallback(() => {
     clearTimers();
-    lastPosRef.current = null;
-    lastPointCountRef.current = 0;
+    holdOriginRef.current = null;
+    prevPosRef.current = null;
+    pathAccRef.current = 0;
   }, [clearTimers]);
 
   useEffect(() => cancelHold, [cancelHold]);
@@ -166,21 +169,8 @@ export function useHoldToSnap(opts: Options) {
     const shape = opts.activeShapeRef.current;
     if (!opts.isDrawing.current || !shape) return;
 
-    const points = shape.points() as number[];
-
-    // თუ ახალი წერტილები არ დაემატა — მომხმარებელი რეალურად გაჩერდა.
-    if (points.length <= lastPointCountRef.current) return;
-    lastPointCountRef.current = points.length;
-
-    const recognized = recognizeShape(points);
-
-    if (!recognized) {
-      // ვერ ვცანით, მაგრამ ხატვა გრძელდება — კიდევ ერთი შანსი.
-      if (opts.isDrawing.current && opts.activeShapeRef.current) {
-        shapeTimerRef.current = setTimeout(trySnapShape, HOLD_MS);
-      }
-      return;
-    }
+    const recognized = recognizeShape(shape.points() as number[]);
+    if (!recognized) return;
 
     commitRecognized(recognized);
   }, [opts, commitRecognized]);
@@ -199,22 +189,28 @@ export function useHoldToSnap(opts: Options) {
       if (opts.activeTool !== 'pen') return;
       if (!opts.isDrawing.current || !opts.activeShapeRef.current) return;
 
-      // ტაიმერები არ მუშაობს — ვრთავთ ორივეს.
       if (shapeTimerRef.current === null) {
-        lastPosRef.current = pos;
+        holdOriginRef.current = pos;
+        prevPosRef.current = pos;
+        pathAccRef.current = 0;
         lineTimerRef.current = setTimeout(trySnapLine, HOLD_MS_LINE);
         shapeTimerRef.current = setTimeout(trySnapShape, HOLD_MS);
         return;
       }
 
-      const last = lastPosRef.current;
-      lastPosRef.current = pos;
-      if (!last) return;
+      const origin = holdOriginRef.current;
+      const prev = prevPosRef.current;
+      prevPosRef.current = pos;
+      if (!origin || !prev) return;
 
-      // კანკალი — ტაიმერებს არ ვეხებით.
-      if (Math.hypot(pos.x - last.x, pos.y - last.y) < JITTER_PX) return;
+      pathAccRef.current += Math.hypot(pos.x - prev.x, pos.y - prev.y);
+      const disp = Math.hypot(pos.x - origin.x, pos.y - origin.y);
 
-      // რეალური მოძრაობა — ორივე ტაიმერს გადავაყენებთ.
+      // Still holding: stayed near the origin without drawing more ink.
+      if (disp < HOLD_DISPLACEMENT_PX && pathAccRef.current < HOLD_PATH_PX) return;
+
+      holdOriginRef.current = pos;
+      pathAccRef.current = 0;
       if (lineTimerRef.current !== null) clearTimeout(lineTimerRef.current);
       if (shapeTimerRef.current !== null) clearTimeout(shapeTimerRef.current);
       lineTimerRef.current = setTimeout(trySnapLine, HOLD_MS_LINE);
