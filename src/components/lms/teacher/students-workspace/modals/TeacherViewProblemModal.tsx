@@ -65,12 +65,14 @@ export function TeacherViewProblemModal({
 
   const payload = assignment.customPayload || {};
   const problemImageRaw =
-    (isImageString(assignment.problemImageUrl) ? assignment.problemImageUrl : null) ||
-    (isImageString(assignment.attachmentUrl) ? assignment.attachmentUrl : null) ||
-    (isImageString(payload.imageUrl) ? payload.imageUrl : null) ||
-    (isImageString(payload.attachmentUrl) ? payload.attachmentUrl : null) ||
-    (isImageString(payload.promptTex) ? payload.promptTex : null) ||
-    (isImageString(rawPrompt) ? rawPrompt : null);
+    [
+      assignment.problemImageUrl,
+      assignment.attachmentUrl,
+      payload.imageUrl,
+      payload.attachmentUrl,
+      payload.promptTex,
+      rawPrompt,
+    ].find((value) => parseImageUrls(value).length > 0) ?? null;
 
   const problemImages = parseImageUrls(problemImageRaw);
   const studentImages = parseImageUrls(assignment.studentAttachmentUrl);

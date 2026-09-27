@@ -226,7 +226,8 @@ export function AssignProblemModal({
         uploadedUrls.push(uploaded.url);
       }
 
-      const resolvedImage = uploadedUrls[0] ?? null;
+      const resolvedImage =
+        uploadedUrls.length > 1 ? JSON.stringify(uploadedUrls) : (uploadedUrls[0] ?? null);
 
       const res = await sendProblemToStudentAction({
         studentId: activeStudent.id,

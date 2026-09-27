@@ -3,7 +3,7 @@
 import { ArrowUpRight } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 import type { Assignment, AssignmentProblem } from '../types/student-assignment.types';
-import { assignmentStatusMeta, extractFirstImageUrl } from '../helpers/student-assignment.helpers';
+import { assignmentStatusMeta, extractImageUrls } from '../helpers/student-assignment.helpers';
 
 interface AssignmentTaskCardProps {
   assignment: Assignment;
@@ -17,12 +17,21 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
   const firstProblemTex = firstProblem?.promptTex;
   const customPayload = (assignment.customPayload as Record<string, unknown>) || {};
 
-  const boardImageUrl =
-    extractFirstImageUrl(assignment.attachmentUrl) ||
-    extractFirstImageUrl(firstProblem?.teacherAttachmentUrl) ||
-    (typeof customPayload.imageUrl === 'string' ? extractFirstImageUrl(customPayload.imageUrl) : null) ||
-    (typeof customPayload.attachmentUrl === 'string' ? extractFirstImageUrl(customPayload.attachmentUrl) : null) ||
-    extractFirstImageUrl(firstProblemTex);
+  const imageSources = [
+    assignment.attachmentUrl,
+    firstProblem?.teacherAttachmentUrl,
+    typeof customPayload.imageUrl === 'string' ? customPayload.imageUrl : null,
+    typeof customPayload.attachmentUrl === 'string' ? customPayload.attachmentUrl : null,
+    firstProblemTex,
+  ];
+  const fromServer = (firstProblem?.teacherImageUrls ?? []).filter((url) => url.length > 0);
+  const imageUrls =
+    fromServer.length > 0
+      ? fromServer
+      : imageSources.reduce<string[]>((best, source) => {
+          const urls = extractImageUrls(source);
+          return urls.length > best.length ? urls : best;
+        }, []);
 
   const isGraded = meta.id === 'graded';
   const StatusIcon = meta.icon;
@@ -33,7 +42,10 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
       assignmentId: assignment.id,
       problem: {
         ...firstProblem,
-        teacherAttachmentUrl: boardImageUrl || firstProblem.teacherAttachmentUrl,
+        teacherAttachmentUrl:
+          imageUrls.length > 1
+            ? JSON.stringify(imageUrls)
+            : imageUrls[0] || firstProblem.teacherAttachmentUrl,
       },
     });
   };
@@ -49,9 +61,19 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
     >
       <span className={`h-1 w-full shrink-0 ${isGraded ? 'bg-win' : 'bg-navy'}`} aria-hidden="true" />
 
-      <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-xl border border-hairline bg-paper">
-        {boardImageUrl ? (
-          <img src={boardImageUrl} alt="" className="size-full bg-white object-contain p-2 transition duration-200 group-hover:scale-[1.03]" />
+      <div
+        className={`relative mx-3 mt-3 overflow-hidden rounded-xl border border-hairline bg-paper ${
+          imageUrls.length > 1 ? 'max-h-52' : 'h-36'
+        }`}
+      >
+        {imageUrls.length > 1 ? (
+          <div className="grid max-h-52 grid-cols-2 gap-1 overflow-y-auto p-1">
+            {imageUrls.map((url, index) => (
+              <img key={`${url}-${index}`} src={url} alt="" className="h-24 w-full bg-white object-contain" />
+            ))}
+          </div>
+        ) : imageUrls.length === 1 ? (
+          <img src={imageUrls[0]} alt="" className="size-full bg-white object-contain p-2 transition duration-200 group-hover:scale-[1.03]" />
         ) : firstProblemTex ? (
           <div className="flex size-full items-center justify-center overflow-hidden px-3 py-2">
             <KatexPreview tex={firstProblemTex} className="pointer-events-none line-clamp-4 text-sm leading-relaxed text-ink" />

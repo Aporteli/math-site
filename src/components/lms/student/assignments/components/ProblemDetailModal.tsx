@@ -18,6 +18,7 @@ export interface ProblemDetailModalProps {
     fileName?: string;
     previewUrl?: string;
     teacherAttachmentUrl?: string | null;
+    teacherImageUrls?: string[];
     grade?: number;
     feedback?: string;
   };
@@ -75,10 +76,12 @@ export function ProblemDetailModal({
   const isGraded = problem.status === 'graded';
 
   const teacherImageRaw =
-    (isImageString(problem.teacherAttachmentUrl) ? problem.teacherAttachmentUrl : null) ||
-    (isImageString(problem.promptTex) ? problem.promptTex : null);
+    [problem.teacherAttachmentUrl, problem.promptTex].find(
+      (value) => parseImageUrls(value).length > 0,
+    ) ?? null;
 
-  const teacherImages = parseImageUrls(teacherImageRaw);
+  const listedImages = (problem.teacherImageUrls ?? []).filter((url) => url.length > 0);
+  const teacherImages = listedImages.length > 0 ? listedImages : parseImageUrls(teacherImageRaw);
   const hasTextPrompt = Boolean(
     problem.promptTex && !isImageString(problem.promptTex) && problem.promptTex.trim() !== '',
   );
@@ -144,7 +147,7 @@ export function ProblemDetailModal({
             )}
 
             {teacherImages.length > 0 ? (
-              <div className="space-y-3">
+              <div className={`grid gap-3 ${teacherImages.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
                 {teacherImages.map((imgUrl, idx) => (
                   <div
                     key={idx}
@@ -154,7 +157,7 @@ export function ProblemDetailModal({
                     <img
                       src={imgUrl}
                       alt="დავალების სურათი"
-                      className="max-h-[58vh] w-auto max-w-full rounded-lg object-contain"
+                      className="max-h-64 w-full rounded-lg object-contain"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity">
                       <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface/95 border border-hairline px-3 py-1.5 text-xs font-bold text-ink shadow-lg backdrop-blur-xs">

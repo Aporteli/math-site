@@ -195,6 +195,7 @@ export async function sendProblemToStudentAction({
           difficulty: problem.difficulty,
           templateId: problem.templateId,
           imageUrl: resolvedAttachmentUrl,
+          imageUrls: readStoredImageUrls(resolvedAttachmentUrl),
         },
       },
     });
@@ -287,6 +288,26 @@ export async function sendProblemToClassAction({
 /**
  * 5. მოსწავლისთვის მისი კუთვნილი დავალებების წამოღება
  */
+function readStoredImageUrls(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => readStoredImageUrls(item));
+  }
+  if (typeof value !== 'string') return [];
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed.flatMap((item) => readStoredImageUrls(item));
+      }
+    } catch {
+      // A plain URL can also end with "]".
+    }
+  }
+  return [trimmed];
+}
+
 export async function getStudentAssignmentsAction() {
   try {
     const session = await getSession();
@@ -325,15 +346,21 @@ export async function getStudentAssignmentsAction() {
         problemStatus = 'uploaded';
       }
 
+      const teacherImageUrls = [
+        ...readStoredImageUrls(a.attachmentUrl),
+        ...readStoredImageUrls(payload.imageUrls),
+        ...readStoredImageUrls(payload.imageUrl),
+        ...readStoredImageUrls(payload.attachmentUrl),
+        ...readStoredImageUrls(payload.image),
+      ].filter((url, index, all) => all.indexOf(url) === index);
       const teacherImage =
-        a.attachmentUrl ||
-        payload.imageUrl ||
-        payload.attachmentUrl ||
-        payload.image ||
-        (typeof payload.promptTex === 'string' && payload.promptTex.startsWith('data:image/')
-          ? payload.promptTex
-          : null) ||
-        null;
+        teacherImageUrls.length > 1
+          ? JSON.stringify(teacherImageUrls)
+          : teacherImageUrls[0] ||
+            (typeof payload.promptTex === 'string' && payload.promptTex.startsWith('data:image/')
+              ? payload.promptTex
+              : null) ||
+            null;
 
       return {
         id: a.id,
@@ -357,6 +384,7 @@ export async function getStudentAssignmentsAction() {
             fileName: submission?.attachmentUrl || undefined,
             previewUrl: submission?.attachmentUrl || undefined,
             teacherAttachmentUrl: teacherImage,
+            teacherImageUrls,
             grade: submission?.grade ? Number(submission.grade.score) : undefined,
             feedback: submission?.grade?.comment || undefined,
           },

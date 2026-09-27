@@ -12,6 +12,7 @@ export type AssignmentProblem = {
   fileName?: string;
   previewUrl?: string;
   teacherAttachmentUrl?: string | null;
+  teacherImageUrls?: string[];
   grade?: number;
   feedback?: string;
 };
