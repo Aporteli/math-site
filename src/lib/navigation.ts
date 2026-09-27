@@ -12,8 +12,6 @@ export type LegalId = keyof Dictionary["footer"]["legal"];
 export const mainNavLinks: { id: NavId; href: string; menu?: NavMenuId }[] = [
   { id: "home", href: "/" },
   { id: "tools", href: "/tools", menu: "tools" },
-  { id: "courses", href: "/courses" },
-  { id: "blog", href: "/blog", menu: "blog" },
   { id: "contact", href: "/contact" },
 ];
 

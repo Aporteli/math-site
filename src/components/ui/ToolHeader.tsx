@@ -1,5 +1,4 @@
 import React from "react";
-import { Calculator, LucideIcon } from "lucide-react";
 
 interface ToolHeaderProps {
   category?: string;
