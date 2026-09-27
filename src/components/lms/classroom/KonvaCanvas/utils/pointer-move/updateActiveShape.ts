@@ -11,6 +11,7 @@ export interface UpdateActiveShapeContext {
   drawLayerRef: RefObject<Konva.Layer>;
   scale: number;
   shiftHeld?: boolean;
+  penPoints?: { x: number; y: number }[];
 }
 
 export function updateActiveShape(ctx: UpdateActiveShapeContext, pos: { x: number; y: number }): void {
@@ -40,12 +41,16 @@ export function updateActiveShape(ctx: UpdateActiveShapeContext, pos: { x: numbe
       const startY = pts[1];
       shape.points([startX, startY, snapX, snapY]);
     } else {
-      const currentPts = shape.points();
-      const lastX = currentPts[currentPts.length - 2];
-      const lastY = currentPts[currentPts.length - 1];
-      if (Math.hypot(pos.x - lastX, pos.y - lastY) >= 1.5) {
-        shape.points(currentPts.concat([pos.x, pos.y]));
+      const incoming = ctx.penPoints && ctx.penPoints.length > 0 ? ctx.penPoints : [pos];
+      let currentPts = shape.points() as number[];
+      for (const p of incoming) {
+        const lastX = currentPts[currentPts.length - 2];
+        const lastY = currentPts[currentPts.length - 1];
+        if (Math.hypot(p.x - lastX, p.y - lastY) >= 1.5) {
+          currentPts = currentPts.concat([p.x, p.y]);
+        }
       }
+      shape.points(currentPts);
     }
   } else if (ctx.activeTool === 'line' || ctx.activeTool === 'arrow') {
     const points = shape.points();

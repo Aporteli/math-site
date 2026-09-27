@@ -88,6 +88,19 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
 
       if (eraserCursorPos) setEraserCursorPos(null);
       if (!isDrawing.current || !activeShapeRef.current) return;
+
+      let penPoints: { x: number; y: number }[] | undefined;
+      if (activeTool === 'pen' && !nativeEvt.shiftKey) {
+        const stage = stageRef.current;
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (stage && rect) {
+          const transform = stage.getAbsoluteTransform().copy().invert();
+          penPoints = events.map((ev) =>
+            transform.point({ x: ev.clientX - rect.left, y: ev.clientY - rect.top }),
+          );
+        }
+      }
+
       updateActiveShape(
         {
           activeTool,
@@ -96,6 +109,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
           drawLayerRef,
           scale,
           shiftHeld: nativeEvt.shiftKey,
+          penPoints,
         },
         pos,
       );

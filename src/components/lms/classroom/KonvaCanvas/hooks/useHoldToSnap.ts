@@ -27,18 +27,13 @@ const HOLD_MS = 2000;
  *  ხაზი მარტივი ფორმაა, 2 წამი ლოდინი ზედმეტია. */
 const HOLD_MS_LINE = 2000;
 
-/** Max distance from the hold origin still counted as standing still. */
-const HOLD_DISPLACEMENT_PX = 14;
-
-/** Max ink length while still counted as standing still (not drawing). */
-const HOLD_PATH_PX = 32;
+/** Leaving this radius counts as drawing and restarts the hold. */
+const HOLD_RADIUS_PX = 8;
 
 export function useHoldToSnap(opts: Options) {
   const lineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shapeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const holdOriginRef = useRef<{ x: number; y: number } | null>(null);
-  const prevPosRef = useRef<{ x: number; y: number } | null>(null);
-  const pathAccRef = useRef(0);
+  const anchorRef = useRef<{ x: number; y: number } | null>(null);
 
   const clearTimers = useCallback(() => {
     if (lineTimerRef.current !== null) {
@@ -53,9 +48,7 @@ export function useHoldToSnap(opts: Options) {
 
   const cancelHold = useCallback(() => {
     clearTimers();
-    holdOriginRef.current = null;
-    prevPosRef.current = null;
-    pathAccRef.current = 0;
+    anchorRef.current = null;
   }, [clearTimers]);
 
   useEffect(() => cancelHold, [cancelHold]);
@@ -146,75 +139,61 @@ export function useHoldToSnap(opts: Options) {
    * და სრულ ტაიმერსაც ვაუქმებთ. თუ არა — ჩუმად ვბრუნდებით და სრული ტაიმერი
    * გააგრძელებს მუშაობას.
    */
+  const armTimers = () => {
+    if (lineTimerRef.current !== null) clearTimeout(lineTimerRef.current);
+    if (shapeTimerRef.current !== null) clearTimeout(shapeTimerRef.current);
+    lineTimerRef.current = setTimeout(trySnapLine, HOLD_MS_LINE);
+    shapeTimerRef.current = setTimeout(trySnapShape, HOLD_MS);
+  };
+
   const trySnapLine = useCallback(() => {
     lineTimerRef.current = null;
     const shape = opts.activeShapeRef.current;
-    if (!opts.isDrawing.current || !shape) return;
+    const anchor = anchorRef.current;
+    if (!opts.isDrawing.current || !shape || !anchor) return;
 
     const points = shape.points() as number[];
     if (points.length < 4) return;
+    const x = points[points.length - 2];
+    const y = points[points.length - 1];
+    if (Math.hypot(x - anchor.x, y - anchor.y) >= HOLD_RADIUS_PX) return;
 
     const line = recognizeLine(points);
-    if (!line) return; // ხაზი არაა — სრული ტაიმერი გადაწყვეტს
+    if (!line) return;
 
     commitRecognized({ kind: 'line', line });
   }, [opts, commitRecognized]);
 
-  /**
-   * სრული ცდა — ყველა ფორმის ამოცნობა. ჩვეულ რიტმში (2000ms).
-   * თუ ვერ ცნობს, ტაიმერს თავიდან აგეგმავს (სანამ ახალი წერტილები ემატება).
-   */
   const trySnapShape = useCallback(() => {
     shapeTimerRef.current = null;
     const shape = opts.activeShapeRef.current;
-    if (!opts.isDrawing.current || !shape) return;
+    const anchor = anchorRef.current;
+    if (!opts.isDrawing.current || !shape || !anchor) return;
 
-    const recognized = recognizeShape(shape.points() as number[]);
+    const points = shape.points() as number[];
+    const x = points[points.length - 2];
+    const y = points[points.length - 1];
+    if (Math.hypot(x - anchor.x, y - anchor.y) >= HOLD_RADIUS_PX) return;
+
+    const recognized = recognizeShape(points);
     if (!recognized) return;
 
     commitRecognized(recognized);
   }, [opts, commitRecognized]);
 
-  /**
-   * ყოველ ახალ pointer-move-ზე.
-   *
-   * ორი ტაიმერი ერთდროულად ეშვება:
-   *  - ხაზის ტაიმერი (500ms) — სწრაფი ცდა მხოლოდ ხაზისთვის.
-   *  - სრული ტაიმერი (2000ms) — ყველა სხვა ფორმისთვის.
-   *
-   * ორივე ახლდება მოძრაობაზე, გარდა კანკალისა.
-   */
   const noteStrokeMove = useCallback(
     (pos: { x: number; y: number }) => {
       if (opts.activeTool !== 'pen') return;
       if (!opts.isDrawing.current || !opts.activeShapeRef.current) return;
 
-      if (shapeTimerRef.current === null) {
-        holdOriginRef.current = pos;
-        prevPosRef.current = pos;
-        pathAccRef.current = 0;
-        lineTimerRef.current = setTimeout(trySnapLine, HOLD_MS_LINE);
-        shapeTimerRef.current = setTimeout(trySnapShape, HOLD_MS);
+      const anchor = anchorRef.current;
+      if (!anchor || Math.hypot(pos.x - anchor.x, pos.y - anchor.y) >= HOLD_RADIUS_PX) {
+        anchorRef.current = pos;
+        armTimers();
         return;
       }
 
-      const origin = holdOriginRef.current;
-      const prev = prevPosRef.current;
-      prevPosRef.current = pos;
-      if (!origin || !prev) return;
-
-      pathAccRef.current += Math.hypot(pos.x - prev.x, pos.y - prev.y);
-      const disp = Math.hypot(pos.x - origin.x, pos.y - origin.y);
-
-      // Still holding: stayed near the origin without drawing more ink.
-      if (disp < HOLD_DISPLACEMENT_PX && pathAccRef.current < HOLD_PATH_PX) return;
-
-      holdOriginRef.current = pos;
-      pathAccRef.current = 0;
-      if (lineTimerRef.current !== null) clearTimeout(lineTimerRef.current);
-      if (shapeTimerRef.current !== null) clearTimeout(shapeTimerRef.current);
-      lineTimerRef.current = setTimeout(trySnapLine, HOLD_MS_LINE);
-      shapeTimerRef.current = setTimeout(trySnapShape, HOLD_MS);
+      if (shapeTimerRef.current === null) armTimers();
     },
     [opts, trySnapLine, trySnapShape],
   );
