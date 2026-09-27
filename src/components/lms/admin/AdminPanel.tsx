@@ -164,6 +164,8 @@ export function AdminPanel({
             </div>
           ) : null}
 
+
+
           {section !== 'overview' && section !== 'taxonomy' && section !== 'courses' ? (
             <ComingSoonCard
               title={active.title}

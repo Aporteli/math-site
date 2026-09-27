@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
-import { HomeBlogSlider } from '@/components/public/HomeBlogSlider';
-import { WorkspaceHub } from '@/components/public/WorkspaceHub';
+import HomeLandPage from '@/components/public/HomePage';
 import { isLocale, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 
@@ -12,8 +11,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
-      <HomeBlogSlider locale={locale} slider={dict.home.slider} blog={dict.blogPage} />
-      <WorkspaceHub locale={locale} copy={dict.home} tools={dict.toolsPage.items} />
+      <HomeLandPage locale={locale} dict={dict} />
     </>
   );
 }

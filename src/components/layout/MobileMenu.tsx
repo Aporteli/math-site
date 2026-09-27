@@ -18,7 +18,7 @@ export function MobileMenu({ locale, header, nav, menus, children }: MobileMenuP
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="xl:hidden">
+    <div className="lg:hidden">
       <button
         type="button"
         onClick={() => setOpen(!open)}
