@@ -5,18 +5,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarDays,
-  Wallet,
-  TrendingUp,
-  AlertCircle,
   Clock3,
-  Users,
-  UserX,
-  UserCheck,
-  Check,
-  CircleDollarSign,
-  CircleX,
 } from 'lucide-react';
-import { EditableAmount } from './EditableAmount';
 import {
   WEEKDAYS_KA,
   formatMonthLabel,
@@ -87,9 +77,6 @@ export function PaymentCalendar({
   payments,
   monthKey,
   onMonthChange,
-  onSetPaid,
-  onSelectStudent,
-  onToggleMissed,
 }: Props) {
   const [view, setView] = useState<CalendarView>('month');
   const [focusKey, setFocusKey] = useState(() => initialFocusKey(monthKey));
@@ -236,7 +223,7 @@ export function PaymentCalendar({
         </div>
       </div>
 
-      <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-4">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="flex min-h-0 min-w-0 flex-col rounded-box border border-hairline bg-surface p-2.5 shadow-sm sm:rounded-box sm:p-4">
           {view === 'month' ? (
             <MonthGrid
@@ -277,16 +264,6 @@ export function PaymentCalendar({
             </span>
           </div>
         </div>
-
-        <DayLessonPanel
-          date={focusDate}
-          lessons={selectedLessons}
-          groups={groups}
-          payments={payments}
-          onSelectStudent={onSelectStudent}
-          onToggleMissed={onToggleMissed}
-          onSetPaid={onSetPaid}
-        />
       </div>
     </div>
   );
@@ -561,157 +538,6 @@ function DayAgenda({
                     );
                   })}
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DayLessonPanel({
-  date,
-  lessons,
-  groups,
-  payments,
-  onSelectStudent,
-  onToggleMissed,
-  onSetPaid,
-}: {
-  date: Date;
-  lessons: DayLesson[];
-  groups: StudentGroup[];
-  payments: PaymentRecord[];
-  onSelectStudent?: (student: StudentRecord) => void;
-  onToggleMissed?: (studentId: string, lessonId: string, date: string, missed: boolean) => void;
-  onSetPaid: (studentId: string, monthKey: string, amount: number) => void;
-}) {
-  const monthKey = getMonthKey(date);
-  const { year, month } = parseMonthKey(monthKey);
-  const dKey = toDateKey(date);
-  const sessions = groupDayLessons(lessons);
-
-  return (
-    <div className="flex min-h-0 flex-col rounded-box border border-hairline bg-surface shadow-sm sm:rounded-box">
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-hairline px-4 py-3">
-        <div>
-          <p className="text-[15px] mb-2 font-bold text-ink">
-            {date.getDate()} {formatMonthLabel(monthKey)}
-          </p>
-          <p className="text-[11px] font-medium text-muted">
-            {sessions.length} გაკვეთილი
-            {lessons.length !== sessions.length ? ` · ${lessons.length} მოსწავლე` : ''}
-          </p>
-        </div>
-        <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
-          <CalendarDays className="size-4" />
-        </span>
-      </div>
-
-      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-3">
-        {sessions.length === 0 ? (
-          <p className="px-2 py-10 text-center text-xs font-medium text-muted">ამ დღეს გაკვეთილი არ არის</p>
-        ) : (
-          <div className="space-y-4">
-            {sessions.map((session) => (
-              <div key={session.key} className="space-y-2">
-                <p
-                  className={`flex items-center gap-1.5 rounded-box px-2 py-1 text-[13px] font-bold tracking-wide ${
-                    session.kind === 'home' ? 'bg-brass-tint/80 text-brass-strong' : 'bg-navy-tint/70 text-navy'
-                  }`}>
-                  {session.startTime}–{session.endTime}
-                  <span className="font-medium text-muted">
-                    · {sessionTitle(session, groups)}
-                    {session.lessons.length > 1 ? ` · ${session.lessons.length}` : ''}
-                  </span>
-                </p>
-                {session.lessons.map(({ student, lessonId, startTime, endTime, groupId }, idx) => {
-                  const expected = computeExpectedForMonth(student, year, month);
-                  const paid = sumPaymentsForMonth(payments, student.id, monthKey);
-                  const owed = Math.max(0, expected - paid);
-                  const isPaid = owed === 0;
-
-                  const isPerLesson = student.priceType === 'PER_LESSON';
-                  const missed = isPerLesson && isLessonMissed(student, lessonId, dKey);
-
-                  return (
-                    <div
-                      key={`${student.id}-${lessonId}-${idx}`}
-                      className={`rounded-box border p-3 transition ${
-                        missed ? 'border-loss/30 bg-loss-tint/30' : 'border-hairline bg-paper hover:border-navy/30'
-                      }`}>
-                      <div className="flex items-start justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={() => onSelectStudent?.(student)}
-                          className="min-w-0 flex-1 cursor-pointer text-left">
-                          <p className={`truncate text-xs font-bold ${missed ? 'text-loss line-through' : 'text-ink'}`}>
-                            {student.firstName} {student.lastName}
-                          </p>
-                        </button>
-
-                        <div className="flex shrink-0 items-center gap-1">
-                          {isPerLesson && onToggleMissed && (
-                            <button
-                              type="button"
-                              onClick={() => onToggleMissed(student.id, lessonId, dKey, !missed)}
-                              title={missed ? 'დასწრებულად მონიშვნა' : 'გამოტოვებულად მონიშვნა'}
-                              className={`flex size-8 cursor-pointer items-center justify-center rounded-box border transition ${
-                                missed
-                                  ? 'border-win/40 bg-win-tint text-win hover:bg-win/20'
-                                  : 'border-loss/30 bg-surface text-loss hover:bg-loss-tint'
-                              }`}>
-                              {missed ? <UserCheck className="size-3.5" /> : <UserX className="size-3.5" />}
-                            </button>
-                          )}
-
-                          <span
-                            title={
-                              missed ? 'გამოტოვა' : isPaid ? 'გადახდილია' : paid > 0 ? 'ნაწილობრივ გადახდილია' : 'ვალი'
-                            }
-                            className={`flex size-8 shrink-0 items-center justify-center rounded-box border ${
-                              missed
-                                ? 'border-loss/30 bg-loss-tint text-loss'
-                                : isPaid
-                                  ? 'border-win/20 bg-win-tint text-win'
-                                  : paid > 0
-                                    ? 'border-brass/30 bg-brass-tint text-brass-strong'
-                                    : 'border-loss/20 bg-loss-tint text-loss'
-                            }`}>
-                            {missed ? (
-                              <UserX className="size-3.5" />
-                            ) : isPaid ? (
-                              <Check className="size-3.5" />
-                            ) : paid > 0 ? (
-                              <CircleDollarSign className="size-3.5" />
-                            ) : (
-                              <AlertCircle className="size-3.5" />
-                            )}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-hairline pt-2">
-                        <div className="flex min-w-0 items-center gap-2 text-[10px] font-bold text-muted">
-                          <span className="truncate">
-                             {formatPrice(student.monthlyPrice)}
-                            {isPerLesson && <span className="text-[9px] font-normal"> / გაკვეთილი</span>}
-                            {student.priceType === 'WEEKLY' && <span className="text-[9px] font-normal"> / კვირა</span>}
-                            {student.priceType === 'BIWEEKLY' && (
-                              <span className="text-[9px] font-normal"> / 2 კვირა</span>
-                            )}
-                          </span>
-                        </div>
-                        <EditableAmount
-                          value={paid}
-                          onSave={(v) => onSetPaid(student.id, monthKey, v)}
-                          className={isPaid ? 'text-win hover:bg-win-tint' : 'text-loss hover:bg-loss-tint'}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             ))}
           </div>
