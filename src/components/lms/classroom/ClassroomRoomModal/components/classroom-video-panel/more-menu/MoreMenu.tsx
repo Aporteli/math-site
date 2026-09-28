@@ -80,7 +80,7 @@ export function MoreMenu({
   // room in a z-[999999] overlay; a body portal at z-60 paints behind it.
   return createPortal(
     <div
-      className="fixed z-[200] flex w-72 flex-col gap-2 rounded-2xl border border-white/10 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-xl overflow-visible"
+      className="fixed z-[200] flex w-72 flex-col gap-2 rounded-box border border-white/10 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-xl overflow-visible"
       style={{ right: position.right, bottom: position.bottom }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
@@ -90,17 +90,17 @@ export function MoreMenu({
         პარამეტრები
       </div>
 
-      <div className="flex items-center justify-between rounded-xl bg-white/5 p-2 text-xs text-white/90">
+      <div className="flex items-center justify-between rounded-box bg-white/5 p-2 text-xs text-white/90">
         <span className="font-medium">ფონის ბლური</span>
         <BlurToggleButton />
       </div>
 
-      <div className="flex items-center justify-between rounded-xl bg-white/5 p-2 text-xs text-white/90">
+      <div className="flex items-center justify-between rounded-box bg-white/5 p-2 text-xs text-white/90">
         <span className="font-medium">ვირტუალური ფონი</span>
         <VirtualBackgroundControl />
       </div>
 
-      <div className="flex items-center justify-between rounded-xl bg-white/5 p-2 text-xs text-white/90 relative">
+      <div className="flex items-center justify-between rounded-box bg-white/5 p-2 text-xs text-white/90 relative">
         <span className="font-medium">მასკის დახვეწა</span>
         <TemporalBackgroundTunerButton />
       </div>

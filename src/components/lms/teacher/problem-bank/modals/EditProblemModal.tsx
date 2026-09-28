@@ -21,7 +21,7 @@ import { childrenOf, taxonomyLabel, type TaxonomyNodeDto } from '@/lib/math/prob
 import { toKatexFriendlyTex } from '@/lib/math/problems/tex';
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
 const EDIT_SOURCES = ['custom', 'verified', 'unchecked', 'ai', 'generated', 'bank'] as const;
 
@@ -47,7 +47,7 @@ interface EditProblemModalProps {
 function MathFieldPreview({ label, tex }: { label: string; tex: string }) {
   if (!tex.trim()) return null;
   return (
-    <div className="min-w-0 overflow-x-auto rounded-xl border border-hairline-soft bg-paper px-3 py-3">
+    <div className="min-w-0 overflow-x-auto rounded-box border border-hairline-soft bg-paper px-3 py-3">
       <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</p>
       <KatexPreview
         tex={toKatexFriendlyTex(tex)}
@@ -351,14 +351,14 @@ export function EditProblemModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-lg shadow-navy/10">
+          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-lg shadow-navy/10">
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
             <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
               {ui.title}
             </h2>
             <button
               type="button"
-              className="inline-flex size-9 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
+              className="inline-flex size-9 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
               aria-label={ui.close}
               onClick={onClose}>
               <X className="size-4" aria-hidden="true" />
@@ -493,14 +493,14 @@ export function EditProblemModal({
             {notice ? <p className="w-full text-sm text-brass-strong sm:me-auto sm:w-auto">{notice}</p> : null}
             <button
               type="button"
-              className="inline-flex w-full items-center justify-center rounded-xl border border-hairline bg-white px-4 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy sm:w-auto"
+              className="inline-flex w-full items-center justify-center rounded-box border border-hairline bg-white px-4 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy sm:w-auto"
               onClick={onClose}>
               {ui.cancel}
             </button>
             <button
               type="button"
               disabled={busy || !prompt.trim() || !solution.trim()}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60 sm:w-auto"
               onClick={() => void onSubmit()}>
               <PenLine className="size-4" aria-hidden="true" />
               {busy ? ui.saving : ui.save}

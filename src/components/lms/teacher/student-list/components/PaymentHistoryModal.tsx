@@ -16,6 +16,7 @@ import type { PaymentRecord, PriceType, StudentRecord } from '../studentList.typ
 
 interface Props {
   open: boolean;
+  embedded?: boolean;
   student: StudentRecord | null;
   payments: PaymentRecord[];
   onClose: () => void;
@@ -43,6 +44,7 @@ function todayIso() {
 
 export function PaymentHistoryModal({
   open,
+  embedded = false,
   student,
   payments,
   onClose,
@@ -173,17 +175,25 @@ export function PaymentHistoryModal({
 
   return (
     <div
-    className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-3 backdrop-blur-[2px] sm:p-4"
-    onClick={onClose}>
+    className={
+      embedded
+        ? 'flex h-full min-h-0 min-w-0 flex-1'
+        : 'fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-3 backdrop-blur-[2px] sm:p-4'
+    }
+    onClick={embedded ? undefined : onClose}>
       <div
         role="dialog"
-        aria-modal="true"
-        className="flex max-h-[min(92dvh,100%)] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-xl"
+        aria-modal={embedded ? undefined : true}
+        className={
+          embedded
+            ? 'flex h-full min-h-0 w-full flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-sm'
+            : 'flex max-h-[min(92dvh,100%)] w-full max-w-lg flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-xl'
+        }
         onClick={(e) => e.stopPropagation()}>
         {/* ═══ Header ═══ */}
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex size-9 items-center justify-center rounded-xl border border-hairline bg-win-tint text-win">
+            <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-win-tint text-win">
               <Wallet className="h-4 w-4" />
             </span>
             <div className="min-w-0">
@@ -193,22 +203,24 @@ export function PaymentHistoryModal({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-paper hover:text-ink">
-            <X className="h-4 w-4" />
-          </button>
+          {embedded ? null : (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink">
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* ═══ Scrollable body ═══ */}
-        <div className="custom-scrollbar space-y-3 overflow-y-auto p-4 sm:p-5">
+        <div className="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
           {/* ─── Month navigation ─── */}
-          <div className="flex items-center justify-between gap-2 rounded-xl border border-hairline bg-paper p-1">
+          <div className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-paper p-1">
             <button
               type="button"
               onClick={() => setMonthKey(shiftMonth(monthKey, -1))}
-              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition hover:bg-surface hover:text-ink"
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink"
               aria-label="წინა თვე">
               ‹
             </button>
@@ -218,7 +230,7 @@ export function PaymentHistoryModal({
             <button
               type="button"
               onClick={() => setMonthKey(shiftMonth(monthKey, 1))}
-              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition hover:bg-surface hover:text-ink"
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink"
               aria-label="შემდეგი თვე">
               ›
             </button>
@@ -226,15 +238,15 @@ export function PaymentHistoryModal({
 
           {/* ─── Summary cards ─── */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-xl border border-hairline bg-paper px-3 py-2.5">
+            <div className="rounded-box border border-hairline bg-paper px-3 py-2.5">
               <p className="text-[10px] font-bold tracking-wide text-muted">თვის ფასი</p>
               <p className="mt-1 truncate text-sm font-bold tabular-nums text-ink">{formatPrice(expected)}</p>
             </div>
-            <div className="rounded-xl border border-hairline bg-paper px-3 py-2.5">
+            <div className="rounded-box border border-hairline bg-paper px-3 py-2.5">
               <p className="text-[10px] font-bold tracking-wide text-muted">გადახდილი</p>
               <p className="mt-1 truncate text-sm font-bold tabular-nums text-win">{formatPrice(monthPaid)}</p>
             </div>
-            <div className="rounded-xl border border-hairline bg-paper px-3 py-2.5">
+            <div className="rounded-box border border-hairline bg-paper px-3 py-2.5">
               <p className="text-[10px] font-bold tracking-wide text-muted">დარჩენილი</p>
               <p className={`mt-1 truncate text-sm font-bold tabular-nums ${monthOwed > 0 ? 'text-loss' : 'text-win'}`}>
                 {formatPrice(monthOwed)}
@@ -245,7 +257,7 @@ export function PaymentHistoryModal({
           {/* ═══════════════════════════════════════════════════════
               PRICE MANAGEMENT — accordion
              ═══════════════════════════════════════════════════════ */}
-          <div className="overflow-hidden rounded-2xl border border-brass/30 bg-brass-tint/20">
+          <div className="overflow-hidden rounded-box border border-brass/30 bg-brass-tint/20">
             {/* toggle header */}
             <button
               type="button"
@@ -284,7 +296,7 @@ export function PaymentHistoryModal({
                       value={priceDraft}
                       onChange={(e) => setPriceDraft(e.target.value)}
                       placeholder="0"
-                      className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-brass focus:ring-2 focus:ring-brass/20 sm:text-sm"
+                      className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-brass focus:ring-2 focus:ring-brass/20 sm:text-sm"
                     />
                   </div>
                   <div>
@@ -292,7 +304,7 @@ export function PaymentHistoryModal({
                     <select
                       value={priceTypeDraft}
                       onChange={(e) => setPriceTypeDraft(e.target.value as PriceType)}
-                      className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-brass focus:ring-2 focus:ring-brass/20">
+                      className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-brass focus:ring-2 focus:ring-brass/20">
                       {PRICE_TYPE_OPTIONS.map((pt) => (
                         <option key={pt} value={pt}>
                           {PRICE_TYPE_SHORT[pt]}
@@ -306,7 +318,7 @@ export function PaymentHistoryModal({
                   type="button"
                   onClick={handleSavePrice}
                   disabled={isPending}
-                  className="inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-brass/40 bg-brass-strong px-4 py-2 text-sm font-bold text-white transition hover:bg-brass disabled:opacity-50">
+                  className="inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-box border border-brass/40 bg-brass-strong px-4 py-2 text-sm font-bold text-white transition hover:bg-brass disabled:opacity-50">
                   <Save className="h-3.5 w-3.5" />
                   {priceSaved ? '✓ შენახულია' : 'ფასის შენახვა'}
                 </button>
@@ -317,7 +329,7 @@ export function PaymentHistoryModal({
           {/* ═══════════════════════════════════════════════════════
               ADD PAYMENT — accordion
              ═══════════════════════════════════════════════════════ */}
-          <div className="overflow-hidden rounded-2xl border border-navy/20 bg-navy-tint/30">
+          <div className="overflow-hidden rounded-box border border-navy/20 bg-navy-tint/30">
             {/* toggle header */}
             <button
               type="button"
@@ -344,7 +356,7 @@ export function PaymentHistoryModal({
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0"
-                    className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                    className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
                   />
                 </div>
 
@@ -355,7 +367,7 @@ export function PaymentHistoryModal({
                       type="date"
                       value={paidAt}
                       onChange={(e) => setPaidAt(e.target.value)}
-                      className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15"
+                      className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15"
                     />
                   </div>
                   <div>
@@ -363,7 +375,7 @@ export function PaymentHistoryModal({
                     <select
                       value={method}
                       onChange={(e) => setMethod(e.target.value as 'cash' | 'card' | 'transfer')}
-                      className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15">
+                      className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15">
                       <option value="cash">ნაღდი</option>
                       <option value="card">ბარათი</option>
                       <option value="transfer">გადარიცხვა</option>
@@ -372,14 +384,14 @@ export function PaymentHistoryModal({
                 </div>
 
                 {error ? (
-                  <p className="rounded-lg bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">{error}</p>
+                  <p className="rounded-box bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">{error}</p>
                 ) : null}
 
                 <button
                   type="button"
                   onClick={handleAdd}
                   disabled={isPending}
-                  className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50">
+                  className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50">
                   <Plus className="h-3.5 w-3.5" />
                   {isPending ? 'ინახება...' : 'დამატება'}
                 </button>
@@ -395,7 +407,7 @@ export function PaymentHistoryModal({
             </p>
 
             {monthPayments.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-hairline bg-paper px-3 py-4 text-center text-xs text-muted">
+              <p className="rounded-box border border-dashed border-hairline bg-paper px-3 py-4 text-center text-xs text-muted">
                 ამ თვეში ჯერ არ არის გადახდა
               </p>
             ) : (
@@ -406,7 +418,7 @@ export function PaymentHistoryModal({
                   return (
                     <div
                       key={p.id}
-                      className="flex items-center justify-between gap-2 rounded-lg border border-hairline bg-paper px-3 py-2">
+                      className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-paper px-3 py-2">
                       <div className="flex min-w-0 flex-1 items-center gap-2">
                         <CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted" />
                         <span className="text-xs font-bold text-ink">{dateLabel}</span>
@@ -421,7 +433,7 @@ export function PaymentHistoryModal({
                         onClick={() => handleDelete(p.id)}
                         disabled={isPending}
                         title="წაშლა"
-                        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-loss-tint hover:text-loss disabled:opacity-40">
+                        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-loss-tint hover:text-loss disabled:opacity-40">
                         <Trash2 className="h-3 w-3" />
                       </button>
                     </div>

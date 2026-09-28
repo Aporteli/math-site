@@ -41,7 +41,7 @@ export function StudentsList({
   return (
     <>
     {isTeacher && (
-    <div className="rounded-xl bg-white/5 p-2 text-xs text-white/90 mt-1">
+    <div className="rounded-box bg-white/5 p-2 text-xs text-white/90 mt-1">
       <span className="font-semibold">სტუდენტები:</span>
       <ul className="mt-1 space-y-1 max-h-40 overflow-y-auto">
         {participants.length === 0 ? (

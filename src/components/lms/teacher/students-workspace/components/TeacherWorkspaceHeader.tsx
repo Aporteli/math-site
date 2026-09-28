@@ -40,14 +40,14 @@ export function TeacherWorkspaceHeader({
                 key={student.id}
                 type="button"
                 onClick={() => onSelectStudent(student.id)}
-                className={`relative inline-flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-full border py-1 pe-3.5 ps-1 text-xs font-bold transition ${
+                className={`relative inline-flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-box border py-1 pe-3.5 ps-1 text-xs font-bold transition ${
                   isSelected
                     ? 'border-navy bg-navy text-white shadow-sm'
                     : 'border-hairline bg-paper text-ink hover:border-navy/40 hover:bg-navy-tint'
                 }`}
               >
                 <span
-                  className={`flex size-7 items-center justify-center rounded-full text-[11px] font-bold ${
+                  className={`flex size-7 items-center justify-center rounded-box text-[11px] font-bold ${
                     isSelected ? 'bg-white/20 text-white' : 'bg-navy-tint text-navy'
                   }`}
                 >
@@ -55,7 +55,7 @@ export function TeacherWorkspaceHeader({
                 </span>
                 <span className="max-w-[9rem] truncate sm:max-w-[12rem]">{student.name}</span>
                 {hasUnread ? (
-                  <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-brass ring-2 ring-surface" />
+                  <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-box bg-brass ring-2 ring-surface" />
                 ) : null}
               </button>
             );
@@ -64,12 +64,12 @@ export function TeacherWorkspaceHeader({
       </div>
 
       {activeStudent ? (
-        <div className="flex w-full shrink-0 items-center rounded-full border border-hairline bg-paper p-1 sm:w-auto">
+        <div className="flex w-full shrink-0 items-center rounded-box border border-hairline bg-paper p-1 sm:w-auto">
           <button
             type="button"
             onClick={() => onShiftDate(-1)}
             title="წინა დღე"
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink"
+            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink"
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -96,7 +96,7 @@ export function TeacherWorkspaceHeader({
             type="button"
             onClick={() => onShiftDate(1)}
             title="შემდეგი დღე"
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink"
+            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink"
           >
             <ChevronRight className="size-4" />
           </button>

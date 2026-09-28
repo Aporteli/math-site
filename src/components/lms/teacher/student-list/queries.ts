@@ -242,3 +242,46 @@ export async function getTeacherIndividualPayments(
     note: p.note ?? undefined,
   }));
 }
+
+export async function getStudentAssignments(
+  teacherId: string,
+  studentId: string,
+): Promise<{ id: string; title: string; status: string; createdAt: string }[]> {
+  const [submissions, targeted] = await Promise.all([
+    prisma.submission.findMany({
+      where: { studentId, assignment: { course: { teacherId } } },
+      include: {
+        assignment: { select: { id: true, title: true, createdAt: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.assignment.findMany({
+      where: { targetUserId: studentId, course: { teacherId } },
+      select: { id: true, title: true, status: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ]);
+
+  const byId = new Map<string, { id: string; title: string; status: string; createdAt: string }>();
+
+  for (const row of submissions) {
+    byId.set(row.assignment.id, {
+      id: row.assignment.id,
+      title: row.assignment.title,
+      status: row.status,
+      createdAt: row.assignment.createdAt.toISOString(),
+    });
+  }
+
+  for (const row of targeted) {
+    if (byId.has(row.id)) continue;
+    byId.set(row.id, {
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      createdAt: row.createdAt.toISOString(),
+    });
+  }
+
+  return Array.from(byId.values());
+}

@@ -35,7 +35,7 @@ export function ControlButton({
       type="button"
       onClick={onClick}
       title={title}
-      className={`flex size-9 items-center justify-center rounded-xl border transition-all ${state}`}
+      className={`flex size-9 items-center justify-center rounded-box border transition-all ${state}`}
     >
       <Icon className="size-4" />
     </button>

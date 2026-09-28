@@ -221,10 +221,10 @@ export function ReportsView({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 sm:gap-4">
       {/* ═══ Header ═══ */}
-      <div className="rounded-2xl border border-hairline bg-surface p-3 shadow-sm sm:rounded-3xl sm:p-5">
+      <div className="rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
               <BarChart3 className="size-5" />
             </span>
             <div className="min-w-0">
@@ -235,11 +235,11 @@ export function ReportsView({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="grid grid-cols-2 gap-1 rounded-2xl border border-hairline bg-paper p-1">
+            <div className="grid grid-cols-2 gap-1 rounded-box border border-hairline bg-paper p-1">
               <button
                 type="button"
                 onClick={() => setMode('monthly')}
-                className={`inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
+                className={`inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-box px-3 text-xs font-bold transition ${
                   mode === 'monthly'
                     ? 'bg-navy text-white shadow-sm'
                     : 'text-body hover:bg-surface hover:text-ink'
@@ -251,7 +251,7 @@ export function ReportsView({
               <button
                 type="button"
                 onClick={() => setMode('yearly')}
-                className={`inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 text-xs font-bold transition ${
+                className={`inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-box px-3 text-xs font-bold transition ${
                   mode === 'yearly'
                     ? 'bg-navy text-white shadow-sm'
                     : 'text-body hover:bg-surface hover:text-ink'
@@ -263,12 +263,12 @@ export function ReportsView({
             </div>
 
             {mode === 'monthly' && (
-              <div className="flex items-center gap-1 rounded-full border border-hairline bg-paper p-1">
+              <div className="flex items-center gap-1 rounded-box border border-hairline bg-paper p-1">
                 <button
                   type="button"
                   onClick={() => onMonthChange(shiftMonth(monthKey, -1))}
                   aria-label="წინა თვე"
-                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink"
+                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink"
                 >
                   <ChevronLeft className="size-4" />
                 </button>
@@ -279,7 +279,7 @@ export function ReportsView({
                   type="button"
                   onClick={() => onMonthChange(shiftMonth(monthKey, 1))}
                   aria-label="შემდეგი თვე"
-                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink"
+                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink"
                 >
                   <ChevronRight className="size-4" />
                 </button>
@@ -287,14 +287,14 @@ export function ReportsView({
             )}
 
             {mode === 'yearly' && (
-              <div className="flex items-center gap-1 rounded-full border border-hairline bg-paper p-1">
+              <div className="flex items-center gap-1 rounded-box border border-hairline bg-paper p-1">
                 <button
                   type="button"
                   onClick={() =>
                     onMonthChange(`${year - 1}-${String(month).padStart(2, '0')}`)
                   }
                   aria-label="წინა წელი"
-                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink"
+                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink"
                 >
                   <ChevronLeft className="size-4" />
                 </button>
@@ -307,7 +307,7 @@ export function ReportsView({
                     onMonthChange(`${year + 1}-${String(month).padStart(2, '0')}`)
                   }
                   aria-label="შემდეგი წელი"
-                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink"
+                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink"
                 >
                   <ChevronRight className="size-4" />
                 </button>
@@ -318,7 +318,7 @@ export function ReportsView({
 
         {/* ═══ Big stats ═══ */}
         <div className="mt-4 grid grid-cols-1 gap-2 min-[480px]:grid-cols-3">
-          <div className="min-w-0 rounded-2xl border border-hairline bg-win-tint/50 px-4 py-3">
+          <div className="min-w-0 rounded-box border border-hairline bg-win-tint/50 px-4 py-3">
             <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-win">
               <Wallet className="size-3.5 shrink-0" />
               {mode === 'monthly' ? 'ამ თვის შემოსავალი' : 'ამ წლის შემოსავალი'}
@@ -327,7 +327,7 @@ export function ReportsView({
               {formatPrice(mode === 'monthly' ? monthlyData.totalPaid : yearlyData.yearTotal)}
             </p>
           </div>
-          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-4 py-3">
+          <div className="min-w-0 rounded-box border border-hairline bg-paper px-4 py-3">
             <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-muted">
               <List className="size-3.5 shrink-0" /> გადახდების რაოდენობა
             </p>
@@ -335,7 +335,7 @@ export function ReportsView({
               {mode === 'monthly' ? monthlyData.paymentCount : yearlyData.yearCount}
             </p>
           </div>
-          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-4 py-3">
+          <div className="min-w-0 rounded-box border border-hairline bg-paper px-4 py-3">
             <p className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-muted">
               <Award className="size-3.5 shrink-0" />
               {mode === 'monthly' ? 'საშუალო გადახდა' : 'თვის საშუალო'}
@@ -393,7 +393,7 @@ function MonthlyReport({
   return (
     <div className="space-y-3 sm:space-y-4">
       {/* ─── Daily chart ─── */}
-      <div className="rounded-2xl border border-hairline bg-surface p-4 shadow-sm sm:rounded-3xl sm:p-5">
+      <div className="rounded-box border border-hairline bg-surface p-4 shadow-sm sm:rounded-box sm:p-5">
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <BarChart3 className="size-4 text-brass-strong" />
@@ -475,7 +475,7 @@ function MonthlyReport({
                       </span>
                     )}
                     <div
-                      className={`w-full rounded-t transition-all ${
+                      className={`w-full rounded-box transition-all ${
                         amt > 0
                           ? isWeekend
                             ? 'bg-brass hover:bg-brass-strong'
@@ -513,19 +513,19 @@ function MonthlyReport({
         {/* Legend */}
         <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-hairline pt-2 text-[10px] font-medium text-muted">
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-win" /> სამუშაო დღე
+            <span className="size-2 rounded-box bg-win" /> სამუშაო დღე
           </span>
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-brass" /> შაბათ-კვირა
+            <span className="size-2 rounded-box bg-brass" /> შაბათ-კვირა
           </span>
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-paper-deep" /> გადახდის გარეშე
+            <span className="size-2 rounded-box bg-paper-deep" /> გადახდის გარეშე
           </span>
         </div>
       </div>
 
       {/* ─── Method breakdown ─── */}
-      <div className="rounded-2xl border border-hairline bg-surface p-4 shadow-sm sm:rounded-3xl sm:p-5">
+      <div className="rounded-box border border-hairline bg-surface p-4 shadow-sm sm:rounded-box sm:p-5">
         <div className="mb-3 flex items-center gap-2">
           <Wallet className="size-4 text-brass-strong" />
           <p className="text-sm font-bold text-ink">გადახდის მეთოდები</p>
@@ -540,7 +540,7 @@ function MonthlyReport({
             return (
               <div
                 key={m}
-                className={`rounded-2xl border px-3 py-3 ${METHOD_COLOR[m]}`}
+                className={`rounded-box border px-3 py-3 ${METHOD_COLOR[m]}`}
               >
                 <div className="flex items-center gap-2">
                   <Icon className="size-3.5 shrink-0" />
@@ -565,7 +565,7 @@ function MonthlyReport({
       </div>
 
       {/* ─── Per-student breakdown ─── */}
-      <div className="rounded-2xl border border-hairline bg-surface shadow-sm sm:rounded-3xl">
+      <div className="rounded-box border border-hairline bg-surface shadow-sm sm:rounded-box">
         <div className="flex items-center gap-2 border-b border-hairline px-4 py-3">
           <Users className="size-4 text-brass-strong" />
           <p className="text-sm font-bold text-ink">
@@ -589,7 +589,7 @@ function MonthlyReport({
                   className="flex items-center gap-3 px-4 py-3"
                 >
                   <span
-                    className={`flex size-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black ${
+                    className={`flex size-7 shrink-0 items-center justify-center rounded-box text-[11px] font-black ${
                       idx === 0
                         ? 'bg-brass text-white'
                         : idx === 1
@@ -610,9 +610,9 @@ function MonthlyReport({
                   
                     </div>
                     <div className="mt-1 flex items-center gap-2">
-                      <div className="relative h-1.5 w-full max-w-[140px] overflow-hidden rounded-full bg-paper-deep">
+                      <div className="relative h-1.5 w-full max-w-[140px] overflow-hidden rounded-box bg-paper-deep">
                         <div
-                          className="absolute inset-y-0 left-0 rounded-full bg-win"
+                          className="absolute inset-y-0 left-0 rounded-box bg-win"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -675,14 +675,14 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
   return (
     <div className="space-y-3 sm:space-y-4">
       {/* ─── 12-month chart ─── */}
-      <div className="rounded-2xl border border-hairline bg-surface p-4 shadow-sm sm:rounded-3xl sm:p-5">
+      <div className="rounded-box border border-hairline bg-surface p-4 shadow-sm sm:rounded-box sm:p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <TrendingUp className="size-4 text-brass-strong" />
             <p className="text-sm font-bold text-ink">{year} წლის შემოსავალი</p>
           </div>
           {data.best.total > 0 && (
-            <div className="rounded-full border border-brass/30 bg-brass-tint px-2.5 py-1 text-[10px] font-bold text-brass-strong">
+            <div className="rounded-box border border-brass/30 bg-brass-tint px-2.5 py-1 text-[10px] font-bold text-brass-strong">
               საუკეთესო: {data.best.label} ({formatPrice(data.best.total)})
             </div>
           )}
@@ -758,7 +758,7 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
                       </span>
                     )}
                     <div
-                      className={`w-full rounded-t-md transition-all ${
+                      className={`w-full rounded-box-md transition-all ${
                         isEmpty
                           ? 'bg-paper-deep'
                           : isCurrent
@@ -794,16 +794,16 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
         {/* Legend */}
         <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-hairline pt-2 text-[10px] font-medium text-muted">
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-win" /> თვე
+            <span className="size-2 rounded-box bg-win" /> თვე
           </span>
           <span className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-brass" /> მიმდინარე თვე
+            <span className="size-2 rounded-box bg-brass" /> მიმდინარე თვე
           </span>
         </div>
       </div>
 
       {/* ─── Monthly table ─── */}
-      <div className="overflow-hidden rounded-2xl border border-hairline bg-surface shadow-sm sm:rounded-3xl">
+      <div className="overflow-hidden rounded-box border border-hairline bg-surface shadow-sm sm:rounded-box">
         <div className="flex items-center gap-2 border-b border-hairline px-4 py-3">
           <CalendarIcon className="size-4 text-brass-strong" />
           <p className="text-sm font-bold text-ink">თვეების დეტალები</p>
@@ -829,9 +829,9 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
                   {m.label}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-paper-deep">
+                  <div className="relative h-1.5 w-full overflow-hidden rounded-box bg-paper-deep">
                     <div
-                      className={`absolute inset-y-0 left-0 rounded-full ${
+                      className={`absolute inset-y-0 left-0 rounded-box ${
                         isCurrent ? 'bg-brass' : 'bg-win'
                       }`}
                       style={{ width: `${pct}%` }}
@@ -855,7 +855,7 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
       </div>
 
       {/* ─── Method breakdown ─── */}
-      <div className="rounded-2xl border border-hairline bg-surface p-4 shadow-sm sm:rounded-3xl sm:p-5">
+      <div className="rounded-box border border-hairline bg-surface p-4 shadow-sm sm:rounded-box sm:p-5">
         <div className="mb-3 flex items-center gap-2">
           <Wallet className="size-4 text-brass-strong" />
           <p className="text-sm font-bold text-ink">გადახდის მეთოდები (წელი)</p>
@@ -870,7 +870,7 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
             return (
               <div
                 key={m}
-                className={`rounded-2xl border px-3 py-3 ${METHOD_COLOR[m]}`}
+                className={`rounded-box border px-3 py-3 ${METHOD_COLOR[m]}`}
               >
                 <div className="flex items-center gap-2">
                   <Icon className="size-3.5 shrink-0" />
@@ -895,7 +895,7 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
       </div>
 
       {/* ─── Top students of the year ─── */}
-      <div className="rounded-2xl border border-hairline bg-surface shadow-sm sm:rounded-3xl">
+      <div className="rounded-box border border-hairline bg-surface shadow-sm sm:rounded-box">
         <div className="flex items-center gap-2 border-b border-hairline px-4 py-3">
           <p className="text-sm font-bold text-ink">
              მოსწავლეები ({data.byStudent.length})
@@ -918,7 +918,7 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
                   className="flex items-center gap-3 px-4 py-3"
                 >
                   <span
-                    className={`flex size-7 shrink-0 items-center justify-center rounded-full text-[11px] font-black ${
+                    className={`flex size-7 shrink-0 items-center justify-center rounded-box text-[11px] font-black ${
                       idx === 0
                         ? 'bg-brass text-white'
                         : idx === 1

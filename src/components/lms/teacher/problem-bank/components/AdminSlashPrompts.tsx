@@ -12,7 +12,7 @@ import type { ProblemBankCopy } from "@/lib/math/problems";
 type SlashCopy = ProblemBankCopy["chat"]["slashPrompts"];
 
 const fieldClass =
-  "w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
+  "w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
 
 export function AdminSlashPromptMenu({
   copy,
@@ -31,7 +31,7 @@ export function AdminSlashPromptMenu({
     <div
       role="listbox"
       aria-label={copy.menuLabel}
-      className="absolute bottom-full left-0 z-20 mb-2 max-h-56 w-full overflow-y-auto rounded-2xl border border-hairline bg-white p-1.5 shadow-lg shadow-navy/10"
+      className="absolute bottom-full left-0 z-20 mb-2 max-h-56 w-full overflow-y-auto rounded-box border border-hairline bg-white p-1.5 shadow-lg shadow-navy/10"
     >
       {items.length === 0 ? (
         <p className="px-3 py-2 text-sm text-muted">{copy.noMatches}</p>
@@ -45,7 +45,7 @@ export function AdminSlashPromptMenu({
                   type="button"
                   role="option"
                   aria-selected={active}
-                  className={`flex w-full flex-col items-start gap-0.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                  className={`flex w-full flex-col items-start gap-0.5 rounded-box px-3 py-2 text-left text-sm transition-colors ${
                     active
                       ? "bg-navy-tint text-ink"
                       : "text-ink hover:bg-paper-deep"
@@ -122,7 +122,7 @@ export function AdminSlashPromptManager({
   }
 
   return (
-    <div className="rounded-2xl border border-navy/15 bg-navy-tint/25 p-3">
+    <div className="rounded-box border border-navy/15 bg-navy-tint/25 p-3">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 id={titleId} className="text-sm font-semibold text-ink">
@@ -134,7 +134,7 @@ export function AdminSlashPromptManager({
           type="button"
           aria-label={copy.closeManage}
           onClick={onClose}
-          className="inline-flex size-8 items-center justify-center rounded-lg text-muted hover:bg-white hover:text-ink"
+          className="inline-flex size-8 items-center justify-center rounded-box text-muted hover:bg-white hover:text-ink"
         >
           <X className="size-4" aria-hidden="true" />
         </button>
@@ -142,14 +142,14 @@ export function AdminSlashPromptManager({
 
       <ul className="mt-3 max-h-40 space-y-2 overflow-y-auto" aria-labelledby={titleId}>
         {prompts.length === 0 ? (
-          <li className="rounded-xl border border-dashed border-hairline bg-white px-3 py-2 text-sm text-muted">
+          <li className="rounded-box border border-dashed border-hairline bg-white px-3 py-2 text-sm text-muted">
             {copy.empty}
           </li>
         ) : (
           prompts.map((prompt) => (
             <li
               key={prompt.id}
-              className="flex items-start justify-between gap-2 rounded-xl border border-hairline bg-white px-3 py-2"
+              className="flex items-start justify-between gap-2 rounded-box border border-hairline bg-white px-3 py-2"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-navy">
@@ -163,7 +163,7 @@ export function AdminSlashPromptManager({
                 type="button"
                 aria-label={copy.remove}
                 onClick={() => onRemove(prompt.id)}
-                className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-paper-deep hover:text-ink"
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-box text-muted hover:bg-paper-deep hover:text-ink"
               >
                 <Trash2 className="size-4" aria-hidden="true" />
               </button>
@@ -197,7 +197,7 @@ export function AdminSlashPromptManager({
         <button
           type="button"
           onClick={onAdd}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong"
+          className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong"
         >
           <Plus className="size-3.5" aria-hidden="true" />
           {copy.add}

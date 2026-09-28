@@ -87,7 +87,7 @@ export function StudentCourseVideoCallButton({ courseId, courseTitle, label }: S
           setIsOpen(true);
         }}
         disabled={disabled}
-        className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-4 text-sm font-bold text-white shadow-sm transition-all active:scale-[0.99] ${
+        className={`inline-flex w-full items-center justify-center gap-2 rounded-box px-4 py-4 text-sm font-bold text-white shadow-sm transition-all active:scale-[0.99] ${
           disabled ? 'cursor-not-allowed bg-slate-400 hover:bg-slate-400' : 'bg-navy hover:bg-navy-strong'
         }`}>
         {checking ? (

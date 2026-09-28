@@ -30,7 +30,7 @@ export default async function LoginPage({ params }: LoginPageProps) {
   const copy = auth.login;
 
   return (
-    <section className="relative w-full max-w-md overflow-hidden rounded-3xl border border-hairline bg-white shadow-sm">
+    <section className="relative w-full max-w-md overflow-hidden rounded-box border border-hairline bg-white shadow-sm">
       <div
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--color-hairline-soft)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-hairline-soft)_1px,transparent_1px)] bg-[size:1.5rem_1.5rem] opacity-70"
         aria-hidden="true"
@@ -40,7 +40,7 @@ export default async function LoginPage({ params }: LoginPageProps) {
         <p className="text-sm font-semibold tracking-wide text-brass">{copy.eyebrow}</p>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink">{copy.title}</h1>
         <div className="mt-6">
-          <Suspense fallback={<div className="h-48 rounded-xl bg-paper-deep" aria-hidden="true" />}>
+          <Suspense fallback={<div className="h-48 rounded-box bg-paper-deep" aria-hidden="true" />}>
             <LoginForm locale={locale} copy={copy} />
           </Suspense>
         </div>

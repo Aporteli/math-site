@@ -56,3 +56,10 @@ export interface PaymentRecord {
 }
 
 export type ContentTab = 'list' | 'calendar';
+
+export interface StudentAssignmentItem {
+  id: string;
+  title: string;
+  status: string;
+  createdAt: string;
+}

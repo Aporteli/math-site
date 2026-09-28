@@ -115,16 +115,16 @@ export function AssignBoardThumbnail({
   return (
     <div
       onClick={onToggle}
-      className={`group relative flex flex-col items-center gap-1 p-1 rounded-2xl cursor-pointer transition-all shrink-0 select-none ${
+      className={`group relative flex flex-col items-center gap-1 p-1 rounded-box cursor-pointer transition-all shrink-0 select-none ${
         isSelected
           ? 'bg-indigo-600/10 dark:bg-indigo-500/20 ring-2 ring-indigo-600 dark:ring-indigo-400'
           : 'hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800'
       }`}>
-      <div className="relative w-24 h-15 rounded-xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950">
+      <div className="relative w-24 h-15 rounded-box overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950">
         <canvas ref={canvasRef} width={96} height={60} className="w-full h-full object-contain" />
 
         <div
-          className={`absolute top-1 right-1 flex size-4 items-center justify-center rounded-full border transition-all ${
+          className={`absolute top-1 right-1 flex size-4 items-center justify-center rounded-box border transition-all ${
             isSelected
               ? 'bg-indigo-600 border-indigo-600 text-white'
               : 'bg-white/80 border-slate-300 text-transparent group-hover:border-slate-400'

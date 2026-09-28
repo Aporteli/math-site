@@ -23,7 +23,7 @@ export function ZoomControls({ zoomPercent, onZoomIn, onZoomOut, onZoomReset, on
         onClick={onZoomOut}
         disabled={disabled}
         title="დაპატარავება (Ctrl + -)"
-        className={`flex size-7 sm:size-8 items-center justify-center rounded-xl text-slate-700 dark:text-slate-200 transition-colors ${btn}`}>
+        className={`flex size-7 sm:size-8 items-center justify-center rounded-box text-slate-700 dark:text-slate-200 transition-colors ${btn}`}>
         <ZoomOut className="size-3.5" />
       </button>
 
@@ -32,7 +32,7 @@ export function ZoomControls({ zoomPercent, onZoomIn, onZoomOut, onZoomReset, on
         onClick={onZoomReset}
         disabled={disabled}
         title="100%-ზე დაბრუნება (Ctrl + 0)"
-        className={`flex h-7 sm:h-8 items-center justify-center px-1 rounded-lg text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 transition-colors min-w-[36px] sm:min-w-[42px] ${btn}`}>
+        className={`flex h-7 sm:h-8 items-center justify-center px-1 rounded-box text-[10px] sm:text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 transition-colors min-w-[36px] sm:min-w-[42px] ${btn}`}>
         {zoomPercent}%
       </button>
 
@@ -41,7 +41,7 @@ export function ZoomControls({ zoomPercent, onZoomIn, onZoomOut, onZoomReset, on
         onClick={onZoomIn}
         disabled={disabled}
         title="გადიდება (Ctrl + +)"
-        className={`flex size-7 sm:size-8 items-center justify-center rounded-xl text-slate-700 dark:text-slate-200 transition-colors ${btn}`}>
+        className={`flex size-7 sm:size-8 items-center justify-center rounded-box text-slate-700 dark:text-slate-200 transition-colors ${btn}`}>
         <ZoomIn className="size-3.5" />
       </button>
 
@@ -50,7 +50,7 @@ export function ZoomControls({ zoomPercent, onZoomIn, onZoomOut, onZoomReset, on
         onClick={onFit}
         disabled={disabled}
         title="ნახაზების ეკრანზე მორგება (Fit)"
-        className={`flex size-7 sm:size-8 items-center justify-center rounded-xl text-slate-700 dark:text-slate-200 transition-colors ${btn}`}>
+        className={`flex size-7 sm:size-8 items-center justify-center rounded-box text-slate-700 dark:text-slate-200 transition-colors ${btn}`}>
         <Frame className="size-3.5" />
       </button>
     </div>

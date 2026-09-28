@@ -43,9 +43,9 @@ import {
 } from '@/lib/math/problems/templates/append-variant';
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
-const panelClass = 'rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5';
+const panelClass = 'rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5';
 
 interface FamilyControlCenterProps {
   locale: Locale;
@@ -544,7 +544,7 @@ export function FamilyControlCenter({
         </h2>
         <button
           type="button"
-          className="inline-flex size-9 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
+          className="inline-flex size-9 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
           aria-label={center.close}
           onClick={onClose}>
           <X className="size-4" aria-hidden="true" />
@@ -552,7 +552,7 @@ export function FamilyControlCenter({
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-[17rem_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col rounded-2xl border border-hairline bg-paper-deep/60 p-3">
+        <aside className="flex min-h-0 flex-col rounded-box border border-hairline bg-paper-deep/60 p-3">
           <div className="space-y-2">
             <label className="sr-only" htmlFor={nameId}>
               {center.nameLabel}
@@ -574,7 +574,7 @@ export function FamilyControlCenter({
             />
             <button
               type="button"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-box bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60"
               disabled={creating || !newFamilyName.trim()}
               onClick={() => void addNamedFamily()}>
               <Plus className="size-4" aria-hidden="true" />
@@ -599,7 +599,7 @@ export function FamilyControlCenter({
                       type="button"
                       aria-current={active ? 'true' : undefined}
                       className={[
-                        'flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left transition-colors',
+                        'flex w-full items-center gap-2 rounded-box px-2.5 py-2 text-left transition-colors',
                         active
                           ? 'bg-white text-navy shadow-sm ring-1 ring-navy/15'
                           : 'text-body hover:bg-white/80 hover:text-ink',
@@ -619,7 +619,7 @@ export function FamilyControlCenter({
 
         <div className="min-w-0 space-y-4">
           {!selected && !jsonText.trim() ? (
-            <p className="rounded-2xl border border-dashed border-hairline bg-paper px-4 py-10 text-center text-sm text-muted">
+            <p className="rounded-box border border-dashed border-hairline bg-paper px-4 py-10 text-center text-sm text-muted">
               {center.selectHint}
             </p>
           ) : (
@@ -632,7 +632,7 @@ export function FamilyControlCenter({
                         {selected.title || selected.slug}
                       </h3>
                       {dirty ? (
-                        <span className="rounded-full bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
+                        <span className="rounded-box bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
                           {center.unsaved}
                         </span>
                       ) : null}
@@ -655,7 +655,7 @@ export function FamilyControlCenter({
                   </div>
                   <button
                     type="button"
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
                     onClick={addVariant}>
                     <Plus className="size-3.5" aria-hidden="true" />
                     {center.addVariant}
@@ -665,7 +665,7 @@ export function FamilyControlCenter({
                 <div className="flex justify-end border-b border-hairline pb-3">
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
+                    className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
                     onClick={addVariant}>
                     <Plus className="size-3.5" aria-hidden="true" />
                     {center.addVariant}
@@ -675,12 +675,12 @@ export function FamilyControlCenter({
 
               <div className="space-y-2">
                 {familyRead?.ok ? (
-                  <details className="rounded-2xl border border-hairline bg-white open:shadow-sm">
+                  <details className="rounded-box border border-hairline bg-white open:shadow-sm">
                     <summary className="cursor-pointer list-none px-3.5 py-2.5 text-sm font-medium text-ink [&::-webkit-details-marker]:hidden">
                       <span className="inline-flex items-center gap-2">
                         <span className="text-muted">›</span>
                         {center.variantsFold}
-                        <span className="rounded-full bg-paper-deep px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted">
+                        <span className="rounded-box bg-paper-deep px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted">
                           {listedVariants.length}
                         </span>
                       </span>
@@ -714,7 +714,7 @@ export function FamilyControlCenter({
                               </button>
                               <button
                                 type="button"
-                                className="inline-flex items-center gap-1 rounded-lg bg-paper px-2 py-1 text-xs font-medium text-body hover:text-navy disabled:opacity-50"
+                                className="inline-flex items-center gap-1 rounded-box bg-paper px-2 py-1 text-xs font-medium text-body hover:text-navy disabled:opacity-50"
                                 disabled={saving}
                                 onClick={() => void removeSelectedVariants()}>
                                 <Trash2 className="size-3.5" aria-hidden="true" />
@@ -740,7 +740,7 @@ export function FamilyControlCenter({
                             return (
                               <li
                                 key={`${slug}-${index}`}
-                                className="flex flex-wrap items-center gap-2 rounded-xl bg-paper px-3 py-1.5">
+                                className="flex flex-wrap items-center gap-2 rounded-box bg-paper px-3 py-1.5">
                                 <input
                                   type="checkbox"
                                   className="size-3.5 shrink-0 rounded border-hairline text-navy focus:ring-navy/30"
@@ -759,7 +759,7 @@ export function FamilyControlCenter({
                                 </label>
                                 <select
                                   id={`${jsonId}-v-${index}-year`}
-                                  className="max-w-[6.75rem] min-w-[5.25rem] rounded-lg border border-hairline bg-white px-1.5 py-1 text-[11px] text-ink focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 disabled:opacity-60"
+                                  className="max-w-[6.75rem] min-w-[5.25rem] rounded-box border border-hairline bg-white px-1.5 py-1 text-[11px] text-ink focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 disabled:opacity-60"
                                   disabled={saving}
                                   value={yearValue}
                                   onChange={(event) =>
@@ -778,7 +778,7 @@ export function FamilyControlCenter({
                                 </label>
                                 <select
                                   id={`${jsonId}-v-${index}-difficulty`}
-                                  className="max-w-[7.5rem] min-w-[5.5rem] rounded-lg border border-hairline bg-white px-1.5 py-1 text-[11px] text-ink focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 disabled:opacity-60"
+                                  className="max-w-[7.5rem] min-w-[5.5rem] rounded-box border border-hairline bg-white px-1.5 py-1 text-[11px] text-ink focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 disabled:opacity-60"
                                   disabled={saving}
                                   value={difficultyValue}
                                   onChange={(event) =>
@@ -794,7 +794,7 @@ export function FamilyControlCenter({
                                 </select>
                                 <button
                                   type="button"
-                                  className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-body hover:bg-white hover:text-navy disabled:opacity-50"
+                                  className="inline-flex shrink-0 items-center gap-1 rounded-box px-2 py-1 text-xs font-medium text-body hover:bg-white hover:text-navy disabled:opacity-50"
                                   disabled={saving}
                                   onClick={() => void removeVariantAt(index)}>
                                   <Trash2 className="size-3.5" aria-hidden="true" />
@@ -809,7 +809,7 @@ export function FamilyControlCenter({
                   </details>
                 ) : null}
 
-                <details className="rounded-2xl border border-hairline bg-white open:shadow-sm">
+                <details className="rounded-box border border-hairline bg-white open:shadow-sm">
                   <summary className="cursor-pointer list-none px-3.5 py-2.5 text-sm font-medium text-ink [&::-webkit-details-marker]:hidden">
                     <span className="inline-flex items-center gap-2">
                       <span className="text-muted">›</span>
@@ -835,7 +835,7 @@ export function FamilyControlCenter({
               </div>
 
               {showVariantPaste ? (
-                <div className="rounded-2xl border border-navy/15 bg-navy-tint/30 p-4">
+                <div className="rounded-box border border-navy/15 bg-navy-tint/30 p-4">
                   <label className="block text-sm font-medium text-ink" htmlFor={variantPasteId}>
                     {center.addVariant}
                   </label>
@@ -864,14 +864,14 @@ export function FamilyControlCenter({
                     <button
                       type="button"
                       disabled={saving || !variantPaste.trim() || variantPasteIssues.length > 0}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60"
+                      className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60"
                       onClick={() => void submitVariantPaste()}>
                       <Plus className="size-3.5" aria-hidden="true" />
                       {center.addVariantSubmit}
                     </button>
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
+                      className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
                       onClick={() => {
                         setShowVariantPaste(false);
                         setVariantPaste('');
@@ -883,7 +883,7 @@ export function FamilyControlCenter({
               ) : null}
 
               {preview && 'problem' in preview && preview.problem ? (
-                <div className="rounded-2xl border border-hairline bg-paper p-4">
+                <div className="rounded-box border border-hairline bg-paper p-4">
                   <p className="text-xs font-semibold tracking-wide text-brass">{center.preview}</p>
                   <div className="mt-2 overflow-x-auto text-ink">
                     <KatexPreview tex={preview.problem.promptTex} />
@@ -899,7 +899,7 @@ export function FamilyControlCenter({
                 </p>
               ) : null}
 
-              <div className="rounded-2xl border border-hairline bg-paper p-4">
+              <div className="rounded-box border border-hairline bg-paper p-4">
                 <div className="grid gap-3 sm:grid-cols-3">
                   <div>
                     <label className="block text-sm font-medium text-ink" htmlFor={`${jsonId}-difficulty`}>
@@ -969,7 +969,7 @@ export function FamilyControlCenter({
                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline pt-4">
                   <button
                     type="button"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60"
                     disabled={saving || schemaBlocked || !jsonText.trim()}
                     onClick={() => void saveCurrent()}>
                     <Save className="size-4" aria-hidden="true" />
@@ -977,7 +977,7 @@ export function FamilyControlCenter({
                   </button>
                   <button
                     type="button"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy hover:border-navy/40 hover:bg-navy-tint disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 rounded-box border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy hover:border-navy/40 hover:bg-navy-tint disabled:opacity-60"
                     disabled={generating || previewBlocked || listedVariants.length === 0 || !jsonText.trim()}
                     onClick={() => void generateProblems()}>
                     <Shuffle className="size-4" aria-hidden="true" />
@@ -986,7 +986,7 @@ export function FamilyControlCenter({
                   <div className="ms-auto flex flex-wrap gap-2">
                     <button
                       type="button"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-box border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60"
                       disabled={!jsonText.trim()}
                       onClick={() => void copyJson()}>
                       {copied ? (
@@ -998,7 +998,7 @@ export function FamilyControlCenter({
                     </button>
                     <button
                       type="button"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-box border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60"
                       disabled={!jsonText.trim()}
                       onClick={downloadJson}>
                       <Download className="size-4" aria-hidden="true" />
@@ -1006,7 +1006,7 @@ export function FamilyControlCenter({
                     </button>
                     <button
                       type="button"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
+                      className="inline-flex items-center justify-center gap-2 rounded-box border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy"
                       onClick={onNewFamily}>
                       <FileUp className="size-4" aria-hidden="true" />
                       {center.newFamily}
@@ -1014,7 +1014,7 @@ export function FamilyControlCenter({
                     {selected ? (
                       <button
                         type="button"
-                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-2 rounded-box border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60"
                         disabled={saving}
                         onClick={() => void removeSelected()}>
                         <Trash2 className="size-4" aria-hidden="true" />
@@ -1034,7 +1034,7 @@ export function FamilyControlCenter({
 
 function DiagnosisNote({ copy, diagnosis }: { copy: ProblemBankCopy['importFamily']; diagnosis: TemplateDiagnosis }) {
   return (
-    <div className="rounded-2xl border border-brass/25 bg-brass-tint px-4 py-3">
+    <div className="rounded-box border border-brass/25 bg-brass-tint px-4 py-3">
       <p className="text-xs font-semibold tracking-wide text-brass">{copy.diagnoseTitle}</p>
       <p className="mt-1 text-sm text-brass-strong">{diagnosisHint(copy, diagnosis.hint)}</p>
       {diagnosis.lines.length > 0 ? (

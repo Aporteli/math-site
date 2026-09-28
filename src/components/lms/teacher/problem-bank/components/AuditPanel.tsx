@@ -16,7 +16,7 @@ export function AuditPanel({
   }, {});
 
   return (
-    <div className="rounded-2xl border border-brass/25 bg-brass-tint px-4 py-3">
+    <div className="rounded-box border border-brass/25 bg-brass-tint px-4 py-3">
       <p className="text-xs font-semibold tracking-wide text-brass">
         {copy.auditTitle}
       </p>

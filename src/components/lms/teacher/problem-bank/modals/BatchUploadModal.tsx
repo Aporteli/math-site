@@ -167,14 +167,14 @@ export function BatchUploadModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="flex h-[90vh] max-h-[820px] w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-black/5"
+        className="flex h-[90vh] max-h-[820px] w-full max-w-5xl flex-col overflow-hidden rounded-box bg-white shadow-2xl ring-1 ring-black/5"
         onClick={(e) => {
           e.stopPropagation();
         }}
       >
         <div className="flex items-center justify-between border-b border-hairline bg-gradient-to-b from-paper/60 to-white px-6 py-5">
           <div className="flex min-w-0 items-center gap-3.5">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-navy/10 bg-navy-tint text-navy">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-box border border-navy/10 bg-navy-tint text-navy">
               <Sparkles className="size-5" />
             </div>
             <div className="min-w-0">
@@ -189,7 +189,7 @@ export function BatchUploadModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-hairline bg-white text-muted shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+            className="flex size-9 shrink-0 items-center justify-center rounded-box border border-hairline bg-white text-muted shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
           >
             <X className="size-5" />
           </button>
@@ -236,7 +236,7 @@ export function BatchUploadModal({
               setIsDragging(false);
               handleFiles(e.dataTransfer.files);
             }}
-            className={`group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-8 text-center cursor-pointer transition-all ${
+            className={`group flex flex-col items-center justify-center gap-3 rounded-box border-2 border-dashed px-6 py-8 text-center cursor-pointer transition-all ${
               isDragging
                 ? "border-navy bg-navy-tint/60 scale-[1.01]"
                 : "border-navy/30 bg-navy-tint/20 hover:border-navy hover:bg-navy-tint/40"
@@ -249,7 +249,7 @@ export function BatchUploadModal({
               </div>
             ) : (
               <>
-                <span className="flex size-12 items-center justify-center rounded-2xl border border-navy/10 bg-white text-navy shadow-sm transition-transform group-hover:scale-105">
+                <span className="flex size-12 items-center justify-center rounded-box border border-navy/10 bg-white text-navy shadow-sm transition-transform group-hover:scale-105">
                   <UploadCloud className="size-6" />
                 </span>
                 <div>
@@ -276,9 +276,9 @@ export function BatchUploadModal({
                     {matchedCount}/{problems.length}
                   </span>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-paper-deep">
+                <div className="h-1.5 w-full overflow-hidden rounded-box bg-paper-deep">
                   <div
-                    className="h-full rounded-full bg-navy transition-all duration-300"
+                    className="h-full rounded-box bg-navy transition-all duration-300"
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
@@ -295,7 +295,7 @@ export function BatchUploadModal({
                   return (
                     <div
                       key={problem.id}
-                      className={`relative flex flex-col sm:flex-row items-stretch sm:items-center gap-4 rounded-2xl border p-4 transition-all ${
+                      className={`relative flex flex-col sm:flex-row items-stretch sm:items-center gap-4 rounded-box border p-4 transition-all ${
                         isDropdownOpen ? "z-50 ring-2 ring-navy/20" : "z-10"
                       } ${
                         assignedItem
@@ -305,7 +305,7 @@ export function BatchUploadModal({
                     >
                       <div className="min-w-0 flex-1">
                         <div className="mb-2.5 flex items-center gap-2">
-                          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">
+                          <span className="flex size-5 shrink-0 items-center justify-center rounded-box bg-navy text-[10px] font-bold text-white">
                             {idx + 1}
                           </span>
                           <span className="min-w-0 flex-1 truncate text-sm font-bold text-ink">
@@ -319,7 +319,7 @@ export function BatchUploadModal({
                         </div>
 
                         {problem.promptTex && (
-                          <div className="relative max-h-[70px] overflow-hidden rounded-xl border border-hairline-soft bg-paper/50 p-2.5">
+                          <div className="relative max-h-[70px] overflow-hidden rounded-box border border-hairline-soft bg-paper/50 p-2.5">
                             <KatexPreview
                               tex={problem.promptTex}
                               className="text-[11px] sm:text-xs text-ink/80 leading-relaxed"
@@ -341,7 +341,7 @@ export function BatchUploadModal({
                               e.stopPropagation();
                               setOpenDropdown(isDropdownOpen ? null : problem.id);
                             }}
-                            className={`flex w-full items-center justify-between rounded-lg border py-2 px-3 text-xs font-bold transition-colors ${
+                            className={`flex w-full items-center justify-between rounded-box border py-2 px-3 text-xs font-bold transition-colors ${
                               assignedItem
                                 ? "border-emerald-300 bg-white text-emerald-800"
                                 : "border-hairline bg-paper text-ink"
@@ -359,7 +359,7 @@ export function BatchUploadModal({
 
                           {isDropdownOpen && (
                             <div
-                              className="absolute left-0 top-full z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-hairline bg-white shadow-2xl custom-scrollbar"
+                              className="absolute left-0 top-full z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-box border border-hairline bg-white shadow-2xl custom-scrollbar"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
@@ -412,10 +412,10 @@ export function BatchUploadModal({
                               e.stopPropagation();
                               setFullscreenImage(currentPreviewItem.url);
                             }}
-                            className="h-24 w-28 rounded-xl border border-hairline bg-white object-cover shadow-sm transition-transform cursor-zoom-in group-hover:scale-105"
+                            className="h-24 w-28 rounded-box border border-hairline bg-white object-cover shadow-sm transition-transform cursor-zoom-in group-hover:scale-105"
                           />
-                          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-slate-900/0 transition-all group-hover:bg-slate-900/20">
-                            <span className="flex items-center gap-1.5 rounded-lg border border-white/50 bg-white/95 px-2.5 py-1 text-[10px] font-bold text-ink opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100">
+                          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-box bg-slate-900/0 transition-all group-hover:bg-slate-900/20">
+                            <span className="flex items-center gap-1.5 rounded-box border border-white/50 bg-white/95 px-2.5 py-1 text-[10px] font-bold text-ink opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100">
                               <ZoomIn className="size-3" /> გადიდება
                             </span>
                           </div>
@@ -426,14 +426,14 @@ export function BatchUploadModal({
                                 e.stopPropagation();
                                 handleUnmatch(problem.id);
                               }}
-                              className="absolute -top-2 -right-2 z-20 flex size-6 items-center justify-center rounded-full bg-rose-500 text-white shadow-md transition-colors hover:bg-rose-600"
+                              className="absolute -top-2 -right-2 z-20 flex size-6 items-center justify-center rounded-box bg-rose-500 text-white shadow-md transition-colors hover:bg-rose-600"
                             >
                               <X className="size-3.5" />
                             </button>
                           )}
                         </div>
                       ) : (
-                        <div className="flex h-24 w-28 shrink-0 items-center justify-center self-center rounded-xl border-2 border-dashed border-hairline bg-paper/50 text-muted transition-all duration-200">
+                        <div className="flex h-24 w-28 shrink-0 items-center justify-center self-center rounded-box border-2 border-dashed border-hairline bg-paper/50 text-muted transition-all duration-200">
                           <FileText className="size-8 opacity-30" />
                         </div>
                       )}
@@ -449,7 +449,7 @@ export function BatchUploadModal({
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded-xl border border-hairline bg-white px-5 py-2.5 text-sm font-bold text-ink transition-colors hover:bg-paper"
+            className="shrink-0 rounded-box border border-hairline bg-white px-5 py-2.5 text-sm font-bold text-ink transition-colors hover:bg-paper"
           >
             გაუქმება
           </button>
@@ -458,7 +458,7 @@ export function BatchUploadModal({
             type="button"
             disabled={matchedCount === 0 || loading}
             onClick={handleConfirm}
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-navy px-6 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-navy-strong disabled:opacity-40 active:scale-95"
+            className="inline-flex shrink-0 items-center gap-2 rounded-box bg-navy px-6 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-navy-strong disabled:opacity-40 active:scale-95"
           >
             <CheckCircle2 className="size-4" />
             <span>მიბმა ({matchedCount})</span>
@@ -474,7 +474,7 @@ export function BatchUploadModal({
           <div className="relative flex h-full w-full items-center justify-center">
             <button
               type="button"
-              className="absolute top-4 right-4 flex size-12 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-rose-500"
+              className="absolute top-4 right-4 flex size-12 items-center justify-center rounded-box bg-white/10 text-white transition-colors hover:bg-rose-500"
               onClick={() => setFullscreenImage(null)}
             >
               <X className="size-6" />
@@ -482,7 +482,7 @@ export function BatchUploadModal({
             <img
               src={fullscreenImage}
               alt="გადიდებული"
-              className="max-h-[95vh] max-w-[95vw] rounded-xl object-contain shadow-2xl"
+              className="max-h-[95vh] max-w-[95vw] rounded-box object-contain shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
           </div>

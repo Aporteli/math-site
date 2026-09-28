@@ -75,7 +75,7 @@ export function SecondaryDeviceNotice() {
   if (role !== 'secondary') return null;
 
   return (
-    <p className="mx-2 mt-2 shrink-0 rounded-lg bg-amber-500/15 px-2 py-1.5 text-[11px] leading-snug text-amber-200">
+    <p className="mx-2 mt-2 shrink-0 rounded-box bg-amber-500/15 px-2 py-1.5 text-[11px] leading-snug text-amber-200">
       ხმა პირველ მოწყობილობაზე რჩება — აქ არ ისმის და მიკროფონიც გამორთულია.
       ვიდეოს გადასართავად ჩართე კამერა; გამორთვისას ისევ პირველი მოწყობილობის სურათი ჩანს.
     </p>

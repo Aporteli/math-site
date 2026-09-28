@@ -29,7 +29,7 @@ import {
 import type { Locale } from '@/i18n/config';
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
 const JSON_UPLOAD_MAX_BYTES = 25 * 1024 * 1024;
 const IMAGE_MIME = /^image\/(jpeg|png|webp)$/;
@@ -94,7 +94,7 @@ function diagnosisHint(copy: ProblemBankCopy['importFamily'], hint: DiagnoseHint
 
 function DiagnosisPanel({ copy, diagnosis }: { copy: ProblemBankCopy['importFamily']; diagnosis: TemplateDiagnosis }) {
   return (
-    <div className="rounded-2xl border border-brass/25 bg-brass-tint px-4 py-3">
+    <div className="rounded-box border border-brass/25 bg-brass-tint px-4 py-3">
       <p className="text-xs font-semibold tracking-wide text-brass">{copy.diagnoseTitle}</p>
       <p className="mt-1 text-sm text-brass-strong">{diagnosisHint(copy, diagnosis.hint)}</p>
       {diagnosis.lines.length > 0 ? (
@@ -480,14 +480,14 @@ export function ImportFamilyModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-lg shadow-navy/10">
+          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-lg shadow-navy/10">
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
             <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
               {family.title}
             </h2>
             <button
               type="button"
-              className="inline-flex size-9 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
+              className="inline-flex size-9 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
               aria-label={family.close}
               onClick={onClose}>
               <X className="size-4" aria-hidden="true" />
@@ -505,7 +505,7 @@ export function ImportFamilyModal({
                     id={`${titleId}-image`}
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
-                    className="block w-full text-sm text-body file:me-3 file:rounded-lg file:border-0 file:bg-navy-tint file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-navy"
+                    className="block w-full text-sm text-body file:me-3 file:rounded-box file:border-0 file:bg-navy-tint file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-navy"
                     disabled={busy}
                     onChange={(event) => {
                       const file = event.target.files?.[0];
@@ -518,7 +518,7 @@ export function ImportFamilyModal({
                     tabIndex={0}
                     aria-label={family.photoDropLabel}
                     className={[
-                      'rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors',
+                      'rounded-box border-2 border-dashed px-4 py-6 text-center transition-colors',
                       dropActive ? 'border-navy bg-navy-tint/60' : 'border-hairline bg-paper hover:border-navy/40',
                       busy ? 'pointer-events-none opacity-60' : '',
                     ].join(' ')}
@@ -551,7 +551,7 @@ export function ImportFamilyModal({
                       void onImageFile(file);
                     }}>
                     <div className="mb-3 flex justify-center">
-                      <span className="flex size-12 items-center justify-center rounded-2xl bg-navy-tint text-navy">
+                      <span className="flex size-12 items-center justify-center rounded-box bg-navy-tint text-navy">
                         <Image className="size-6" aria-hidden="true" />
                       </span>
                     </div>
@@ -566,7 +566,7 @@ export function ImportFamilyModal({
               {jsonText ? (
                 <>
                   {preview?.problem ? (
-                    <div className="rounded-2xl border border-hairline bg-paper p-3">
+                    <div className="rounded-box border border-hairline bg-paper p-3">
                       <p className="text-xs font-semibold tracking-wide text-brass">{family.preview}</p>
                       <div className="mt-2 text-ink">
                         <KatexPreview tex={preview.problem.promptTex} />
@@ -581,7 +581,7 @@ export function ImportFamilyModal({
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      className="rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy-strong disabled:opacity-60"
+                      className="rounded-box bg-navy px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy-strong disabled:opacity-60"
                       disabled={Boolean(preview?.diagnosis) || !preview?.problem}
                       onClick={buildProblems}>
                       {family.build}

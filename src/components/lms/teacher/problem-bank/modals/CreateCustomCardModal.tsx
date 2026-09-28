@@ -21,7 +21,7 @@ import { toKatexFriendlyTex } from '@/lib/math/problems/tex';
 import type { Locale } from '@/i18n/config';
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
 interface CreateCustomCardModalProps {
   locale: Locale;
@@ -44,7 +44,7 @@ function buildSolutionTex(answer: string, explanation: string) {
 function MathFieldPreview({ label, tex }: { label: string; tex: string }) {
   if (!tex.trim()) return null;
   return (
-    <div className="min-w-0 overflow-x-auto rounded-xl border border-hairline-soft bg-paper px-3 py-3">
+    <div className="min-w-0 overflow-x-auto rounded-box border border-hairline-soft bg-paper px-3 py-3">
       <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</p>
       <KatexPreview
         tex={toKatexFriendlyTex(tex)}
@@ -139,14 +139,14 @@ export function CreateCustomCardModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-lg shadow-navy/10">
+          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-lg shadow-navy/10">
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
             <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
               {card.title}
             </h2>
             <button
               type="button"
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
               aria-label={card.close}
               onClick={onClose}>
               <X className="size-4" aria-hidden="true" />
@@ -204,7 +204,7 @@ export function CreateCustomCardModal({
                 />
               </div>
               <div className="flex min-w-0 items-end">
-                <span className="inline-flex h-10 w-full items-center justify-center rounded-xl border border-brass/20 bg-brass-tint px-3 text-xs font-semibold text-brass">
+                <span className="inline-flex h-10 w-full items-center justify-center rounded-box border border-brass/20 bg-brass-tint px-3 text-xs font-semibold text-brass">
                   {copy.sources.custom}
                 </span>
               </div>
@@ -267,7 +267,7 @@ export function CreateCustomCardModal({
               <button
                 type="button"
                 disabled={busy !== null || !prompt.trim()}
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy transition-colors hover:border-navy/40 hover:bg-navy-tint disabled:opacity-60"
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-box border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy transition-colors hover:border-navy/40 hover:bg-navy-tint disabled:opacity-60"
                 onClick={() => void onSubmit('bank')}>
                 <PenLine className="size-4" aria-hidden="true" />
                 {busy === 'bank' ? card.saving : card.save}
@@ -276,7 +276,7 @@ export function CreateCustomCardModal({
                 <button
                   type="button"
                   disabled={busy !== null || !prompt.trim()}
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60"
                   onClick={() => void onSubmit('lab')}>
                   <FlaskConical className="size-4" aria-hidden="true" />
                   {busy === 'lab' ? card.savingLab : card.saveToLab}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Search,
   Users,
@@ -9,12 +10,11 @@ import {
   Filter,
   CalendarDays,
   Table2 as TableIcon,
-  LayoutGrid,
   UserPlus,
   AlertCircle,
   BarChart3,
+  ClipboardList,
 } from 'lucide-react';
-import { StudentListCard } from './StudentListCard';
 import { StudentListTable } from './StudentListTable';
 import { PaymentCalendar } from './PaymentCalendar';
 import { DebtTracker } from './DebtTracker';
@@ -23,6 +23,7 @@ import { LessonEditorModal } from './LessonEditorModal';
 import { PhoneEditorModal } from './PhoneEditorModal';
 import { IndividualStudentModal } from './IndividualStudentModal';
 import { PaymentHistoryModal } from './PaymentHistoryModal';
+import { StudentContactCard } from './StudentContactCard';
 import { formatPrice, countTodayLessonSessions, sectionStudents } from '../studentList.helpers';
 import { getMonthKey, sumPaymentsForMonth, computeExpectedForMonth, parseMonthKey } from '../paymentCalendar.helpers';
 import {
@@ -31,19 +32,23 @@ import {
   addIndividualLessonAction,
   deleteIndividualLessonAction,
 } from '@/components/lms/teacher/student-list/actions';
-import type { PaymentRecord, StudentGroup, StudentRecord } from '../studentList.types';
+import type { PaymentRecord, StudentAssignmentItem, StudentGroup, StudentRecord } from '../studentList.types';
+import { defaultLocale, isLocale, localePath } from '@/i18n/config';
 
 interface Props {
   students: StudentRecord[];
   groups: StudentGroup[];
   initialPayments?: PaymentRecord[];
   onSelectStudent?: (student: StudentRecord) => void;
+  studentId?: string;
+  assignments?: StudentAssignmentItem[];
   onUpdateStudent?: (id: string, patch: Partial<StudentRecord>) => void;
   onUpdatePayments?: (payments: PaymentRecord[]) => void;
   onUpdatePhones?: (
     studentId: string,
     phone: string | null,
     parentPhone: string | null,
+    email?: string | null,
   ) => Promise<{ ok: boolean; error?: string }>;
 
   onCreateIndividual?: (input: {
@@ -87,13 +92,23 @@ interface Props {
   onToggleMissed?: (studentId: string, lessonId: string, date: string, missed: boolean) => void;
 }
 
-type View = 'table' | 'grid' | 'calendar' | 'debt' | 'reports';
+type View = 'table' | 'calendar' | 'debt' | 'reports';
+
+const ASSIGNMENT_STATUS_LABEL: Record<string, string> = {
+  DRAFT: 'დრაფტი',
+  SUBMITTED: 'ჩაბარებული',
+  RETURNED: 'დაბრუნებული',
+  PUBLISHED: 'გამოქვეყნებული',
+  CLOSED: 'დახურული',
+};
 
 export function StudentList({
   students,
   groups,
   initialPayments = [],
   onSelectStudent,
+  studentId,
+  assignments = [],
   onUpdateStudent,
   onUpdatePayments,
   onUpdatePhones,
@@ -108,7 +123,13 @@ export function StudentList({
   onDeleteIndividualPayment,
   onToggleMissed,
 }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const localeSegment = pathname.split('/')[1] ?? '';
+  const locale = isLocale(localeSegment) ? localeSegment : defaultLocale;
+
   const [view, setView] = useState<View>('table');
+  const [studentSection, setStudentSection] = useState<'phones' | 'pricing' | 'schedule' | 'tasks'>('phones');
   const [query, setQuery] = useState('');
   const [activeGroupId, setActiveGroupId] = useState<string | 'all'>('all');
   const [monthKey, setMonthKey] = useState(() => getMonthKey(new Date()));
@@ -449,25 +470,152 @@ export function StudentList({
     };
   }, [students, payments, monthKey]);
 
-  const isListView = view === 'table' || view === 'grid';
+  const isListView = view === 'table';
+
+  const openStudentPage = (student: StudentRecord) => {
+    router.push(localePath(locale, `/teacher/student-list/${student.id}`));
+  };
+
+  if (studentId) {
+    const student = students.find((item) => item.id === studentId) ?? null;
+
+    return (
+      <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex shrink-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={() => router.push(localePath(locale, '/teacher/student-list'))}
+            className="cursor-pointer rounded-box border border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-navy-tint"
+          >
+            უკან
+          </button>
+          <p className="truncate text-sm font-bold text-ink">
+            {student ? `${student.firstName} ${student.lastName}` : 'მოსწავლე ვერ მოიძებნა'}
+          </p>
+        </div>
+
+        {student ? (
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="grid grid-cols-4 gap-1 rounded-box border border-hairline bg-paper p-1">
+              {(
+                [
+                  ['phones', 'ტელეფონი'],
+                  ['pricing', 'ფასი'],
+                  ['schedule', 'განრიგი'],
+                  ['tasks', 'დავალებები'],
+                ] as const
+              ).map(([key, label]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setStudentSection(key)}
+                  className={`cursor-pointer rounded-box px-2 py-2 text-xs font-bold transition ${
+                    studentSection === key ? 'bg-navy text-white' : 'text-body hover:bg-surface hover:text-ink'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {studentSection === 'phones' ? (
+              <StudentContactCard
+                student={student}
+                onSave={async (id, phone, parentPhone, email) => {
+                  if (student.kind === 'individual') {
+                    onUpdateStudent?.(id, {
+                      phone: phone ?? '',
+                      parentPhone: parentPhone ?? undefined,
+                      email: email ?? undefined,
+                    });
+                    return { ok: true };
+                  }
+                  return (
+                    (await onUpdatePhones?.(id, phone, parentPhone, email)) ?? {
+                      ok: false,
+                      error: 'Not configured',
+                    }
+                  );
+                }}
+              />
+            ) : null}
+
+            {studentSection === 'pricing' ? (
+              <PaymentHistoryModal
+                embedded
+                open
+                student={student}
+                payments={payments}
+                onClose={() => {}}
+                onAddPayment={handleAddPaymentForModal}
+                onDeletePayment={handleDeletePaymentForModal}
+                onUpdateStudent={handleUpdateStudent}
+              />
+            ) : null}
+
+            {studentSection === 'schedule' ? (
+              <LessonEditorModal
+                embedded
+                open
+                student={student}
+                groups={groups}
+                groupMemberCounts={groupMemberCounts}
+                onClose={() => {}}
+                onAdd={handleAddLesson}
+                onDelete={handleDeleteLesson}
+              />
+            ) : null}
+
+            {studentSection === 'tasks' ? (
+              <div className="overflow-hidden rounded-box border border-hairline bg-surface shadow-sm">
+                <div className="flex shrink-0 items-center gap-2.5 border-b border-hairline px-4 py-3">
+                  <span className="inline-flex size-8 items-center justify-center rounded-box bg-navy-tint text-navy">
+                    <ClipboardList className="size-3.5" />
+                  </span>
+                  <p className="text-sm font-bold text-ink">დავალებები</p>
+                  <span className="rounded-box bg-paper px-1.5 py-0.5 text-[10px] font-bold text-muted">
+                    {assignments.length}
+                  </span>
+                </div>
+                <div className="space-y-2 p-3">
+                  {assignments.length === 0 ? (
+                    <p className="px-2 py-8 text-center text-xs font-medium text-muted">დავალება არ არის</p>
+                  ) : (
+                    assignments.map((item) => (
+                      <div key={item.id} className="rounded-box border border-hairline bg-paper px-3 py-2">
+                        <p className="truncate text-xs font-bold text-ink">{item.title}</p>
+                        <p className="mt-0.5 text-[10px] font-medium text-muted">
+                          {ASSIGNMENT_STATUS_LABEL[item.status] ?? item.status}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   const viewButtonClass = (active: boolean) =>
-    `inline-flex min-h-9 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-xl px-1.5 py-2 text-xs font-bold transition sm:min-h-10 sm:px-3 ${
+    `inline-flex min-h-9 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-box px-1.5 py-2 text-xs font-bold transition sm:min-h-10 sm:px-3 ${
       active ? 'bg-navy text-white shadow-sm' : 'text-body hover:bg-surface hover:text-ink'
     }`;
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
-      <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-hairline bg-surface p-3 shadow-sm sm:rounded-3xl sm:p-5">
+      <div className="flex min-w-0 flex-col gap-3 rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
               <Users className="size-5" />
             </span>
           </div>
 
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="grid w-full grid-cols-5 gap-1 rounded-2xl border border-hairline bg-paper p-1 sm:w-auto sm:min-w-[28rem]">
+            <div className="grid w-full grid-cols-4 gap-1 rounded-box border border-hairline bg-paper p-1 sm:w-auto sm:min-w-[22rem]">
               <button
                 type="button"
                 onClick={() => setView('table')}
@@ -476,16 +624,6 @@ export function StudentList({
                 className={viewButtonClass(view === 'table')}>
                 <TableIcon className="size-4 shrink-0" />
                 <span className="truncate text-[11px] sm:text-xs">ცხრილი</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setView('grid')}
-                title="ბარათების ხედი"
-                aria-pressed={view === 'grid'}
-                className={viewButtonClass(view === 'grid')}>
-                <LayoutGrid className="size-4 shrink-0" />
-                <span className="truncate text-[11px] sm:text-xs">ბარათები</span>
               </button>
 
               <button
@@ -526,7 +664,7 @@ export function StudentList({
                 setIndividualModalOpen(true);
               }}
               title="ინდივიდუალური მოსწავლის დამატება"
-              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-brass-strong px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brass">
+              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-brass-strong px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brass">
               <UserPlus className="size-4 shrink-0" />
               <span className="truncate">სახლში</span>
             </button>
@@ -539,7 +677,7 @@ export function StudentList({
                 setHomeGroupOpen(true);
               }}
               title="სახლში მოსული მოსწავლეების ჯგუფი"
-              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-brass-strong/40 bg-brass-tint px-3 py-2 text-xs font-bold text-brass-strong shadow-sm transition hover:bg-brass-strong hover:text-white">
+              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-box border border-brass-strong/40 bg-brass-tint px-3 py-2 text-xs font-bold text-brass-strong shadow-sm transition hover:bg-brass-strong hover:text-white">
               <Users className="size-4 shrink-0" />
               <span className="truncate">ჯგუფი</span>
             </button>
@@ -555,26 +693,26 @@ export function StudentList({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="სახელი, ტელეფონი ან ელფოსტა"
-                className="w-full rounded-xl border border-hairline bg-paper py-2.5 pl-10 pr-3 text-base font-medium text-ink outline-none transition placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-paper py-2.5 pl-10 pr-3 text-base font-medium text-ink outline-none transition placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">მოსწავლეები</p>
                 <p className="mt-1 truncate text-lg font-bold tabular-nums text-ink sm:text-xl">{students.length}</p>
               </div>
-              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">გაკვეთილები</p>
                 <p className="mt-1 truncate text-lg font-bold tabular-nums text-navy sm:text-xl">{stats.todayCount}</p>
               </div>
-              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">ჯამში</p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-ink sm:text-xl">
                   {formatPrice(stats.totalPrice)}
                 </p>
               </div>
-              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">გადასახდელი</p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-loss sm:text-xl">
                   {formatPrice(stats.debt)}
@@ -589,7 +727,7 @@ export function StudentList({
                   setActiveGroupId('all');
                   setShowTodayOnly(false);
                 }}
-                className={`shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                className={`shrink-0 cursor-pointer rounded-box border px-3 py-1.5 text-[11px] font-bold transition ${
                   activeGroupId === 'all' && !showTodayOnly
                     ? 'border-navy bg-navy text-white shadow-sm'
                     : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
@@ -600,7 +738,7 @@ export function StudentList({
               <button
                 type="button"
                 onClick={() => setShowTodayOnly(true)}
-                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-box border px-3 py-1.5 text-[11px] font-bold transition ${
                   showTodayOnly
                     ? 'border-navy bg-navy text-white shadow-sm'
                     : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
@@ -618,7 +756,7 @@ export function StudentList({
                       setActiveGroupId(g.id);
                       setShowTodayOnly(false);
                     }}
-                    className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                    className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-box border px-3 py-1.5 text-[11px] font-bold transition ${
                       g.home
                         ? active
                           ? 'border-brass-strong bg-brass-strong text-white shadow-sm'
@@ -630,7 +768,7 @@ export function StudentList({
                     {g.home ? <span className="text-[9px] font-bold uppercase">სახლში</span> : null}
                     <span>{g.name}</span>
                     <span
-                      className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+                      className={`rounded-box px-1.5 py-0.5 text-[9px] font-bold ${
                         active ? 'bg-white/20 text-white' : 'bg-paper-deep text-muted'
                       }`}>
                       {count}
@@ -675,65 +813,12 @@ export function StudentList({
       ) : (
         <div className="custom-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto">
           {filtered.length === 0 ? (
-            <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-hairline bg-surface px-6 py-16 text-center">
-              <span className="mb-3 inline-flex size-12 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
+            <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-surface px-6 py-16 text-center">
+              <span className="mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
                 <Users className="size-5" />
               </span>
               <p className="text-sm font-bold text-ink">მოსწავლე ვერ მოიძებნა</p>
               <p className="mt-1 max-w-xs text-xs text-muted">სცადეთ სხვა საძიებო სიტყვა ან შეცვალეთ ჯგუფის ფილტრი.</p>
-            </div>
-          ) : view === 'grid' ? (
-            <div className="space-y-5">
-              {listSections.map((section) => (
-                <section key={section.key} className="space-y-3">
-                  <div
-                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${
-                      section.kind === 'home' ? 'border-brass/40 bg-brass-tint/60' : 'border-hairline bg-paper'
-                    }`}>
-                    <span
-                      className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`}
-                    />
-                    {section.kind === 'home' ? (
-                      <span className="rounded-full bg-brass-strong px-1.5 py-0.5 text-[9px] font-bold text-white">
-                        სახლში
-                      </span>
-                    ) : null}
-                    <h2 className="text-xs font-bold tracking-wide text-ink">{section.title}</h2>
-                    <span className="rounded-full bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
-                      {section.students.length}
-                    </span>
-                    {section.kind === 'home' && section.groupId ? (
-                      <button
-                        type="button"
-                        onClick={() => handleDisbandHomeGroup(section.groupId!)}
-                        className="ml-auto cursor-pointer rounded-lg px-2 py-1 text-[10px] font-bold text-brass-strong hover:bg-white">
-                        დაშლა
-                      </button>
-                    ) : null}
-                  </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-                    {section.students.map((student) => (
-                      <StudentListCard
-                        key={student.id}
-                        view="grid"
-                        student={student}
-                        groups={groups}
-                        payments={payments}
-                        monthKey={monthKey}
-                        classmateCount={section.groupId ? groupMemberCounts[section.groupId] : undefined}
-                        onSelect={(s) => onSelectStudent?.(s)}
-                        onEditLessons={(s) => setLessonEditorStudent(s)}
-                        onEditPhones={(s) => setPhoneEditorStudent(s)}
-                        onManagePayments={(s) => setPaymentHistoryStudent(s)}
-                        onEditIndividual={(s) => {
-                          setEditingIndividual(s);
-                          setIndividualModalOpen(true);
-                        }}
-                      />
-                    ))}
-                  </div>
-                </section>
-              ))}
             </div>
           ) : (
             <>
@@ -743,7 +828,7 @@ export function StudentList({
                 payments={payments}
                 monthKey={monthKey}
                 groupMemberCounts={groupMemberCounts}
-                onSelect={(s) => onSelectStudent?.(s)}
+                onSelect={openStudentPage}
                 onEditLessons={(s) => setLessonEditorStudent(s)}
                 onEditPhones={(s) => setPhoneEditorStudent(s)}
                 onManagePayments={(s) => setPaymentHistoryStudent(s)}
@@ -754,58 +839,6 @@ export function StudentList({
                 }}
                 onDisbandHomeGroup={onDisbandHomeGroup ? handleDisbandHomeGroup : undefined}
               />
-              <div className="space-y-5 lg:hidden">
-                {listSections.map((section) => (
-                  <section key={section.key} className="space-y-3">
-                    <div
-                      className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${
-                        section.kind === 'home' ? 'border-brass/40 bg-brass-tint/60' : 'border-hairline bg-paper'
-                      }`}>
-                      <span
-                        className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`}
-                      />
-                      {section.kind === 'home' ? (
-                        <span className="rounded-full bg-brass-strong px-1.5 py-0.5 text-[9px] font-bold text-white">
-                          სახლში
-                        </span>
-                      ) : null}
-                      <h2 className="text-xs font-bold tracking-wide text-ink">{section.title}</h2>
-                      <span className="rounded-full bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
-                        {section.students.length}
-                      </span>
-                      {section.kind === 'home' && section.groupId ? (
-                        <button
-                          type="button"
-                          onClick={() => handleDisbandHomeGroup(section.groupId!)}
-                          className="ml-auto cursor-pointer rounded-lg px-2 py-1 text-[10px] font-bold text-brass-strong hover:bg-white">
-                          დაშლა
-                        </button>
-                      ) : null}
-                    </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {section.students.map((student) => (
-                        <StudentListCard
-                          key={student.id}
-                          view="table"
-                          student={student}
-                          groups={groups}
-                          payments={payments}
-                          monthKey={monthKey}
-                          classmateCount={section.groupId ? groupMemberCounts[section.groupId] : undefined}
-                          onSelect={(s) => onSelectStudent?.(s)}
-                          onEditLessons={(s) => setLessonEditorStudent(s)}
-                          onEditPhones={(s) => setPhoneEditorStudent(s)}
-                          onManagePayments={(s) => setPaymentHistoryStudent(s)}
-                          onEditIndividual={(s) => {
-                            setEditingIndividual(s);
-                            setIndividualModalOpen(true);
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                ))}
-              </div>
             </>
           )}
         </div>
@@ -845,7 +878,7 @@ export function StudentList({
             role="dialog"
             aria-modal="true"
             aria-labelledby="home-group-title"
-            className="flex max-h-[min(88dvh,40rem)] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-xl"
+            className="flex max-h-[min(88dvh,40rem)] w-full max-w-md flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-xl"
             onClick={(e) => e.stopPropagation()}>
             <div className="border-b border-hairline px-4 py-4">
               <p className="text-[10px] font-bold uppercase tracking-wide text-brass-strong">სახლში</p>
@@ -863,13 +896,13 @@ export function StudentList({
                   value={homeGroupName}
                   onChange={(e) => setHomeGroupName(e.target.value)}
                   placeholder="მაგ. სამშაბათის ჯგუფი"
-                  className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-brass-strong/60 focus:ring-2 focus:ring-brass/20"
+                  className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-brass-strong/60 focus:ring-2 focus:ring-brass/20"
                 />
               </label>
               <div>
                 <p className="mb-1.5 text-[10px] font-bold text-muted">მოსწავლეები</p>
                 {ungroupedHomeStudents.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-hairline px-3 py-4 text-center text-xs text-muted">
+                  <p className="rounded-box border border-dashed border-hairline px-3 py-4 text-center text-xs text-muted">
                     ჯგუფის გარეშე სახლის მოსწავლე არ არის
                   </p>
                 ) : (
@@ -879,7 +912,7 @@ export function StudentList({
                       return (
                         <label
                           key={student.id}
-                          className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${
+                          className={`flex cursor-pointer items-center gap-2 rounded-box border px-3 py-2 text-xs font-bold ${
                             checked ? 'border-brass/40 bg-brass-tint text-brass-strong' : 'border-hairline bg-paper text-ink'
                           }`}>
                           <input
@@ -908,14 +941,14 @@ export function StudentList({
                 type="button"
                 disabled={homeGroupSaving}
                 onClick={() => setHomeGroupOpen(false)}
-                className="cursor-pointer rounded-xl px-3 py-2 text-xs font-bold text-muted hover:bg-paper">
+                className="cursor-pointer rounded-box px-3 py-2 text-xs font-bold text-muted hover:bg-paper">
                 გაუქმება
               </button>
               <button
                 type="button"
                 disabled={homeGroupSaving}
                 onClick={handleCreateHomeGroup}
-                className="cursor-pointer rounded-xl bg-brass-strong px-3 py-2 text-xs font-bold text-white hover:bg-brass disabled:opacity-50">
+                className="cursor-pointer rounded-box bg-brass-strong px-3 py-2 text-xs font-bold text-white hover:bg-brass disabled:opacity-50">
                 შექმნა
               </button>
             </div>

@@ -39,8 +39,8 @@ export function TeacherAssignmentsGrid({
     <div className="flex min-h-0 flex-1 flex-col bg-paper p-3 sm:p-4">
       <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto pe-1">
         {!activeStudent ? (
-          <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-hairline bg-surface px-6 py-16 text-center">
-            <span className="mb-3 inline-flex size-12 items-center justify-center rounded-2xl border border-hairline bg-brass-tint text-brass-strong">
+          <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-surface px-6 py-16 text-center">
+            <span className="mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
               <Users className="size-5" />
             </span>
             <p className="text-base font-bold text-ink">მოსწავლე არ არის არჩეული</p>
@@ -49,8 +49,8 @@ export function TeacherAssignmentsGrid({
             </p>
           </div>
         ) : assignments.length === 0 ? (
-          <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-hairline bg-surface px-6 py-16 text-center">
-            <span className="mb-3 inline-flex size-12 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
+          <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-surface px-6 py-16 text-center">
+            <span className="mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
               <EmptyIcon className="size-5" />
             </span>
             <p className="text-sm font-bold text-ink">{emptyCopy.title}</p>
@@ -61,7 +61,7 @@ export function TeacherAssignmentsGrid({
               <button
                 type="button"
                 onClick={onOpenMaterialModal}
-                className="mt-4 inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong"
+                className="mt-4 inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong"
               >
                 <UploadCloud className="size-3.5" />
                 <span>ატვირთეთ პირველი მასალა</span>

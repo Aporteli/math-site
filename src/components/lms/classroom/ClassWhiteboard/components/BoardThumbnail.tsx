@@ -156,18 +156,18 @@ export function BoardThumbnail({
       onTouchEnd={cancelPress}
       onContextMenu={(e) => e.preventDefault()}
       onClick={handleClick}
-      className={`group relative flex flex-col items-center gap-1.5 p-1.5 rounded-2xl cursor-pointer transition-all shrink-0 select-none [-webkit-touch-callout:none] ${
+      className={`group relative flex flex-col items-center gap-1.5 p-1.5 rounded-box cursor-pointer transition-all shrink-0 select-none [-webkit-touch-callout:none] ${
         isSelected
           ? 'bg-indigo-600/20 ring-2 ring-indigo-600 dark:ring-indigo-400 shadow-md'
           : isActive
             ? 'bg-indigo-600/10 dark:bg-indigo-500/20 ring-2 ring-indigo-600 dark:ring-indigo-400'
             : 'hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800'
       }`}>
-      <div className="relative w-28 h-18 rounded-xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 pointer-events-none">
+      <div className="relative w-28 h-18 rounded-box overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 pointer-events-none">
         <canvas ref={canvasRef} width={112} height={72} className="w-full h-full object-contain" />
 
         {isSelected && (
-          <div className="absolute top-1 left-1 flex size-5 items-center justify-center rounded-full bg-indigo-600 text-white shadow-xs z-10 animate-in zoom-in-75 duration-150">
+          <div className="absolute top-1 left-1 flex size-5 items-center justify-center rounded-box bg-indigo-600 text-white shadow-xs z-10 animate-in zoom-in-75 duration-150">
             <Check className="size-3 stroke-[3]" />
           </div>
         )}
@@ -180,7 +180,7 @@ export function BoardThumbnail({
               e.stopPropagation();
               onDelete();
             }}
-            className="pointer-events-auto absolute top-1 right-1 flex size-5 items-center justify-center rounded-md bg-rose-600 text-white opacity-100 transition-opacity hover:bg-rose-700 shadow-xs z-10">
+            className="pointer-events-auto absolute top-1 right-1 flex size-5 items-center justify-center rounded-box bg-rose-600 text-white opacity-100 transition-opacity hover:bg-rose-700 shadow-xs z-10">
             <X className="size-3" />
           </button>
         )}

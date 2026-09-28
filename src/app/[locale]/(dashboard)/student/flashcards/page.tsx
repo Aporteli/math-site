@@ -82,7 +82,7 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
         title="ფორმულები"
         description="აქ ინახება მასწავლებლის მიერ გამოგზავნილი ფორმულები."
         aside={
-          <div className="rounded-2xl border border-hairline bg-white/80 px-6 py-4 shadow-sm backdrop-blur-md transition-colors hover:border-navy/30 min-w-[160px]">
+          <div className="rounded-box border border-hairline bg-white/80 px-6 py-4 shadow-sm backdrop-blur-md transition-colors hover:border-navy/30 min-w-[160px]">
             <p className="text-[11px] font-bold uppercase tracking-wider text-muted">სულ ფორმულა</p>
             <p className="mt-1.5 text-3xl font-black text-navy">{assignments.length}</p>
           </div>

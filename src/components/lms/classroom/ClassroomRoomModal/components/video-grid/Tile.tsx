@@ -32,7 +32,7 @@ export const Tile = memo(function Tile({
     <TrackRefContext.Provider value={trackRef}>
       <div
         onClick={spotlight ? undefined : () => onSelect?.(trackRef)}
-        className={`group relative h-full w-full overflow-hidden rounded-xl border bg-slate-950 transition-all duration-200 ${
+        className={`group relative h-full w-full overflow-hidden rounded-box border bg-slate-950 transition-all duration-200 ${
           spotlight
             ? "border-emerald-500/30"
             : "cursor-pointer border-white/10 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10"
@@ -50,7 +50,7 @@ export const Tile = memo(function Tile({
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-slate-900">
             <div
-              className={`flex items-center justify-center rounded-full border border-white/10 bg-slate-800 ${
+              className={`flex items-center justify-center rounded-box border border-white/10 bg-slate-800 ${
                 spotlight ? "size-16" : "size-10"
               }`}
             >
@@ -67,11 +67,11 @@ export const Tile = memo(function Tile({
               type="button"
               onClick={onMinimize}
               title="მინიმიზაცია"
-              className="absolute right-2 bottom-2 z-10 flex size-7 items-center justify-center rounded-lg bg-black/70 text-white backdrop-blur-md transition hover:bg-black/90"
+              className="absolute right-2 bottom-2 z-10 flex size-7 items-center justify-center rounded-box bg-black/70 text-white backdrop-blur-md transition hover:bg-black/90"
             >
               <Minimize2 className="size-3.5" />
             </button>
-            <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 rounded-lg bg-black/70 px-2.5 py-1 backdrop-blur-md">
+            <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 rounded-box bg-black/70 px-2.5 py-1 backdrop-blur-md">
               {isScreenShare && <ScreenShare className="size-3.5 text-emerald-400" />}
               <span className="truncate text-xs font-semibold text-white">{name}</span>
             </div>
@@ -79,7 +79,7 @@ export const Tile = memo(function Tile({
         ) : (
           <>
             <div className="absolute right-2 bottom-2 z-10 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-black/60 text-white backdrop-blur-md">
+              <div className="flex size-7 items-center justify-center rounded-box bg-black/60 text-white backdrop-blur-md">
                 <Maximize2 className="size-3.5" />
               </div>
             </div>

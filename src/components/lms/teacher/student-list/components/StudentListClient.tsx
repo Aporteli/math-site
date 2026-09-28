@@ -22,6 +22,7 @@ import type {
   MissedLesson,
   PaymentRecord,
   PriceType,
+  StudentAssignmentItem,
   StudentGroup,
   StudentRecord,
 } from '../studentList.types';
@@ -30,12 +31,16 @@ interface Props {
   initialStudents: StudentRecord[];
   groups: StudentGroup[];
   initialPayments?: PaymentRecord[];
+  studentId?: string;
+  assignments?: StudentAssignmentItem[];
 }
 
 export function StudentListClient({
   initialStudents,
   groups,
   initialPayments = [],
+  studentId,
+  assignments = [],
 }: Props) {
   const [students, setStudents] = useState<StudentRecord[]>(initialStudents);
   const [groupList, setGroupList] = useState<StudentGroup[]>(groups);
@@ -160,16 +165,22 @@ export function StudentListClient({
     studentId: string,
     phone: string | null,
     parentPhone: string | null,
+    email?: string | null,
   ): Promise<{ ok: boolean; error?: string }> => {
     setStudents((prev) =>
       prev.map((s) =>
         s.id === studentId
-          ? { ...s, phone: phone ?? '', parentPhone: parentPhone ?? undefined }
+          ? {
+              ...s,
+              phone: phone ?? '',
+              parentPhone: parentPhone ?? undefined,
+              ...(email !== undefined && { email: email ?? undefined }),
+            }
           : s,
       ),
     );
 
-    const res = await updateStudentPhonesAction({ studentId, phone, parentPhone });
+    const res = await updateStudentPhonesAction({ studentId, phone, parentPhone, email });
     if (!res.ok) {
       console.error('[updateStudentPhones]', res.error);
       return { ok: false, error: res.error };
@@ -369,6 +380,8 @@ export function StudentListClient({
   return (
     <div className="min-w-0">
       <StudentList
+        studentId={studentId}
+        assignments={assignments}
         students={students}
         groups={groupList}
         onCreateHomeGroup={async (input) => {

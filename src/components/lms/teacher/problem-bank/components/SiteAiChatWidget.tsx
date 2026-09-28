@@ -59,7 +59,7 @@ export function SiteAiChatWidget({
         aria-label={copy.chat.open}
         title={copy.chat.open}
         onClick={() => setOpen(true)}
-        className="fixed right-5 bottom-5 z-[1000000] inline-flex h-12 w-12 sm:w-auto sm:px-4 items-center justify-center gap-2 rounded-full bg-navy text-sm font-semibold text-white shadow-lg transition-all hover:bg-navy-strong focus:outline-none focus:ring-2 focus:ring-navy/25 focus:ring-offset-2 focus:ring-offset-paper">
+        className="fixed right-5 bottom-5 z-[1000000] inline-flex h-12 w-12 sm:w-auto sm:px-4 items-center justify-center gap-2 rounded-box bg-navy text-sm font-semibold text-white shadow-lg transition-all hover:bg-navy-strong focus:outline-none focus:ring-2 focus:ring-navy/25 focus:ring-offset-2 focus:ring-offset-paper">
         <span className="hidden sm:inline leading-none">{copy.chat.launcher}</span>
       </button>
 

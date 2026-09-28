@@ -138,14 +138,14 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
         className="absolute inset-0 h-full w-full cursor-default bg-transparent"
       />
 
-      <div className="relative z-10 flex h-[88vh] w-full max-w-3xl flex-col rounded-2xl border border-white/10 bg-slate-900 text-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="relative z-10 flex h-[88vh] w-full max-w-3xl flex-col rounded-box border border-white/10 bg-slate-900 text-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="pt-3 h-14 shrink-0 border-b border-white/10 px-4 bg-slate-950/60">
           <div className="flex items-center justify-between gap-3">
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value as AiModelId)}
-              className="rounded-lg bg-slate-800 border border-white/10 px-2.5 py-1 text-xs font-medium text-slate-200 outline-none focus:border-indigo-500">
+              className="rounded-box bg-slate-800 border border-white/10 px-2.5 py-1 text-xs font-medium text-slate-200 outline-none focus:border-indigo-500">
               {AI_MODELS.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.id} ({m.provider})
@@ -156,7 +156,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:bg-rose-500/20 hover:text-rose-400 transition-colors">
+              className="flex size-8 items-center justify-center rounded-box bg-white/5 text-slate-400 hover:bg-rose-500/20 hover:text-rose-400 transition-colors">
               <X className="size-4" />
             </button>
           </div>
@@ -175,7 +175,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
                   setPrompt(qp.prompt);
                   void executeAiRequest(qp.prompt);
                 }}
-                className="flex items-center gap-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/40 disabled:opacity-50 transition-all">
+                className="flex items-center gap-1.5 rounded-box border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/40 disabled:opacity-50 transition-all">
                 <Icon className="size-3.5 text-indigo-400" />
                 <span>{qp.label}</span>
               </button>
@@ -186,11 +186,11 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
         {/* პასუხის არეალი */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {error && (
-            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-400">{error}</div>
+            <div className="rounded-box border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-400">{error}</div>
           )}
 
           {response ? (
-            <div className="rounded-xl border border-white/5 bg-slate-800/60 p-4 text-sm leading-relaxed text-slate-200 select-text">
+            <div className="rounded-box border border-white/5 bg-slate-800/60 p-4 text-sm leading-relaxed text-slate-200 select-text">
               <KatexPreview
                 tex={toKatexFriendlyTex(response.replaceAll('**', ''))}
                 className="block break-words whitespace-pre-wrap text-slate-200 [&_.katex-display]:my-3 [&_.katex]:text-[1rem] [&_.katex]:text-white"
@@ -214,7 +214,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
         {/* Input და სურათის მიმაგრება */}
         <div className="shrink-0 border-t border-white/10 bg-slate-950/80 p-3 space-y-2">
           {image && (
-            <div className="relative inline-flex items-center gap-2 rounded-lg border border-white/10 bg-slate-800 p-1.5 pr-3">
+            <div className="relative inline-flex items-center gap-2 rounded-box border border-white/10 bg-slate-800 p-1.5 pr-3">
               <img
                 src={image.preview}
                 alt="Upload preview"
@@ -236,7 +236,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               title="სურათის მიმაგრება"
-              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 transition-colors">
+              className="flex size-9 shrink-0 items-center justify-center rounded-box bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 transition-colors">
               <ImageIcon className="size-4" />
             </button>
 
@@ -251,14 +251,14 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
                 }
               }}
               placeholder="დაწერეთ კითხვა ან ჩასვით სურათი (Ctrl+V)..."
-              className="flex-1 rounded-xl bg-slate-800 border border-white/10 px-3.5 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-indigo-500"
+              className="flex-1 rounded-box bg-slate-800 border border-white/10 px-3.5 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-indigo-500"
             />
 
             <button
               type="button"
               disabled={loading || (!prompt.trim() && !image)}
               onClick={() => executeAiRequest(prompt)}
-              className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40 transition-colors">
+              className="flex size-9 shrink-0 items-center justify-center rounded-box bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40 transition-colors">
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             </button>
           </div>

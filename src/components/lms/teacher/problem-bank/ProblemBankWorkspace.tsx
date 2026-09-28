@@ -1171,7 +1171,7 @@ export function ProblemBankWorkspace({
               const Icon = tool.icon;
               const item = copy.tools[tool.id];
               const className = [
-                'flex h-full w-full flex-col gap-1 rounded-2xl border px-4 py-3 text-left transition-all',
+                'flex h-full w-full flex-col gap-1 rounded-box border px-4 py-3 text-left transition-all',
                 tool.status === 'ready' && (panel === tool.id || (tool.id === 'import' && importOpen))
                   ? 'border-navy/30 bg-navy-tint shadow-sm'
                   : 'border-hairline bg-white shadow-sm hover:border-navy/30 hover:shadow-md',
@@ -1180,12 +1180,12 @@ export function ProblemBankWorkspace({
               const body = (
                 <>
                   <span className="flex items-start gap-2">
-                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy-tint text-navy">
+                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-box bg-navy-tint text-navy">
                       <Icon className="size-4" aria-hidden="true" />
                     </span>
                     <span className="min-w-0 text-sm font-semibold text-ink">{item.title}</span>
                     {tool.status === 'soon' ? (
-                      <span className="ml-auto shrink-0 rounded-full bg-brass-tint px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brass">
+                      <span className="ml-auto shrink-0 rounded-box bg-brass-tint px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brass">
                         {copy.soon}
                       </span>
                     ) : null}
@@ -1226,7 +1226,7 @@ export function ProblemBankWorkspace({
           {notice ? (
             <button
               type="button"
-              className="mt-3 w-full cursor-pointer rounded-xl border border-brass/20 bg-brass-tint px-4 py-3 text-left text-sm text-brass-strong transition-colors hover:border-brass/40 hover:bg-brass-tint/80"
+              className="mt-3 w-full cursor-pointer rounded-box border border-brass/20 bg-brass-tint px-4 py-3 text-left text-sm text-brass-strong transition-colors hover:border-brass/40 hover:bg-brass-tint/80"
               aria-label={copy.dismissNotice}
               onClick={() => setNotice(null)}>
               {notice}
@@ -1384,22 +1384,22 @@ export function ProblemBankWorkspace({
             </h2>
             <button
               type="button"
-              className="inline-flex size-9 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
+              className="inline-flex size-9 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
               aria-label={copy.generate.close}
               onClick={() => setPanel(null)}>
               <X className="size-4" aria-hidden="true" />
             </button>
           </div>
-          <div className="rounded-2xl border border-navy/8 bg-navy-tint/35 p-3">
+          <div className="rounded-box border border-navy/8 bg-navy-tint/35 p-3">
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
               <div
-                className="flex w-full flex-col gap-1 rounded-xl border border-navy/15 bg-white/80 p-1 sm:inline-flex sm:w-auto sm:flex-row"
+                className="flex w-full flex-col gap-1 rounded-box border border-navy/15 bg-white/80 p-1 sm:inline-flex sm:w-auto sm:flex-row"
                 role="group"
                 aria-label={copy.generate.mode}>
                 <button
                   type="button"
                   className={[
-                    'w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
+                    'w-full rounded-box px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
                     genMode === 'diverse' ? 'bg-white text-navy shadow-sm' : 'text-body hover:text-navy',
                   ].join(' ')}
                   aria-pressed={genMode === 'diverse'}
@@ -1409,7 +1409,7 @@ export function ProblemBankWorkspace({
                 <button
                   type="button"
                   className={[
-                    'w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
+                    'w-full rounded-box px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
                     genMode === 'algorithms' ? 'bg-white text-navy shadow-sm' : 'text-body hover:text-navy',
                   ].join(' ')}
                   aria-pressed={genMode === 'algorithms'}
@@ -1424,7 +1424,7 @@ export function ProblemBankWorkspace({
                 <button
                   type="button"
                   className={[
-                    'w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
+                    'w-full rounded-box px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
                     genMode === 'families' ? 'bg-white text-navy shadow-sm' : 'text-body hover:text-navy',
                   ].join(' ')}
                   aria-pressed={genMode === 'families'}
@@ -1440,13 +1440,13 @@ export function ProblemBankWorkspace({
               {genMode === 'diverse' ? (
                 <>
                   <div
-                    className="flex w-full flex-col gap-1 rounded-xl border border-navy/15 bg-white/80 p-1 sm:inline-flex sm:w-auto sm:flex-row"
+                    className="flex w-full flex-col gap-1 rounded-box border border-navy/15 bg-white/80 p-1 sm:inline-flex sm:w-auto sm:flex-row"
                     role="group"
                     aria-label={copy.generate.checkMode}>
                     <button
                       type="button"
                       className={[
-                        'w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
+                        'w-full rounded-box px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
                         genCheck === 'verified' ? 'bg-white text-navy shadow-sm' : 'text-body hover:text-navy',
                       ].join(' ')}
                       aria-pressed={genCheck === 'verified'}
@@ -1456,7 +1456,7 @@ export function ProblemBankWorkspace({
                     <button
                       type="button"
                       className={[
-                        'w-full rounded-lg px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
+                        'w-full rounded-box px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
                         genCheck === 'plain' ? 'bg-white text-navy shadow-sm' : 'text-body hover:text-navy',
                       ].join(' ')}
                       aria-pressed={genCheck === 'plain'}
@@ -1464,7 +1464,7 @@ export function ProblemBankWorkspace({
                       {copy.generate.modePlain}
                     </button>
                   </div>
-                  <div className="flex min-w-0 w-full rounded-xl border border-navy/15 bg-white/80 p-1 sm:w-auto sm:min-w-[10.5rem]">
+                  <div className="flex min-w-0 w-full rounded-box border border-navy/15 bg-white/80 p-1 sm:w-auto sm:min-w-[10.5rem]">
                     <SelectMenu
                       id={`${genId}-reply-language`}
                       className="w-full"
@@ -1482,7 +1482,7 @@ export function ProblemBankWorkspace({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-brass/10 bg-brass-tint/30 p-3 sm:p-4">
+          <div className="rounded-box border border-brass/10 bg-brass-tint/30 p-3 sm:p-4">
             {genMode === 'families' ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 <div>
@@ -1567,7 +1567,7 @@ export function ProblemBankWorkspace({
                   <button
                     type="submit"
                     disabled={generating}
-                    className="inline-flex h-[38px] w-full items-center justify-center rounded-xl bg-navy px-4 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
+                    className="inline-flex h-[38px] w-full items-center justify-center rounded-box bg-navy px-4 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
                     {generating ? copy.generate.busy : copy.generate.submit}
                   </button>
                 </div>
@@ -1663,7 +1663,7 @@ export function ProblemBankWorkspace({
                   <button
                     type="submit"
                     disabled={generating}
-                    className="inline-flex h-[38px] w-full items-center justify-center rounded-xl bg-navy px-4 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
+                    className="inline-flex h-[38px] w-full items-center justify-center rounded-box bg-navy px-4 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
                     {generating ? copy.generate.busy : copy.generate.submit}
                   </button>
                 </div>
@@ -1742,7 +1742,7 @@ export function ProblemBankWorkspace({
                   <button
                     type="submit"
                     disabled={generating}
-                    className="inline-flex w-full items-center justify-center rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
+                    className="inline-flex w-full items-center justify-center rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
                     {generating ? copy.generate.busy : copy.generate.submit}
                   </button>
                 </div>
@@ -1782,14 +1782,14 @@ export function ProblemBankWorkspace({
             </h2>
             <button
               type="button"
-              className="inline-flex size-9 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
+              className="inline-flex size-9 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
               aria-label={copy.variantPanel.close}
               onClick={() => setPanel(null)}>
               <X className="size-4" aria-hidden="true" />
             </button>
           </div>
           {selected ? (
-            <div className="mt-4 rounded-xl bg-paper-deep px-4 py-3">
+            <div className="mt-4 rounded-box bg-paper-deep px-4 py-3">
               <p className="text-xs font-semibold tracking-wide text-muted">{copy.variantPanel.sourceLabel}</p>
               <p className="mt-1 text-sm font-medium text-ink">{copy.instructions[selected.instructionId]}</p>
               <div className="mt-2 overflow-x-auto">
@@ -1813,7 +1813,7 @@ export function ProblemBankWorkspace({
             </label>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong">
+              className="inline-flex items-center justify-center gap-2 rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong">
               <Shuffle className="size-4" aria-hidden="true" />
               {copy.variantPanel.submit}
             </button>
@@ -1822,7 +1822,7 @@ export function ProblemBankWorkspace({
       ) : null}
 
       <div className="mt-6 grid gap-5 xl:h-[calc(100vh-9rem)] xl:min-h-[36rem] xl:grid-cols-[16.5rem_minmax(0,1fr)_21rem] xl:items-stretch">
-        <aside className="relative z-20 order-1 flex min-h-0 flex-col rounded-2xl border border-hairline bg-paper p-4 shadow-sm sm:p-5">
+        <aside className="relative z-20 order-1 flex min-h-0 flex-col rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5">
           <h2 className="shrink-0 border-b border-hairline pb-3 text-sm font-semibold tracking-wide text-brass">
             {copy.filtersTitle}
           </h2>
@@ -1871,7 +1871,7 @@ export function ProblemBankWorkspace({
             <div className="border-t flex justify-center border-hairline-soft pt-3">
               <button
                 type="button"
-                className="mt-6 shrink-0 w-50 flex rounded-[15px] justify-center align-center border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
+                className="mt-6 shrink-0 w-50 flex rounded-box justify-center align-center border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
                 onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
                 {copy.resetFilters}
               </button>
@@ -1900,7 +1900,7 @@ export function ProblemBankWorkspace({
                 {selectedVisibleIds.length > 0 ? (
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 rounded-lg bg-paper px-2 py-1 text-xs font-medium text-body hover:text-navy disabled:opacity-50"
+                    className="inline-flex items-center gap-1 rounded-box bg-paper px-2 py-1 text-xs font-medium text-body hover:text-navy disabled:opacity-50"
                     disabled={saving}
                     onClick={() => void discardSelectedProblems()}>
                     <Trash2 className="size-3.5" aria-hidden="true" />
@@ -1939,7 +1939,7 @@ export function ProblemBankWorkspace({
                   <li
                     key={problem.id}
                     className={[
-                      'relative select-none rounded-xl border transition-colors',
+                      'relative select-none rounded-box border transition-colors',
                       active
                         ? 'border-navy/20 bg-navy-tint/90'
                         : 'border-navy/20 bg-white hover:border-hairline hover:bg-paper-deep/80',
@@ -1983,7 +1983,7 @@ export function ProblemBankWorkspace({
                         }}>
                         <span className="flex flex-wrap items-center gap-2">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${difficultyTone[problem.difficulty]}`}>
+                            className={`rounded-box px-2 py-0.5 text-[11px] font-semibold ${difficultyTone[problem.difficulty]}`}>
                             {copy.difficulties[problem.difficulty]}
                           </span>
                           <span className="text-xs font-medium text-muted">
@@ -1991,7 +1991,7 @@ export function ProblemBankWorkspace({
                           </span>
                           {problem.year ? <span className="text-xs text-muted">{copy.years[problem.year]}</span> : null}
                           {problem.source !== 'bank' ? (
-                            <span className="rounded-full bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
+                            <span className="rounded-box bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
                               {sourceBadgeLabel(copy, problem)}
                             </span>
                           ) : null}
@@ -2001,7 +2001,7 @@ export function ProblemBankWorkspace({
                           {showSaveToLab && labIds.includes(problem.id) ? (
                             <span
                               className={[
-                                'rounded-full bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass',
+                                'rounded-box bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass',
                                 inSet ? '' : 'ml-auto',
                               ].join(' ')}>
                               {copy.stats.inLab}
@@ -2010,7 +2010,7 @@ export function ProblemBankWorkspace({
                           {!showSaveToLab && !isUnsavedId(problem.id) && !isCatalogSeedId(problem.id) ? (
                             <span
                               className={[
-                                'rounded-full bg-navy-tint px-2 py-0.5 text-[11px] font-semibold text-navy',
+                                'rounded-box bg-navy-tint px-2 py-0.5 text-[11px] font-semibold text-navy',
                                 inSet ? '' : 'ml-auto',
                               ].join(' ')}>
                               {copy.stats.inBank}
@@ -2069,7 +2069,7 @@ export function ProblemBankWorkspace({
         </section>
 
         <section
-          className="order-2 flex min-h-0 min-w-0 flex-col rounded-2xl border border-navy/10 bg-navy-tint/25 p-4 shadow-sm sm:p-5 xl:order-3"
+          className="order-2 flex min-h-0 min-w-0 flex-col rounded-box border border-navy/10 bg-navy-tint/25 p-4 shadow-sm sm:p-5 xl:order-3"
           aria-label={copy.previewLabel}>
           {selected ? (
             <>
@@ -2077,7 +2077,7 @@ export function ProblemBankWorkspace({
                 {copy.prompt}
               </p>
               <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-y-auto pe-0.5">
-                <div className="group relative min-w-0 overflow-x-auto rounded-xl bg-paper-deep px-4 py-5 pe-12">
+                <div className="group relative min-w-0 overflow-x-auto rounded-box bg-paper-deep px-4 py-5 pe-12">
                   <KatexPreview tex={selected.promptTex} displayMode className="block min-w-0 text-ink" />
                   <CopyPromptButton
                     text={selected.promptTex}
@@ -2096,12 +2096,12 @@ export function ProblemBankWorkspace({
                     </>
                   ) : null}
                   {showSaveToLab && labIds.includes(selected.id) ? (
-                    <span className="rounded-full bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
+                    <span className="rounded-box bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
                       {copy.stats.inLab}
                     </span>
                   ) : null}
                   {!showSaveToLab && !isUnsavedId(selected.id) && !isCatalogSeedId(selected.id) ? (
-                    <span className="rounded-full bg-navy-tint px-2 py-0.5 text-[11px] font-semibold text-navy">
+                    <span className="rounded-box bg-navy-tint px-2 py-0.5 text-[11px] font-semibold text-navy">
                       {copy.stats.inBank}
                     </span>
                   ) : null}
@@ -2121,7 +2121,7 @@ export function ProblemBankWorkspace({
                   </button>
                   {showSolution ? (
                     <>
-                      <div className="mt-3 max-h-64 overflow-y-auto overflow-x-auto rounded-xl border border-hairline bg-white px-4 py-4 sm:max-h-80">
+                      <div className="mt-3 max-h-64 overflow-y-auto overflow-x-auto rounded-box border border-hairline bg-white px-4 py-4 sm:max-h-80">
                         <p className="mb-2 text-xs font-semibold tracking-wide text-muted">{copy.solution}</p>
                         <KatexPreview
                           tex={selected.solutionTex}
@@ -2144,7 +2144,7 @@ export function ProblemBankWorkspace({
                     <button
                       type="button"
                       disabled={saving}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/30 bg-navy-tint px-4 py-2.5 text-sm font-semibold text-navy disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-box border border-navy/30 bg-navy-tint px-4 py-2.5 text-sm font-semibold text-navy disabled:opacity-60"
                       onClick={() => {
                         void (async () => {
                           setSaving(true);
@@ -2161,7 +2161,7 @@ export function ProblemBankWorkspace({
                   ) : null}
                   <button
                     type="button"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
+                    className="inline-flex items-center justify-center gap-2 rounded-box border border-navy/20 bg-white px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:border-navy/40 hover:bg-navy-tint"
                     onClick={() => void discardProblem(selected.id)}>
                     <Trash2 className="size-4" aria-hidden="true" />
                     {selected.source === 'bank' ? copy.generate.remove : copy.generate.discard}
@@ -2202,7 +2202,7 @@ export function ProblemBankWorkspace({
               <button
                 type="button"
                 disabled={saving}
-                className="inline-flex items-center justify-center rounded-full border border-hairline px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60 sm:py-1.5"
+                className="inline-flex items-center justify-center rounded-box border border-hairline px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60 sm:py-1.5"
                 onClick={() => {
                   void (async () => {
                     setSaving(true);
@@ -2218,7 +2218,7 @@ export function ProblemBankWorkspace({
             ) : null}
             <Link
               href={localePath(locale, '/teacher/homework')}
-              className="inline-flex items-center justify-center rounded-full border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy sm:py-1.5">
+              className="inline-flex items-center justify-center rounded-box border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy sm:py-1.5">
               {copy.actions.openHomework}
             </Link>
           </div>
@@ -2230,7 +2230,7 @@ export function ProblemBankWorkspace({
             {lessonSet.map((problem) => (
               <li
                 key={problem.id}
-                className="inline-flex max-w-full items-center gap-1 rounded-2xl border border-hairline bg-paper py-1 pr-1 pl-3 text-sm text-ink">
+                className="inline-flex max-w-full items-center gap-1 rounded-box border border-hairline bg-paper py-1 pr-1 pl-3 text-sm text-ink">
                 <button
                   type="button"
                   className="inline-flex min-w-0 max-w-[min(100%,16rem)] items-center gap-2 overflow-hidden hover:text-navy sm:max-w-[18rem]"
@@ -2241,7 +2241,7 @@ export function ProblemBankWorkspace({
                 </button>
                 <button
                   type="button"
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-white hover:text-navy"
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-box text-muted hover:bg-white hover:text-navy"
                   aria-label={copy.removeFromSet}
                   onClick={() => void toggleInSet(problem.id)}>
                   <X className="size-3.5" aria-hidden="true" />

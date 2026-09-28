@@ -134,7 +134,7 @@ export function TopToolbar(props: Props) {
 
   return (
     <div className="absolute top-2 sm:top-3 inset-x-0 z-[100] flex justify-center px-1 sm:px-2 pointer-events-none">
-      <div className="pointer-events-auto w-max max-w-full min-w-0 rounded-2xl border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 overflow-visible">
+      <div className="pointer-events-auto w-max max-w-full min-w-0 rounded-box border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 overflow-visible">
         <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5 p-1 sm:p-1.5">
           {isTeacher && (
             <UndoRedoButtons canUndo={canUndo} canRedo={canRedo} onUndo={onUndo} onRedo={onRedo} />

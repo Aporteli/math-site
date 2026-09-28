@@ -144,7 +144,7 @@ ${styles}
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="pointer-events-auto flex max-h-full w-full max-w-3xl min-h-0 flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-lg shadow-navy/10 print:max-h-none print:max-w-none print:rounded-none print:border-0 print:shadow-none">
+          className="pointer-events-auto flex max-h-full w-full max-w-3xl min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-lg shadow-navy/10 print:max-h-none print:max-w-none print:rounded-box print:border-0 print:shadow-none">
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5 print:hidden">
             <div>
               <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
@@ -154,7 +154,7 @@ ${styles}
             </div>
             <button
               type="button"
-              className="inline-flex size-9 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
+              className="inline-flex size-9 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
               aria-label={ui.close}
               onClick={onClose}>
               <X className="size-4" aria-hidden="true" />
@@ -177,7 +177,7 @@ ${styles}
               </p>
 
               <h2 className="mt-5 text-xs font-semibold uppercase tracking-wide text-brass">{copy.prompt}</h2>
-              <div className="mt-2 min-w-0 overflow-x-auto rounded-xl bg-paper-deep px-4 py-4">
+              <div className="mt-2 min-w-0 overflow-x-auto rounded-box bg-paper-deep px-4 py-4">
                 <KatexPreview
                   tex={problem.promptTex}
                   className="block whitespace-pre-wrap break-words text-ink [&_.katex-display]:my-2"
@@ -185,7 +185,7 @@ ${styles}
               </div>
 
               <h2 className="mt-5 text-xs font-semibold uppercase tracking-wide text-brass">{copy.solution}</h2>
-              <div className="mt-2 min-w-0 overflow-x-auto rounded-xl border border-hairline bg-white px-4 py-4">
+              <div className="mt-2 min-w-0 overflow-x-auto rounded-box border border-hairline bg-white px-4 py-4">
                 <KatexPreview
                   tex={problem.solutionTex}
                   className="block whitespace-pre-wrap break-words text-ink [&_.katex-display]:my-2 [&_.katex]:text-[1.05rem]"
@@ -199,7 +199,7 @@ ${styles}
               <button
                 type="button"
                 disabled={!hasPrev}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2.5 text-sm font-semibold text-navy hover:border-navy/30 hover:bg-navy-tint disabled:opacity-40"
+                className="inline-flex items-center justify-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2.5 text-sm font-semibold text-navy hover:border-navy/30 hover:bg-navy-tint disabled:opacity-40"
                 onClick={() => onSelect(problems[index - 1]!.id)}>
                 <ChevronLeft className="size-4" aria-hidden="true" />
                 {ui.previous}
@@ -207,7 +207,7 @@ ${styles}
               <button
                 type="button"
                 disabled={!hasNext}
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2.5 text-sm font-semibold text-navy hover:border-navy/30 hover:bg-navy-tint disabled:opacity-40"
+                className="inline-flex items-center justify-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2.5 text-sm font-semibold text-navy hover:border-navy/30 hover:bg-navy-tint disabled:opacity-40"
                 onClick={() => onSelect(problems[index + 1]!.id)}>
                 {ui.next}
                 <ChevronRight className="size-4" aria-hidden="true" />
@@ -216,14 +216,14 @@ ${styles}
             <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
               <button
                 type="button"
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2.5 text-sm font-semibold text-navy hover:border-navy/30 hover:bg-navy-tint sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2.5 text-sm font-semibold text-navy hover:border-navy/30 hover:bg-navy-tint sm:w-auto"
                 onClick={() => void onCopy()}>
                 <Copy className="size-4" aria-hidden="true" />
                 {copied ? ui.copied : ui.copy}
               </button>
               <button
                 type="button"
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2.5 text-sm font-semibold text-navy hover:border-navy/30 hover:bg-navy-tint sm:w-auto"
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2.5 text-sm font-semibold text-navy hover:border-navy/30 hover:bg-navy-tint sm:w-auto"
                 onClick={onPrint}>
                 <Printer className="size-4" aria-hidden="true" />
                 {ui.print}

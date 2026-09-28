@@ -49,7 +49,7 @@ export function SendCardModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg rounded-2xl border border-hairline bg-white p-6 shadow-xl">
+      <div className="relative w-full max-w-lg rounded-box border border-hairline bg-white p-6 shadow-xl">
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-muted hover:text-ink"
@@ -64,7 +64,7 @@ export function SendCardModal({
         </h3>
 
         {error && (
-          <p className="mt-2 rounded-lg bg-red-50 p-2 text-xs font-medium text-red-600">
+          <p className="mt-2 rounded-box bg-red-50 p-2 text-xs font-medium text-red-600">
             {error}
           </p>
         )}
@@ -76,7 +76,7 @@ export function SendCardModal({
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-hairline p-2.5 text-sm outline-none focus:border-navy"
+              className="mt-1 w-full rounded-box border border-hairline p-2.5 text-sm outline-none focus:border-navy"
               placeholder="მაგ: კვადრატული განტოლების ამოხსნა"
             />
           </div>
@@ -87,7 +87,7 @@ export function SendCardModal({
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as any)}
-                className="mt-1 w-full rounded-xl border border-hairline p-2.5 text-sm outline-none focus:border-navy"
+                className="mt-1 w-full rounded-box border border-hairline p-2.5 text-sm outline-none focus:border-navy"
               >
                 <option value="FLASHCARD">სასწავლო ბარათი</option>
                 <option value="PROBLEM">ამოცანა / სავარჯიშო</option>
@@ -99,7 +99,7 @@ export function SendCardModal({
               <select
                 value={courseId}
                 onChange={(e) => setCourseId(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-hairline p-2.5 text-sm outline-none focus:border-navy"
+                className="mt-1 w-full rounded-box border border-hairline p-2.5 text-sm outline-none focus:border-navy"
               >
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -118,7 +118,7 @@ export function SendCardModal({
               rows={3}
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-hairline p-2.5 text-sm outline-none focus:border-navy"
+              className="mt-1 w-full rounded-box border border-hairline p-2.5 text-sm outline-none focus:border-navy"
               placeholder="მაგ: ყურადღება მიაქციეთ ფორმულას..."
             />
           </div>
@@ -127,14 +127,14 @@ export function SendCardModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full px-4 py-2 text-xs font-medium text-muted hover:bg-paper-deep"
+              className="rounded-box px-4 py-2 text-xs font-medium text-muted hover:bg-paper-deep"
             >
               გაუქმება
             </button>
             <button
               type="submit"
               disabled={pending}
-              className="rounded-full bg-navy px-5 py-2 text-xs font-semibold text-white hover:bg-navy-strong disabled:opacity-50"
+              className="rounded-box bg-navy px-5 py-2 text-xs font-semibold text-white hover:bg-navy-strong disabled:opacity-50"
             >
               {pending ? "იგზავნება..." : "გაგზავნა"}
             </button>
@@ -158,7 +158,7 @@ export function StudentActions({
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:border-navy/40 hover:text-navy"
+        className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:border-navy/40 hover:text-navy"
       >
         <Send className="size-3.5" />
         ბარათის გაგზავნა

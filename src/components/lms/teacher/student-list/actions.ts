@@ -383,6 +383,7 @@ export async function updateStudentPhonesAction(input: {
   studentId: string;
   phone: string | null;
   parentPhone: string | null;
+  email?: string | null;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const user = await getSession();
   if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
@@ -406,10 +407,18 @@ export async function updateStudentPhonesAction(input: {
     return { ok: false, error: 'მშობლის ტელეფონი უნდა შეიცავდეს ციფრებს' };
   }
 
-  await prisma.user.update({
-    where: { id: input.studentId },
-    data: { phone, parentPhone },
-  });
+  try {
+    await prisma.user.update({
+      where: { id: input.studentId },
+      data: {
+        phone,
+        parentPhone,
+        ...(input.email?.trim() ? { email: input.email.trim() } : {}),
+      },
+    });
+  } catch {
+    return { ok: false, error: 'კონტაქტის შენახვა ვერ მოხერხდა' };
+  }
 
   revalidatePath('/[locale]/teacher/student-list', 'page');
   return { ok: true };

@@ -419,7 +419,7 @@ export function ClassWhiteboard({
       onDrop={handleDrop}
       className={`relative flex flex-col min-h-0 min-w-0 overflow-hidden overscroll-none touch-none select-none ${
         isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'
-      } ${isFullscreen ? 'h-full w-full' : 'h-full w-full rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm'}`}>
+      } ${isFullscreen ? 'h-full w-full' : 'h-full w-full rounded-box border border-slate-200 dark:border-slate-800 shadow-sm'}`}>
       <input type="file" ref={fileInputRef} onChange={handleFileInputChange} accept="image/*" className="hidden" />
 
       {isClearConfirmOpen && (
@@ -529,7 +529,7 @@ export function ClassWhiteboard({
         className="relative flex-1 w-full min-h-0 min-w-0 overflow-hidden"
         style={{ backgroundColor: isDark ? '#020617' : '#ffffff' }}>
         {pageLocked && (
-          <div className="pointer-events-none absolute top-2 left-2 z-10 rounded-lg bg-indigo-600/90 px-2 py-1 text-[11px] font-bold text-white">
+          <div className="pointer-events-none absolute top-2 left-2 z-10 rounded-box bg-indigo-600/90 px-2 py-1 text-[11px] font-bold text-white">
             დაფა {assignedPageIndex + 1}
           </div>
         )}

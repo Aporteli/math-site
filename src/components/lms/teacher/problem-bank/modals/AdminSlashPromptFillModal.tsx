@@ -181,7 +181,7 @@ export function AdminSlashPromptFillModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 flex w-full max-w-[600px] flex-col overflow-hidden rounded-2xl border border-hairline bg-white shadow-xl shadow-navy/10"
+        className="relative z-10 flex w-full max-w-[600px] flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-xl shadow-navy/10"
         style={{ height: "min(300px, calc(100vh - 2rem))" }}
       >
         <div className="flex items-start justify-between gap-2 border-b border-hairline-soft px-4 py-3">
@@ -202,7 +202,7 @@ export function AdminSlashPromptFillModal({
             tabIndex={-1}
             aria-label={copy.fillCancel}
             onClick={onCancel}
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-paper-deep hover:text-ink"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-box text-muted hover:bg-paper-deep hover:text-ink"
           >
             <X className="size-4" aria-hidden="true" />
           </button>
@@ -223,7 +223,7 @@ export function AdminSlashPromptFillModal({
             type="button"
             tabIndex={-1}
             onClick={onCancel}
-            className="rounded-xl border border-hairline bg-white px-3 py-2 text-xs font-semibold text-body hover:border-navy/30 hover:text-navy"
+            className="rounded-box border border-hairline bg-white px-3 py-2 text-xs font-semibold text-body hover:border-navy/30 hover:text-navy"
           >
             {copy.fillCancel}
           </button>
@@ -231,7 +231,7 @@ export function AdminSlashPromptFillModal({
             type="button"
             tabIndex={-1}
             onClick={() => onConfirm(text)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong"
+            className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong"
           >
             <Check className="size-3.5" aria-hidden="true" />
             {copy.fillInsert}

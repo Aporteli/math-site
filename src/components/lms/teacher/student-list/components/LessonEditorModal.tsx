@@ -13,6 +13,7 @@ interface Props {
   groups: StudentGroup[];
   groupMemberCounts?: Record<string, number>;
   open: boolean;
+  embedded?: boolean;
   onClose: () => void;
   onAdd: (input: {
     studentId: string;
@@ -32,6 +33,7 @@ export function LessonEditorModal({
   groups,
   groupMemberCounts = {},
   open,
+  embedded = false,
   onClose,
   onAdd,
   onDelete,
@@ -97,19 +99,27 @@ export function LessonEditorModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-3 backdrop-blur-[2px] sm:p-4"
-      onClick={onClose}
+      className={
+        embedded
+          ? 'flex h-full min-h-0 min-w-0 flex-1'
+          : 'fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-3 backdrop-blur-[2px] sm:p-4'
+      }
+      onClick={embedded ? undefined : onClose}
     >
       <div
         role="dialog"
-        aria-modal="true"
+        aria-modal={embedded ? undefined : true}
         aria-labelledby="lesson-editor-title"
-        className="flex max-h-[min(92dvh,100%)] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-xl"
+        className={
+          embedded
+            ? 'flex h-full min-h-0 w-full flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-sm'
+            : 'flex max-h-[min(92dvh,100%)] w-full max-w-lg flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-xl'
+        }
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex size-9 items-center justify-center rounded-xl border border-hairline bg-brass-strong/90 text-paper">
+            <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-brass-strong/90 text-paper">
               <Clock3 className="h-4 w-4" />
             </span>
 
@@ -145,13 +155,15 @@ export function LessonEditorModal({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-paper hover:text-ink"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          {embedded ? null : (
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* Body */}
@@ -163,7 +175,7 @@ export function LessonEditorModal({
             </p>
 
             {student.lessons.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-hairline bg-paper px-3 py-4 text-center text-xs text-muted">
+              <p className="rounded-box border border-dashed border-hairline bg-paper px-3 py-4 text-center text-xs text-muted">
                 ჯერ არ არის დამატებული
               </p>
             ) : (
@@ -176,7 +188,7 @@ export function LessonEditorModal({
                   return (
                     <div
                       key={d}
-                      className="rounded-xl border border-hairline bg-paper p-2.5"
+                      className="rounded-box border border-hairline bg-paper p-2.5"
                     >
                       <div className="space-y-1">
                         <p className="mb-1.5 text-[11px] font-bold text-ink">
@@ -187,7 +199,7 @@ export function LessonEditorModal({
                           return (
                             <div
                               key={l.id}
-                              className="flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5"
+                              className="flex items-center justify-between gap-2 rounded-box px-2.5 py-1.5"
                             >
                               <div className="flex min-w-0 items-center gap-2">
                                 <span className="text-xs font-bold text-navy">
@@ -199,7 +211,7 @@ export function LessonEditorModal({
                                 type="button"
                                 onClick={() => handleDelete(l.id)}
                                 disabled={isPending}
-                                className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-loss-tint hover:text-loss disabled:opacity-40"
+                                className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-loss-tint hover:text-loss disabled:opacity-40"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </button>
@@ -215,7 +227,7 @@ export function LessonEditorModal({
           </div>
 
           {/* ახალი გაკვეთილი */}
-          <div className="overflow-hidden rounded-2xl border border-navy/20 bg-navy-tint/30">
+          <div className="overflow-hidden rounded-box border border-navy/20 bg-navy-tint/30">
             <button
               type="button"
               onClick={() => {
@@ -241,7 +253,7 @@ export function LessonEditorModal({
               <div className="border-t border-navy/15 p-4">
                 {!isIndividual || inHomeGroup ? (
                   <p
-                    className={`mb-3 rounded-xl border px-2.5 py-2 text-[11px] font-medium leading-snug text-muted ${
+                    className={`mb-3 rounded-box border px-2.5 py-2 text-[11px] font-medium leading-snug text-muted ${
                       inHomeGroup ? 'border-brass/30 bg-brass-tint/40' : 'border-navy/15 bg-surface'
                     }`}>
                     ეს დრო დაემატება ჯგუფის ყველა მოსწავლეს. გადახდები რჩება ცალ-ცალკე.
@@ -259,7 +271,7 @@ export function LessonEditorModal({
                       <select
                         value={groupId}
                         onChange={(e) => setGroupId(e.target.value)}
-                        className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                        className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
                       >
                         {student.groupIds.map((gid) => (
                           <option key={gid} value={gid}>
@@ -282,7 +294,7 @@ export function LessonEditorModal({
                           key={d}
                           type="button"
                           onClick={() => setDayOfWeek(d)}
-                          className={`min-h-10 cursor-pointer rounded-lg border px-0.5 py-2 text-[10px] font-bold transition sm:text-[11px] ${
+                          className={`min-h-10 cursor-pointer rounded-box border px-0.5 py-2 text-[10px] font-bold transition sm:text-[11px] ${
                             dayOfWeek === d
                               ? 'border-navy bg-navy text-white'
                               : 'border-hairline bg-surface text-body hover:border-navy/40'
@@ -305,7 +317,7 @@ export function LessonEditorModal({
                         type="time"
                         value={startTime}
                         onChange={(e) => setStartTime(e.target.value)}
-                        className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                        className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
                       />
                     </div>
 
@@ -318,13 +330,13 @@ export function LessonEditorModal({
                         type="time"
                         value={endTime}
                         onChange={(e) => setEndTime(e.target.value)}
-                        className="w-full rounded-xl border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                        className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
                       />
                     </div>
                   </div>
 
                   {error ? (
-                    <p className="rounded-lg bg-loss-tint px-2.5 py-1.5 text-[11px] font-bold text-loss">
+                    <p className="rounded-box bg-loss-tint px-2.5 py-1.5 text-[11px] font-bold text-loss">
                       {error}
                     </p>
                   ) : null}
@@ -333,7 +345,7 @@ export function LessonEditorModal({
                     type="button"
                     onClick={handleAdd}
                     disabled={isPending}
-                    className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50"
+                    className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     {isPending ? 'ინახება...' : 'დამატება'}

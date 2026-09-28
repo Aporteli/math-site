@@ -273,7 +273,7 @@ export function AssignProblemModal({
       onDrop={handleDrop}
     >
       <div
-        className={`relative flex w-full max-w-2xl flex-col overflow-hidden rounded-2xl border bg-paper shadow-2xl animate-in zoom-in-95 duration-150 ${
+        className={`relative flex w-full max-w-2xl flex-col overflow-hidden rounded-box border bg-paper shadow-2xl animate-in zoom-in-95 duration-150 ${
           isDraggingOver ? 'border-navy ring-2 ring-navy/30' : 'border-hairline'
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -281,7 +281,7 @@ export function AssignProblemModal({
         {/* Drag overlay */}
         {isDraggingOver && (
           <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 bg-navy/10 backdrop-blur-[2px]">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-navy text-white shadow-lg">
+            <div className="flex size-14 items-center justify-center rounded-box bg-navy text-white shadow-lg">
               <UploadCloud className="size-7" />
             </div>
             <p className="text-sm font-bold text-navy">ჩააგდეთ სურათი აქ</p>
@@ -291,7 +291,7 @@ export function AssignProblemModal({
 
         <div className="flex items-center justify-between border-b border-hairline bg-surface px-5 py-3.5">
           <div className="flex items-center gap-3">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-navy/15 text-navy">
+            <div className="flex size-7 items-center justify-center rounded-box bg-navy/15 text-navy">
               <Send className="size-3.5" />
             </div>
             <div className="flex items-baseline gap-2">
@@ -304,7 +304,7 @@ export function AssignProblemModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-7 items-center justify-center rounded-lg border border-hairline/80 bg-surface/50 text-muted hover:bg-paper-deep hover:text-ink transition-colors cursor-pointer"
+            className="flex size-7 items-center justify-center rounded-box border border-hairline/80 bg-surface/50 text-muted hover:bg-paper-deep hover:text-ink transition-colors cursor-pointer"
           >
             <X className="size-3.5" />
           </button>
@@ -331,7 +331,7 @@ export function AssignProblemModal({
                   {assignImages.map((image, index) => (
                     <div
                       key={`${image.fileName}-${index}`}
-                      className="relative overflow-hidden rounded-xl border border-hairline bg-surface shadow-inner"
+                      className="relative overflow-hidden rounded-box border border-hairline bg-surface shadow-inner"
                     >
                       <img
                         src={image.dataUrl}
@@ -349,7 +349,7 @@ export function AssignProblemModal({
                               prev.filter((_, i) => i !== index),
                             )
                           }
-                          className="text-rose-500 hover:text-rose-400 p-0.5 rounded-md transition-colors cursor-pointer"
+                          className="text-rose-500 hover:text-rose-400 p-0.5 rounded-box transition-colors cursor-pointer"
                         >
                           <X className="size-3.5" />
                         </button>
@@ -369,9 +369,9 @@ export function AssignProblemModal({
               <button
                 type="button"
                 onClick={() => assignFileRef.current?.click()}
-                className="group flex flex-col items-center justify-center gap-2.5 h-52 rounded-xl border-2 border-dashed border-hairline/80 bg-surface/30 hover:border-navy hover:bg-surface/80 transition-all cursor-pointer"
+                className="group flex flex-col items-center justify-center gap-2.5 h-52 rounded-box border-2 border-dashed border-hairline/80 bg-surface/30 hover:border-navy hover:bg-surface/80 transition-all cursor-pointer"
               >
-                <div className="flex size-10 items-center justify-center rounded-xl bg-paper-deep text-muted group-hover:bg-navy group-hover:text-white transition-all shadow-2xs">
+                <div className="flex size-10 items-center justify-center rounded-box bg-paper-deep text-muted group-hover:bg-navy group-hover:text-white transition-all shadow-2xs">
                   <UploadCloud className="size-5" />
                 </div>
                 <div className="text-center space-y-0.5">
@@ -398,7 +398,7 @@ export function AssignProblemModal({
                 value={assignComment}
                 onChange={(e) => setAssignComment(e.target.value)}
                 placeholder="ჩაწერეთ მითითება ან კითხვა ამოცანის ირგვლივ..."
-                className="w-full resize-none rounded-xl border border-hairline bg-surface p-3 text-xs text-ink placeholder:text-muted/70 outline-none focus:border-navy transition-colors"
+                className="w-full resize-none rounded-box border border-hairline bg-surface p-3 text-xs text-ink placeholder:text-muted/70 outline-none focus:border-navy transition-colors"
                 rows={5}
               />
             </div>
@@ -408,7 +408,7 @@ export function AssignProblemModal({
                 type="button"
                 disabled={isSendDisabled || assigning}
                 onClick={handleSend}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-navy py-2.5 px-4 text-xs font-bold text-white shadow-xs hover:bg-navy-strong disabled:opacity-40 transition-all active:scale-98 cursor-pointer"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-box bg-navy py-2.5 px-4 text-xs font-bold text-white shadow-xs hover:bg-navy-strong disabled:opacity-40 transition-all active:scale-98 cursor-pointer"
               >
                 {assigning ? (
                   <Loader2 className="size-4 animate-spin" />
