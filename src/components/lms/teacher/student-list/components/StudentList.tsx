@@ -57,6 +57,11 @@ interface Props {
   }) => Promise<{ ok: boolean; error?: string; id?: string }>;
   onUpdateIndividual?: (studentId: string, patch: Partial<StudentRecord>) => Promise<{ ok: boolean; error?: string }>;
   onDeleteIndividual?: (studentId: string) => Promise<{ ok: boolean; error?: string }>;
+  onCreateHomeGroup?: (input: {
+    name: string;
+    studentIds: string[];
+  }) => Promise<{ ok: boolean; error?: string; id?: string }>;
+  onDisbandHomeGroup?: (groupId: string) => Promise<{ ok: boolean; error?: string }>;
 
   /* Group payments (add/delete) */
   onAddGroupPayment?: (input: {
@@ -95,6 +100,8 @@ export function StudentList({
   onCreateIndividual,
   onUpdateIndividual,
   onDeleteIndividual,
+  onCreateHomeGroup,
+  onDisbandHomeGroup,
   onAddGroupPayment,
   onDeleteGroupPayment,
   onAddIndividualPayment,
@@ -118,6 +125,11 @@ export function StudentList({
   const [phoneEditorStudent, setPhoneEditorStudent] = useState<StudentRecord | null>(null);
 
   const [individualModalOpen, setIndividualModalOpen] = useState(false);
+  const [homeGroupOpen, setHomeGroupOpen] = useState(false);
+  const [homeGroupName, setHomeGroupName] = useState('');
+  const [homeGroupStudentIds, setHomeGroupStudentIds] = useState<string[]>([]);
+  const [homeGroupError, setHomeGroupError] = useState<string | null>(null);
+  const [homeGroupSaving, setHomeGroupSaving] = useState(false);
   const [editingIndividual, setEditingIndividual] = useState<StudentRecord | null>(null);
   const [paymentHistoryStudent, setPaymentHistoryStudent] = useState<StudentRecord | null>(null);
   const [showTodayOnly, setShowTodayOnly] = useState(false);
@@ -222,19 +234,33 @@ export function StudentList({
       });
       if (!res.ok) return { ok: false, error: res.error };
 
-      const current = studentsRef.current.find((s) => s.id === input.studentId);
-      handleUpdateStudent(input.studentId, {
-        lessons: [
-          ...(current?.lessons ?? []),
-          {
-            id: res.id,
-            dayOfWeek: input.dayOfWeek,
-            startTime: input.startTime,
-            endTime: input.endTime,
-            groupId: '',
-          },
-        ],
-      });
+      const homeGroupId = studentsRef.current.find((s) => s.id === input.studentId)?.homeGroupId ?? '';
+      const copies = res.copies.length > 0 ? res.copies : [{ studentId: input.studentId, lessonId: res.id }];
+
+      for (const copy of copies) {
+        const current = studentsRef.current.find((s) => s.id === copy.studentId);
+        if (
+          current?.lessons.some(
+            (l) =>
+              l.id === copy.lessonId ||
+              (l.dayOfWeek === input.dayOfWeek && l.startTime === input.startTime && l.endTime === input.endTime),
+          )
+        ) {
+          continue;
+        }
+        handleUpdateStudent(copy.studentId, {
+          lessons: [
+            ...(current?.lessons ?? []),
+            {
+              id: copy.lessonId,
+              dayOfWeek: input.dayOfWeek,
+              startTime: input.startTime,
+              endTime: input.endTime,
+              groupId: homeGroupId,
+            },
+          ],
+        });
+      }
       return { ok: true };
     }
 
@@ -288,6 +314,20 @@ export function StudentList({
       const res = await deleteIndividualLessonAction({ lessonId });
       if (!res.ok) return { ok: false, error: res.error };
 
+      if (res.match) {
+        const { groupId, dayOfWeek, startTime, endTime } = res.match;
+        for (const owner of studentsRef.current) {
+          if (owner.homeGroupId !== groupId) continue;
+          const next = owner.lessons.filter(
+            (l) => !(l.dayOfWeek === dayOfWeek && l.startTime === startTime && l.endTime === endTime),
+          );
+          if (next.length !== owner.lessons.length) {
+            handleUpdateStudent(owner.id, { lessons: next });
+          }
+        }
+        return { ok: true };
+      }
+
       const owner = studentsRef.current.find((s) => s.lessons.some((l) => l.id === lessonId));
       if (owner) {
         handleUpdateStudent(owner.id, {
@@ -311,6 +351,39 @@ export function StudentList({
       }
     }
     return { ok: true };
+  };
+
+  const handleDisbandHomeGroup = async (groupId: string) => {
+    const group = groups.find((g) => g.id === groupId);
+    const name = group?.name ?? 'ჯგუფი';
+    if (!window.confirm(`დავშალოთ „${name}“? მოსწავლეები და მათი გადახდები დარჩება.`)) return;
+    const res = await onDisbandHomeGroup?.(groupId);
+    if (res && !res.ok) window.alert(res.error ?? 'ჯგუფის დაშლა ვერ მოხერხდა');
+  };
+
+  const ungroupedHomeStudents = students.filter((s) => s.kind === 'individual' && !s.homeGroupId);
+
+  const handleCreateHomeGroup = async () => {
+    setHomeGroupError(null);
+    const name = homeGroupName.trim();
+    if (!name) {
+      setHomeGroupError('ჯგუფის სახელი სავალდებულოა');
+      return;
+    }
+    if (homeGroupStudentIds.length < 2) {
+      setHomeGroupError('აირჩიე მინიმუმ ორი მოსწავლე');
+      return;
+    }
+    setHomeGroupSaving(true);
+    const res = await onCreateHomeGroup?.({ name, studentIds: homeGroupStudentIds });
+    setHomeGroupSaving(false);
+    if (!res?.ok) {
+      setHomeGroupError(res?.error ?? 'ჯგუფის შექმნა ვერ მოხერხდა');
+      return;
+    }
+    setHomeGroupOpen(false);
+    setHomeGroupName('');
+    setHomeGroupStudentIds([]);
   };
 
   const handleSavePhones = async (
@@ -457,6 +530,19 @@ export function StudentList({
               <UserPlus className="size-4 shrink-0" />
               <span className="truncate">სახლში</span>
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setHomeGroupName('');
+                setHomeGroupStudentIds([]);
+                setHomeGroupError(null);
+                setHomeGroupOpen(true);
+              }}
+              title="სახლში მოსული მოსწავლეების ჯგუფი"
+              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-brass-strong/40 bg-brass-tint px-3 py-2 text-xs font-bold text-brass-strong shadow-sm transition hover:bg-brass-strong hover:text-white">
+              <Users className="size-4 shrink-0" />
+              <span className="truncate">ჯგუფი</span>
+            </button>
           </div>
         </div>
 
@@ -533,10 +619,15 @@ export function StudentList({
                       setShowTodayOnly(false);
                     }}
                     className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
-                      active
-                        ? 'border-navy bg-navy text-white shadow-sm'
-                        : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
+                      g.home
+                        ? active
+                          ? 'border-brass-strong bg-brass-strong text-white shadow-sm'
+                          : 'border-brass/40 bg-brass-tint text-brass-strong hover:border-brass-strong'
+                        : active
+                          ? 'border-navy bg-navy text-white shadow-sm'
+                          : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
                     }`}>
+                    {g.home ? <span className="text-[9px] font-bold uppercase">სახლში</span> : null}
                     <span>{g.name}</span>
                     <span
                       className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
@@ -595,14 +686,30 @@ export function StudentList({
             <div className="space-y-5">
               {listSections.map((section) => (
                 <section key={section.key} className="space-y-3">
-                  <div className="flex items-center gap-2 rounded-xl border border-hairline bg-paper px-3 py-2">
+                  <div
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${
+                      section.kind === 'home' ? 'border-brass/40 bg-brass-tint/60' : 'border-hairline bg-paper'
+                    }`}>
                     <span
                       className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`}
                     />
+                    {section.kind === 'home' ? (
+                      <span className="rounded-full bg-brass-strong px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        სახლში
+                      </span>
+                    ) : null}
                     <h2 className="text-xs font-bold tracking-wide text-ink">{section.title}</h2>
                     <span className="rounded-full bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
                       {section.students.length}
                     </span>
+                    {section.kind === 'home' && section.groupId ? (
+                      <button
+                        type="button"
+                        onClick={() => handleDisbandHomeGroup(section.groupId!)}
+                        className="ml-auto cursor-pointer rounded-lg px-2 py-1 text-[10px] font-bold text-brass-strong hover:bg-white">
+                        დაშლა
+                      </button>
+                    ) : null}
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                     {section.students.map((student) => (
@@ -645,18 +752,35 @@ export function StudentList({
                   setEditingIndividual(s);
                   setIndividualModalOpen(true);
                 }}
+                onDisbandHomeGroup={onDisbandHomeGroup ? handleDisbandHomeGroup : undefined}
               />
               <div className="space-y-5 lg:hidden">
                 {listSections.map((section) => (
                   <section key={section.key} className="space-y-3">
-                    <div className="flex items-center gap-2 rounded-xl border border-hairline bg-paper px-3 py-2">
+                    <div
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${
+                        section.kind === 'home' ? 'border-brass/40 bg-brass-tint/60' : 'border-hairline bg-paper'
+                      }`}>
                       <span
                         className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`}
                       />
+                      {section.kind === 'home' ? (
+                        <span className="rounded-full bg-brass-strong px-1.5 py-0.5 text-[9px] font-bold text-white">
+                          სახლში
+                        </span>
+                      ) : null}
                       <h2 className="text-xs font-bold tracking-wide text-ink">{section.title}</h2>
                       <span className="rounded-full bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
                         {section.students.length}
                       </span>
+                      {section.kind === 'home' && section.groupId ? (
+                        <button
+                          type="button"
+                          onClick={() => handleDisbandHomeGroup(section.groupId!)}
+                          className="ml-auto cursor-pointer rounded-lg px-2 py-1 text-[10px] font-bold text-brass-strong hover:bg-white">
+                          დაშლა
+                        </button>
+                      ) : null}
                     </div>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       {section.students.map((student) => (
@@ -711,6 +835,94 @@ export function StudentList({
       ) : null}
 
       {/* ════════════ Individual Student Modal ════════════ */}
+      {homeGroupOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-3 sm:items-center"
+          onClick={() => {
+            if (!homeGroupSaving) setHomeGroupOpen(false);
+          }}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="home-group-title"
+            className="flex max-h-[min(88dvh,40rem)] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-xl"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="border-b border-hairline px-4 py-4">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-brass-strong">სახლში</p>
+              <h2 id="home-group-title" className="mt-1 text-sm font-bold text-ink">
+                სახლის ჯგუფი
+              </h2>
+              <p className="mt-1 text-[11px] font-medium leading-snug text-muted">
+                ერთად მოსული მოსწავლეები კალენდარზე ერთ ჩანაწერად გამოჩნდებიან. გადახდები რჩება ცალ-ცალკე.
+              </p>
+            </div>
+            <div className="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+              <label className="block">
+                <span className="mb-1 block text-[10px] font-bold text-muted">სახელი</span>
+                <input
+                  value={homeGroupName}
+                  onChange={(e) => setHomeGroupName(e.target.value)}
+                  placeholder="მაგ. სამშაბათის ჯგუფი"
+                  className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-brass-strong/60 focus:ring-2 focus:ring-brass/20"
+                />
+              </label>
+              <div>
+                <p className="mb-1.5 text-[10px] font-bold text-muted">მოსწავლეები</p>
+                {ungroupedHomeStudents.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-hairline px-3 py-4 text-center text-xs text-muted">
+                    ჯგუფის გარეშე სახლის მოსწავლე არ არის
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    {ungroupedHomeStudents.map((student) => {
+                      const checked = homeGroupStudentIds.includes(student.id);
+                      return (
+                        <label
+                          key={student.id}
+                          className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold ${
+                            checked ? 'border-brass/40 bg-brass-tint text-brass-strong' : 'border-hairline bg-paper text-ink'
+                          }`}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => {
+                              setHomeGroupStudentIds((current) =>
+                                checked ? current.filter((id) => id !== student.id) : [...current, student.id],
+                              );
+                            }}
+                            className="size-3.5 accent-brass-strong"
+                          />
+                          <span className="truncate">
+                            {student.firstName} {student.lastName}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              {homeGroupError ? <p className="text-xs font-bold text-loss">{homeGroupError}</p> : null}
+            </div>
+            <div className="flex items-center justify-end gap-2 border-t border-hairline px-4 py-3">
+              <button
+                type="button"
+                disabled={homeGroupSaving}
+                onClick={() => setHomeGroupOpen(false)}
+                className="cursor-pointer rounded-xl px-3 py-2 text-xs font-bold text-muted hover:bg-paper">
+                გაუქმება
+              </button>
+              <button
+                type="button"
+                disabled={homeGroupSaving}
+                onClick={handleCreateHomeGroup}
+                className="cursor-pointer rounded-xl bg-brass-strong px-3 py-2 text-xs font-bold text-white hover:bg-brass disabled:opacity-50">
+                შექმნა
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <IndividualStudentModal
         open={individualModalOpen}
         student={currentEditingIndividual}

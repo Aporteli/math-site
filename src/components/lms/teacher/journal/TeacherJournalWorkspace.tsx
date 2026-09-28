@@ -731,15 +731,18 @@ export function TeacherJournalWorkspace() {
   }, [currentDate, view, weekGrid]);
 
   /* ─── Google Calendar სტილი: ღია ფონი + მარცხენა ფერადი ზოლი ─── */
-  const virtualChipClass = (source: 'group' | 'individual') =>
+  const virtualChipClass = (source: VirtualScheduleEvent['source']) =>
     source === 'group'
       ? 'bg-sky-500 text-sky-950 border-l-[3px] border-sky-500'
-      : 'bg-emerald-500 text-emerald-950 border-l-[3px] border-emerald-500';
+      : source === 'home'
+        ? 'bg-amber-400 text-amber-950 border-l-[3px] border-amber-700'
+        : 'bg-emerald-500 text-emerald-950 border-l-[3px] border-emerald-500';
 
-  const virtualTitle = (v: VirtualScheduleEvent) =>
-    v.source === 'group' && v.courseTitle
-      ? v.courseTitle
-      : v.students.map((s) => s.name).join(', ') || 'გაკვეთილი';
+  const virtualTitle = (v: VirtualScheduleEvent) => {
+    if (v.source === 'home' && v.courseTitle) return `სახლში · ${v.courseTitle}`;
+    if (v.source === 'group' && v.courseTitle) return v.courseTitle;
+    return v.students.map((s) => s.name).join(', ') || 'გაკვეთილი';
+  };
 
   const virtualStudentsLabel = (v: VirtualScheduleEvent) =>
     v.students.map((s) => s.name).join(', ');
@@ -879,7 +882,7 @@ export function TeacherJournalWorkspace() {
               <div className="text-[10px] opacity-70 font-normal tabular-nums mt-0.5">
                 {v.startTime} – {v.endTime}
               </div>
-              {v.source === 'group' ? (
+              {v.source !== 'individual' ? (
                 <div className="text-[10px] opacity-70 font-normal truncate mt-0.5">
                   {virtualStudentsLabel(v)}
                 </div>
@@ -1228,7 +1231,7 @@ export function TeacherJournalWorkspace() {
                                 </span>
                               ) : null}
                             </div>
-                            {v.source === 'group' ? (
+                            {v.source !== 'individual' ? (
                               <p className="mt-1 truncate text-[11px] opacity-80 font-medium">
                                 {virtualStudentsLabel(v)}
                               </p>

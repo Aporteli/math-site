@@ -347,7 +347,7 @@ export function lessonsForDate(
 
 export interface CalendarSession {
   key: string;
-  kind: 'group' | 'individual';
+  kind: 'group' | 'individual' | 'home';
   groupId: string;
   startTime: string;
   endTime: string;
@@ -358,10 +358,14 @@ export function groupDayLessons(lessons: DayLesson[]): CalendarSession[] {
   const map = new Map<string, CalendarSession>();
 
   for (const lesson of lessons) {
-    const isGroup = lesson.student.kind === 'group' && Boolean(lesson.groupId);
-    const key = isGroup
-      ? `g:${lesson.groupId}:${lesson.startTime}:${lesson.endTime}`
-      : `i:${lesson.student.id}:${lesson.lessonId}`;
+    const homeId = lesson.student.homeGroupId;
+    const isHome = Boolean(homeId);
+    const isGroup = !isHome && lesson.student.kind === 'group' && Boolean(lesson.groupId);
+    const key = isHome
+      ? `h:${homeId}:${lesson.startTime}:${lesson.endTime}`
+      : isGroup
+        ? `g:${lesson.groupId}:${lesson.startTime}:${lesson.endTime}`
+        : `i:${lesson.student.id}:${lesson.lessonId}`;
     const existing = map.get(key);
     if (existing) {
       existing.lessons.push(lesson);
@@ -369,8 +373,8 @@ export function groupDayLessons(lessons: DayLesson[]): CalendarSession[] {
     }
     map.set(key, {
       key,
-      kind: isGroup ? 'group' : 'individual',
-      groupId: lesson.groupId,
+      kind: isHome ? 'home' : isGroup ? 'group' : 'individual',
+      groupId: homeId ?? lesson.groupId,
       startTime: lesson.startTime,
       endTime: lesson.endTime,
       lessons: [lesson],

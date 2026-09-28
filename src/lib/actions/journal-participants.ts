@@ -85,19 +85,46 @@ export async function getJournalParticipantOptionsAction() {
     const individuals = await prisma.individualStudent.findMany({
       where: { teacherId, status: "active" },
       orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
-      select: { id: true, firstName: true, lastName: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        homeGroup: { select: { id: true, name: true } },
+      },
     });
 
-    if (individuals.length > 0) {
+    const loose: ParticipantOption[] = [];
+    const homeBuckets = new Map<string, ParticipantGroup>();
+
+    for (const s of individuals) {
+      const option: ParticipantOption = {
+        id: `individual:${s.id}`,
+        name: `${s.firstName} ${s.lastName}`.trim(),
+        type: "individual",
+        individualStudentId: s.id,
+      };
+      if (!s.homeGroup) {
+        loose.push(option);
+        continue;
+      }
+      const bucket = homeBuckets.get(s.homeGroup.id) ?? {
+        label: `სახლში · ${s.homeGroup.name}`,
+        type: "individual" as const,
+        students: [],
+      };
+      bucket.students.push(option);
+      homeBuckets.set(s.homeGroup.id, bucket);
+    }
+
+    for (const bucket of homeBuckets.values()) {
+      groups.push(bucket);
+    }
+
+    if (loose.length > 0) {
       groups.push({
         label: "ინდივიდუალური მოსწავლეები",
         type: "individual",
-        students: individuals.map((s) => ({
-          id: `individual:${s.id}`,
-          name: `${s.firstName} ${s.lastName}`.trim(),
-          type: "individual" as const,
-          individualStudentId: s.id,     // ← ცალკე
-        })),
+        students: loose,
       });
     }
 

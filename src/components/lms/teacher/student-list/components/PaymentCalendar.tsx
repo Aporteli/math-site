@@ -440,7 +440,13 @@ function WeekGrid({
                   <span
                     key={session.key}
                     className={`block truncate rounded-md px-1 py-0.5 text-[9px] font-bold leading-tight ${
-                      isSelected ? 'bg-navy text-white' : 'bg-navy-tint text-navy'
+                      session.kind === 'home'
+                        ? isSelected
+                          ? 'bg-brass-strong text-white'
+                          : 'bg-brass-tint text-brass-strong'
+                        : isSelected
+                          ? 'bg-navy text-white'
+                          : 'bg-navy-tint text-navy'
                     }`}>
                     {session.startTime} {sessionChipLabel(session, groups)}
                   </span>
@@ -454,13 +460,19 @@ function WeekGrid({
   );
 }
 
+function sessionTitle(session: CalendarSession, groups: StudentGroup[]): string {
+  if (session.kind === 'home') return `სახლში · ${getGroupName(session.groupId, groups)}`;
+  if (session.kind === 'group') return getGroupName(session.groupId, groups);
+  return 'სახლში';
+}
+
 function sessionChipLabel(session: CalendarSession, groups: StudentGroup[]): string {
-  if (session.kind === 'group') {
-    const name = getGroupName(session.groupId, groups);
-    const count = session.lessons.length;
-    return count > 1 ? `${name} · ${count}` : name;
+  if (session.kind === 'individual') {
+    return session.lessons[0]?.student.firstName ?? '—';
   }
-  return session.lessons[0]?.student.firstName ?? '—';
+  const name = sessionTitle(session, groups);
+  const count = session.lessons.length;
+  return count > 1 ? `${name} · ${count}` : name;
 }
 
 function DayAgenda({
@@ -506,10 +518,13 @@ function DayAgenda({
                   {session.startTime}
                 </div>
                 <div className="min-w-0 flex-1 space-y-1.5 border-l border-hairline pl-3">
-                  <p className="rounded-md bg-navy-tint/60 px-1.5 py-0.5 text-[10px] font-bold text-navy">
-                    {session.kind === 'group'
-                      ? `${getGroupName(session.groupId, groups)} · ${session.lessons.length} მოსწავლე`
-                      : 'სახლში'}
+                  <p
+                    className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                      session.kind === 'home' ? 'bg-brass-tint/80 text-brass-strong' : 'bg-navy-tint/60 text-navy'
+                    }`}>
+                    {session.kind === 'individual'
+                      ? 'სახლში'
+                      : `${sessionTitle(session, groups)} · ${session.lessons.length} მოსწავლე`}
                     <span className="ml-1 font-medium text-muted">
                       {session.startTime}–{session.endTime}
                     </span>
@@ -601,10 +616,13 @@ function DayLessonPanel({
           <div className="space-y-4">
             {sessions.map((session) => (
               <div key={session.key} className="space-y-2">
-                <p className="flex items-center gap-1.5 rounded-lg bg-navy-tint/70 px-2 py-1 text-[13px] font-bold tracking-wide text-navy">
+                <p
+                  className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-[13px] font-bold tracking-wide ${
+                    session.kind === 'home' ? 'bg-brass-tint/80 text-brass-strong' : 'bg-navy-tint/70 text-navy'
+                  }`}>
                   {session.startTime}–{session.endTime}
                   <span className="font-medium text-muted">
-                    · {session.kind === 'group' ? getGroupName(session.groupId, groups) : 'სახლში'}
+                    · {sessionTitle(session, groups)}
                     {session.lessons.length > 1 ? ` · ${session.lessons.length}` : ''}
                   </span>
                 </p>

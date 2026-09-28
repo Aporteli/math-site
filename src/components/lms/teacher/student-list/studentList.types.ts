@@ -12,6 +12,8 @@ export interface StudentGroup {
   id: string;
   name: string;
   monthlyPrice: number;
+  /** სახლში, ხელით დამატებული მოსწავლეების ჯგუფი */
+  home?: boolean;
 }
 
 /** გამოტოვებული გაკვეთილი — კონკრეტული lesson slot კონკრეტულ თარიღზე */
@@ -29,6 +31,8 @@ export interface StudentRecord {
   parentPhone?: string;
   email?: string;
   groupIds: string[];
+  /** სახლის ჯგუფი — გადახდები მაინც ინდივიდუალურია */
+  homeGroupId?: string;
   monthlyPrice: number;
   priceType?: PriceType;
   /** მოსალოდნელი გადახდის თარიღი, "YYYY-MM-DD" */

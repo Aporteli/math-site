@@ -28,7 +28,7 @@ export function SiteLogo({
     >
       <MathMark
         tone={tone}
-        className="size-9 transition-transform group-hover:-rotate-3"
+        className="h-11 w-11 transition-transform group-hover:-rotate-3"
       />
       {markOnly ? null : (
         <span className="flex min-w-0 flex-col leading-tight">

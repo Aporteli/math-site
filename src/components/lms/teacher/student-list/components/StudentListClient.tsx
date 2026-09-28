@@ -10,6 +10,8 @@ import {
   createIndividualStudentAction,
   updateIndividualStudentAction,
   deleteIndividualStudentAction,
+  createHomeGroupAction,
+  disbandHomeGroupAction,
   addIndividualPaymentAction,
   deleteIndividualPaymentAction,
   addStudentPaymentAction,
@@ -36,6 +38,7 @@ export function StudentListClient({
   initialPayments = [],
 }: Props) {
   const [students, setStudents] = useState<StudentRecord[]>(initialStudents);
+  const [groupList, setGroupList] = useState<StudentGroup[]>(groups);
   const [payments, setPayments] = useState<PaymentRecord[]>(initialPayments);
   const [, startTransition] = useTransition();
 
@@ -199,6 +202,7 @@ export function StudentListClient({
         parentPhone: input.parentPhone,
         email: input.email,
         groupIds: [],
+        homeGroupId: undefined,
         monthlyPrice: input.monthlyPrice ?? 0,
         priceType: input.priceType ?? 'MONTHLY',
         paidAmount: 0,
@@ -247,6 +251,9 @@ export function StudentListClient({
     const res = await deleteIndividualStudentAction({ studentId });
     if (!res.ok) return { ok: false, error: res.error };
 
+    if (res.removedGroupId) {
+      setGroupList((prev) => prev.filter((g) => g.id !== res.removedGroupId));
+    }
     setStudents((prev) => prev.filter((s) => s.id !== studentId));
     setPayments((prev) => prev.filter((p) => p.studentId !== studentId));
     return { ok: true };
@@ -363,7 +370,47 @@ export function StudentListClient({
     <div className="min-w-0">
       <StudentList
         students={students}
-        groups={groups}
+        groups={groupList}
+        onCreateHomeGroup={async (input) => {
+          const res = await createHomeGroupAction(input);
+          if (!res.ok) return { ok: false, error: res.error };
+          const id = res.id;
+          setGroupList((prev) => [
+            ...prev,
+            { id, name: input.name.trim(), monthlyPrice: 0, home: true },
+          ]);
+          setStudents((prev) =>
+            prev.map((s) =>
+              input.studentIds.includes(s.id)
+                ? {
+                    ...s,
+                    homeGroupId: id,
+                    groupIds: [id],
+                    lessons: s.lessons.map((lesson) => ({ ...lesson, groupId: id })),
+                  }
+                : s,
+            ),
+          );
+          return { ok: true, id };
+        }}
+        onDisbandHomeGroup={async (groupId) => {
+          const res = await disbandHomeGroupAction({ groupId });
+          if (!res.ok) return { ok: false, error: res.error };
+          setGroupList((prev) => prev.filter((g) => g.id !== groupId));
+          setStudents((prev) =>
+            prev.map((s) =>
+              s.homeGroupId === groupId
+                ? {
+                    ...s,
+                    homeGroupId: undefined,
+                    groupIds: [],
+                    lessons: s.lessons.map((lesson) => ({ ...lesson, groupId: '' })),
+                  }
+                : s,
+            ),
+          );
+          return { ok: true };
+        }}
         initialPayments={payments}
         onUpdateStudent={handleUpdateStudent}
         onUpdatePayments={handleUpdatePayments}

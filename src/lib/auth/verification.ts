@@ -26,9 +26,9 @@ export async function generateAndSendOTP(email: string) {
 
   // მეილის გაგზავნა
   await resend.emails.send({
-    from: "MathLab <onboarding@resend.dev>", // პროდაქშენში შენი დომენი
+    from: "pinf <onboarding@resend.dev>", // პროდაქშენში შენი დომენი
     to: normalizedEmail,
-    subject: "თქვენი ვერიფიკაციის კოდი - MathLab",
+    subject: "თქვენი ვერიფიკაციის კოდი - pinf",
     html: `<p>თქვენი რეგისტრაციის კოდია: <strong>${token}</strong>. კოდი აქტიურია 10 წუთის განმავლობაში.</p>`,
   });
 

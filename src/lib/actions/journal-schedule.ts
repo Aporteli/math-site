@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth/session';
 
-export type VirtualEventSource = 'group' | 'individual';
+export type VirtualEventSource = 'group' | 'individual' | 'home';
 
 export interface VirtualScheduleStudent {
   id: string;
@@ -60,7 +60,14 @@ export async function getScheduleLessonsAction(): Promise<{
         student: { teacherId, status: 'active' },
       },
       include: {
-        student: { select: { id: true, firstName: true, lastName: true } },
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            homeGroup: { select: { id: true, name: true } },
+          },
+        },
       },
     });
 
@@ -97,21 +104,53 @@ export async function getScheduleLessonsAction(): Promise<{
       students: sortStudents(event.students),
     }));
 
-    const individualEvents: VirtualScheduleEvent[] = individualLessons.map((lesson) => ({
-      id: `schedule-individual-${lesson.id}`,
-      source: 'individual',
-      students: [
-        {
-          id: lesson.student.id,
-          name: `${lesson.student.firstName} ${lesson.student.lastName}`.trim(),
-        },
-      ],
-      dayOfWeek: lesson.dayOfWeek as 1 | 2 | 3 | 4 | 5 | 6 | 7,
-      startTime: lesson.startTime,
-      endTime: lesson.endTime,
+    const homeGrouped = new Map<string, VirtualScheduleEvent>();
+    const soloEvents: VirtualScheduleEvent[] = [];
+
+    for (const lesson of individualLessons) {
+      const student: VirtualScheduleStudent = {
+        id: lesson.student.id,
+        name: `${lesson.student.firstName} ${lesson.student.lastName}`.trim(),
+      };
+      const home = lesson.student.homeGroup;
+      if (!home) {
+        soloEvents.push({
+          id: `schedule-individual-${lesson.id}`,
+          source: 'individual',
+          students: [student],
+          dayOfWeek: lesson.dayOfWeek as 1 | 2 | 3 | 4 | 5 | 6 | 7,
+          startTime: lesson.startTime,
+          endTime: lesson.endTime,
+        });
+        continue;
+      }
+
+      const key = `${home.id}|${lesson.dayOfWeek}|${lesson.startTime}|${lesson.endTime}`;
+      const existing = homeGrouped.get(key);
+      if (existing) {
+        if (!existing.students.some((s) => s.id === student.id)) {
+          existing.students.push(student);
+        }
+        continue;
+      }
+      homeGrouped.set(key, {
+        id: `schedule-home-${key}`,
+        source: 'home',
+        students: [student],
+        courseId: home.id,
+        courseTitle: home.name,
+        dayOfWeek: lesson.dayOfWeek as 1 | 2 | 3 | 4 | 5 | 6 | 7,
+        startTime: lesson.startTime,
+        endTime: lesson.endTime,
+      });
+    }
+
+    const homeEvents = Array.from(homeGrouped.values()).map((event) => ({
+      ...event,
+      students: sortStudents(event.students),
     }));
 
-    return { success: true, events: [...groupEvents, ...individualEvents] };
+    return { success: true, events: [...groupEvents, ...homeEvents, ...soloEvents] };
   } catch (error) {
     console.error('Failed to load schedule lessons:', error);
     return {

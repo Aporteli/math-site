@@ -48,6 +48,8 @@ export function LessonEditorModal({
   if (!open) return null;
 
   const isIndividual = student.kind === 'individual';
+  const inHomeGroup = isIndividual && Boolean(student.homeGroupId);
+  const homeGroupName = groups.find((g) => g.id === student.homeGroupId)?.name;
 
   const handleAdd = () => {
     setError(null);
@@ -120,7 +122,15 @@ export function LessonEditorModal({
               <p className="truncate text-[11px] font-medium text-muted">
                 {isIndividual ? (
                   <>
-                    <span className=" text-brass-strong">სახლში</span>
+                    <span className=" text-brass-strong">
+                      {inHomeGroup ? `სახლში · ${homeGroupName ?? 'ჯგუფი'}` : 'სახლში'}
+                    </span>
+                    {inHomeGroup && groupMemberCounts[student.homeGroupId ?? ''] ? (
+                      <span className="text-brass-strong">
+                        {' '}
+                        · {groupMemberCounts[student.homeGroupId ?? '']} მოსწავლე
+                      </span>
+                    ) : null}
                   </>
                 ) : (
                   <>
@@ -229,8 +239,11 @@ export function LessonEditorModal({
 
             {isAddOpen ? (
               <div className="border-t border-navy/15 p-4">
-                {!isIndividual ? (
-                  <p className="mb-3 rounded-xl border border-navy/15 bg-surface px-2.5 py-2 text-[11px] font-medium leading-snug text-muted">
+                {!isIndividual || inHomeGroup ? (
+                  <p
+                    className={`mb-3 rounded-xl border px-2.5 py-2 text-[11px] font-medium leading-snug text-muted ${
+                      inHomeGroup ? 'border-brass/30 bg-brass-tint/40' : 'border-navy/15 bg-surface'
+                    }`}>
                     ეს დრო დაემატება ჯგუფის ყველა მოსწავლეს. გადახდები რჩება ცალ-ცალკე.
                   </p>
                 ) : null}

@@ -505,20 +505,31 @@ export async function updateIndividualStudentAction(input: {
 
 export async function deleteIndividualStudentAction(input: {
   studentId: string;
-}): Promise<{ ok: true } | { ok: false; error: string }> {
+}): Promise<{ ok: true; removedGroupId?: string } | { ok: false; error: string }> {
   const user = await getSession();
   if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
 
   const found = await prisma.individualStudent.findFirst({
     where: { id: input.studentId, teacherId: user.user.id },
-    select: { id: true },
+    select: { id: true, homeGroupId: true },
   });
   if (!found) return { ok: false, error: 'Forbidden' };
 
   await prisma.individualStudent.delete({ where: { id: found.id } });
 
+  let removedGroupId: string | undefined;
+  if (found.homeGroupId) {
+    const left = await prisma.individualStudent.count({
+      where: { homeGroupId: found.homeGroupId },
+    });
+    if (left === 0) {
+      await prisma.homeGroup.delete({ where: { id: found.homeGroupId } });
+      removedGroupId = found.homeGroupId;
+    }
+  }
+
   revalidatePath('/[locale]/teacher/student-list', 'page');
-  return { ok: true };
+  return { ok: true, removedGroupId };
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -530,13 +541,16 @@ export async function addIndividualLessonAction(input: {
   dayOfWeek: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   startTime: string;
   endTime: string;
-}): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+}): Promise<
+  | { ok: true; id: string; copies: { studentId: string; lessonId: string }[] }
+  | { ok: false; error: string }
+> {
   const user = await getSession();
   if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
 
   const found = await prisma.individualStudent.findFirst({
     where: { id: input.studentId, teacherId: user.user.id },
-    select: { id: true },
+    select: { id: true, homeGroupId: true },
   });
   if (!found) return { ok: false, error: 'Forbidden' };
 
@@ -550,22 +564,75 @@ export async function addIndividualLessonAction(input: {
     return { ok: false, error: 'დროის ფორმატი არასწორია' };
   }
 
-  const lesson = await prisma.individualLesson.create({
-    data: {
-      studentId: found.id,
-      dayOfWeek: input.dayOfWeek,
-      startTime: input.startTime,
-      endTime: input.endTime,
+  const members = await prisma.individualStudent.findMany({
+    where: found.homeGroupId
+      ? { homeGroupId: found.homeGroupId, teacherId: user.user.id }
+      : { id: found.id },
+    select: {
+      id: true,
+      lessons: {
+        where: {
+          dayOfWeek: input.dayOfWeek,
+          startTime: input.startTime,
+          endTime: input.endTime,
+        },
+        select: { id: true },
+        take: 1,
+      },
     },
   });
 
+  const copies: { studentId: string; lessonId: string }[] = [];
+  let triggerId: string | null = null;
+
+  const creates = members.filter((member) => {
+    const existingId = member.lessons[0]?.id;
+    if (existingId) {
+      if (member.id === input.studentId) triggerId = existingId;
+      return false;
+    }
+    return true;
+  });
+
+  if (creates.length > 0) {
+    const created = await prisma.$transaction(
+      creates.map((member) =>
+        prisma.individualLesson.create({
+          data: {
+            studentId: member.id,
+            dayOfWeek: input.dayOfWeek,
+            startTime: input.startTime,
+            endTime: input.endTime,
+          },
+        }),
+      ),
+    );
+
+    created.forEach((lesson, index) => {
+      const member = creates[index];
+      copies.push({ studentId: member.id, lessonId: lesson.id });
+      if (member.id === input.studentId) triggerId = lesson.id;
+    });
+  }
+
   revalidatePath('/[locale]/teacher/student-list', 'page');
-  return { ok: true, id: lesson.id };
+  return { ok: true, id: triggerId ?? copies[0]?.lessonId ?? found.id, copies };
 }
 
 export async function deleteIndividualLessonAction(input: {
   lessonId: string;
-}): Promise<{ ok: true } | { ok: false; error: string }> {
+}): Promise<
+  | {
+      ok: true;
+      match?: {
+        groupId: string;
+        dayOfWeek: number;
+        startTime: string;
+        endTime: string;
+      };
+    }
+  | { ok: false; error: string }
+> {
   const user = await getSession();
   if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
 
@@ -574,11 +641,101 @@ export async function deleteIndividualLessonAction(input: {
       id: input.lessonId,
       student: { teacherId: user.user.id },
     },
-    select: { id: true },
+    select: {
+      id: true,
+      dayOfWeek: true,
+      startTime: true,
+      endTime: true,
+      student: { select: { homeGroupId: true } },
+    },
   });
   if (!lesson) return { ok: false, error: 'Forbidden' };
 
+  if (lesson.student.homeGroupId) {
+    const match = {
+      groupId: lesson.student.homeGroupId,
+      dayOfWeek: lesson.dayOfWeek,
+      startTime: lesson.startTime,
+      endTime: lesson.endTime,
+    };
+    await prisma.individualLesson.deleteMany({
+      where: {
+        dayOfWeek: match.dayOfWeek,
+        startTime: match.startTime,
+        endTime: match.endTime,
+        student: { homeGroupId: match.groupId, teacherId: user.user.id },
+      },
+    });
+    revalidatePath('/[locale]/teacher/student-list', 'page');
+    return { ok: true, match };
+  }
+
   await prisma.individualLesson.delete({ where: { id: lesson.id } });
+
+  revalidatePath('/[locale]/teacher/student-list', 'page');
+  return { ok: true };
+}
+
+export async function createHomeGroupAction(input: {
+  name: string;
+  studentIds: string[];
+}): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const user = await getSession();
+  if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
+
+  const name = input.name.trim();
+  const studentIds = [...new Set(input.studentIds)];
+  if (!name) return { ok: false, error: 'ჯგუფის სახელი სავალდებულოა' };
+  if (name.length > 80) return { ok: false, error: 'სახელი ძალიან გრძელია' };
+  if (studentIds.length < 2) {
+    return { ok: false, error: 'ჯგუფში მინიმუმ ორი მოსწავლე უნდა იყოს' };
+  }
+
+  const teacherId = user.user.id;
+  const group = await prisma.$transaction(async (tx) => {
+    const owned = await tx.individualStudent.findMany({
+      where: { id: { in: studentIds }, teacherId, homeGroupId: null },
+      select: { id: true },
+    });
+    if (owned.length !== studentIds.length) return null;
+
+    const created = await tx.homeGroup.create({
+      data: { teacherId, name },
+    });
+    await tx.individualStudent.updateMany({
+      where: { id: { in: studentIds }, teacherId },
+      data: { homeGroupId: created.id },
+    });
+    return created;
+  });
+
+  if (!group) {
+    return { ok: false, error: 'მოსწავლეები ვერ დაემატა ჯგუფში' };
+  }
+
+  revalidatePath('/[locale]/teacher/student-list', 'page');
+  return { ok: true, id: group.id };
+}
+
+export async function disbandHomeGroupAction(input: {
+  groupId: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const user = await getSession();
+  if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
+
+  const group = await prisma.homeGroup.findFirst({
+    where: { id: input.groupId, teacherId: user.user.id },
+    select: { id: true },
+  });
+  if (!group) return { ok: false, error: 'Forbidden' };
+
+  await prisma.$transaction([
+    prisma.individualStudent.updateMany({
+      where: { homeGroupId: group.id },
+      data: { homeGroupId: null },
+    }),
+    prisma.homeGroup.delete({ where: { id: group.id } }),
+  ]);
 
   revalidatePath('/[locale]/teacher/student-list', 'page');
   return { ok: true };

@@ -124,6 +124,7 @@ model User {
   paymentsRecorded     Payment[] @relation("PaymentRecorder")
 
   individualStudents IndividualStudent[] @relation("TeacherIndividualStudents")
+  homeGroups         HomeGroup[]          @relation("TeacherHomeGroups")
 
 
   @@map("users")
@@ -520,9 +521,24 @@ model JournalEvent {
   @@map("journal_events")
 }
 
+model HomeGroup {
+  id        String   @id @default(cuid())
+  teacherId String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teacher  User                @relation("TeacherHomeGroups", fields: [teacherId], references: [id], onDelete: Cascade)
+  students IndividualStudent[]
+
+  @@index([teacherId])
+  @@map("home_groups")
+}
+
 model IndividualStudent {
   id            String    @id @default(cuid())
   teacherId     String
+  homeGroupId   String?
   firstName     String
   lastName      String
   phone         String?
@@ -536,12 +552,14 @@ model IndividualStudent {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  teacher  User                @relation("TeacherIndividualStudents", fields: [teacherId], references: [id], onDelete: Cascade)
-  lessons  IndividualLesson[]
-  payments IndividualPayment[]
+  teacher   User                @relation("TeacherIndividualStudents", fields: [teacherId], references: [id], onDelete: Cascade)
+  homeGroup HomeGroup?          @relation(fields: [homeGroupId], references: [id], onDelete: SetNull)
+  lessons   IndividualLesson[]
+  payments  IndividualPayment[]
   missedLessons Json @default("[]")
 
   @@index([teacherId])
+  @@index([homeGroupId])
   @@map("individual_students")
 }
 

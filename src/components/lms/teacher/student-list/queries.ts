@@ -31,17 +31,32 @@ function parseMissedLessons(raw: unknown): MissedLesson[] {
 export async function getTeacherGroups(
   teacherId: string,
 ): Promise<StudentGroup[]> {
-  const courses = await prisma.course.findMany({
-    where: { teacherId },
-    select: { id: true, title: true, defaultMonthlyPrice: true },
-    orderBy: { title: 'asc' },
-  });
+  const [courses, homeGroups] = await Promise.all([
+    prisma.course.findMany({
+      where: { teacherId },
+      select: { id: true, title: true, defaultMonthlyPrice: true },
+      orderBy: { title: 'asc' },
+    }),
+    prisma.homeGroup.findMany({
+      where: { teacherId },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    }),
+  ]);
 
-  return courses.map((c) => ({
-    id: c.id,
-    name: c.title,
-    monthlyPrice: Number(c.defaultMonthlyPrice ?? 0),
-  }));
+  return [
+    ...courses.map((c) => ({
+      id: c.id,
+      name: c.title,
+      monthlyPrice: Number(c.defaultMonthlyPrice ?? 0),
+    })),
+    ...homeGroups.map((g) => ({
+      id: g.id,
+      name: g.name,
+      monthlyPrice: 0,
+      home: true as const,
+    })),
+  ];
 }
 
 export async function getTeacherStudents(
@@ -145,7 +160,8 @@ export async function getTeacherIndividualStudents(
     phone: s.phone ?? '',
     parentPhone: s.parentPhone ?? undefined,
     email: s.email ?? undefined,
-    groupIds: [],
+    groupIds: s.homeGroupId ? [s.homeGroupId] : [],
+    homeGroupId: s.homeGroupId ?? undefined,
     monthlyPrice: Number(s.monthlyPrice),
     priceType: s.priceType,
     paymentDate: s.paymentDate ?? undefined,
@@ -156,7 +172,7 @@ export async function getTeacherIndividualStudents(
         dayOfWeek: l.dayOfWeek as 1 | 2 | 3 | 4 | 5 | 6 | 7,
         startTime: l.startTime,
         endTime: l.endTime,
-        groupId: '',
+        groupId: s.homeGroupId ?? '',
       }))
       .sort(
         (a, b) =>

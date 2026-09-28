@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
-const PRISMA_GENERATION = 'course-whiteboard-v1';
+const PRISMA_GENERATION = 'home-groups-v1';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -25,6 +25,8 @@ function hasCurrentDelegates(client: PrismaClient | undefined) {
   if (!client) return false;
   const family = (client as { problemFamily?: { findMany?: unknown } }).problemFamily;
   if (typeof family?.findMany !== 'function') return false;
+  const homeGroup = (client as { homeGroup?: { findMany?: unknown } }).homeGroup;
+  if (typeof homeGroup?.findMany !== 'function') return false;
   const dmmf = (
     client as {
       _runtimeDataModel?: { models?: { Problem?: { fields?: { name: string }[] } } };

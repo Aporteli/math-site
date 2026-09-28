@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "MathLab — mathematics resources and tools",
-    "description": "Calculators, a formula reference, a problem bank and the lesson schedule in one catalogue."
+    "title": "PinF — mathematics teaching platform",
+    "description": "Mathematics teaching platform for teachers and students."
   },
   "brand": {
-    "name": "MathLab",
+    "name": "PinF",
     "person": "Shota Mikolaichuki",
     "home": "Back to the home page"
   },
@@ -50,7 +50,7 @@
   },
   "home": {
     "index": {
-      "title": "MathLab · Mathematics resources and tools",
+      "title": "pinf · Mathematics resources and tools",
       "badge": "Open workspace / catalogue",
       "searchLabel": "Search the catalogue",
       "searchPlaceholder": "Find a topic, formula or calculator…",
@@ -894,7 +894,7 @@
     },
     "signup": {
       "metaTitle": "Sign up",
-      "metaDescription": "Create a new account on MathLab.",
+      "metaDescription": "Create a new account on pinf.",
       "eyebrow": "New account",
       "title": "Create an account",
       "subtitle": "Register and start learning mathematics.",
@@ -2489,7 +2489,7 @@
       "address": "1 Chavchavadze Avenue, Tbilisi",
       "telegram": "@mathlabge"
     },
-    "copyright": "© {year} MathLab",
+    "copyright": "© {year} pinf",
     "legal": {
       "privacy": "Privacy",
       "terms": "Terms and conditions"

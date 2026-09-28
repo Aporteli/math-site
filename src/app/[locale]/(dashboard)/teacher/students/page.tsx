@@ -9,7 +9,7 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return {
-    title: 'მოსწავლეების მართვა | MathLab',
+    title: 'მოსწავლეების მართვა | PinF',
     description: 'მოსწავლეების მონაცემები, ინდივიდუალური ბარათები და კომუნიკაცია',
   };
 }

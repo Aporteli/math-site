@@ -55,9 +55,11 @@ export function countTodayLessonSessions(students: StudentRecord[]): number {
   for (const student of students) {
     for (const lesson of getTodayLessons(student.lessons)) {
       keys.add(
-        student.kind === 'individual'
-          ? `individual:${student.id}:${lesson.id}`
-          : `group:${lesson.groupId}:${lesson.dayOfWeek}:${lesson.startTime}:${lesson.endTime}`,
+        student.homeGroupId
+          ? `home:${student.homeGroupId}:${lesson.dayOfWeek}:${lesson.startTime}:${lesson.endTime}`
+          : student.kind === 'individual'
+            ? `individual:${student.id}:${lesson.id}`
+            : `group:${lesson.groupId}:${lesson.dayOfWeek}:${lesson.startTime}:${lesson.endTime}`,
       );
     }
   }
@@ -72,7 +74,7 @@ export function getGroupName(groupId: string, groups: StudentGroup[]): string {
 export interface StudentListSection {
   key: string;
   title: string;
-  kind: 'group' | 'individual';
+  kind: 'group' | 'individual' | 'home';
   groupId?: string;
   students: StudentRecord[];
 }
@@ -88,7 +90,14 @@ export function sectionStudents(
 
   for (const student of students) {
     if (student.kind === 'individual') {
-      individuals.push(student);
+      const homeId = student.homeGroupId;
+      if (homeId && groups.some((g) => g.id === homeId && g.home)) {
+        const list = byGroup.get(homeId) ?? [];
+        list.push(student);
+        byGroup.set(homeId, list);
+      } else {
+        individuals.push(student);
+      }
       continue;
     }
     const groupId =
@@ -112,7 +121,7 @@ export function sectionStudents(
     sections.push({
       key: group.id,
       title: group.name,
-      kind: 'group',
+      kind: group.home ? 'home' : 'group',
       groupId: group.id,
       students: list,
     });

@@ -11,7 +11,7 @@ type PageProps = { params: Promise<{ locale: Locale }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   return {
-    title: 'ფორმულები | MathLab',
+    title: 'ფორმულები | PinF',
     description: 'მასწავლებლის მიერ გამოგზავნილი ფორმულები',
   };
 }

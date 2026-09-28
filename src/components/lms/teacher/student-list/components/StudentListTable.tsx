@@ -32,6 +32,7 @@ interface Props {
   onManagePayments?: (student: StudentRecord) => void;
   onUpdateStudent?: (id: string, patch: Partial<StudentRecord>) => void;
   onEditIndividual?: (student: StudentRecord) => void;
+  onDisbandHomeGroup?: (groupId: string) => void;
 }
 
 export function StudentListTable({
@@ -46,6 +47,7 @@ export function StudentListTable({
   onManagePayments,
   onUpdateStudent,
   onEditIndividual,
+  onDisbandHomeGroup,
 }: Props) {
   const { year, month } = parseMonthKey(monthKey);
 
@@ -91,7 +93,7 @@ export function StudentListTable({
           <tbody>
             {sections.map((section) => (
               <Fragment key={section.key}>
-                <tr className="bg-navy-tint/35">
+                <tr className={section.kind === 'home' ? 'bg-brass-tint/50' : 'bg-navy-tint/35'}>
                   <td colSpan={5} className="px-4 py-2">
                     <div className="flex items-center gap-2">
                       <span
@@ -102,6 +104,12 @@ export function StudentListTable({
                         }`}
                       />
 
+                      {section.kind === 'home' ? (
+                        <span className="rounded-full bg-brass-strong px-1.5 py-0.5 text-[9px] font-bold text-white">
+                          სახლში
+                        </span>
+                      ) : null}
+
                       <span className="text-[11px] font-bold tracking-wide text-ink">
                         {section.title}
                       </span>
@@ -109,6 +117,15 @@ export function StudentListTable({
                       <span className="rounded-full bg-surface px-1.5 py-0.5 text-[9px] font-bold text-muted">
                         {section.students.length}
                       </span>
+
+                      {section.kind === 'home' && section.groupId && onDisbandHomeGroup ? (
+                        <button
+                          type="button"
+                          onClick={() => onDisbandHomeGroup(section.groupId!)}
+                          className="ml-auto cursor-pointer rounded-lg px-2 py-1 text-[10px] font-bold text-brass-strong hover:bg-white">
+                          დაშლა
+                        </button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
