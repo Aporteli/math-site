@@ -27,6 +27,6 @@ export function FractionToolLoader({
 
 function FractionSkeleton() {
   return (
-    <div className="h-80 animate-pulse rounded-2xl border border-hairline bg-white" />
+    <div className="h-80 animate-pulse rounded-box border border-hairline bg-white" />
   );
 }

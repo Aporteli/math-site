@@ -40,7 +40,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
   return (
     <div ref={containerRef} className="pointer-events-none absolute inset-0 z-40 overflow-hidden">
       <div
-        className="pointer-events-auto absolute flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl"
+        className="pointer-events-auto absolute flex min-w-0 flex-col overflow-hidden rounded-box border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl"
         style={
           maximized
             ? {
@@ -74,7 +74,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
               type="button"
               onClick={reset}
               title="საწყის პოზიციაზე დაბრუნება"
-              className="flex size-7 shrink-0 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white"
+              className="flex size-7 shrink-0 items-center justify-center rounded-box text-white/60 hover:bg-white/10 hover:text-white"
               aria-label="Reset">
               <RotateCcw className="size-3.5" />
             </button>
@@ -83,7 +83,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
               type="button"
               onClick={() => setMaximized((v) => !v)}
               title={maximized ? 'აღდგენა' : 'გაფართოება'}
-              className="flex size-7 shrink-0 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white"
+              className="flex size-7 shrink-0 items-center justify-center rounded-box text-white/60 hover:bg-white/10 hover:text-white"
               aria-label="Maximize">
               <Maximize2 className="size-3.5" />
             </button>
@@ -91,7 +91,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
             <button
               type="button"
               onClick={() => breakout.setDashboardOpen(false)}
-              className="flex size-7 shrink-0 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white"
+              className="flex size-7 shrink-0 items-center justify-center rounded-box text-white/60 hover:bg-white/10 hover:text-white"
               aria-label="დახურვა">
               <X className="size-4" />
             </button>
@@ -104,7 +104,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
             <button
               type="button"
               onClick={breakout.resumeMonitorAudio}
-              className="mb-3 w-full rounded-xl bg-amber-500/20 px-3 py-2 text-left text-xs font-semibold leading-5 text-amber-200">
+              className="mb-3 w-full rounded-box bg-amber-500/20 px-3 py-2 text-left text-xs font-semibold leading-5 text-amber-200">
               მოსმენა დაბლოკილია ბრაუზერმა. დააჭირეთ ხმის ჩასართავად.
             </button>
           )}
@@ -138,7 +138,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
             <div onPointerDown={startResize('sw')} className="absolute bottom-0 left-0 size-3 cursor-nesw-resize" />
 
             <div onPointerDown={startResize('se')} className="absolute bottom-0 right-0 size-3 cursor-nwse-resize">
-              <span className="pointer-events-none absolute bottom-1 right-1 size-1.5 rounded-sm bg-white/30" />
+              <span className="pointer-events-none absolute bottom-1 right-1 size-1.5 rounded-box bg-white/30" />
             </div>
           </>
         )}
@@ -181,7 +181,7 @@ function AssignRooms({ students }: { students: StudentOption[] }) {
       ) : (
         <ul className="flex min-w-0 flex-col gap-1">
           {students.map((student) => (
-            <li key={student.identity} className="flex min-w-0 items-center gap-2 rounded-xl bg-white/5 px-2 py-1.5">
+            <li key={student.identity} className="flex min-w-0 items-center gap-2 rounded-box bg-white/5 px-2 py-1.5">
               <span className="min-w-0 flex-1 truncate text-xs font-medium text-white">
                 {student.name || student.identity}
               </span>
@@ -208,7 +208,7 @@ function AssignRooms({ students }: { students: StudentOption[] }) {
         type="button"
         disabled={busy || (groupA.length === 0 && groupB.length === 0)}
         onClick={() => void split(groupA, groupB)}
-        className="inline-flex min-w-0 items-center justify-center gap-2 rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-slate-950 disabled:opacity-40">
+        className="inline-flex min-w-0 items-center justify-center gap-2 rounded-box bg-amber-500 px-3 py-2 text-xs font-bold text-slate-950 disabled:opacity-40">
         <Split className="size-4 shrink-0" />
         <span className="truncate">გაყოფა</span>
       </button>
@@ -225,7 +225,7 @@ function RoomPick({ label, selected, onClick }: { label: string; selected: boole
     <button
       type="button"
       onClick={onClick}
-      className={`flex size-7 shrink-0 items-center justify-center rounded-lg text-[11px] font-bold ${
+      className={`flex size-7 shrink-0 items-center justify-center rounded-box text-[11px] font-bold ${
         selected ? 'bg-amber-400 text-slate-950' : 'bg-white/10 text-white/70 hover:bg-white/20'
       }`}>
       {label}
@@ -274,7 +274,7 @@ function ActiveRooms({ students, compact }: { students: StudentOption[]; compact
         type="button"
         disabled={busy}
         onClick={() => void merge()}
-        className="inline-flex min-w-0 items-center justify-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-950 disabled:opacity-40">
+        className="inline-flex min-w-0 items-center justify-center gap-2 rounded-box bg-white px-3 py-2 text-xs font-bold text-slate-950 disabled:opacity-40">
         <Merge className="size-4 shrink-0" />
         <span className="truncate">გაერთიანება</span>
       </button>
@@ -328,7 +328,7 @@ function RoomColumn({
   }, [ids, names]);
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-2">
+    <section className="min-w-0 overflow-hidden rounded-box border border-white/10 bg-white/5 p-2">
       <div className="mb-2 flex min-w-0 flex-col gap-2">
         {/* სათაური: badge + მოსწავლეების სახელები */}
         <div className="flex min-w-0 items-center gap-1.5" title={fullTitle}>
@@ -402,7 +402,7 @@ function StudentListenRow({
   const volume = Math.round(studentVolume(userId) * 100);
 
   return (
-    <li className="min-w-0 overflow-hidden rounded-lg bg-slate-950/60 px-2 py-1.5">
+    <li className="min-w-0 overflow-hidden rounded-box bg-slate-950/60 px-2 py-1.5">
       <div className="flex min-w-0 items-center gap-1.5">
         {speaking && (
           <span className="hidden shrink-0 text-[9px] font-bold text-emerald-300 min-[360px]:inline">საუბრობს</span>
@@ -422,7 +422,7 @@ function StudentListenRow({
           value={volume}
           aria-label={`${name} ხმა`}
           onChange={(event) => setStudentVolume(userId, event.currentTarget.valueAsNumber / 100)}
-          className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-amber-400"
+          className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-box bg-white/15 accent-amber-400"
         />
 
         <span className="w-7 shrink-0 text-right text-[9px] tabular-nums text-white/30">{volume}%</span>
@@ -455,7 +455,7 @@ function IconButton({
       title={label}
       aria-label={label}
       onClick={onClick}
-      className={`inline-flex min-w-0 shrink-0 items-center justify-center gap-1 rounded-lg text-[10px] font-bold ${
+      className={`inline-flex min-w-0 shrink-0 items-center justify-center gap-1 rounded-box text-[10px] font-bold ${
         compact ? 'size-7 p-0' : 'px-2 py-1'
       } ${pressed ? 'bg-emerald-500 text-slate-950' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}>
       <Icon className="size-3 shrink-0" />

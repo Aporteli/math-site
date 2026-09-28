@@ -24,7 +24,7 @@ export function MobileMenu({ locale, header, nav, menus, children }: MobileMenuP
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-controls="mobile-menu"
-        className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-hairline bg-paper text-ink shadow-sm transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy">
+        className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-ink shadow-sm transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy">
         {open ? <X className="size-5" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
         <span className="sr-only">{open ? header.closeMenu : header.openMenu}</span>
       </button>

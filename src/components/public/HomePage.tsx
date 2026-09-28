@@ -26,10 +26,10 @@ const toolsById = new Map(TOOL_SECTIONS.flatMap((section) => section.tools.map((
 const toolCount = TOOL_SECTIONS.reduce((sum, section) => sum + section.tools.length, 0);
 
 const primaryButton =
-  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-navy px-6 text-sm font-semibold text-white transition-colors hover:bg-navy-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 focus-visible:ring-offset-paper sm:w-auto dark:bg-white dark:text-[#10233f] dark:hover:bg-white/90 dark:focus-visible:ring-white';
+  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-box bg-navy px-6 text-sm font-semibold text-white transition-colors hover:bg-navy-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 focus-visible:ring-offset-paper sm:w-auto dark:bg-white dark:text-[#10233f] dark:hover:bg-white/90 dark:focus-visible:ring-white';
 
 const secondaryButton =
-  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-hairline bg-surface px-6 text-sm font-semibold text-ink transition-colors hover:border-navy/40 hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 focus-visible:ring-offset-paper sm:w-auto';
+  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-box border border-hairline bg-surface px-6 text-sm font-semibold text-ink transition-colors hover:border-navy/40 hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 focus-visible:ring-offset-paper sm:w-auto';
 
 export default function HomeLandPage({ locale, dict }: HomePageProps) {
   const copy = landingCopy[locale];
@@ -85,7 +85,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
             {copy.processTitle}
           </h2>
 
-          <ol className="mt-8 grid gap-px overflow-hidden rounded-[1.75rem] border border-hairline bg-hairline md:grid-cols-3">
+          <ol className="mt-8 grid gap-px overflow-hidden rounded-box border border-hairline bg-hairline md:grid-cols-3">
             {copy.steps.map((step, index) => {
               const Icon = [BookOpen, Calculator, BarChart3][index] ?? BookOpen;
               return (
@@ -110,7 +110,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
               <p className="text-sm font-medium text-brass">{copy.toolsKicker}</p>
               <h2 className="mt-2 flex flex-wrap items-center gap-3 text-3xl font-semibold tracking-[-0.03em] text-balance text-ink sm:text-4xl">
                 {copy.toolsTitle}
-                <span className="rounded-full bg-navy-tint px-2.5 py-1 font-mono text-sm font-semibold text-navy">
+                <span className="rounded-box bg-navy-tint px-2.5 py-1 font-mono text-sm font-semibold text-navy">
                   {toolCount}
                 </span>
               </h2>
@@ -132,9 +132,9 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
                 <li key={tool.id}>
                   <Link
                     href={localePath(locale, tool.href)}
-                    className="group flex h-full min-h-36 flex-col justify-between rounded-2xl border border-hairline bg-surface p-5 transition-colors hover:border-navy/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
+                    className="group flex h-full min-h-36 flex-col justify-between rounded-box border border-hairline bg-surface p-5 transition-colors hover:border-navy/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
                   >
-                    <span className="flex size-11 items-center justify-center rounded-2xl bg-navy-tint text-navy transition-colors group-hover:bg-navy/15">
+                    <span className="flex size-11 items-center justify-center rounded-box bg-navy-tint text-navy transition-colors group-hover:bg-navy/15">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
                     <span className="mt-6 flex items-end justify-between gap-3">
@@ -156,7 +156,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
 
       <section className="border-t border-hairline">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-          <div className="overflow-hidden rounded-[1.75rem] bg-[#0c2340] text-white">
+          <div className="overflow-hidden rounded-box bg-[#0c2340] text-white">
             <div className="h-1 bg-brass" aria-hidden="true" />
             <div className="flex flex-col gap-8 px-6 py-10 sm:px-10 sm:py-12 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-xl">
@@ -165,7 +165,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
               </div>
               <Link
                 href={localePath(locale, '/signup')}
-                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-[#0c2340] transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c2340]"
+                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-box  bg-white px-6 text-sm font-semibold text-[#0c2340] transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c2340]"
               >
                 {copy.createAccount}
                 <ArrowRight className="size-4" aria-hidden="true" />
@@ -180,7 +180,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
 
 function GraphStage({ locale, copy }: { locale: Locale; copy: LandingCopy }) {
   return (
-    <div className="mt-12 overflow-hidden rounded-[1.75rem] border border-hairline bg-surface shadow-[0_24px_50px_-28px_rgba(16,40,80,0.35)] dark:shadow-none sm:mt-16">
+    <div className="mt-12 overflow-hidden rounded-box border border-hairline bg-surface shadow-[0_24px_50px_-28px_rgba(16,40,80,0.35)] dark:shadow-none sm:mt-16">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-hairline px-5 py-4 sm:px-7">
         <div>
           <p className="text-sm text-muted">{copy.graphCaption}</p>
@@ -199,11 +199,11 @@ function GraphStage({ locale, copy }: { locale: Locale; copy: LandingCopy }) {
 
       <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-hairline px-5 py-3.5 text-sm text-body sm:px-7">
         <span className="inline-flex items-center gap-2">
-          <span className="size-2 rounded-full bg-navy" aria-hidden="true" />
+          <span className="size-2 rounded-box bg-navy" aria-hidden="true" />
           {copy.rootsLabel}
         </span>
         <span className="inline-flex items-center gap-2">
-          <span className="size-2 rounded-full bg-brass" aria-hidden="true" />
+          <span className="size-2 rounded-box bg-brass" aria-hidden="true" />
           {copy.vertexLabel}
         </span>
       </div>
@@ -213,7 +213,7 @@ function GraphStage({ locale, copy }: { locale: Locale; copy: LandingCopy }) {
 
 function TeacherPanel({ copy }: { copy: LandingCopy }) {
   return (
-    <article className="flex flex-col rounded-[1.75rem] border border-hairline bg-surface p-6 sm:p-8 lg:col-span-3">
+    <article className="flex flex-col rounded-box border border-hairline bg-surface p-6 sm:p-8 lg:col-span-3">
       <p className="text-sm font-medium text-brass">{copy.teacherKicker}</p>
       <h3 className="mt-3 text-2xl font-semibold tracking-tight text-ink">{copy.teacherTitle}</h3>
       <p className="mt-3 max-w-md text-sm leading-6 text-pretty text-body">{copy.teacherBody}</p>
@@ -223,20 +223,20 @@ function TeacherPanel({ copy }: { copy: LandingCopy }) {
           <p className="text-xs text-muted">{copy.assignmentLabel}</p>
           <p className="mt-1 text-sm font-semibold text-ink">{copy.assignment}</p>
         </div>
-        <span className="rounded-full bg-win-tint px-2.5 py-1 text-xs font-semibold text-win">{copy.active}</span>
+        <span className="rounded-box bg-win-tint px-2.5 py-1 text-xs font-semibold text-win">{copy.active}</span>
       </div>
 
       <ul className="mt-2">
         {copy.students.map((student) => (
           <li key={student.name} className="grid grid-cols-[2.25rem_minmax(0,1fr)_2.5rem] items-center gap-3 border-b border-hairline/80 py-3.5 last:border-b-0">
-            <span className="flex size-9 items-center justify-center rounded-full bg-navy-tint text-xs font-semibold text-navy">
+            <span className="flex size-9 items-center justify-center rounded-box bg-navy-tint text-xs font-semibold text-navy">
               {student.name.charAt(0)}
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-ink">{student.name}</p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-paper-deep">
+              <div className="mt-2 h-1.5 overflow-hidden rounded-box bg-paper-deep">
                 <div
-                  className={`h-full rounded-full ${student.progress === 100 ? 'bg-win' : 'bg-navy'}`}
+                  className={`h-full rounded-box ${student.progress === 100 ? 'bg-win' : 'bg-navy'}`}
                   style={{ width: `${student.progress}%` }}
                 />
               </div>
@@ -251,7 +251,7 @@ function TeacherPanel({ copy }: { copy: LandingCopy }) {
 
 function StudentPanel({ copy }: { copy: LandingCopy }) {
   return (
-    <article className="flex flex-col rounded-[1.75rem] border border-brass/30 bg-brass-tint p-6 sm:p-8 lg:col-span-2">
+    <article className="flex flex-col rounded-box border border-brass/30 bg-brass-tint p-6 sm:p-8 lg:col-span-2">
       <p className="text-sm font-medium text-brass-strong">{copy.studentKicker}</p>
       <h3 className="mt-3 text-2xl font-semibold tracking-tight text-ink">{copy.studentTitle}</h3>
       <p className="mt-3 text-sm leading-6 text-pretty text-body">{copy.studentBody}</p>
@@ -260,8 +260,8 @@ function StudentPanel({ copy }: { copy: LandingCopy }) {
         <p className="text-xs text-muted">{copy.current}</p>
         <p className="mt-1 text-base font-semibold text-ink">{copy.assignment}</p>
         <p className="mt-5 font-mono text-5xl font-semibold tracking-tight text-navy">40%</p>
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface/80">
-          <div className="h-full w-[40%] rounded-full bg-navy" />
+        <div className="mt-3 h-1.5 overflow-hidden rounded-box bg-surface/80">
+          <div className="h-full w-[40%] rounded-box bg-navy" />
         </div>
         <div className="mt-6 border-t border-brass/25 pt-4">
           <p className="text-xs text-muted">{copy.next}</p>
@@ -274,24 +274,24 @@ function StudentPanel({ copy }: { copy: LandingCopy }) {
 
 function LivePanel({ copy }: { copy: LandingCopy }) {
   return (
-    <article className="overflow-hidden rounded-[1.75rem] bg-[#0c2340] text-white ring-1 ring-white/10 lg:col-span-5">
+      <article className="overflow-hidden rounded-box bg-[#0c2340] text-white ring-1 ring-white/10 lg:col-span-5">
       <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
           <div className="flex items-center gap-2 text-sm font-medium text-brass">
             <span className="relative flex size-2" aria-hidden="true">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-brass opacity-60 motion-reduce:hidden" />
-              <span className="relative size-2 rounded-full bg-brass" />
+              <span className="absolute inline-flex size-full animate-ping rounded-box bg-brass opacity-60 motion-reduce:hidden" />
+              <span className="relative size-2 rounded-box bg-brass" />
             </span>
             {copy.liveKicker}
           </div>
           <h3 className="mt-4 max-w-md text-2xl font-semibold tracking-tight text-balance sm:text-3xl">{copy.liveTitle}</h3>
           <p className="mt-4 max-w-md text-sm leading-6 text-pretty text-white/70 sm:text-base sm:leading-7">{copy.liveBody}</p>
           <div className="mt-8 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium">
+            <span className="inline-flex items-center gap-2 rounded-box bg-white/10 px-3 py-1.5 text-xs font-medium">
               <Video className="size-3.5" aria-hidden="true" />
               {copy.teacherPresence}
             </span>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium">
+            <span className="inline-flex items-center gap-2 rounded-box bg-white/10 px-3 py-1.5 text-xs font-medium">
               {copy.studentPresence}
             </span>
           </div>

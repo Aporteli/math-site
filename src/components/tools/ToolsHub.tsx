@@ -45,20 +45,20 @@ function ToolCard({
   const tone = badgeToneClass[tool.badgeColor];
 
   return (
-    <article className="group flex h-full min-w-0 flex-col rounded-2xl border border-hairline bg-white shadow-sm transition-all hover:border-navy/30 hover:shadow-md">
+    <article className="group flex h-full min-w-0 flex-col rounded-box border border-hairline bg-white shadow-sm transition-all hover:border-navy/30 hover:shadow-md">
       <Link href={localePath(locale, tool.href)} className="flex h-full min-w-0 flex-1 flex-col p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
-          <span className={`inline-flex size-10 shrink-0 items-center justify-center rounded-xl ${tone.chip}`}>
+          <span className={`inline-flex size-10 shrink-0 items-center justify-center rounded-box ${tone.chip}`}>
             <Icon className="size-5" aria-hidden="true" />
           </span>
           <span
-            className={`min-w-0 max-w-[11rem] truncate rounded-full px-2.5 py-1 text-xs font-semibold leading-none ${tone.badge}`}>
+            className={`min-w-0 max-w-[11rem] truncate rounded-box px-2.5 py-1 text-xs font-semibold leading-none ${tone.badge}`}>
             {item.badge}
           </span>
         </div>
         <h3 className="mt-4 break-words text-lg font-semibold leading-snug text-ink">{item.title}</h3>
         <p className="mt-2 min-h-0 flex-1 break-words text-sm leading-relaxed text-body">{item.description}</p>
-        <span className="mt-5 inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-xl bg-navy px-3 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors group-hover:bg-navy-strong">
+        <span className="mt-5 inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-box bg-navy px-3 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors group-hover:bg-navy-strong">
           {openLabel}
           <ArrowRight className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
@@ -73,7 +73,7 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`max-w-full rounded-full border px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:px-4 ${
+      className={`max-w-full rounded-box border px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:px-4 ${
         active
           ? 'border-navy bg-navy text-white shadow-sm'
           : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink'
@@ -123,7 +123,7 @@ export function ToolsHub({ locale, copy }: ToolsHubProps) {
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={copy.hero.searchPlaceholder}
                   autoComplete="off"
-                  className="w-full min-w-0 appearance-none rounded-2xl border border-hairline bg-white py-3 pr-4 pl-12 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                  className="w-full min-w-0 appearance-none rounded-box border border-hairline bg-white py-3 pr-4 pl-12 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
                 />
               </label>
               <p className="text-sm text-muted" aria-live="polite">
@@ -149,7 +149,7 @@ export function ToolsHub({ locale, copy }: ToolsHubProps) {
 
         <div className="mt-12">
           {visibleSections.length === 0 ? (
-            <p className="rounded-2xl border border-hairline bg-white px-6 py-16 text-center text-body shadow-sm">
+            <p className="rounded-box border border-hairline bg-white px-6 py-16 text-center text-body shadow-sm">
               {copy.hero.empty}
             </p>
           ) : (

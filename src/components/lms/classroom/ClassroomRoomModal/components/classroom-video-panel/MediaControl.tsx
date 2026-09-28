@@ -60,12 +60,12 @@ export function MediaControl({
 
   if (locked) {
     return (
-      <div className="relative flex items-center rounded-xl border border-white/10 bg-white/5 p-0.5">
+      <div className="relative flex items-center rounded-box border border-white/10 bg-white/5 p-0.5">
         <button
           type="button"
           disabled
           title={lockedTitle}
-          className="flex h-8 cursor-not-allowed items-center justify-center rounded-lg bg-red-500/20 px-2 text-red-400 opacity-70"
+          className="flex h-8 cursor-not-allowed items-center justify-center rounded-box bg-red-500/20 px-2 text-red-400 opacity-70"
         >
           <MicOff className="size-4" />
         </button>
@@ -76,7 +76,7 @@ export function MediaControl({
   return (
     <div
       ref={anchorRef}
-      className="relative flex items-center rounded-xl border border-white/10 bg-white/5 p-0.5"
+      className="relative flex items-center rounded-box border border-white/10 bg-white/5 p-0.5"
     >
       <button
         type="button"
@@ -86,7 +86,7 @@ export function MediaControl({
             : localParticipant.setCameraEnabled(muted)
         }
         title={`${nounGen} ${muted ? 'ჩართვა' : 'გათიშვა'}`}
-        className={`flex h-8 items-center justify-center rounded-lg px-2 transition-all ${
+        className={`flex h-8 items-center justify-center rounded-box px-2 transition-all ${
           muted
             ? 'bg-red-500/20 text-red-400'
             : 'text-white/80 hover:bg-white/10 hover:text-white'
@@ -98,7 +98,7 @@ export function MediaControl({
         type="button"
         onClick={() => setActiveMenu(activeMenu === menuId ? null : menuId)}
         title={`${nounGen} არჩევა`}
-        className="flex h-8 items-center justify-center rounded-lg px-1 text-white/50 hover:bg-white/10 hover:text-white"
+        className="flex h-8 items-center justify-center rounded-box px-1 text-white/50 hover:bg-white/10 hover:text-white"
       >
         <ChevronUp className="size-3" />
       </button>
@@ -176,7 +176,7 @@ function DeviceMenu({
 
   return createPortal(
     <div
-      className="fixed z-[200] w-52 rounded-2xl border border-white/10 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-xl"
+      className="fixed z-[200] w-52 rounded-box border border-white/10 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-xl"
       style={{ left: position.left, bottom: position.bottom }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
@@ -190,7 +190,7 @@ function DeviceMenu({
           key={d.deviceId}
           type="button"
           onClick={() => onSelect(d.deviceId)}
-          className={`w-full truncate rounded-lg px-2.5 py-1.5 text-left text-xs transition ${
+          className={`w-full truncate rounded-box px-2.5 py-1.5 text-left text-xs transition ${
             activeDeviceId === d.deviceId
               ? 'bg-emerald-500/20 text-emerald-400 font-medium'
               : 'text-white/80 hover:bg-white/10'

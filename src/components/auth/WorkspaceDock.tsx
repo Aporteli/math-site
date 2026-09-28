@@ -43,7 +43,7 @@ export function WorkspaceDock({
         href={href}
         onClick={handleDockClick}
         aria-label={displayHint}
-        className="inline-flex min-w-0 items-center gap-2 rounded-full bg-navy px-3 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong"
+        className="inline-flex min-w-0 items-center gap-2 rounded-box   bg-navy px-3 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong"
       >
         {isVisitor ? (
           <UserPlus className="size-4 shrink-0" aria-hidden="true" />
@@ -60,9 +60,9 @@ export function WorkspaceDock({
       <Link
         href={href}
         onClick={handleDockClick}
-        className="pointer-events-auto flex max-w-xs items-center gap-3 overflow-hidden rounded-2xl border border-hairline bg-surface p-3 shadow-md transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-lg"
+        className="pointer-events-auto flex max-w-xs items-center gap-3 overflow-hidden rounded-box border border-hairline bg-surface p-3 shadow-md transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-lg"
       >
-          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-sm">
+          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-box bg-navy text-white shadow-sm">
           {isVisitor ? (
             <UserPlus className="size-5" aria-hidden="true" />
           ) : (

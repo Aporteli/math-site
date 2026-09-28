@@ -14,7 +14,7 @@ export function MathMark({ tone = "dark", className = "size-9" }: MathMarkProps)
   return (
     <span
       className={[
-        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl",
+        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-box",
         isLight
           ? "bg-paper text-navy ring-1 ring-white/25"
           : "bg-linear-to-br from-navy to-navy-strong text-white ring-1 ring-navy-strong/40",

@@ -13,7 +13,7 @@ interface StudentRowProps {
 export function StudentRow({ student, locked, onToggleLock, isDark }: StudentRowProps) {
   return (
     <li
-      className={`flex items-center justify-between gap-2 rounded-xl px-2 py-1.5 ${
+      className={`flex items-center justify-between gap-2 rounded-box px-2 py-1.5 ${
         isDark ? 'hover:bg-white/5' : 'hover:bg-slate-50'
       }`}
     >

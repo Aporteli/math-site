@@ -38,7 +38,7 @@ interface SelectMenuProps<T extends string> {
 }
 
 const triggerBase =
-  "flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border bg-white px-3 py-2 text-left text-sm text-ink shadow-sm transition-colors hover:border-navy/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/15 disabled:cursor-not-allowed disabled:opacity-60";
+  "flex w-full min-w-0 items-center justify-between gap-2 rounded-box border bg-white px-3 py-2 text-left text-sm text-ink shadow-sm transition-colors hover:border-navy/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/15 disabled:cursor-not-allowed disabled:opacity-60";
 
 function isOption<T extends string>(
   item: SelectItem<T>,
@@ -207,7 +207,7 @@ export function SelectMenu<T extends string>({
         <span className="flex min-w-0 items-center gap-2 truncate">
           {selected && isOption(selected) && selected.marked ? (
             <span
-              className="size-1.5 shrink-0 rounded-full bg-brass"
+              className="size-1.5 shrink-0 rounded-box bg-brass"
               aria-hidden="true"
             />
           ) : null}
@@ -228,7 +228,7 @@ export function SelectMenu<T extends string>({
           id={listId}
           role="listbox"
           aria-labelledby={triggerId}
-          className="thin-scrollbar absolute z-50 mt-1.5 max-h-72 w-full min-w-full origin-top overflow-y-auto animate-dropdown rounded-2xl border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5"
+          className="thin-scrollbar absolute z-50 mt-1.5 max-h-72 w-full min-w-full origin-top overflow-y-auto animate-dropdown rounded-box border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5"
         >
           {options.map((item, index) => {
             if (!isOption(item)) {
@@ -259,7 +259,7 @@ export function SelectMenu<T extends string>({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => selectValue(item.value)}
                 className={[
-                  "flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
+                  "flex cursor-pointer items-center justify-between gap-3 rounded-box px-3 py-2 text-sm transition-colors",
                   isSelected
                     ? "bg-navy-tint font-semibold text-navy"
                     : isActive
@@ -270,7 +270,7 @@ export function SelectMenu<T extends string>({
                 <span className="flex min-w-0 items-center gap-2">
                   {item.marked ? (
                     <span
-                      className="size-1.5 shrink-0 rounded-full bg-brass"
+                      className="size-1.5 shrink-0 rounded-box bg-brass"
                       aria-hidden="true"
                     />
                   ) : null}

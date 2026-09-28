@@ -23,7 +23,7 @@ export function ChatHeader({ isUploading, canClear, onClear }: ChatHeaderProps) 
             type="button"
             onClick={onClear}
             title="ისტორიის გასუფთავება"
-            className="text-white/40 hover:text-red-400 transition p-1 rounded-lg hover:bg-white/5"
+            className="text-white/40 hover:text-red-400 transition p-1 rounded-box hover:bg-white/5"
           >
             <Trash2 className="size-4" />
           </button>

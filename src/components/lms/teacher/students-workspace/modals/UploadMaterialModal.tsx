@@ -88,11 +88,11 @@ export function UploadMaterialModal({ isOpen = true, onClose, activeStudent, onS
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs animate-in fade-in duration-150"
       onClick={() => !uploadingMaterial && onClose()}>
       <div
-        className="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-hairline bg-paper shadow-2xl animate-in zoom-in-95 duration-150"
+        className="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}>
         <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-surface px-5 py-3.5">
           <div className="flex items-center gap-2.5 min-w-0 pr-2">
-            <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-navy/15 text-navy">
+            <div className="flex size-7 shrink-0 items-center justify-center rounded-box bg-navy/15 text-navy">
               <Layers className="size-3.5" />
             </div>
             <div className="flex items-baseline gap-2 min-w-0">
@@ -103,7 +103,7 @@ export function UploadMaterialModal({ isOpen = true, onClose, activeStudent, onS
           <button
             type="button"
             onClick={onClose}
-            className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-hairline/80 bg-surface/50 text-muted hover:bg-paper-deep hover:text-ink transition-colors cursor-pointer">
+            className="flex size-7 shrink-0 items-center justify-center rounded-box border border-hairline/80 bg-surface/50 text-muted hover:bg-paper-deep hover:text-ink transition-colors cursor-pointer">
             <X className="size-3.5" />
           </button>
         </div>
@@ -116,7 +116,7 @@ export function UploadMaterialModal({ isOpen = true, onClose, activeStudent, onS
               value={materialTitle}
               onChange={(e) => setMaterialTitle(e.target.value)}
               placeholder="მაგ: თეორიული მასალა (გეომეტრია)"
-              className="w-full rounded-xl border border-hairline bg-surface/60 px-3.5 py-2 text-xs font-medium text-ink placeholder:text-muted outline-none focus:border-navy focus:bg-surface transition-all"
+              className="w-full rounded-box border border-hairline bg-surface/60 px-3.5 py-2 text-xs font-medium text-ink placeholder:text-muted outline-none focus:border-navy focus:bg-surface transition-all"
             />
           </div>
 
@@ -139,8 +139,8 @@ export function UploadMaterialModal({ isOpen = true, onClose, activeStudent, onS
             />
 
             {materialFileBase64 ? (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-2.5 shadow-2xs">
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-navy/10 text-navy">
+              <div className="flex items-center justify-between gap-3 rounded-box border border-hairline bg-surface p-2.5 shadow-2xs">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-box bg-navy/10 text-navy">
                   <FileText className="size-4" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -153,7 +153,7 @@ export function UploadMaterialModal({ isOpen = true, onClose, activeStudent, onS
                     setMaterialFileBase64(null);
                     setMaterialFileName(null);
                   }}
-                  className="flex size-7 items-center justify-center rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer">
+                  className="flex size-7 items-center justify-center rounded-box bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition-colors cursor-pointer">
                   <X className="size-3.5" />
                 </button>
               </div>
@@ -161,8 +161,8 @@ export function UploadMaterialModal({ isOpen = true, onClose, activeStudent, onS
               <button
                 type="button"
                 onClick={() => materialFileInputRef.current?.click()}
-                className="group w-full flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-hairline hover:border-navy bg-surface/40 hover:bg-surface/80 py-6 text-xs transition-all cursor-pointer">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-paper-deep text-muted group-hover:bg-navy/10 group-hover:text-navy transition-colors">
+                className="group w-full flex flex-col items-center justify-center gap-1.5 rounded-box border border-dashed border-hairline hover:border-navy bg-surface/40 hover:bg-surface/80 py-6 text-xs transition-all cursor-pointer">
+                <div className="flex size-8 items-center justify-center rounded-box bg-paper-deep text-muted group-hover:bg-navy/10 group-hover:text-navy transition-colors">
                   <UploadCloud className="size-4" />
                 </div>
                 <span className="font-semibold text-muted group-hover:text-ink transition-colors">
@@ -181,7 +181,7 @@ export function UploadMaterialModal({ isOpen = true, onClose, activeStudent, onS
               value={materialNote}
               onChange={(e) => setMaterialNote(e.target.value)}
               placeholder="ჩაწერეთ მითითება ამ მასალისთვის..."
-              className="w-full resize-none rounded-xl border border-hairline bg-surface/60 p-3 text-xs text-ink placeholder:text-muted outline-none focus:border-navy focus:bg-surface transition-colors"
+              className="w-full resize-none rounded-box border border-hairline bg-surface/60 p-3 text-xs text-ink placeholder:text-muted outline-none focus:border-navy focus:bg-surface transition-colors"
               rows={2}
             />
           </div>
@@ -192,14 +192,14 @@ export function UploadMaterialModal({ isOpen = true, onClose, activeStudent, onS
             type="button"
             disabled={uploadingMaterial}
             onClick={onClose}
-            className="rounded-xl px-3.5 py-1.5 text-xs font-bold text-body hover:text-ink hover:bg-paper-deep transition-colors cursor-pointer disabled:opacity-50">
+            className="rounded-box px-3.5 py-1.5 text-xs font-bold text-body hover:text-ink hover:bg-paper-deep transition-colors cursor-pointer disabled:opacity-50">
             გაუქმება
           </button>
           <button
             type="button"
             disabled={uploadingMaterial || !materialFileBase64}
             onClick={handleUpload}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-navy-strong disabled:opacity-40 transition-all active:scale-98 cursor-pointer">
+            className="inline-flex items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-navy-strong disabled:opacity-40 transition-all active:scale-98 cursor-pointer">
             {uploadingMaterial ? (
               <>
                 <Loader2 className="size-3.5 animate-spin" />

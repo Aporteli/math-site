@@ -10,7 +10,7 @@ import { GoogleSignInButton } from './GoogleSignInButton';
 import type { LoginFormProps } from './types';
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
 export function LoginForm({ locale, copy }: LoginFormProps) {
   const router = useRouter();
@@ -118,7 +118,7 @@ export function LoginForm({ locale, copy }: LoginFormProps) {
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex w-full items-center justify-center rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70">
+          className="inline-flex w-full items-center justify-center rounded-box bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70">
           {pending ? copy.submitting : copy.submit}
         </button>
       </form>

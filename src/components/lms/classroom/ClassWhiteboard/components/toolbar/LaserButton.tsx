@@ -15,7 +15,7 @@ export function LaserButton({ activeTool, setActiveTool, closeAllMenus }: Props)
         type="button"
         title="ლაზერული მაჩვენებელი (Laser Pointer)"
         onClick={() => { setActiveTool('laser'); closeAllMenus(); }}
-        className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+        className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-box transition-colors ${
           activeTool === 'laser'
             ? 'bg-rose-600 text-white shadow-xs'
             : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'

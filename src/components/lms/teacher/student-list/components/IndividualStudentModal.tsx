@@ -117,12 +117,12 @@ export function IndividualStudentModal({
       <div
         role="dialog"
         aria-modal="true"
-        className="flex max-h-[min(92dvh,100%)] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-xl"
+        className="flex max-h-[min(92dvh,100%)] w-full max-w-md flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex size-9 items-center justify-center rounded-xl border border-hairline bg-brass-tint text-brass-strong">
+            <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
               <User2 className="h-4 w-4" />
             </span>
             <div className="min-w-0">
@@ -134,7 +134,7 @@ export function IndividualStudentModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-paper hover:text-ink"
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink"
           >
             <X className="h-4 w-4" />
           </button>
@@ -148,7 +148,7 @@ export function IndividualStudentModal({
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="სახელი"
-                className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
               />
             </div>
             <div>
@@ -157,7 +157,7 @@ export function IndividualStudentModal({
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="გვარი"
-                className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
               />
             </div>
           </div>
@@ -170,7 +170,7 @@ export function IndividualStudentModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="ტელეფონი"
-              className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+              className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
             />
           </div>
 
@@ -182,7 +182,7 @@ export function IndividualStudentModal({
               value={parentPhone}
               onChange={(e) => setParentPhone(e.target.value)}
               placeholder="მშობლის ტელეფონი"
-              className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+              className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
             />
           </div>
 
@@ -194,14 +194,14 @@ export function IndividualStudentModal({
                 value={monthlyPrice}
                 onChange={(e) => setMonthlyPrice(e.target.value)}
                 placeholder="ფასი"
-                className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
               />
             </div>
             <div>
               <select
                 value={priceType}
                 onChange={(e) => setPriceType(e.target.value as PriceType)}
-                className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
+                className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
               >
                 {PRICE_TYPE_OPTIONS.map((pt) => (
                   <option key={pt} value={pt}>
@@ -218,7 +218,7 @@ export function IndividualStudentModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="ელფოსტა"
-              className="w-full rounded-xl border border-hairline bg-paper px-3 py-2.5 text-base text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+              className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
             />
           </div>
 
@@ -228,12 +228,12 @@ export function IndividualStudentModal({
               onChange={(e) => setNote(e.target.value)}
               rows={2}
               placeholder="შენიშვნა"
-              className="w-full resize-none rounded-xl border border-hairline bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
+              className="w-full resize-none rounded-box border border-hairline bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
             />
           </div>
 
           {error ? (
-            <p className="rounded-lg bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">
+            <p className="rounded-box bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">
               {error}
             </p>
           ) : null}
@@ -245,7 +245,7 @@ export function IndividualStudentModal({
               type="button"
               onClick={handleDelete}
               disabled={isPending}
-              className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-loss/30 bg-loss-tint px-4 py-2.5 text-sm font-bold text-loss transition hover:bg-loss/20 disabled:opacity-50"
+              className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-box border border-loss/30 bg-loss-tint px-4 py-2.5 text-sm font-bold text-loss transition hover:bg-loss/20 disabled:opacity-50"
             >
               <Trash2 className="h-3.5 w-3.5" />
               წაშლა
@@ -259,7 +259,7 @@ export function IndividualStudentModal({
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="min-h-10 cursor-pointer rounded-xl border border-hairline bg-surface px-4 py-2.5 text-sm font-bold text-body transition hover:bg-paper disabled:opacity-50"
+              className="min-h-10 cursor-pointer rounded-box border border-hairline bg-surface px-4 py-2.5 text-sm font-bold text-body transition hover:bg-paper disabled:opacity-50"
             >
               გაუქმება
             </button>
@@ -267,7 +267,7 @@ export function IndividualStudentModal({
               type="button"
               onClick={handleSave}
               disabled={isPending}
-              className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong disabled:opacity-50"
+              className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong disabled:opacity-50"
             >
               <Save className="h-3.5 w-3.5" />
               {isPending ? 'ინახება...' : isEdit ? 'შენახვა' : 'დამატება'}

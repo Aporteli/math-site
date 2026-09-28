@@ -566,7 +566,7 @@ export function TeacherAiChatPanel({
 
   return (
     <section
-      className={`${className} space-y-4 rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5 relative`}
+      className={`${className} space-y-4 rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5 relative`}
       aria-labelledby="teacher-ai-chat-heading">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hairline pb-4">
         <h2 id="teacher-ai-chat-heading" className="text-lg font-semibold tracking-tight text-ink">
@@ -574,7 +574,7 @@ export function TeacherAiChatPanel({
         </h2>
         <button
           type="button"
-          className="inline-flex size-9 items-center justify-center rounded-xl text-muted hover:bg-paper hover:text-navy"
+          className="inline-flex size-9 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
           aria-label={copy.close}
           onClick={onClose}>
           <X className="size-4" aria-hidden="true" />
@@ -615,7 +615,7 @@ export function TeacherAiChatPanel({
         </div>
         <button
           type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-hairline bg-white px-4 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-2 rounded-box border border-hairline bg-white px-4 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60"
           disabled={busy || messages.length === 0}
           onClick={() => {
             setMessages([]);
@@ -628,10 +628,10 @@ export function TeacherAiChatPanel({
         </button>
       </div>
 
-      <div className="min-h-[18rem] max-h-[28rem] overflow-y-auto rounded-2xl border border-hairline bg-paper p-3">
+      <div className="min-h-[18rem] max-h-[28rem] overflow-y-auto rounded-box border border-hairline bg-paper p-3">
         {messages.length === 0 ? (
           <div className="flex h-full min-h-[14rem] flex-col items-center justify-center text-center">
-            <span className="inline-flex size-10 items-center justify-center rounded-full bg-navy-tint text-navy">
+            <span className="inline-flex size-10 items-center justify-center rounded-box bg-navy-tint text-navy">
               <MessageSquare className="size-5" aria-hidden="true" />
             </span>
             <p className="mt-3 text-sm font-medium text-ink">{copy.emptyTitle}</p>
@@ -643,7 +643,7 @@ export function TeacherAiChatPanel({
               if (user) {
                 return (
                   <li key={`user-${index}`} className="flex justify-end">
-                    <div className="max-w-[85%] rounded-2xl bg-navy px-4 py-3 text-sm leading-relaxed text-white shadow-sm">
+                    <div className="max-w-[85%] rounded-box bg-navy px-4 py-3 text-sm leading-relaxed text-white shadow-sm">
                       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">{copy.you}</p>
                       {message.content ? (
                         <KatexPreview
@@ -659,7 +659,7 @@ export function TeacherAiChatPanel({
                               <img
                                 src={src}
                                 alt=""
-                                className="size-20 rounded-lg border border-white/20 object-cover"
+                                className="size-20 rounded-box border border-white/20 object-cover"
                               />
                             </div>
                           ))}
@@ -690,7 +690,7 @@ export function TeacherAiChatPanel({
                 <li key={`assistant-${index}`} className="flex justify-start">
                   <div className="max-w-[95%] space-y-3 sm:max-w-[85%]">
                     {bankProblems.length === 0 ? (
-                      <div className="rounded-2xl border border-hairline bg-white px-4 py-3 text-sm leading-relaxed text-ink shadow-sm">
+                      <div className="rounded-box border border-hairline bg-white px-4 py-3 text-sm leading-relaxed text-ink shadow-sm">
                         <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">
                           {copy.assistant}
                         </p>
@@ -702,14 +702,14 @@ export function TeacherAiChatPanel({
                     ) : null}
 
                     {bankProblems.length > 0 ? (
-                      <div className="rounded-2xl border border-navy/15 bg-navy-tint/30 p-3">
+                      <div className="rounded-box border border-navy/15 bg-navy-tint/30 p-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <p className="text-xs font-semibold tracking-wide text-brass">{copy.cardsTitle}</p>
                           <div className="flex flex-wrap gap-2">
                             {selectedInBlock.length > 0 && (
                               <button
                                 type="button"
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong shadow-xs transition-all active:scale-95"
+                                className="inline-flex items-center gap-1.5 rounded-box bg-navy px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong shadow-xs transition-all active:scale-95"
                                 onClick={() =>
                                   handleOpenAssignModal(
                                     selectedInBlock.map((p) => ({
@@ -735,7 +735,7 @@ export function TeacherAiChatPanel({
                                     setSelectedProblemIds((prev) => Array.from(new Set([...prev, ...blockIds])));
                                   }
                                 }}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint">
+                                className="inline-flex items-center gap-1.5 rounded-box border border-navy/20 bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint">
                                 <CheckSquare className="size-3.5" aria-hidden="true" />
                                 <span>
                                   {allInBlockSelected
@@ -749,7 +749,7 @@ export function TeacherAiChatPanel({
                             <button
                               type="button"
                               disabled={savingKey !== null}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint disabled:opacity-60"
+                              className="inline-flex items-center gap-1.5 rounded-box border border-navy/20 bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint disabled:opacity-60"
                               onClick={() =>
                                 void persistCards(
                                   bankProblems,
@@ -778,18 +778,18 @@ export function TeacherAiChatPanel({
                                 onMouseLeave={handlePressEnd}
                                 onTouchStart={() => handlePressStart(problem.id)}
                                 onTouchEnd={handlePressEnd}
-                                className={`relative rounded-xl border p-3 transition-all ${
+                                className={`relative rounded-box border p-3 transition-all ${
                                   isSelected
                                     ? 'border-2 border-navy bg-sky-50 dark:border-sky-400 dark:bg-sky-900/30 shadow-md ring-2 ring-navy/10 dark:ring-sky-400/20 ring-offset-1'
                                     : 'border-hairline bg-white dark:border-slate-800 dark:bg-slate-900/50'
                                 }`}>
                                 {isSelected && (
-                                  <div className="absolute -top-2.5 -left-2.5 flex size-6 items-center justify-center rounded-full bg-navy dark:bg-sky-500 text-white shadow-md z-10 animate-in zoom-in-75 duration-200">
+                                  <div className="absolute -top-2.5 -left-2.5 flex size-6 items-center justify-center rounded-box bg-navy dark:bg-sky-500 text-white shadow-md z-10 animate-in zoom-in-75 duration-200">
                                     <Check className="size-3.5 stroke-[3]" />
                                   </div>
                                 )}
                                 <div className="mb-2 flex flex-wrap gap-2 text-[11px] text-muted">
-                                  <span className="rounded-full bg-paper-deep px-2 py-0.5 font-semibold text-brass-strong">
+                                  <span className="rounded-box bg-paper-deep px-2 py-0.5 font-semibold text-brass-strong">
                                     {fullCopy.difficulties[problem.difficulty]}
                                   </span>
                                   <span>{topicLabel(fullCopy.topics, problem.topic)}</span>
@@ -822,7 +822,7 @@ export function TeacherAiChatPanel({
                                   <button
                                     type="button"
                                     disabled={savingKey !== null}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-navy/20 bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint disabled:opacity-60"
+                                    className="inline-flex items-center gap-1.5 rounded-box border border-navy/20 bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint disabled:opacity-60"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handlePressEnd();
@@ -834,7 +834,7 @@ export function TeacherAiChatPanel({
 
                                   <button
                                     type="button"
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong shadow-xs transition-all active:scale-95"
+                                    className="inline-flex items-center gap-1.5 rounded-box bg-navy px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong shadow-xs transition-all active:scale-95"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handlePressEnd();
@@ -862,7 +862,7 @@ export function TeacherAiChatPanel({
             })}
             {busy ? (
               <li className="flex justify-start">
-                <div className="rounded-2xl border border-hairline bg-white px-4 py-3 text-sm text-body shadow-sm">
+                <div className="rounded-box border border-hairline bg-white px-4 py-3 text-sm text-body shadow-sm">
                   {copy.thinking}
                 </div>
               </li>
@@ -889,7 +889,7 @@ export function TeacherAiChatPanel({
             onClick={() => fileInputRef.current?.click()}
             aria-label={copy.addImage}
             title={copy.addImage}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint">
+            className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint">
             <ImagePlus className="size-3.5" aria-hidden="true" />
             {copy.addImage}
           </button>
@@ -897,7 +897,7 @@ export function TeacherAiChatPanel({
             <button
               type="button"
               onClick={() => setManageSlashOpen((open) => !open)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint">
+              className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint">
               <Sparkles className="size-3.5" aria-hidden="true" />
               {copy.slashPrompts.manage}
             </button>
@@ -920,14 +920,14 @@ export function TeacherAiChatPanel({
                 <img
                   src={image.previewUrl}
                   alt=""
-                  className="size-20 rounded-xl border border-hairline object-cover shadow-sm"
+                  className="size-20 rounded-box border border-hairline object-cover shadow-sm"
                 />
                 <button
                   type="button"
                   onClick={() => removeImage(image.id)}
                   aria-label={copy.removeImage}
                   title={copy.removeImage}
-                  className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-ink text-white shadow hover:bg-rose-600">
+                  className="absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-box bg-ink text-white shadow hover:bg-rose-600">
                   <X className="size-3" aria-hidden="true" />
                 </button>
               </li>
@@ -948,7 +948,7 @@ export function TeacherAiChatPanel({
           <textarea
             id={inputId}
             ref={textareaRef}
-            className="min-h-[6rem] w-full rounded-xl border border-hairline bg-white px-3 py-2 font-sans text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15"
+            className="min-h-[6rem] w-full rounded-box border border-hairline bg-white px-3 py-2 font-sans text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15"
             value={draft}
             maxLength={10000}
             placeholder={copy.inputPlaceholder}
@@ -973,7 +973,7 @@ export function TeacherAiChatPanel({
           />
         </div>
         {previewTex ? (
-          <div className="rounded-xl border border-hairline-soft bg-paper px-3 py-3">
+          <div className="rounded-box border border-hairline-soft bg-paper px-3 py-3">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">{copy.previewLabel}</p>
             <KatexPreview
               tex={previewTex}
@@ -985,7 +985,7 @@ export function TeacherAiChatPanel({
           <button
             type="submit"
             disabled={busy || (!draft.trim() && images.length === 0)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
+            className="inline-flex items-center justify-center gap-2 rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
             <Send className="size-4" aria-hidden="true" />
             {busy ? copy.sending : copy.send}
           </button>
@@ -993,7 +993,7 @@ export function TeacherAiChatPanel({
       </form>
 
       {notice ? (
-        <p className="rounded-xl border border-brass/25 bg-brass-tint px-4 py-3 text-sm text-brass-strong">{notice}</p>
+        <p className="rounded-box border border-brass/25 bg-brass-tint px-4 py-3 text-sm text-brass-strong">{notice}</p>
       ) : null}
 
       {fillPrompt ? (
@@ -1007,11 +1007,11 @@ export function TeacherAiChatPanel({
       ) : null}
 
       {isAssignModalOpen && (
-        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-150 rounded-2xl">
-          <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl border border-hairline animate-in zoom-in-95 duration-150">
+        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-150 rounded-box">
+          <div className="flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-box bg-white shadow-2xl border border-hairline animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-hairline bg-paper/30 px-6 py-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-navy-tint text-navy">
+                <div className="flex size-9 items-center justify-center rounded-box bg-navy-tint text-navy">
                   <Send className="size-4" />
                 </div>
                 <div>
@@ -1025,7 +1025,7 @@ export function TeacherAiChatPanel({
                   setIsAssignModalOpen(false);
                   setAssignError(null);
                 }}
-                className="flex size-7 items-center justify-center rounded-xl border border-hairline bg-white text-muted hover:bg-paper hover:text-ink transition-colors">
+                className="flex size-7 items-center justify-center rounded-box border border-hairline bg-white text-muted hover:bg-paper hover:text-ink transition-colors">
                 <X className="size-4" />
               </button>
             </div>
@@ -1061,7 +1061,7 @@ export function TeacherAiChatPanel({
                     <span className="text-xs">კურსები იტვირთება...</span>
                   </div>
                 ) : courseGroups.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-muted border border-dashed rounded-2xl">
+                  <div className="p-6 text-center text-xs text-muted border border-dashed rounded-box">
                     კურსები და მოსწავლეები ვერ მოიძებნა
                   </div>
                 ) : (
@@ -1077,14 +1077,14 @@ export function TeacherAiChatPanel({
                       return (
                         <div
                           key={group.id}
-                          className="rounded-2xl border border-hairline bg-paper/30 overflow-hidden transition-all">
+                          className="rounded-box border border-hairline bg-paper/30 overflow-hidden transition-all">
                           <div
                             onClick={() => toggleCourseExpand(group.id)}
                             className="flex items-center justify-between p-3 bg-white hover:bg-paper cursor-pointer transition-colors">
                             <div className="flex items-center gap-2 min-w-0 pr-2">
                               <GraduationCap className="size-4 text-navy shrink-0" />
                               <span className="text-xs font-bold text-ink truncate">{group.title}</span>
-                              <span className="rounded-md bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
+                              <span className="rounded-box bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
                                 {group.students.length}
                               </span>
                             </div>
@@ -1096,7 +1096,7 @@ export function TeacherAiChatPanel({
                                   e.stopPropagation();
                                   toggleCourseSelectAll(group);
                                 }}
-                                className={`text-[11px] font-bold px-2 py-1 rounded-lg border transition-all ${
+                                className={`text-[11px] font-bold px-2 py-1 rounded-box border transition-all ${
                                   allGroupSelected
                                     ? 'bg-navy text-white border-navy'
                                     : someGroupSelected
@@ -1123,14 +1123,14 @@ export function TeacherAiChatPanel({
                                     <div
                                       key={student.id}
                                       onClick={() => toggleStudentSelection(student.id)}
-                                      className={`flex items-center justify-between p-2 rounded-xl text-xs cursor-pointer transition-all ${
+                                      className={`flex items-center justify-between p-2 rounded-box text-xs cursor-pointer transition-all ${
                                         isSelected
                                           ? 'bg-navy text-white shadow-2xs font-bold'
                                           : 'bg-white hover:bg-paper text-ink border border-hairline'
                                       }`}>
                                       <div className="flex items-center gap-2 min-w-0 pr-2">
                                         <div
-                                          className={`flex size-5 items-center justify-center rounded-full text-[9px] font-bold shrink-0 ${
+                                          className={`flex size-5 items-center justify-center rounded-box text-[9px] font-bold shrink-0 ${
                                             isSelected ? 'bg-white text-navy' : 'bg-paper-deep text-muted'
                                           }`}>
                                           {student.name.charAt(0)}
@@ -1139,7 +1139,7 @@ export function TeacherAiChatPanel({
                                       </div>
 
                                       <div
-                                        className={`flex size-4 shrink-0 items-center justify-center rounded-md border transition-all ${
+                                        className={`flex size-4 shrink-0 items-center justify-center rounded-box border transition-all ${
                                           isSelected
                                             ? 'bg-white border-white text-navy'
                                             : 'border-slate-300 bg-paper text-transparent'
@@ -1160,7 +1160,7 @@ export function TeacherAiChatPanel({
               </div>
 
               {assignedStatus && (
-                <div className="flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-200">
+                <div className="flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-emerald-700 bg-emerald-50 rounded-box border border-emerald-200">
                   <UserCheck className="size-4" />
                   <span>{assignedStatus}</span>
                 </div>
@@ -1178,7 +1178,7 @@ export function TeacherAiChatPanel({
                 type="button"
                 disabled={assignPending || selectedStudentIds.length === 0}
                 onClick={() => handleSendProblemToStudents('task')}
-                className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-navy hover:bg-navy-strong text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-all active:scale-95 cursor-pointer">
+                className="flex items-center justify-center gap-1.5 py-2.5 rounded-box bg-navy hover:bg-navy-strong text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-all active:scale-95 cursor-pointer">
                 {assignPending && assignTargetType === 'task' ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin" />
@@ -1196,7 +1196,7 @@ export function TeacherAiChatPanel({
                 type="button"
                 disabled={assignPending || selectedStudentIds.length === 0}
                 onClick={() => handleSendProblemToStudents('material')}
-                className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-all active:scale-95 cursor-pointer">
+                className="flex items-center justify-center gap-1.5 py-2.5 rounded-box bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-all active:scale-95 cursor-pointer">
                 {assignPending && assignTargetType === 'material' ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin" />

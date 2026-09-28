@@ -67,10 +67,10 @@ export function DebtTracker({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 sm:gap-4">
       {/* ═══ Header ═══ */}
-      <div className="rounded-2xl border border-hairline bg-surface p-3 shadow-sm sm:rounded-3xl sm:p-5">
+      <div className="rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-hairline bg-loss-tint text-loss">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-loss-tint text-loss">
               <AlertCircle className="size-5" />
             </span>
             <div className="min-w-0">
@@ -81,11 +81,11 @@ export function DebtTracker({
           </div>
 
           {/* Month navigation */}
-          <div className="flex w-full items-center gap-1 rounded-full border border-hairline bg-paper p-1 sm:w-auto">
+          <div className="flex w-full items-center gap-1 rounded-box border border-hairline bg-paper p-1 sm:w-auto">
             <button
               type="button"
               onClick={() => onMonthChange(shiftMonth(monthKey, -1))}
-              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink sm:size-8"
+              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink sm:size-8"
               aria-label="წინა თვე"
             >
               <ChevronLeft className="size-4" />
@@ -96,7 +96,7 @@ export function DebtTracker({
             <button
               type="button"
               onClick={() => onMonthChange(shiftMonth(monthKey, 1))}
-              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink sm:size-8"
+              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink sm:size-8"
               aria-label="შემდეგი თვე"
             >
               <ChevronRight className="size-4" />
@@ -106,7 +106,7 @@ export function DebtTracker({
 
         {/* ═══ Stats cards ═══ */}
         <div className="mt-3 grid grid-cols-2 gap-2 min-[480px]:grid-cols-4">
-          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
               გადასახდელი
             </p>
@@ -114,7 +114,7 @@ export function DebtTracker({
               {formatPrice(stats.totalExpected)}
             </p>
           </div>
-          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
                გადახდილი
             </p>
@@ -122,7 +122,7 @@ export function DebtTracker({
               {formatPrice(stats.totalPaid)}
             </p>
           </div>
-          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
                დავალიანება
             </p>
@@ -130,7 +130,7 @@ export function DebtTracker({
               {formatPrice(stats.totalDebt)}
             </p>
           </div>
-          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
               მოვალეები
             </p>
@@ -141,7 +141,7 @@ export function DebtTracker({
         </div>
 
         {/* ═══ Filter tabs ═══ */}
-        <div className="mt-3 grid grid-cols-3 gap-1 rounded-2xl border border-hairline bg-paper p-1 sm:w-auto sm:min-w-80">
+        <div className="mt-3 grid grid-cols-3 gap-1 rounded-box border border-hairline bg-paper p-1 sm:w-auto sm:min-w-80">
           {[
             { key: 'debtors' as const, label: 'მოვალეები', count: stats.debtorsCount },
             { key: 'all' as const, label: 'ყველა', count: rows.length },
@@ -151,7 +151,7 @@ export function DebtTracker({
               key={f.key}
               type="button"
               onClick={() => setFilter(f.key)}
-              className={`inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-xl px-1.5 py-2 text-xs font-bold transition sm:px-3 ${
+              className={`inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-box px-1.5 py-2 text-xs font-bold transition sm:px-3 ${
                 filter === f.key
                   ? 'bg-navy text-white shadow-sm'
                   : 'text-body hover:bg-surface hover:text-ink'
@@ -159,7 +159,7 @@ export function DebtTracker({
             >
               <span className="truncate text-[11px] sm:text-xs">{f.label}</span>
               <span
-                className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+                className={`rounded-box px-1.5 py-0.5 text-[9px] font-bold ${
                   filter === f.key
                     ? 'bg-white/20 text-white'
                     : 'bg-paper-deep text-muted'
@@ -175,9 +175,9 @@ export function DebtTracker({
       {/* ═══ List ═══ */}
       <div className="custom-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-hairline bg-surface px-6 py-16 text-center">
+          <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-surface px-6 py-16 text-center">
             <span
-              className={`mb-3 inline-flex size-12 items-center justify-center rounded-2xl border border-hairline ${
+              className={`mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline ${
                 filter === 'debtors'
                   ? 'bg-win-tint text-win'
                   : 'bg-navy-tint text-navy'
@@ -210,11 +210,11 @@ export function DebtTracker({
               return (
                 <div
                   key={student.id}
-                  className="flex items-center gap-3 rounded-2xl border border-hairline bg-surface p-3 shadow-sm transition hover:border-navy/30 hover:shadow-md sm:p-4"
+                  className="flex items-center gap-3 rounded-box border border-hairline bg-surface p-3 shadow-sm transition hover:border-navy/30 hover:shadow-md sm:p-4"
                 >
                   {/* Avatar */}
                   <span
-                    className={`flex size-11 shrink-0 items-center justify-center rounded-full text-base font-bold ${
+                    className={`flex size-11 shrink-0 items-center justify-center rounded-box text-base font-bold ${
                       isPaidFull
                         ? 'bg-win-tint text-win'
                         : isPartial
@@ -232,7 +232,7 @@ export function DebtTracker({
                         {student.firstName} {student.lastName}
                       </p>
                       {isIndividual ? (
-                        <span className="shrink-0 rounded-full border border-brass/30 bg-brass-tint px-2 py-0.5 text-[9px] font-bold text-brass-strong">
+                        <span className="shrink-0 rounded-box border border-brass/30 bg-brass-tint px-2 py-0.5 text-[9px] font-bold text-brass-strong">
                           სახლში
                         </span>
                       ) : null}
@@ -250,9 +250,9 @@ export function DebtTracker({
                     {/* Progress bar */}
                     {expected > 0 && (
                       <div className="mt-1.5 flex items-center gap-2">
-                        <div className="relative h-1.5 w-full max-w-[180px] overflow-hidden rounded-full bg-paper-deep">
+                        <div className="relative h-1.5 w-full max-w-[180px] overflow-hidden rounded-box bg-paper-deep">
                           <div
-                            className={`absolute inset-y-0 left-0 rounded-full transition-all ${
+                            className={`absolute inset-y-0 left-0 rounded-box transition-all ${
                               isPaidFull ? 'bg-win' : isPartial ? 'bg-brass' : 'bg-loss'
                             }`}
                             style={{ width: `${paidRatio * 100}%` }}
@@ -299,7 +299,7 @@ export function DebtTracker({
                     type="button"
                     onClick={() => onManagePayments(student)}
                     title="გადახდის მართვა"
-                    className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-hairline bg-paper text-muted transition hover:border-navy/30 hover:bg-navy-tint hover:text-navy"
+                    className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-muted transition hover:border-navy/30 hover:bg-navy-tint hover:text-navy"
                   >
                     <Receipt className="size-4" />
                   </button>

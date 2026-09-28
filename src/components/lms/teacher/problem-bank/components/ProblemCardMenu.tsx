@@ -279,7 +279,7 @@ export function ProblemCardMenu({
         aria-expanded={open}
         aria-controls={menuId}
         aria-label={menu.open}
-        className="inline-flex size-9 items-center justify-center rounded-lg border border-ink bg-white text-muted shadow-sm transition-colors hover:border-navy/30 hover:text-navy"
+        className="inline-flex size-9 items-center justify-center rounded-box border border-ink bg-white text-muted shadow-sm transition-colors hover:border-navy/30 hover:text-navy"
         onClick={(event) => {
           event.stopPropagation();
           setOpen((value) => !value);
@@ -296,7 +296,7 @@ export function ProblemCardMenu({
               style={
                 coords ? { top: coords.top, left: coords.left } : { top: 0, left: 0, visibility: 'hidden' as const }
               }
-              className="fixed z-[80] min-w-[14rem] origin-top-right animate-dropdown rounded-2xl border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5"
+              className="fixed z-[80] min-w-[14rem] origin-top-right animate-dropdown rounded-box border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5"
               onClick={(event) => event.stopPropagation()}>
               {items.map((item) => {
                 const Icon = item.icon;
@@ -306,7 +306,7 @@ export function ProblemCardMenu({
                       type="button"
                       role="menuitem"
                       className={[
-                        'flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors',
+                        'flex w-full items-center gap-2.5 rounded-box px-3 py-2.5 text-left text-sm font-medium transition-colors',
                         item.danger
                           ? 'text-brass-strong hover:bg-brass-tint/50'
                           : item.highlight
@@ -331,13 +331,13 @@ export function ProblemCardMenu({
               className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs animate-in fade-in duration-200"
               onClick={() => setIsClassModalOpen(false)}>
               <div
-                className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-3xl border border-hairline bg-white p-5 shadow-2xl transition-all sm:p-6"
+                className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-box border border-hairline bg-white p-5 shadow-2xl transition-all sm:p-6"
                 onClick={(e) => e.stopPropagation()}>
                 
                 {/* Header */}
                 <div className="flex items-center justify-between pb-3 border-b border-hairline">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-navy-tint text-navy">
+                    <div className="flex size-9 items-center justify-center rounded-box bg-navy-tint text-navy">
                       <GraduationCap className="size-5" />
                     </div>
                     <div>
@@ -348,7 +348,7 @@ export function ProblemCardMenu({
                   <button
                     type="button"
                     onClick={() => setIsClassModalOpen(false)}
-                    className="flex size-8 items-center justify-center rounded-lg text-muted hover:bg-paper hover:text-ink transition">
+                    className="flex size-8 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-ink transition">
                     <X className="size-4" />
                   </button>
                 </div>
@@ -361,7 +361,7 @@ export function ProblemCardMenu({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="მოძებნეთ კლასი ან მოსწავლე..."
-                    className="w-full rounded-2xl border border-hairline bg-paper py-2.5 pl-10 pr-4 text-xs font-medium text-ink outline-none focus:ring-2 focus:ring-navy/20 transition"
+                    className="w-full rounded-box border border-hairline bg-paper py-2.5 pl-10 pr-4 text-xs font-medium text-ink outline-none focus:ring-2 focus:ring-navy/20 transition"
                   />
                 </div>
 
@@ -383,13 +383,13 @@ export function ProblemCardMenu({
                       return (
                         <div
                           key={group.id}
-                          className="overflow-hidden rounded-2xl border border-hairline bg-white transition hover:border-navy/30">
+                          className="overflow-hidden rounded-box border border-hairline bg-white transition hover:border-navy/30">
                           <div className="flex items-center gap-2 p-3">
                             <button
                               type="button"
                               onClick={() => toggleCourseExpand(group.id)}
                               className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-navy text-white text-xs font-bold">
+                              <div className="flex size-9 shrink-0 items-center justify-center rounded-box bg-navy text-white text-xs font-bold">
                                 {group.title.charAt(0)}
                               </div>
                               <div className="min-w-0">
@@ -403,7 +403,7 @@ export function ProblemCardMenu({
                               disabled={isClassSent || isClassSending}
                               onClick={() => handleSendToClass(group)}
                               className={[
-                                'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition shadow-xs',
+                                'inline-flex items-center gap-1.5 rounded-box px-3 py-1.5 text-xs font-bold transition shadow-xs',
                                 isClassSent
                                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                   : isClassSending
@@ -424,7 +424,7 @@ export function ProblemCardMenu({
                               type="button"
                               onClick={() => toggleCourseExpand(group.id)}
                               aria-label={isExpanded ? 'დახურვა' : 'გახსნა'}
-                              className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-paper hover:text-ink transition">
+                              className="flex size-7 shrink-0 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-ink transition">
                               <ChevronDown
                                 className={`size-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                               />
@@ -445,9 +445,9 @@ export function ProblemCardMenu({
                                   return (
                                     <div
                                       key={student.id}
-                                      className="flex items-center justify-between gap-2 rounded-xl border border-hairline bg-white p-2">
+                                      className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-white p-2">
                                       <div className="flex min-w-0 items-center gap-2">
-                                        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-paper-deep text-[10px] font-bold text-muted">
+                                        <div className="flex size-7 shrink-0 items-center justify-center rounded-box bg-paper-deep text-[10px] font-bold text-muted">
                                           {student.name.charAt(0)}
                                         </div>
                                         <span className="truncate text-xs font-medium text-ink">
@@ -460,7 +460,7 @@ export function ProblemCardMenu({
                                         disabled={isStudentSent || isStudentSending}
                                         onClick={() => handleSendToStudent(student)}
                                         className={[
-                                          'inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition shadow-xs',
+                                          'inline-flex items-center gap-1.5 rounded-box px-3 py-1.5 text-xs font-bold transition shadow-xs',
                                           isStudentSent
                                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                             : isStudentSending
@@ -498,7 +498,7 @@ export function ProblemCardMenu({
                     value={assignComment}
                     onChange={(e) => setAssignComment(e.target.value)}
                     placeholder="ჩაწერეთ დამატებითი მითითება მოსწავლეებისთვის..."
-                    className="w-full resize-none rounded-xl border border-hairline bg-paper p-2.5 text-xs text-ink outline-none transition focus:border-navy focus:bg-white"
+                    className="w-full resize-none rounded-box border border-hairline bg-paper p-2.5 text-xs text-ink outline-none transition focus:border-navy focus:bg-white"
                     rows={2}
                   />
                 </div>
@@ -507,7 +507,7 @@ export function ProblemCardMenu({
                   <button
                     type="button"
                     onClick={() => setIsClassModalOpen(false)}
-                    className="rounded-xl bg-paper px-4 py-2 text-xs font-bold text-ink hover:bg-paper-deep transition">
+                    className="rounded-box bg-paper px-4 py-2 text-xs font-bold text-ink hover:bg-paper-deep transition">
                     დახურვა
                   </button>
                 </div>

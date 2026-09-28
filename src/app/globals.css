@@ -2,6 +2,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+
+  --radius-box: 6px;
   --font-sans: var(--font-georgian), 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif;
 
   /* =========================================================

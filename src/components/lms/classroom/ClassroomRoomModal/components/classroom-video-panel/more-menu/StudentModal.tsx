@@ -68,7 +68,7 @@ export function StudentModal({
         top: position.y,
         transform: 'translateY(-100%)', // <--- მთავარი ცვლილება: აფართოებს ზემოთ
       }}
-      className="z-[88888] min-w-[180px] rounded-xl border border-white/10 bg-slate-800 p-3 shadow-2xl text-xs text-white pointer-events-auto"
+      className="z-[88888] min-w-[180px] rounded-box border border-white/10 bg-slate-800 p-3 shadow-2xl text-xs text-white pointer-events-auto"
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}>
       <p className="font-semibold text-emerald-400">{student.name || student.identity}</p>
@@ -83,7 +83,7 @@ export function StudentModal({
               e.preventDefault();
               onToggleIsolation(student.identity);
             }}
-            className={`flex items-center justify-between w-full rounded-lg px-2 py-1.5 transition text-left font-medium ${
+            className={`flex items-center justify-between w-full rounded-box px-2 py-1.5 transition text-left font-medium ${
               isIsolated
                 ? 'bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30'
                 : 'bg-white/5 text-white/80 hover:bg-white/10'
@@ -107,7 +107,7 @@ export function StudentModal({
               toggleStudentLock(participantUserId(student));
             }}
             aria-pressed={isLocked}
-            className={`flex items-center justify-between w-full rounded-lg px-2 py-1.5 transition text-left font-medium ${
+            className={`flex items-center justify-between w-full rounded-box px-2 py-1.5 transition text-left font-medium ${
               isLocked
                 ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30'
                 : 'bg-white/5 text-white/80 hover:bg-white/10'
@@ -122,12 +122,12 @@ export function StudentModal({
         )}
 
         {isTeacher && studentUserId && (
-          <div className="rounded-lg bg-white/5 px-2 py-1.5">
+          <div className="rounded-box bg-white/5 px-2 py-1.5">
             <BoardAssignSelect studentId={studentUserId} />
           </div>
         )}
 
-        <div className="flex items-center gap-2 rounded-lg bg-white/5 px-2 py-1.5">
+        <div className="flex items-center gap-2 rounded-box bg-white/5 px-2 py-1.5">
           <Volume2 className="size-3.5 shrink-0 text-white/40" />
           <input
             type="range"
@@ -139,7 +139,7 @@ export function StudentModal({
             onChange={(e) => {
               if (student) setVolume(student.identity, e.currentTarget.valueAsNumber / 100);
             }}
-            className="h-1 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-indigo-500"
+            className="h-1 w-full cursor-pointer appearance-none rounded-box bg-white/15 accent-indigo-500"
           />
           <span className="w-8 shrink-0 text-right font-mono text-[10px] text-white/60">
             {volumePercent}%
@@ -154,7 +154,7 @@ export function StudentModal({
             alert(`მოქმედება სტუდენტზე: ${student.identity}`);
             onClose();
           }}
-          className="w-full rounded-lg bg-white/5 px-2 py-1.5 text-left text-white/80 hover:bg-white/10 transition">
+          className="w-full rounded-box bg-white/5 px-2 py-1.5 text-left text-white/80 hover:bg-white/10 transition">
           პროფილის ნახვა
         </button>
       </div>

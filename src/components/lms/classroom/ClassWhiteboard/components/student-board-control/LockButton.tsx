@@ -15,7 +15,7 @@ export function LockButton({ locked, onClick, isDark }: LockButtonProps) {
       onClick={onClick}
       aria-pressed={locked}
       title={locked ? 'მართვის გამორთვა' : 'დაფის მიბმა მასწავლებლის ხედვასთან'}
-      className={`flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs font-bold transition-colors active:scale-95 ${
+      className={`flex items-center gap-1.5 h-7 px-2.5 rounded-box text-xs font-bold transition-colors active:scale-95 ${
         locked
           ? 'bg-indigo-600 text-white hover:bg-indigo-700'
           : isDark

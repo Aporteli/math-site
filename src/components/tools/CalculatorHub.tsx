@@ -130,7 +130,7 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`max-w-full rounded-full border px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:px-4 ${
+      className={`max-w-full rounded-box border px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:px-4 ${
         active
           ? 'border-navy bg-navy text-white shadow-sm'
           : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink'
@@ -222,7 +222,7 @@ export function CalculatorHub({
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={copy.hero.searchPlaceholder}
                 autoComplete="off"
-                className="w-full min-w-0 appearance-none rounded-2xl border border-hairline bg-white py-3 pr-4 pl-12 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                className="w-full min-w-0 appearance-none rounded-box   border border-hairline bg-white py-3 pr-4 pl-12 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
               />
             </label>
             <p className="text-sm text-muted" aria-live="polite">
@@ -261,7 +261,7 @@ export function CalculatorHub({
                         onClick={() => switchTo(tool.id)}
                         aria-current={active ? 'page' : undefined}
                         className={
-                          'inline-flex max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ' +
+                          'inline-flex max-w-full items-center gap-1.5 rounded-box border px-3 py-1.5 text-sm font-semibold transition-colors ' +
                           (active
                             ? 'border-navy bg-navy text-white shadow-sm'
                             : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink')
@@ -409,7 +409,7 @@ export function CalculatorHub({
           />
         )}
         {!activeImplemented && activeItem ? (
-          <section className="rounded-3xl border border-hairline bg-white p-6 shadow-sm sm:p-8">
+          <section className="rounded-box border border-hairline bg-white p-6 shadow-sm sm:p-8">
             <h2 className="text-xl font-semibold tracking-tight text-ink">{activeItem.title}</h2>
             <p className="mt-2 max-w-3xl text-base leading-relaxed text-body">{activeItem.description}</p>
             <h3 className="mt-6 text-lg font-semibold text-ink">{copy.tool.comingSoon}</h3>
@@ -422,5 +422,5 @@ export function CalculatorHub({
 }
 
 function Loading() {
-  return <div className="h-80 animate-pulse rounded-2xl border border-hairline bg-white dark:bg-slate-900" />;
+  return <div className="h-80 animate-pulse rounded-box border border-hairline bg-white dark:bg-slate-900" />;
 }

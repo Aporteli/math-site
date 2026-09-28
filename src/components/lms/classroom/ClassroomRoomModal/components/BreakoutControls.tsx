@@ -57,7 +57,7 @@ export function BreakoutControls({
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         title="აუდიო იზოლაცია (Breakout mode)"
-        className={`flex h-9 items-center justify-center gap-1.5 rounded-xl border px-2.5 transition-all ${
+        className={`flex h-9 items-center justify-center gap-1.5 rounded-box border px-2.5 transition-all ${
           isOpen || hasIsolated
             ? 'border-amber-500/60 bg-amber-500/20 text-amber-300'
             : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/15 hover:text-white'
@@ -74,7 +74,7 @@ export function BreakoutControls({
             className="fixed inset-0 z-40 cursor-default bg-transparent"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute bottom-full right-0 z-50 mb-2 w-60 overflow-hidden rounded-xl border border-white/10 bg-slate-900 shadow-2xl">
+          <div className="absolute bottom-full right-0 z-50 mb-2 w-60 overflow-hidden rounded-box border border-white/10 bg-slate-900 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
               <span className="text-xs font-bold text-white">მოსწავლეების იზოლაცია</span>
               <button
@@ -101,7 +101,7 @@ export function BreakoutControls({
                         type="button"
                         onClick={() => toggleIsolation(identity)}
                         disabled={pendingIdentity !== null}
-                        className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left transition-colors ${
+                        className={`flex w-full items-center justify-between gap-2 rounded-box px-2.5 py-2 text-left transition-colors ${
                           isIsolated
                             ? 'bg-amber-500/20 text-amber-300'
                             : 'text-white/80 hover:bg-white/10 hover:text-white'
@@ -111,7 +111,7 @@ export function BreakoutControls({
                           <Loader2 className="size-3.5 shrink-0 animate-spin" />
                         ) : (
                           <span
-                            className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                            className={`shrink-0 rounded-box px-1.5 py-0.5 text-[10px] font-bold ${
                               isIsolated ? 'bg-amber-400 text-slate-950' : 'bg-white/10 text-white/60'
                             }`}>
                             {isIsolated ? 'გამოშვება' : 'იზოლაცია'}

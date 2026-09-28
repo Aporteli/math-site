@@ -13,7 +13,7 @@ import {
 import type { SignupFormProps } from './types';
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
 export function SignupForm({ locale, copy }: SignupFormProps) {
   const router = useRouter();
@@ -190,14 +190,14 @@ export function SignupForm({ locale, copy }: SignupFormProps) {
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex w-full items-center justify-center rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70"
+            className="inline-flex w-full items-center justify-center rounded-box bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70"
           >
             {pending ? copy.submitting : 'კოდის მიღება'}
           </button>
         </form>
       ) : (
         <form onSubmit={handleVerifyAndRegister} className="space-y-4" noValidate>
-          <div className="rounded-xl bg-slate-50 p-3 text-center text-sm text-ink/80">
+          <div className="rounded-box bg-slate-50 p-3 text-center text-sm text-ink/80">
             ვერიფიკაციის კოდი გაიგზავნა მისამართზე:
             <br />
             <strong>{email}</strong>
@@ -230,7 +230,7 @@ export function SignupForm({ locale, copy }: SignupFormProps) {
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex w-full items-center justify-center rounded-full bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70"
+            className="inline-flex w-full items-center justify-center rounded-box bg-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-70"
           >
             {pending ? copy.submitting : copy.submit}
           </button>

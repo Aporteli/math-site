@@ -62,7 +62,7 @@ export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
         />
 
         {/* 2. მარჯვენა მხარე: სამუშაო სივრცე */}
-        <section className="flex min-h-0 flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-sm">
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-sm">
           <TeacherWorkspaceHeader
             studentsInActiveCourse={ws.studentsInActiveCourse}
             selectedStudentId={ws.selectedStudentId}

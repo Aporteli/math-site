@@ -154,10 +154,10 @@ export function PaymentCalendar({
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 sm:gap-4">
-      <div className="flex flex-col gap-3 rounded-2xl border border-hairline bg-surface p-3 shadow-sm sm:rounded-3xl sm:p-5">
+      <div className="flex flex-col gap-3 rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-hairline bg-brass-tint text-brass-strong">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
               <CalendarDays className="size-5" />
             </span>
             <div className="min-w-0">
@@ -170,7 +170,7 @@ export function PaymentCalendar({
             {/* <button
               type="button"
               onClick={() => goToDate(new Date())}
-              className={`h-10 shrink-0 cursor-pointer rounded-full border px-3 text-xs font-bold transition sm:h-8 ${
+              className={`h-10 shrink-0 cursor-pointer rounded-box border px-3 text-xs font-bold transition sm:h-8 ${
                 isSameDay(focusDate, today)
                   ? 'border-navy bg-navy text-white'
                   : 'border-hairline bg-paper text-ink hover:border-navy/40'
@@ -178,12 +178,12 @@ export function PaymentCalendar({
               დღეს
             </button> */}
 
-            <div className="flex min-w-0 flex-1 items-center gap-1 rounded-full border border-hairline bg-paper p-1 sm:flex-none">
+            <div className="flex min-w-0 flex-1 items-center gap-1 rounded-box border border-hairline bg-paper p-1 sm:flex-none">
               <button
                 type="button"
                 onClick={() => shiftPeriod(-1)}
                 aria-label={navLabel.prev}
-                className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink sm:size-8">
+                className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink sm:size-8">
                 <ChevronLeft className="size-4" />
               </button>
               <span className="min-w-0 flex-1 truncate px-2 text-center text-sm font-bold text-ink sm:min-w-44 sm:flex-none">
@@ -193,18 +193,18 @@ export function PaymentCalendar({
                 type="button"
                 onClick={() => shiftPeriod(1)}
                 aria-label={navLabel.next}
-                className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-surface hover:text-ink sm:size-8">
+                className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink sm:size-8">
                 <ChevronRight className="size-4" />
               </button>
             </div>
 
-            <div className="flex w-full items-center rounded-full border border-hairline bg-paper p-1 min-[420px]:w-auto">
+            <div className="flex w-full items-center rounded-box border border-hairline bg-paper p-1 min-[420px]:w-auto">
               {VIEW_OPTIONS.map((option) => (
                 <button
                   key={option.id}
                   type="button"
                   onClick={() => setView(option.id)}
-                  className={`h-8 flex-1 cursor-pointer rounded-full px-3 text-[11px] font-bold transition min-[420px]:flex-none ${
+                  className={`h-8 flex-1 cursor-pointer rounded-box px-3 text-[11px] font-bold transition min-[420px]:flex-none ${
                     view === option.id ? 'bg-navy text-white shadow-sm' : 'text-muted hover:bg-surface hover:text-ink'
                   }`}>
                   {option.label}
@@ -215,19 +215,19 @@ export function PaymentCalendar({
         </div>
 
         <div className="grid grid-cols-1 gap-2 min-[480px]:grid-cols-3">
-          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">გადასახდელი</p>
             <p className="mt-1 truncate text-lg font-bold tabular-nums text-ink sm:text-xl">
               {formatPrice(monthStats.expected)}
             </p>
           </div>
-          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">გადახდილი</p>
             <p className="mt-1 truncate text-lg font-bold tabular-nums text-win sm:text-xl">
               {formatPrice(monthStats.paid)}
             </p>
           </div>
-          <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">დავალიანება</p>
             <p className="mt-1 truncate text-lg font-bold tabular-nums text-loss sm:text-xl">
               {formatPrice(monthStats.debt)}
@@ -237,7 +237,7 @@ export function PaymentCalendar({
       </div>
 
       <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-4">
-        <div className="flex min-h-0 min-w-0 flex-col rounded-2xl border border-hairline bg-surface p-2.5 shadow-sm sm:rounded-3xl sm:p-4">
+        <div className="flex min-h-0 min-w-0 flex-col rounded-box border border-hairline bg-surface p-2.5 shadow-sm sm:rounded-box sm:p-4">
           {view === 'month' ? (
             <MonthGrid
               cells={monthGrid}
@@ -267,13 +267,13 @@ export function PaymentCalendar({
 
           <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-hairline pt-3 text-[10px] font-medium text-muted">
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-win" /> სრულად
+              <span className="size-2 rounded-box bg-win" /> სრულად
             </span>
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-brass" /> ნაწილობრივ
+              <span className="size-2 rounded-box bg-brass" /> ნაწილობრივ
             </span>
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-loss" /> გადაუხდელი
+              <span className="size-2 rounded-box bg-loss" /> გადაუხდელი
             </span>
           </div>
         </div>
@@ -332,7 +332,7 @@ function MonthGrid({
               key={key}
               type="button"
               onClick={() => onSelectDate(date)}
-              className={`group relative flex aspect-square min-h-11 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border transition sm:rounded-xl ${
+              className={`group relative flex aspect-square min-h-11 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-box border transition sm:rounded-box ${
                 isSelected
                   ? 'border-navy bg-navy text-white shadow-md'
                   : isToday
@@ -364,7 +364,7 @@ function MonthGrid({
                 </span>
               ) : null}
 
-              {dot !== 'none' ? <span className={`absolute bottom-1 size-1.5 rounded-full ${DOT_CLASS[dot]}`} /> : null}
+              {dot !== 'none' ? <span className={`absolute bottom-1 size-1.5 rounded-box ${DOT_CLASS[dot]}`} /> : null}
             </button>
           );
         })}
@@ -412,7 +412,7 @@ function WeekGrid({
                 onSelectDate(date);
               }
             }}
-            className={`flex min-h-0 min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border text-left transition ${
+            className={`flex min-h-0 min-w-0 cursor-pointer flex-col overflow-hidden rounded-box border text-left transition ${
               isSelected
                 ? 'border-navy bg-navy-tint/50 shadow-sm'
                 : isToday
@@ -424,12 +424,12 @@ function WeekGrid({
                 {WEEKDAYS_KA[(date.getDay() + 6) % 7]}
               </span>
               <span
-                className={`flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                className={`flex size-6 items-center justify-center rounded-box text-xs font-bold ${
                   isToday ? 'bg-navy text-white' : isSelected ? 'bg-navy/15 text-navy' : 'text-ink'
                 }`}>
                 {date.getDate()}
               </span>
-              {dot !== 'none' ? <span className={`size-1.5 rounded-full ${DOT_CLASS[dot]}`} /> : null}
+              {dot !== 'none' ? <span className={`size-1.5 rounded-box ${DOT_CLASS[dot]}`} /> : null}
             </div>
 
             <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-1">
@@ -439,7 +439,7 @@ function WeekGrid({
                 sessions.map((session) => (
                   <span
                     key={session.key}
-                    className={`block truncate rounded-md px-1 py-0.5 text-[9px] font-bold leading-tight ${
+                    className={`block truncate rounded-box px-1 py-0.5 text-[9px] font-bold leading-tight ${
                       isSelected ? 'bg-navy text-white' : 'bg-navy-tint text-navy'
                     }`}>
                     {session.startTime} {sessionChipLabel(session, groups)}
@@ -478,10 +478,10 @@ function DayAgenda({
   const sessions = useMemo(() => groupDayLessons(lessons), [lessons]);
 
   return (
-    <div className="flex min-h-[20rem] flex-1 flex-col overflow-hidden rounded-xl border border-hairline bg-paper">
+    <div className="flex min-h-[20rem] flex-1 flex-col overflow-hidden rounded-box border border-hairline bg-paper">
       <div className="flex shrink-0 items-center gap-3 border-b border-hairline px-3 py-2.5">
         <span
-          className={`flex size-8 items-center justify-center rounded-full text-sm font-bold ${
+          className={`flex size-8 items-center justify-center rounded-box text-sm font-bold ${
             isToday ? 'bg-navy text-white' : 'bg-surface text-ink'
           }`}>
           {date.getDate()}
@@ -506,7 +506,7 @@ function DayAgenda({
                   {session.startTime}
                 </div>
                 <div className="min-w-0 flex-1 space-y-1.5 border-l border-hairline pl-3">
-                  <p className="rounded-md bg-navy-tint/60 px-1.5 py-0.5 text-[10px] font-bold text-navy">
+                  <p className="rounded-box bg-navy-tint/60 px-1.5 py-0.5 text-[10px] font-bold text-navy">
                     {session.kind === 'group'
                       ? `${getGroupName(session.groupId, groups)} · ${session.lessons.length} მოსწავლე`
                       : 'სახლში'}
@@ -527,7 +527,7 @@ function DayAgenda({
                     return (
                       <div
                         key={`${lesson.student.id}-${lesson.lessonId}-${idx}`}
-                        className={`rounded-xl border px-2.5 py-2 ${
+                        className={`rounded-box border px-2.5 py-2 ${
                           missed
                             ? 'border-loss/30 bg-loss-tint/40'
                             : isPaid
@@ -578,7 +578,7 @@ function DayLessonPanel({
   const sessions = groupDayLessons(lessons);
 
   return (
-    <div className="flex min-h-0 flex-col rounded-2xl border border-hairline bg-surface shadow-sm sm:rounded-3xl">
+    <div className="flex min-h-0 flex-col rounded-box border border-hairline bg-surface shadow-sm sm:rounded-box">
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-hairline px-4 py-3">
         <div>
           <p className="text-[15px] mb-2 font-bold text-ink">
@@ -589,7 +589,7 @@ function DayLessonPanel({
             {lessons.length !== sessions.length ? ` · ${lessons.length} მოსწავლე` : ''}
           </p>
         </div>
-        <span className="inline-flex size-9 items-center justify-center rounded-xl border border-hairline bg-brass-tint text-brass-strong">
+        <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
           <CalendarDays className="size-4" />
         </span>
       </div>
@@ -601,7 +601,7 @@ function DayLessonPanel({
           <div className="space-y-4">
             {sessions.map((session) => (
               <div key={session.key} className="space-y-2">
-                <p className="flex items-center gap-1.5 rounded-lg bg-navy-tint/70 px-2 py-1 text-[13px] font-bold tracking-wide text-navy">
+                <p className="flex items-center gap-1.5 rounded-box bg-navy-tint/70 px-2 py-1 text-[13px] font-bold tracking-wide text-navy">
                   {session.startTime}–{session.endTime}
                   <span className="font-medium text-muted">
                     · {session.kind === 'group' ? getGroupName(session.groupId, groups) : 'სახლში'}
@@ -620,7 +620,7 @@ function DayLessonPanel({
                   return (
                     <div
                       key={`${student.id}-${lessonId}-${idx}`}
-                      className={`rounded-2xl border p-3 transition ${
+                      className={`rounded-box border p-3 transition ${
                         missed ? 'border-loss/30 bg-loss-tint/30' : 'border-hairline bg-paper hover:border-navy/30'
                       }`}>
                       <div className="flex items-start justify-between gap-2">
@@ -639,7 +639,7 @@ function DayLessonPanel({
                               type="button"
                               onClick={() => onToggleMissed(student.id, lessonId, dKey, !missed)}
                               title={missed ? 'დასწრებულად მონიშვნა' : 'გამოტოვებულად მონიშვნა'}
-                              className={`flex size-8 cursor-pointer items-center justify-center rounded-lg border transition ${
+                              className={`flex size-8 cursor-pointer items-center justify-center rounded-box border transition ${
                                 missed
                                   ? 'border-win/40 bg-win-tint text-win hover:bg-win/20'
                                   : 'border-loss/30 bg-surface text-loss hover:bg-loss-tint'
@@ -652,7 +652,7 @@ function DayLessonPanel({
                             title={
                               missed ? 'გამოტოვა' : isPaid ? 'გადახდილია' : paid > 0 ? 'ნაწილობრივ გადახდილია' : 'ვალი'
                             }
-                            className={`flex size-8 shrink-0 items-center justify-center rounded-lg border ${
+                            className={`flex size-8 shrink-0 items-center justify-center rounded-box border ${
                               missed
                                 ? 'border-loss/30 bg-loss-tint text-loss'
                                 : isPaid

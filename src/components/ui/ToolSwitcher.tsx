@@ -28,12 +28,12 @@ export function ToolSwitcher({
       {/* ── Horizontal nav strip ── */}
       <nav
         aria-label={copy.hero.eyebrow ?? 'Tools'}
-        className="rounded-2xl border border-hairline bg-white p-2 shadow-sm dark:bg-slate-900/60 dark:border-slate-800">
+        className="rounded-box border border-hairline bg-white p-2 shadow-sm dark:bg-slate-900/60 dark:border-slate-800">
         <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar">
           {/* Back */}
           <Link
             href={localePath(locale, '/tools')}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-muted transition-colors hover:bg-paper hover:text-navy dark:hover:bg-slate-800">
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-box px-3 py-2 text-xs font-semibold text-muted transition-colors hover:bg-paper hover:text-navy dark:hover:bg-slate-800">
             <ArrowLeft className="size-3.5" aria-hidden="true" />
             <span className="whitespace-nowrap">{copy.tool.back}</span>
           </Link>
@@ -52,7 +52,7 @@ export function ToolSwitcher({
                 title={item.title}
                 aria-current={active ? 'page' : undefined}
                 className={
-                  'inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors ' +
+                  'inline-flex shrink-0 items-center gap-1.5 rounded-box px-3 py-2 text-xs font-semibold transition-colors ' +
                   (active
                     ? 'bg-navy text-white shadow-sm dark:bg-sky-600'
                     : 'text-body hover:bg-navy-tint hover:text-navy dark:hover:bg-slate-800 dark:hover:text-sky-400')

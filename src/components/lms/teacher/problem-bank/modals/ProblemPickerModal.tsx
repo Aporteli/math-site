@@ -40,11 +40,11 @@ export function ProblemPickerModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
-      <div className="flex h-[85vh] w-full max-w-4xl flex-col rounded-3xl border border-hairline bg-paper shadow-2xl overflow-hidden">
+      <div className="flex h-[85vh] w-full max-w-4xl flex-col rounded-box border border-hairline bg-paper shadow-2xl overflow-hidden">
         {/* ჰედერი */}
         <div className="flex items-center justify-between border-b border-hairline bg-white px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-navy-tint text-navy">
+            <div className="flex size-9 items-center justify-center rounded-box bg-navy-tint text-navy">
               <FolderOpen className="size-5" />
             </div>
             <div>
@@ -54,7 +54,7 @@ export function ProblemPickerModal({
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-muted transition-colors hover:bg-paper-deep hover:text-ink"
+            className="rounded-box p-2 text-muted transition-colors hover:bg-paper-deep hover:text-ink"
           >
             <X className="size-5" />
           </button>
@@ -68,14 +68,14 @@ export function ProblemPickerModal({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="მოძებნეთ ამოცანის ტექსტით ან თემით..."
-              className="w-full rounded-xl border border-hairline bg-paper pl-9 pr-3 py-1.5 text-xs outline-none focus:border-navy"
+              className="w-full rounded-box border border-hairline bg-paper pl-9 pr-3 py-1.5 text-xs outline-none focus:border-navy"
             />
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto">
             <button
               onClick={() => setSelectedSet("ALL")}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+              className={`rounded-box px-3 py-1.5 text-xs font-semibold transition-all ${
                 selectedSet === "ALL"
                   ? "bg-navy text-white shadow-sm"
                   : "bg-paper text-muted hover:bg-paper-deep hover:text-ink"
@@ -87,7 +87,7 @@ export function ProblemPickerModal({
               <button
                 key={name}
                 onClick={() => setSelectedSet(name)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                className={`rounded-box px-3 py-1.5 text-xs font-semibold transition-all ${
                   selectedSet === name
                     ? "bg-navy text-white shadow-sm"
                     : "bg-paper text-muted hover:bg-paper-deep hover:text-ink"
@@ -115,18 +115,18 @@ export function ProblemPickerModal({
                     onSelect(problem);
                     onClose();
                   }}
-                  className="group relative flex flex-col justify-between rounded-2xl border border-hairline bg-white p-5 shadow-sm transition-all hover:border-navy/60 hover:shadow-md cursor-pointer"
+                  className="group relative flex flex-col justify-between rounded-box border border-hairline bg-white p-5 shadow-sm transition-all hover:border-navy/60 hover:shadow-md cursor-pointer"
                 >
                   <div>
                     {/* ტეგები */}
                     <div className="flex flex-wrap items-center gap-1.5 mb-3">
-                      <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
+                      <span className="rounded-box bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">
                         {problem.difficulty || "მარტივი"}
                       </span>
-                      <span className="rounded-md bg-paper-deep px-2 py-0.5 text-[11px] font-semibold text-muted">
+                      <span className="rounded-box bg-paper-deep px-2 py-0.5 text-[11px] font-semibold text-muted">
                         {problem.title}
                       </span>
-                      <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                      <span className="rounded-box bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
                         {problem.setTitle}
                       </span>
                     </div>
@@ -141,7 +141,7 @@ export function ProblemPickerModal({
                     <span className="text-[11px] font-medium text-muted group-hover:text-navy transition-colors">
                       დააწკაპუნეთ ასარჩევად →
                     </span>
-                    <span className="inline-flex size-6 items-center justify-center rounded-full bg-navy-tint text-navy opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="inline-flex size-6 items-center justify-center rounded-box bg-navy-tint text-navy opacity-0 group-hover:opacity-100 transition-opacity">
                       <Check className="size-3.5" />
                     </span>
                   </div>

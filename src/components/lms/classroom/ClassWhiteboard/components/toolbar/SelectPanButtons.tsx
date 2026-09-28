@@ -21,7 +21,7 @@ export function SelectPanButtons({ isTeacher, activeTool, setActiveTool, closeAl
             setActiveTool('select');
             closeAllMenus();
           }}
-          className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors ${
+          className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-box transition-colors ${
             activeTool === 'select'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
@@ -37,7 +37,7 @@ export function SelectPanButtons({ isTeacher, activeTool, setActiveTool, closeAl
           setActiveTool('hand');
           closeAllMenus();
         }}
-        className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl transition-colors disabled:opacity-40 disabled:pointer-events-none ${
+        className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-box transition-colors disabled:opacity-40 disabled:pointer-events-none ${
           activeTool === 'hand'
             ? 'bg-indigo-600 text-white shadow-xs'
             : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'

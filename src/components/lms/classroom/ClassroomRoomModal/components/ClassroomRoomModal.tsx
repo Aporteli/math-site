@@ -121,7 +121,7 @@ export function ClassroomRoomModal({
 
           <main
             className={`relative flex flex-1 min-h-0 w-full overflow-hidden bg-slate-900 ${
-              isBoardFullscreen ? '' : 'rounded-2xl border border-white/10'
+              isBoardFullscreen ? '' : 'rounded-box border border-white/10'
             }`}>
             <div
               className={`flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row ${

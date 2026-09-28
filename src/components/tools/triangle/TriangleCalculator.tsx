@@ -30,13 +30,13 @@ interface Props {
 }
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';
 
 const chipClass =
-  'inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-navy-tint disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
+  'inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-navy-tint disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
 
 const panelClass =
-  'rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
+  'rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
 
 const SIDE_FIELDS = ['a', 'b', 'c'] as const;
 const ANGLE_FIELDS = ['A', 'B', 'C'] as const;
@@ -173,7 +173,7 @@ export function TriangleCalculator({
           key={ex.label}
           type="button"
           onClick={() => applyExample(ex)}
-          className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
+          className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
           {ex.label}
         </button>
       ))}
@@ -242,7 +242,7 @@ export function TriangleCalculator({
               </div>
             </div>
 
-            <p className="rounded-lg bg-navy-tint/50 px-3 py-2 text-[11px] leading-relaxed text-navy dark:bg-sky-950/30 dark:text-sky-300">
+            <p className="rounded-box bg-navy-tint/50 px-3 py-2 text-[11px] leading-relaxed text-navy dark:bg-sky-950/30 dark:text-sky-300">
               {copy.hint}
             </p>
 
@@ -250,7 +250,7 @@ export function TriangleCalculator({
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-50">
+                className="inline-flex items-center gap-2 rounded-box bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-50">
                 <Calculator className="size-4" aria-hidden="true" />
                 {loading ? copy.solving : copy.solveButton}
               </button>
@@ -266,7 +266,7 @@ export function TriangleCalculator({
           </div>
 
           {error && (
-            <div className="mt-3 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+            <div className="mt-3 flex items-start gap-2 rounded-box border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
               <span className="mt-0.5 shrink-0">⚠</span>
               <span>{error}</span>
             </div>
@@ -277,13 +277,13 @@ export function TriangleCalculator({
         <section className={panelClass}>
           {loading && (
             <div className="flex min-h-[200px] items-center justify-center">
-              <span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-navy border-t-transparent" />
+              <span className="inline-block h-8 w-8 animate-spin rounded-box border-4 border-navy border-t-transparent" />
             </div>
           )}
 
           {!result && !loading && (
             <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 text-center">
-              <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-navy-tint text-navy dark:bg-sky-950/40 dark:text-sky-400">
+              <span className="inline-flex size-12 items-center justify-center rounded-box bg-navy-tint text-navy dark:bg-sky-950/40 dark:text-sky-400">
                 <Sparkles className="size-5" />
               </span>
               <p className="max-w-sm text-sm text-muted">
@@ -295,7 +295,7 @@ export function TriangleCalculator({
           {result && !loading && (
             <div className="space-y-5">
               {result.ambiguous && (
-                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                <div className="flex items-start gap-2 rounded-box border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
                   <Info
                     className="mt-0.5 size-3.5 shrink-0"
                     aria-hidden="true"
@@ -334,7 +334,7 @@ export function TriangleCalculator({
                         <button
                           type="button"
                           onClick={() => applyHistory(h)}
-                          className="w-full overflow-x-auto rounded-lg border border-hairline-soft bg-white px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:border-navy/30 hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800">
+                          className="w-full overflow-x-auto rounded-box border border-hairline-soft bg-white px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:border-navy/30 hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800">
                           {Object.entries(h)
                             .filter(([, v]) => v.trim() !== '')
                             .map(([k, v]) => `${k}=${v}`)
@@ -403,7 +403,7 @@ function SolutionCard({
 
       {/* Sides & Angles */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-hairline bg-paper/40 p-3 dark:bg-slate-800/40 dark:border-slate-700">
+        <div className="rounded-box border border-hairline bg-paper/40 p-3 dark:bg-slate-800/40 dark:border-slate-700">
           <p className="mb-2 text-[11px] font-semibold text-muted">
             {copy.sidesResult}
           </p>
@@ -418,7 +418,7 @@ function SolutionCard({
             ))}
           </ul>
         </div>
-        <div className="rounded-xl border border-hairline bg-paper/40 p-3 dark:bg-slate-800/40 dark:border-slate-700">
+        <div className="rounded-box border border-hairline bg-paper/40 p-3 dark:bg-slate-800/40 dark:border-slate-700">
           <p className="mb-2 text-[11px] font-semibold text-muted">
             {copy.anglesResult}
           </p>
@@ -436,7 +436,7 @@ function SolutionCard({
       </div>
 
       {/* Derived */}
-      <div className="rounded-xl border border-hairline bg-paper/40 p-3 dark:bg-slate-800/40 dark:border-slate-700">
+      <div className="rounded-box border border-hairline bg-paper/40 p-3 dark:bg-slate-800/40 dark:border-slate-700">
         <p className="mb-2 text-[11px] font-semibold text-muted">
           {copy.derivedTitle}
         </p>
@@ -485,7 +485,7 @@ function SolutionCard({
             {solution.steps.map((st, i) => (
               <div
                 key={i}
-                className="rounded-xl border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
                 <h3 className="text-xs font-bold text-navy dark:text-sky-400">
                   {st.title}
                 </h3>
@@ -493,7 +493,7 @@ function SolutionCard({
                   {st.explanation}
                 </p>
                 {st.latex && (
-                  <div className="mt-2 overflow-x-auto rounded-lg border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                  <div className="mt-2 overflow-x-auto rounded-box border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
                     <KatexPreview tex={st.latex} />
                   </div>
                 )}

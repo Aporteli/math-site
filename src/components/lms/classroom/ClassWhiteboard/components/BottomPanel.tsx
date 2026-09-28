@@ -37,7 +37,7 @@ export function BottomPanel(props: Props) {
     <div className={`relative z-[100] flex w-full min-w-0 flex-col items-center justify-center pt-1 px-1 sm:px-2 pointer-events-auto shrink-0 select-none ${
       props.isFullscreen ? 'pb-[calc(0.75rem+env(safe-area-inset-bottom))]' : 'pb-3'
     }`}>
-      <div className="w-max max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x thin-scrollbar rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl">
+      <div className="w-max max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x thin-scrollbar rounded-box border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl">
         <div className="flex w-max items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5">
           <ZoomControls
             zoomPercent={props.zoomPercent}
@@ -53,7 +53,7 @@ export function BottomPanel(props: Props) {
               onClick={props.onToggleFullscreen}
               aria-label={props.isFullscreen ? 'სრული ეკრანიდან გამოსვლა' : 'სრული ეკრანი'}
               title={props.isFullscreen ? 'სრული ეკრანიდან გამოსვლა' : 'სრული ეკრანი'}
-              className="flex size-7 sm:size-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
+              className="flex size-7 sm:size-8 items-center justify-center rounded-box hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors active:scale-95"
             >
               {props.isFullscreen ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
             </button>

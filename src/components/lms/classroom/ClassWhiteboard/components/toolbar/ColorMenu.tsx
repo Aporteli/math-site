@@ -23,20 +23,20 @@ export function ColorMenu({
         type="button"
         onClick={() => { setIsOpen(!isOpen); closeOtherMenus(); }}
         title="ფერის არჩევა"
-        className="flex items-center gap-1 h-7 sm:h-8 px-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200/60 dark:border-slate-700/60">
-        <div className="size-4 sm:size-4.5 rounded-full border border-black/10 dark:border-white/20 shadow-2xs" style={{ backgroundColor: effectiveStroke }} />
+        className="flex items-center gap-1 h-7 sm:h-8 px-1.5 rounded-box bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border border-slate-200/60 dark:border-slate-700/60">
+        <div className="size-4 sm:size-4.5 rounded-box border border-black/10 dark:border-white/20 shadow-2xs" style={{ backgroundColor: effectiveStroke }} />
         <ChevronDown className={`size-2.5 sm:size-3 text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-2 right-0 z-[120] w-max rounded-2xl bg-white dark:bg-slate-900 p-2.5 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute top-full mt-2 right-0 z-[120] w-max rounded-box bg-white dark:bg-slate-900 p-2.5 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
           <div className="flex items-center gap-2">
             {WHITEBOARD_COLORS.map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setStrokeColor(c)}
-                className={`size-6 rounded-full transition-transform ${
+                className={`size-6 rounded-box transition-transform ${
                   strokeColor === c ? 'scale-125 ring-2 ring-indigo-500 ring-offset-1' : 'hover:scale-110'
                 }`}
                 style={{ backgroundColor: c }}

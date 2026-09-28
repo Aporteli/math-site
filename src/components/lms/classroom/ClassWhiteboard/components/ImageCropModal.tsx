@@ -185,10 +185,10 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
     <div className="fixed inset-0 z-[1000002] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs animate-in fade-in duration-150">
       <button type="button" aria-label="დახურვა" className="absolute inset-0 cursor-default bg-transparent" onClick={onCancel} />
 
-      <div className="relative z-10 flex w-full max-w-3xl flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl animate-in zoom-in-95 duration-150 dark:border-slate-800 dark:bg-slate-900">
+      <div className="relative z-10 flex w-full max-w-3xl flex-col rounded-box border border-slate-200 bg-white p-4 shadow-2xl animate-in zoom-in-95 duration-150 dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+            <div className="flex size-8 items-center justify-center rounded-box bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
               <Crop className="size-4" />
             </div>
             <span className="text-sm font-bold text-slate-900 dark:text-slate-100">სურათის ამოჭრა</span>
@@ -202,7 +202,7 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
           გადაათრიეთ კურსორი სურათზე და მონიშნეთ ის ნაწილი, რომელიც დაფაზე უნდა განთავსდეს. დანარჩენი ნაწილი ავტომატურად მოიჭრება.
         </p>
 
-        <div className="flex justify-center rounded-xl bg-slate-100/60 p-3 dark:bg-slate-950/40">
+        <div className="flex justify-center rounded-box bg-slate-100/60 p-3 dark:bg-slate-950/40">
           {!natural ? (
             <div className="flex h-48 w-full items-center justify-center text-slate-400">
               <Loader2 className="size-6 animate-spin" />
@@ -256,7 +256,7 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
               <button
                 type="button"
                 onClick={resetToFull}
-                className="rounded-md px-2 py-1 text-[11px] font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/40"
+                className="rounded-box px-2 py-1 text-[11px] font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/40"
               >
                 გადატვირთვა
               </button>
@@ -267,7 +267,7 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="rounded-box border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               გაუქმება
             </button>
@@ -275,7 +275,7 @@ export function ImageCropModal({ src, onCancel, onConfirm }: Props) {
               type="button"
               disabled={!natural}
               onClick={applyCrop}
-              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-box bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Check className="size-3.5" />
               დაფაზე განთავსება

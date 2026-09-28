@@ -1,46 +1,34 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
-import { localePath, type Locale } from "@/i18n/config";
-import type { Dictionary } from "@/i18n/types";
-import { mainNavLinks, navMenuHrefs, type NavMenuId } from "@/lib/navigation";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { ChevronDown } from 'lucide-react';
+import { localePath, type Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/types';
+import { mainNavLinks, navMenuHrefs, type NavMenuId } from '@/lib/navigation';
 
 interface NavLinksProps {
   locale: Locale;
-  labels: Dictionary["nav"];
-  menus: Dictionary["menus"];
-  variant?: "desktop" | "mobile";
+  labels: Dictionary['nav'];
+  menus: Dictionary['menus'];
+  variant?: 'desktop' | 'mobile';
   onNavigate?: () => void;
 }
 
-export function NavLinks({
-  locale,
-  labels,
-  menus,
-  variant = "desktop",
-  onNavigate,
-}: NavLinksProps) {
+export function NavLinks({ locale, labels, menus, variant = 'desktop', onNavigate }: NavLinksProps) {
   const pathname = usePathname();
-  const isMobile = variant === "mobile";
-  const [openMobileMenuId, setOpenMobileMenuId] = useState<NavMenuId | null>(
-    null,
-  );
+  const isMobile = variant === 'mobile';
+  const [openMobileMenuId, setOpenMobileMenuId] = useState<NavMenuId | null>(null);
 
   return (
     <ul
       className={
-        isMobile
-          ? "flex flex-col gap-1"
-          : "flex items-center gap-1 rounded-full border border-hairline bg-paper p-1"
-      }
-    >
+        isMobile ? 'flex flex-col gap-1' : 'flex items-center gap-1 rounded-box border border-hairline bg-paper p-1'
+      }>
       {mainNavLinks.map((link) => {
         const href = localePath(locale, link.href);
-        const active =
-          link.href === "/" ? pathname === href : pathname.startsWith(href);
+        const active = link.href === '/' ? pathname === href : pathname.startsWith(href);
         const menuId = link.menu;
         const menuItems = menuId ? Object.entries(menus[menuId]) : null;
 
@@ -60,21 +48,18 @@ export function NavLinks({
                   }
                   onNavigate?.();
                 }}
-                aria-current={active ? "page" : undefined}
+                aria-current={active ? 'page' : undefined}
                 aria-expanded={menuItems ? isMenuOpen : undefined}
                 className={[
-                  "flex items-center gap-1 rounded-xl px-3 py-2.5 text-base transition-colors",
+                  'flex items-center gap-1 rounded-box px-3 py-2.5 text-base transition-colors',
                   active
-                    ? "bg-navy font-bold text-white shadow-sm"
-                    : "font-bold text-body hover:bg-paper hover:text-ink",
-                ].join(" ")}
-              >
+                    ? 'bg-navy font-bold text-white shadow-sm'
+                    : 'font-bold text-body hover:bg-paper hover:text-ink',
+                ].join(' ')}>
                 {labels[link.id]}
                 {menuItems && (
                   <ChevronDown
-                    className={`size-3.5 shrink-0 transition-transform duration-200 ${
-                      isMenuOpen ? "rotate-180" : ""
-                    }`}
+                    className={`size-3.5 shrink-0 transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`}
                     aria-hidden="true"
                   />
                 )}
@@ -82,10 +67,7 @@ export function NavLinks({
               {menuItems && menuId && isMenuOpen && (
                 <ul className="mb-1 ml-3 space-y-0.5 border-l border-hairline pl-3">
                   {menuItems.map(([itemId, itemLabel]) => {
-                    const itemHref = localePath(
-                      locale,
-                      navMenuHrefs[menuId][itemId] ?? "/",
-                    );
+                    const itemHref = localePath(locale, navMenuHrefs[menuId][itemId] ?? '/');
 
                     return (
                       <li key={itemId}>
@@ -97,12 +79,11 @@ export function NavLinks({
                             onNavigate?.();
                           }}
                           className={[
-                            "block rounded-lg px-3 py-2 text-sm transition-colors duration-200",
+                            'block rounded-box px-3 py-2 text-sm transition-colors duration-200',
                             pathname === itemHref
-                              ? "bg-navy-tint font-bold text-navy"
-                              : "font-medium text-body hover:bg-paper hover:text-ink",
-                          ].join(" ")}
-                        >
+                              ? 'bg-navy-tint font-bold text-navy'
+                              : 'font-medium text-body hover:bg-paper hover:text-ink',
+                          ].join(' ')}>
                           {itemLabel}
                         </Link>
                       </li>
@@ -172,28 +153,24 @@ function DesktopNavItem({
         if (!event.currentTarget.contains(event.relatedTarget)) {
           setOpen(false);
         }
-      }}
-    >
+      }}>
       <Link
         href={href}
         prefetch={false}
         onClick={close}
-        aria-current={active ? "page" : undefined}
+        aria-current={active ? 'page' : undefined}
         aria-expanded={menuItems ? open : undefined}
-        aria-haspopup={menuItems ? "true" : undefined}
+        aria-haspopup={menuItems ? 'true' : undefined}
         className={[
-          "flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors",
-          active
-            ? "bg-navy font-bold text-white shadow-sm"
-            : "font-bold text-body hover:bg-surface hover:text-ink",
-        ].join(" ")}
-      >
+          'flex items-center gap-1 whitespace-nowrap rounded-box px-3 py-1.5 text-sm transition-colors',
+          active ? 'bg-navy font-bold text-white' : 'font-bold text-body hover:bg-paper hover:text-ink',
+        ].join(' ')}>
         {label}
         {menuItems && (
           <ChevronDown
             className={`size-4 shrink-0 transition-transform duration-200 ${
-              open ? "rotate-180" : ""
-            } ${active ? "text-white" : ""}`}
+              open ? 'rotate-180' : ''
+            } ${active ? 'text-white' : ''}`}
             aria-hidden="true"
           />
         )}
@@ -201,12 +178,9 @@ function DesktopNavItem({
 
       {menuItems && menuId && open && (
         <div className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2">
-          <ul className="w-72 origin-top animate-dropdown overflow-hidden rounded-2xl border border-hairline bg-surface p-1.5 shadow-lg shadow-navy/10">
+          <ul className="w-72 origin-top animate-dropdown overflow-hidden rounded-box border border-hairline bg-surface p-1.5">
             {menuItems.map(([itemId, itemLabel]) => {
-              const itemHref = localePath(
-                locale,
-                navMenuHrefs[menuId][itemId] ?? "/",
-              );
+              const itemHref = localePath(locale, navMenuHrefs[menuId][itemId] ?? '/');
 
               return (
                 <li key={itemId}>
@@ -215,12 +189,11 @@ function DesktopNavItem({
                     prefetch={false}
                     onClick={close}
                     className={[
-                      "block rounded-xl px-3 py-2 text-sm transition-colors duration-200",
+                      'block rounded-box px-3 py-2 text-sm transition-colors duration-200',
                       pathname === itemHref
-                        ? "bg-navy-tint font-bold text-navy"
-                        : "font-medium text-body hover:bg-paper hover:text-ink",
-                    ].join(" ")}
-                  >
+                        ? 'bg-navy-tint font-bold text-navy'
+                        : 'font-medium text-body hover:bg-paper hover:text-ink',
+                    ].join(' ')}>
                     {itemLabel}
                   </Link>
                 </li>

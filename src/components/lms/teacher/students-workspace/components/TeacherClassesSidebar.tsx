@@ -25,12 +25,12 @@ export function TeacherClassesSidebar({
   students,
 }: TeacherClassesSidebarProps) {
   return (
-    <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-sm">
+    <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-sm">
       <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
 
       <div className="flex shrink-0 items-center justify-between border-b border-hairline px-4 py-4">
         <div className="flex items-center gap-2.5">
-          <span className="inline-flex size-9 items-center justify-center rounded-xl border border-hairline bg-brass-tint text-brass-strong">
+          <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
             <GraduationCap className="size-4" />
           </span>
           <div>
@@ -38,7 +38,7 @@ export function TeacherClassesSidebar({
             <p className="text-[11px] font-medium text-muted">{studentsCount} მოსწავლე</p>
           </div>
         </div>
-        <span className="rounded-full border border-hairline bg-paper-deep px-2.5 py-1 text-[11px] font-bold text-ink">
+        <span className="rounded-box border border-hairline bg-paper-deep px-2.5 py-1 text-[11px] font-bold text-ink">
           {courses.length}
         </span>
       </div>
@@ -51,7 +51,7 @@ export function TeacherClassesSidebar({
             value={classSearchQuery}
             onChange={(e) => setClassSearchQuery(e.target.value)}
             placeholder="მოძებნეთ კლასი..."
-            className="w-full rounded-xl border border-hairline bg-paper py-2.5 pl-9 pr-3 text-xs font-medium text-ink outline-none transition placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
+            className="w-full rounded-box border border-hairline bg-paper py-2.5 pl-9 pr-3 text-xs font-medium text-ink outline-none transition placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
           />
         </div>
 
@@ -68,7 +68,7 @@ export function TeacherClassesSidebar({
                   key={course.id}
                   type="button"
                   onClick={() => handleCourseChange(course.id)}
-                  className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left transition ${
+                  className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-box border px-3 py-2.5 text-left transition ${
                     active
                       ? 'border-navy/25 bg-navy-tint text-navy-strong shadow-sm'
                       : 'border-transparent text-body hover:bg-paper hover:text-ink'
@@ -76,7 +76,7 @@ export function TeacherClassesSidebar({
                 >
                   <span className="truncate text-[13px] font-bold">{course.title}</span>
                   <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    className={`shrink-0 rounded-box px-2 py-0.5 text-[10px] font-bold ${
                       active ? 'bg-navy text-white' : 'bg-paper-deep text-muted'
                     }`}
                   >

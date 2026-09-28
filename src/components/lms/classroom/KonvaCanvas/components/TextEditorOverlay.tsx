@@ -69,7 +69,7 @@ export function TextEditorOverlay({
       <div
         className={`flex items-center gap-1.5 ${
           isDark ? 'bg-slate-900/95 border-slate-800' : 'bg-white/95 border-slate-200'
-        } p-1 rounded-xl shadow-md border text-xs w-max select-none`}
+        } p-1 rounded-box shadow-md border text-xs w-max select-none`}
         onMouseDown={(e) => e.preventDefault()}>
         <span className="text-[11px] font-bold text-slate-500 px-1">ზომა:</span>
         <button
@@ -79,7 +79,7 @@ export function TextEditorOverlay({
             const s = Math.max(12, currentFontSize - 4);
             onFontSizeChange(s);
           }}
-          className={`size-6 flex items-center justify-center rounded-lg ${
+          className={`size-6 flex items-center justify-center rounded-box ${
             isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
           } font-bold transition-colors`}>
           -
@@ -97,7 +97,7 @@ export function TextEditorOverlay({
             const s = Math.min(72, currentFontSize + 4);
             onFontSizeChange(s);
           }}
-          className={`size-6 flex items-center justify-center rounded-lg ${
+          className={`size-6 flex items-center justify-center rounded-box ${
             isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
           } font-bold transition-colors`}>
           +
@@ -110,7 +110,7 @@ export function TextEditorOverlay({
             onClick={() => {
               onFontSizeChange(s);
             }}
-            className={`px-1.5 py-0.5 rounded-md text-[11px] font-bold transition-colors ${
+            className={`px-1.5 py-0.5 rounded-box text-[11px] font-bold transition-colors ${
               currentFontSize === s
                 ? 'bg-indigo-600 text-white'
                 : isDark
@@ -141,7 +141,7 @@ export function TextEditorOverlay({
           userSelect: 'text',
           touchAction: 'auto',
         }}
-        className={`border-2 border-indigo-500 shadow-2xl outline-none p-2.5 resize rounded-xl ${
+        className={`border-2 border-indigo-500 shadow-2xl outline-none p-2.5 resize rounded-box ${
           isDark ? 'bg-slate-900/95' : 'bg-white/95'
         }`}
       />

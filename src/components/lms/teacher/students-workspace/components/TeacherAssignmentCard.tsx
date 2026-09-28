@@ -27,7 +27,7 @@ export function TeacherAssignmentCard({ assignment, activeTab, onSelect, onDelet
   const accent = isMaterial ? 'bg-brass' : isGraded ? 'bg-win' : isSubmitted ? 'bg-navy' : 'bg-hairline';
 
   return (
-    <div className="group relative flex min-h-[260px] w-full flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md">
+    <div className="group relative flex min-h-[260px] w-full flex-col overflow-hidden rounded-box border border-hairline bg-surface text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md">
       <button
         type="button"
         onClick={onSelect}
@@ -35,7 +35,7 @@ export function TeacherAssignmentCard({ assignment, activeTab, onSelect, onDelet
       >
       <span className={`h-1 w-full shrink-0 ${accent}`} aria-hidden="true" />
 
-      <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-xl border border-hairline bg-paper">
+      <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-box border border-hairline bg-paper">
         {displayImageUrl ? (
           <img
             src={displayImageUrl}
@@ -66,13 +66,13 @@ export function TeacherAssignmentCard({ assignment, activeTab, onSelect, onDelet
         )}
 
         {isGraded ? (
-          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-win/20 bg-win-tint px-2 py-0.5 text-[10px] font-bold text-win shadow-sm">
+          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-box border border-win/20 bg-win-tint px-2 py-0.5 text-[10px] font-bold text-win shadow-sm">
             <CheckCircle2 className="size-3" />
             ჩაბარებულია
           </span>
         ) : isSubmitted ? (
-          <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-full border border-navy/15 bg-surface px-2 py-0.5 text-[10px] font-bold text-navy shadow-sm">
-            <span className="size-1.5 rounded-full bg-navy" />
+          <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-box border border-navy/15 bg-surface px-2 py-0.5 text-[10px] font-bold text-navy shadow-sm">
+            <span className="size-1.5 rounded-box bg-navy" />
             პასუხი მიღებულია
           </span>
         ) : null}
@@ -80,7 +80,7 @@ export function TeacherAssignmentCard({ assignment, activeTab, onSelect, onDelet
 
       <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
         <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{assignment.title}</p>
-        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-navy-tint px-2.5 py-1 text-xs font-bold text-navy transition group-hover:bg-navy group-hover:text-white">
+        <span className="inline-flex w-fit items-center gap-1 rounded-box bg-navy-tint px-2.5 py-1 text-xs font-bold text-navy transition group-hover:bg-navy group-hover:text-white">
           {isMaterial ? 'მასალის გახსნა' : 'ნახვა'}
           <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </span>
@@ -91,7 +91,7 @@ export function TeacherAssignmentCard({ assignment, activeTab, onSelect, onDelet
         type="button"
         title="წაშლა"
         onClick={() => onDelete(assignment.id)}
-        className="absolute bottom-3.5 right-3.5 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border border-hairline bg-surface text-muted shadow-sm transition hover:border-loss/40 hover:bg-loss-tint hover:text-loss"
+        className="absolute bottom-3.5 right-3.5 z-10 flex size-8 cursor-pointer items-center justify-center rounded-box border border-hairline bg-surface text-muted shadow-sm transition hover:border-loss/40 hover:bg-loss-tint hover:text-loss"
       >
         <Trash2 className="size-3.5" />
       </button>

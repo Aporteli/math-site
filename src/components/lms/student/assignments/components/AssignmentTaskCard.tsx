@@ -57,12 +57,12 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
     <button
       type="button"
       onClick={handleClick}
-      className="group flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-hairline bg-surface text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-navy/35"
+      className="group flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-box border border-hairline bg-surface text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-navy/35"
     >
       <span className={`h-1 w-full shrink-0 ${isGraded ? 'bg-win' : 'bg-navy'}`} aria-hidden="true" />
 
       <div
-        className={`relative mx-3 mt-3 overflow-hidden rounded-xl border border-hairline bg-paper ${
+        className={`relative mx-3 mt-3 overflow-hidden rounded-box border border-hairline bg-paper ${
           imageUrls.length > 1 ? 'max-h-52' : 'h-36'
         }`}
       >
@@ -83,7 +83,7 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
         )}
 
         <span
-          className={`absolute left-2 top-2 mb-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold shadow-sm ${
+          className={`absolute left-2 top-2 mb-2 inline-flex items-center gap-1 rounded-box border px-2 py-0.5 text-[10px] font-bold shadow-sm ${
             isGraded ? 'border-win/20 bg-win-tint text-win' : 'border-navy/15 bg-surface text-navy'
           }`}
         >
@@ -96,13 +96,13 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
         <div className="space-y-2">
           <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{assignment.title}</p>
           {showNote ? (
-            <p className="line-clamp-2 rounded-lg bg-brass-tint px-2 py-1.5 text-[11px] leading-snug text-ink">
+            <p className="line-clamp-2 rounded-box bg-brass-tint px-2 py-1.5 text-[11px] leading-snug text-ink">
               <span className="mr-1 font-bold text-brass-strong">შენიშვნა:</span>
               {teacherNote}
             </p>
           ) : null}
         </div>
-        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-navy-tint px-2.5 py-1 text-xs font-bold text-navy transition group-hover:bg-navy group-hover:text-white">
+        <span className="inline-flex w-fit items-center gap-1 rounded-box bg-navy-tint px-2.5 py-1 text-xs font-bold text-navy transition group-hover:bg-navy group-hover:text-white">
           ნახვა
           <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </span>

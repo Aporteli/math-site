@@ -29,7 +29,7 @@ export function ModalRoot({ open, onClose, children, title }: ModalRootProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? "modal-title" : undefined}
-        className="relative z-10 w-full max-w-lg rounded-lg bg-white shadow-lg"
+        className="relative z-10 w-full max-w-lg rounded-box bg-white shadow-lg"
       >
         {title && (
           <div className="flex items-center justify-between border-b px-4 py-3">

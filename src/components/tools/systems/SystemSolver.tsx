@@ -43,13 +43,13 @@ interface Props {
 }
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';
 
 const panelClass =
-  'rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
+  'rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
 
 const chipClass =
-  'inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-white px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
+  'inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
 
 const DEFAULT_2 = ['2x + 3y = 8', 'x - y = -1'];
 const DEFAULT_3 = ['x + y + z = 6', '2x - y + z = 3', 'x + 2y - z = 2'];
@@ -244,13 +244,13 @@ export function SystemSolver({ copy }: Props) {
           <section className={panelClass}>
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-semibold text-ink">{copy.inputTitle}</h2>
-              <div className="flex rounded-lg border border-hairline p-0.5 dark:border-slate-700">
+              <div className="flex rounded-box border border-hairline p-0.5 dark:border-slate-700">
                 {([2, 3] as VarCount[]).map((n) => (
                   <button
                     key={n}
                     type="button"
                     onClick={() => setSize(n)}
-                    className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                    className={`rounded-box px-3 py-1 text-xs font-semibold transition-colors ${
                       size === n ? 'bg-navy text-white' : 'text-muted hover:text-ink'
                     }`}>
                     {n}×{n}
@@ -307,7 +307,7 @@ export function SystemSolver({ copy }: Props) {
                 <button
                   type="submit"
                   disabled={loading || !allFilled}
-                  className="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-50">
+                  className="inline-flex items-center gap-2 rounded-box bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-50">
                   <Calculator className="size-4" />
                   {copy.solveButton}
                 </button>
@@ -330,7 +330,7 @@ export function SystemSolver({ copy }: Props) {
                   key={p.label}
                   type="button"
                   onClick={() => applyPreset(p)}
-                  className="rounded-lg border border-hairline px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:border-navy/30 hover:text-ink dark:border-slate-700">
+                  className="rounded-box border border-hairline px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:border-navy/30 hover:text-ink dark:border-slate-700">
                   {p.label}
                 </button>
               ))}
@@ -345,7 +345,7 @@ export function SystemSolver({ copy }: Props) {
                 {copy.syntaxTitle}
               </button>
               {syntaxOpen && (
-                <ul className="mt-2 space-y-1 rounded-xl bg-paper-deep/60 p-3 font-mono text-[11px] text-body dark:bg-slate-800/40 dark:text-slate-300">
+                <ul className="mt-2 space-y-1 rounded-box bg-paper-deep/60 p-3 font-mono text-[11px] text-body dark:bg-slate-800/40 dark:text-slate-300">
                   {SYNTAX_HINTS.map((h) => (
                     <li key={h}>· {h}</li>
                   ))}
@@ -354,7 +354,7 @@ export function SystemSolver({ copy }: Props) {
             </div>
 
             {error && (
-              <div className="mt-3 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+              <div className="mt-3 flex items-start gap-2 rounded-box border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
                 <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -381,7 +381,7 @@ export function SystemSolver({ copy }: Props) {
                     <button
                       type="button"
                       onClick={() => applyHistory(h)}
-                      className="w-full rounded-lg px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:bg-paper-deep/60 dark:hover:bg-slate-800">
+                      className="w-full rounded-box px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:bg-paper-deep/60 dark:hover:bg-slate-800">
                       {h.equations.join('  |  ')}
                     </button>
                   </li>
@@ -396,7 +396,7 @@ export function SystemSolver({ copy }: Props) {
           {!result && !loading && (
             <section
               className={`${panelClass} flex min-h-[200px] flex-col items-center justify-center gap-3 text-center`}>
-              <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-navy-tint text-navy dark:bg-sky-950/40 dark:text-sky-400">
+              <span className="inline-flex size-12 items-center justify-center rounded-box bg-navy-tint text-navy dark:bg-sky-950/40 dark:text-sky-400">
                 <Sparkles className="size-5" />
               </span>
               <p className="max-w-sm text-sm text-muted">{copy.emptyResult}</p>
@@ -405,7 +405,7 @@ export function SystemSolver({ copy }: Props) {
 
           {loading && (
             <section className={`${panelClass} flex min-h-[200px] items-center justify-center`}>
-              <span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-navy border-t-transparent" />
+              <span className="inline-block h-8 w-8 animate-spin rounded-box border-4 border-navy border-t-transparent" />
             </section>
           )}
 
@@ -418,7 +418,7 @@ export function SystemSolver({ copy }: Props) {
                     <CheckCircle2 className="size-4 text-navy dark:text-sky-400" />
                     {copy.resultTitle}
                   </h2>
-                  <span className="rounded-full bg-navy-tint px-2.5 py-0.5 text-[11px] font-semibold text-navy dark:bg-sky-950/40 dark:text-sky-400">
+                  <span className="rounded-box bg-navy-tint px-2.5 py-0.5 text-[11px] font-semibold text-navy dark:bg-sky-950/40 dark:text-sky-400">
                     {result.is_linear ? 'წრფივი' : 'არაწრფივი'}
                   </span>
                 </div>
@@ -445,7 +445,7 @@ export function SystemSolver({ copy }: Props) {
                       return (
                         <li
                           key={i}
-                          className="flex items-center justify-between gap-2 rounded-xl border border-hairline bg-paper/40 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/40">
+                          className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-paper/40 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/40">
                           <div className="min-w-0 overflow-x-auto">
                             <KatexPreview tex={tex} />
                           </div>
@@ -502,7 +502,7 @@ export function SystemSolver({ copy }: Props) {
                           key={m.method}
                           type="button"
                           onClick={() => setActiveMethod(m.method)}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                          className={`rounded-box px-3 py-1.5 text-xs font-medium transition-colors ${
                             activeMethod === m.method
                               ? 'bg-navy text-white dark:bg-sky-600'
                               : 'border border-hairline text-muted hover:text-ink dark:border-slate-700'
@@ -518,13 +518,13 @@ export function SystemSolver({ copy }: Props) {
                       {activeMethodData.steps.map((st, idx) => (
                         <div
                           key={idx}
-                          className="rounded-xl border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                          className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
                           <h3 className="text-xs font-bold text-navy dark:text-sky-400">{st.title}</h3>
                           <p className="mt-1 text-xs leading-relaxed text-ink/80 dark:text-slate-300">
                             <RichText text={st.explanation} />
                           </p>
                           {st.latex && (
-                            <div className="mt-2 min-w-0 overflow-x-auto rounded-lg border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                            <div className="mt-2 min-w-0 overflow-x-auto rounded-box border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
                               <KatexPreview tex={st.latex} displayMode />
                             </div>
                           )}
@@ -559,7 +559,7 @@ function MatrixView({ rows }: { rows: string[][] }) {
   const cols = rows[0]?.length ?? 1;
   return (
     <span className="inline-flex items-stretch gap-1">
-      <span className="w-1 rounded-l border-y border-l border-ink/40" />
+      <span className="w-1 rounded-box border-y border-l border-ink/40" />
       <span
         className="inline-grid gap-x-4 gap-y-1 px-2 py-1"
         style={{
@@ -573,7 +573,7 @@ function MatrixView({ rows }: { rows: string[][] }) {
           )),
         )}
       </span>
-      <span className="w-1 rounded-r border-y border-r border-ink/40" />
+      <span className="w-1 rounded-box border-y border-r border-ink/40" />
     </span>
   );
 }
@@ -594,7 +594,7 @@ function KeyboardPopup({
     ['0', '.', '=', ')', 'BACKSPACE', 'CLEAR'],
   ];
   return (
-    <div className="mt-3 rounded-2xl border border-hairline bg-paper-deep/40 p-3 dark:border-slate-700 dark:bg-slate-800/40">
+    <div className="mt-3 rounded-box border border-hairline bg-paper-deep/40 p-3 dark:border-slate-700 dark:bg-slate-800/40">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-xs font-semibold text-ink">{copy.keyboard}</span>
         <button type="button" onClick={onClose} className="text-muted hover:text-ink" aria-label="close">
@@ -609,7 +609,7 @@ function KeyboardPopup({
                 key={k}
                 type="button"
                 onClick={() => onInsert(k)}
-                className="flex min-h-9 items-center justify-center rounded-lg border border-hairline bg-white px-2 text-xs font-semibold text-ink transition-colors hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800">
+                className="flex min-h-9 items-center justify-center rounded-box border border-hairline bg-white px-2 text-xs font-semibold text-ink transition-colors hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800">
                 {k === 'BACKSPACE' ? (
                   <Delete className="size-3.5" />
                 ) : k === 'CLEAR' ? (
@@ -705,7 +705,7 @@ function SystemGraph({ equations, solutions }: { equations: string[]; solutions:
 
   if (error)
     return (
-      <p className="rounded-xl border border-dashed border-hairline bg-paper/40 px-3 py-6 text-center text-xs text-muted dark:border-slate-700 dark:bg-slate-800/40">
+      <p className="rounded-box border border-dashed border-hairline bg-paper/40 px-3 py-6 text-center text-xs text-muted dark:border-slate-700 dark:bg-slate-800/40">
         გრაფიკი ხელმისაწვდომია მხოლოდ y = f(x) ტიპის სისტემებისთვის.
       </p>
     );
@@ -713,7 +713,7 @@ function SystemGraph({ equations, solutions }: { equations: string[]; solutions:
   return (
     <div
       ref={hostRef}
-      className="flex w-full justify-center overflow-hidden rounded-xl border border-hairline bg-white [&_svg]:block [&_svg]:max-w-full dark:border-slate-800 dark:bg-slate-950 dark:[&_.domain]:stroke-slate-600 dark:[&_.grid]:stroke-slate-800 dark:[&_.origin]:stroke-slate-400 dark:[&_.tick_line]:stroke-slate-700 dark:[&_.tick_text]:fill-slate-400"
+      className="flex w-full justify-center overflow-hidden rounded-box border border-hairline bg-white [&_svg]:block [&_svg]:max-w-full dark:border-slate-800 dark:bg-slate-950 dark:[&_.domain]:stroke-slate-600 dark:[&_.grid]:stroke-slate-800 dark:[&_.origin]:stroke-slate-400 dark:[&_.tick_line]:stroke-slate-700 dark:[&_.tick_text]:fill-slate-400"
     />
   );
 }

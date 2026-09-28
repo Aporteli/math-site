@@ -21,15 +21,15 @@ export function ChatMessage({ msg }: { msg: ReceivedChatMessage }) {
       </div>
 
       {isImage && imageUrl ? (
-        <div className="max-w-[80%] overflow-hidden rounded-xl border border-white/10 bg-white/5 p-1">
+        <div className="max-w-[80%] overflow-hidden rounded-box border border-white/10 bg-white/5 p-1">
           <img
             src={imageUrl}
             alt="ჩატის სურათი"
-            className="max-h-60 w-full rounded-lg object-cover"
+            className="max-h-60 w-full rounded-box object-cover"
           />
         </div>
       ) : (
-        <p className="w-fit max-w-[85%] break-words rounded-lg border border-white/5 bg-white/5 p-2 text-white/90">
+        <p className="w-fit max-w-[85%] break-words rounded-box border border-white/5 bg-white/5 p-2 text-white/90">
           {msg.message}
         </p>
       )}

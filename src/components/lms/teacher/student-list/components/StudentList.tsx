@@ -379,22 +379,22 @@ export function StudentList({
   const isListView = view === 'table' || view === 'grid';
 
   const viewButtonClass = (active: boolean) =>
-    `inline-flex min-h-9 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-xl px-1.5 py-2 text-xs font-bold transition sm:min-h-10 sm:px-3 ${
+    `inline-flex min-h-9 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-box px-1.5 py-2 text-xs font-bold transition sm:min-h-10 sm:px-3 ${
       active ? 'bg-navy text-white shadow-sm' : 'text-body hover:bg-surface hover:text-ink'
     }`;
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
-      <div className="flex min-w-0 flex-col gap-3 rounded-2xl border border-hairline bg-surface p-3 shadow-sm sm:rounded-3xl sm:p-5">
+      <div className="flex min-w-0 flex-col gap-3 rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
               <Users className="size-5" />
             </span>
           </div>
 
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="grid w-full grid-cols-5 gap-1 rounded-2xl border border-hairline bg-paper p-1 sm:w-auto sm:min-w-[28rem]">
+            <div className="grid w-full grid-cols-5 gap-1 rounded-box border border-hairline bg-paper p-1 sm:w-auto sm:min-w-[28rem]">
               <button
                 type="button"
                 onClick={() => setView('table')}
@@ -453,7 +453,7 @@ export function StudentList({
                 setIndividualModalOpen(true);
               }}
               title="ინდივიდუალური მოსწავლის დამატება"
-              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-brass-strong px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brass">
+              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-brass-strong px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brass">
               <UserPlus className="size-4 shrink-0" />
               <span className="truncate">სახლში</span>
             </button>
@@ -469,26 +469,26 @@ export function StudentList({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="სახელი, ტელეფონი ან ელფოსტა"
-                className="w-full rounded-xl border border-hairline bg-paper py-2.5 pl-10 pr-3 text-base font-medium text-ink outline-none transition placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-paper py-2.5 pl-10 pr-3 text-base font-medium text-ink outline-none transition placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">მოსწავლეები</p>
                 <p className="mt-1 truncate text-lg font-bold tabular-nums text-ink sm:text-xl">{students.length}</p>
               </div>
-              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">გაკვეთილები</p>
                 <p className="mt-1 truncate text-lg font-bold tabular-nums text-navy sm:text-xl">{stats.todayCount}</p>
               </div>
-              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">ჯამში</p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-ink sm:text-xl">
                   {formatPrice(stats.totalPrice)}
                 </p>
               </div>
-              <div className="min-w-0 rounded-2xl border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">გადასახდელი</p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-loss sm:text-xl">
                   {formatPrice(stats.debt)}
@@ -503,7 +503,7 @@ export function StudentList({
                   setActiveGroupId('all');
                   setShowTodayOnly(false);
                 }}
-                className={`shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                className={`shrink-0 cursor-pointer rounded-box border px-3 py-1.5 text-[11px] font-bold transition ${
                   activeGroupId === 'all' && !showTodayOnly
                     ? 'border-navy bg-navy text-white shadow-sm'
                     : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
@@ -514,7 +514,7 @@ export function StudentList({
               <button
                 type="button"
                 onClick={() => setShowTodayOnly(true)}
-                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-box border px-3 py-1.5 text-[11px] font-bold transition ${
                   showTodayOnly
                     ? 'border-navy bg-navy text-white shadow-sm'
                     : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
@@ -532,14 +532,14 @@ export function StudentList({
                       setActiveGroupId(g.id);
                       setShowTodayOnly(false);
                     }}
-                    className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                    className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-box border px-3 py-1.5 text-[11px] font-bold transition ${
                       active
                         ? 'border-navy bg-navy text-white shadow-sm'
                         : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
                     }`}>
                     <span>{g.name}</span>
                     <span
-                      className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+                      className={`rounded-box px-1.5 py-0.5 text-[9px] font-bold ${
                         active ? 'bg-white/20 text-white' : 'bg-paper-deep text-muted'
                       }`}>
                       {count}
@@ -584,8 +584,8 @@ export function StudentList({
       ) : (
         <div className="custom-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto">
           {filtered.length === 0 ? (
-            <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-hairline bg-surface px-6 py-16 text-center">
-              <span className="mb-3 inline-flex size-12 items-center justify-center rounded-2xl border border-hairline bg-navy-tint text-navy">
+            <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-surface px-6 py-16 text-center">
+              <span className="mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
                 <Users className="size-5" />
               </span>
               <p className="text-sm font-bold text-ink">მოსწავლე ვერ მოიძებნა</p>
@@ -595,12 +595,12 @@ export function StudentList({
             <div className="space-y-5">
               {listSections.map((section) => (
                 <section key={section.key} className="space-y-3">
-                  <div className="flex items-center gap-2 rounded-xl border border-hairline bg-paper px-3 py-2">
+                  <div className="flex items-center gap-2 rounded-box border border-hairline bg-paper px-3 py-2">
                     <span
-                      className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`}
+                      className={`size-1.5 shrink-0 rounded-box ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`}
                     />
                     <h2 className="text-xs font-bold tracking-wide text-ink">{section.title}</h2>
-                    <span className="rounded-full bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
+                    <span className="rounded-box bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
                       {section.students.length}
                     </span>
                   </div>
@@ -649,12 +649,12 @@ export function StudentList({
               <div className="space-y-5 lg:hidden">
                 {listSections.map((section) => (
                   <section key={section.key} className="space-y-3">
-                    <div className="flex items-center gap-2 rounded-xl border border-hairline bg-paper px-3 py-2">
+                    <div className="flex items-center gap-2 rounded-box border border-hairline bg-paper px-3 py-2">
                       <span
-                        className={`size-1.5 shrink-0 rounded-full ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`}
+                        className={`size-1.5 shrink-0 rounded-box ${section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'}`}
                       />
                       <h2 className="text-xs font-bold tracking-wide text-ink">{section.title}</h2>
-                      <span className="rounded-full bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
+                      <span className="rounded-box bg-paper-deep px-1.5 py-0.5 text-[10px] font-bold text-muted">
                         {section.students.length}
                       </span>
                     </div>

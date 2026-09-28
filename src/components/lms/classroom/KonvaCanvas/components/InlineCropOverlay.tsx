@@ -234,11 +234,11 @@ export function InlineCropOverlay({
       </div>
 
       {/* Action bar */}
-      <div className="pointer-events-auto absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-white/10 bg-slate-900/95 p-1.5 shadow-2xl backdrop-blur-md">
+      <div className="pointer-events-auto absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-box border border-white/10 bg-slate-900/95 p-1.5 shadow-2xl backdrop-blur-md">
         <button
           type="button"
           onClick={onCancel}
-          className="flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-white/80 transition hover:bg-white/10"
+          className="flex h-8 items-center gap-1.5 rounded-box px-3 text-xs font-semibold text-white/80 transition hover:bg-white/10"
         >
           <X className="size-3.5" />
           გაუქმება
@@ -246,7 +246,7 @@ export function InlineCropOverlay({
         <button
           type="button"
           onClick={handleConfirm}
-          className="flex h-8 items-center gap-1.5 rounded-lg bg-indigo-600 px-3 text-xs font-bold text-white transition hover:bg-indigo-700"
+          className="flex h-8 items-center gap-1.5 rounded-box bg-indigo-600 px-3 text-xs font-bold text-white transition hover:bg-indigo-700"
         >
           <Check className="size-3.5" />
           დადასტურება

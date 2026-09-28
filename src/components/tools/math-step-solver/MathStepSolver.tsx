@@ -769,7 +769,7 @@ export function MathStepSolver() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5 font-sans select-none">
-      <div className="rounded-3xl border border-hairline bg-white p-4 sm:p-6 shadow-sm space-y-3">
+      <div className="rounded-box border border-hairline bg-white p-4 sm:p-6 shadow-sm space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <PlusCircle className="size-4 text-navy" aria-hidden="true" />
@@ -785,7 +785,7 @@ export function MathStepSolver() {
                   setPlaygroundTokens(activeTokens);
                 }
               }}
-              className={`inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl border transition shadow-xs ${
+              className={`inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-box border transition shadow-xs ${
                 isManualPlayground
                   ? "bg-rose-600 text-white border-rose-600 ring-2 ring-rose-200"
                   : "bg-paper text-ink border-hairline hover:border-navy/40"
@@ -794,7 +794,7 @@ export function MathStepSolver() {
               <Sliders className="size-3.5" aria-hidden="true" />
               {isManualPlayground ? "ხელით მართვა: ჩართულია" : "ხელით მართვა: გამორთულია"}
             </button>
-            <span className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold px-2.5 py-1 rounded-full bg-navy-tint text-navy">
+            <span className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold px-2.5 py-1 rounded-box bg-navy-tint text-navy">
               <Sparkles className="size-3" aria-hidden="true" />
               AI Engine v2.4
             </span>
@@ -811,11 +811,11 @@ export function MathStepSolver() {
             value={inputEquation}
             onChange={(e) => setInputEquation(e.target.value)}
             placeholder="შეიყვანეთ განტოლება ან ფორმულა..."
-            className="flex-1 rounded-2xl border border-hairline bg-paper px-4 py-3 text-sm font-mono font-bold text-ink outline-none focus:ring-2 focus:ring-navy/30 transition min-w-0"
+            className="flex-1 rounded-box border border-hairline bg-paper px-4 py-3 text-sm font-mono font-bold text-ink outline-none focus:ring-2 focus:ring-navy/30 transition min-w-0"
           />
           <button
             type="submit"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-navy px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-navy-strong transition shrink-0"
+            className="inline-flex items-center justify-center gap-2 rounded-box bg-navy px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-navy-strong transition shrink-0"
           >
             <Play className="size-3.5" aria-hidden="true" />
             გენერირება
@@ -832,7 +832,7 @@ export function MathStepSolver() {
                 setInputEquation(preset.eq);
                 handleApplyEquation(preset.eq);
               }}
-              className="rounded-lg bg-paper px-2.5 py-1 text-[11px] font-mono font-bold text-muted hover:bg-navy-tint hover:text-navy transition"
+              className="rounded-box bg-paper px-2.5 py-1 text-[11px] font-mono font-bold text-muted hover:bg-navy-tint hover:text-navy transition"
             >
               {preset.label}
             </button>
@@ -841,19 +841,19 @@ export function MathStepSolver() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        <div className="lg:col-span-4 flex flex-col rounded-3xl border border-hairline bg-white p-4 sm:p-5 shadow-sm min-h-[320px] lg:min-h-[560px]">
+        <div className="lg:col-span-4 flex flex-col rounded-box border border-hairline bg-white p-4 sm:p-5 shadow-sm min-h-[320px] lg:min-h-[560px]">
           <div className="flex items-center justify-between pb-3 border-b border-hairline-soft mb-3 shrink-0">
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
               <History className="size-3.5 text-navy" aria-hidden="true" /> ამოხსნის ეტაპები
             </span>
-            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-navy-tint text-navy font-mono">
+            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-box bg-navy-tint text-navy font-mono">
               {currentStepIdx + 1} / {steps.length}
             </span>
           </div>
 
-          <div className="h-1.5 w-full rounded-full bg-paper mb-3 overflow-hidden shrink-0" aria-hidden="true">
+          <div className="h-1.5 w-full rounded-box bg-paper mb-3 overflow-hidden shrink-0" aria-hidden="true">
             <motion.div
-              className="h-full rounded-full bg-navy"
+              className="h-full rounded-box bg-navy"
               animate={{ width: `${overallProgress}%` }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
             />
@@ -879,7 +879,7 @@ export function MathStepSolver() {
                   }}
                   aria-current={isCurrent ? "step" : undefined}
                   disabled={!isUnlocked}
-                  className={`w-full text-left rounded-2xl p-3 border transition-all flex items-center justify-between ${
+                  className={`w-full text-left rounded-box p-3 border transition-all flex items-center justify-between ${
                     !isUnlocked
                       ? "opacity-40 border-dashed border-hairline bg-paper/30 cursor-not-allowed"
                       : isCurrent
@@ -889,7 +889,7 @@ export function MathStepSolver() {
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <span
-                      className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                      className={`flex size-6 shrink-0 items-center justify-center rounded-box text-xs font-bold ${
                         isCurrent
                           ? "bg-navy text-white shadow-sm"
                           : isUnlocked
@@ -918,7 +918,7 @@ export function MathStepSolver() {
               type="button"
               onClick={handleReset}
               disabled={!canReset || isFlying}
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-muted hover:text-navy disabled:opacity-30 rounded-md px-1.5 py-1 transition"
+              className="inline-flex items-center gap-1 text-[11px] font-bold text-muted hover:text-navy disabled:opacity-30 rounded-box px-1.5 py-1 transition"
             >
               <RotateCcw className="size-3" aria-hidden="true" />
               თავიდან
@@ -926,17 +926,17 @@ export function MathStepSolver() {
           </div>
         </div>
 
-        <div className="lg:col-span-8 flex flex-col rounded-3xl border border-hairline bg-white p-5 sm:p-6 shadow-sm min-h-[420px] lg:min-h-[560px]">
+        <div className="lg:col-span-8 flex flex-col rounded-box border border-hairline bg-white p-5 sm:p-6 shadow-sm min-h-[420px] lg:min-h-[560px]">
           <div className="flex flex-col gap-2 border-b border-hairline-soft pb-3 shrink-0 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-2.5 min-w-0">
-              <span className="rounded-lg bg-navy px-3 py-1 text-xs font-bold text-white font-mono shrink-0">
+              <span className="rounded-box bg-navy px-3 py-1 text-xs font-bold text-white font-mono shrink-0">
                 ნაბიჯი {currentStepIdx + 1}
               </span>
               <h4 className="text-sm font-bold text-ink leading-snug" title={step.title}>
                 {step.title} {isManualPlayground && <span className="text-rose-600 font-normal">(ხელით მართვა)</span>}
               </h4>
             </div>
-            <span className="inline-flex w-fit items-center gap-1 rounded-lg bg-navy-tint px-3 py-1 text-xs font-semibold text-navy">
+            <span className="inline-flex w-fit items-center gap-1 rounded-box bg-navy-tint px-3 py-1 text-xs font-semibold text-navy">
               <HelpCircle className="size-3.5 shrink-0" aria-hidden="true" />
               {step.ruleTitle}
             </span>
@@ -962,7 +962,7 @@ export function MathStepSolver() {
                         setTrajectoryIdx(-1);
                         setIsFlying(false);
                       }}
-                      className={`px-4 py-1.5 rounded-full text-xs font-bold font-mono transition shadow-xs disabled:opacity-40 ${
+                      className={`px-4 py-1.5 rounded-box text-xs font-bold font-mono transition shadow-xs disabled:opacity-40 ${
                         phase === pNum
                           ? "bg-navy text-white ring-2 ring-navy/30"
                           : "bg-paper text-muted hover:text-navy hover:bg-navy-tint/30"
@@ -1111,7 +1111,7 @@ export function MathStepSolver() {
 
                       <div
                         ref={targetBoxRef}
-                        className="flex flex-wrap items-center min-h-[50px] min-w-[120px] px-3 py-1 rounded-2xl border-2 border-dashed border-rose-400 bg-rose-50/20"
+                        className="flex flex-wrap items-center min-h-[50px] min-w-[120px] px-3 py-1 rounded-box border-2 border-dashed border-rose-400 bg-rose-50/20"
                       >
                         {establishedTokens.length === 0 && (
                           <span className="text-xs font-semibold text-rose-300 px-2">შედეგი გამოჩნდება აქ</span>
@@ -1131,7 +1131,7 @@ export function MathStepSolver() {
                       </div>
                     </div>
 
-                    <p className="mt-6 text-xs font-bold text-rose-900 bg-rose-100/80 px-4 py-2 rounded-full border border-rose-300 shadow-xs text-center max-w-full" aria-live="polite">
+                    <p className="mt-6 text-xs font-bold text-rose-900 bg-rose-100/80 px-4 py-2 rounded-box border border-rose-300 shadow-xs text-center max-w-full" aria-live="polite">
                       {trajectoryIdx >= 0
                         ? step.trajectorySteps[trajectoryIdx].note
                         : "დააჭირეთ ღილაკს მამრავლების ეტაპობრივი გადამრავლებისთვის"}
@@ -1187,7 +1187,7 @@ export function MathStepSolver() {
 
                 <div className="mt-6 text-center w-full max-w-xl px-2 shrink-0">
                   <p
-                    className="text-xs sm:text-sm font-bold text-navy bg-navy-tint/60 px-5 py-3 rounded-2xl border border-navy/10 leading-relaxed shadow-xs"
+                    className="text-xs sm:text-sm font-bold text-navy bg-navy-tint/60 px-5 py-3 rounded-box border border-navy/10 leading-relaxed shadow-xs"
                     aria-live="polite"
                   >
                     {phase === 1 && step.phase1Text}
@@ -1210,11 +1210,11 @@ export function MathStepSolver() {
                 <div
                   className={
                     isFullscreen
-                      ? "fixed inset-4 sm:inset-10 z-50 flex flex-col bg-white rounded-3xl shadow-2xl overflow-hidden border border-hairline transition-all duration-300"
+                      ? "fixed inset-4 sm:inset-10 z-50 flex flex-col bg-white rounded-box shadow-2xl overflow-hidden border border-hairline transition-all duration-300"
                       : "w-full space-y-6"
                   }
                 >
-                  <div className={`border-rose-200 bg-rose-50/50 p-4 flex flex-col transition-all ${isFullscreen ? 'flex-1 min-h-0' : 'rounded-2xl border space-y-3'}`}>
+                  <div className={`border-rose-200 bg-rose-50/50 p-4 flex flex-col transition-all ${isFullscreen ? 'flex-1 min-h-0' : 'rounded-box border space-y-3'}`}>
                     <div className="flex flex-wrap items-center justify-between gap-2 text-rose-800 text-xs font-bold">
                       <span className="flex items-center gap-1.5">
                         <MousePointerClick className="size-4 shrink-0" aria-hidden="true" />
@@ -1225,14 +1225,14 @@ export function MathStepSolver() {
                         <button
                           type="button"
                           onClick={handleAddToken}
-                          className="inline-flex items-center gap-1 bg-rose-600 text-white px-3 py-1.5 rounded-lg text-xs shadow-xs hover:bg-rose-700 transition"
+                          className="inline-flex items-center gap-1 bg-rose-600 text-white px-3 py-1.5 rounded-box text-xs shadow-xs hover:bg-rose-700 transition"
                         >
                           <Plus className="size-3.5" aria-hidden="true" /> <span className="hidden sm:inline">დამატება</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => setIsFullscreen(!isFullscreen)}
-                          className="inline-flex items-center gap-1 bg-white text-rose-700 border border-rose-300 px-3 py-1.5 rounded-lg text-xs shadow-xs hover:bg-rose-50 transition"
+                          className="inline-flex items-center gap-1 bg-white text-rose-700 border border-rose-300 px-3 py-1.5 rounded-box text-xs shadow-xs hover:bg-rose-50 transition"
                         >
                           {isFullscreen ? (
                             <><Minimize className="size-3.5" /> <span className="hidden sm:inline">შეკუმშვა</span></>
@@ -1251,7 +1251,7 @@ export function MathStepSolver() {
                           setSelectedTokenId(null);
                         }
                       }}
-                      className={`relative overflow-hidden rounded-xl border border-hairline bg-white shadow-xs touch-none ${
+                      className={`relative overflow-hidden rounded-box border border-hairline bg-white shadow-xs touch-none ${
                         isFullscreen ? "flex-1 w-full mt-3" : "resize-y min-h-[250px]"
                       }`}
                       style={!isFullscreen ? { minHeight: "250px", maxHeight: "800px" } : undefined}
@@ -1289,7 +1289,7 @@ export function MathStepSolver() {
                                 handleTokenSelect(token);
                               }}
                               onDoubleClick={(e) => handleDuplicateToken(token, e)}
-                              className={`font-mono font-black px-3.5 py-2.5 rounded-xl border transition-colors cursor-pointer select-none ${
+                              className={`font-mono font-black px-3.5 py-2.5 rounded-box border transition-colors cursor-pointer select-none ${
                                 isSelected
                                   ? "bg-rose-600 text-white border-rose-600 ring-2 ring-rose-300 scale-105 shadow-md"
                                   : token.isTarget
@@ -1307,7 +1307,7 @@ export function MathStepSolver() {
                                 e.stopPropagation();
                                 handleDeleteToken(token.id);
                               }}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition shadow-xs z-20 hover:bg-red-600"
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-box p-1 opacity-0 group-hover:opacity-100 transition shadow-xs z-20 hover:bg-red-600"
                               title="წაშლა"
                             >
                               <Trash2 className="size-3" aria-hidden="true" />
@@ -1319,7 +1319,7 @@ export function MathStepSolver() {
                   </div>
 
                   {selectedTokenId ? (
-                    <div className={`border-hairline bg-paper p-4 space-y-3 ${isFullscreen ? 'border-t shrink-0' : 'rounded-2xl border'}`}>
+                    <div className={`border-hairline bg-paper p-4 space-y-3 ${isFullscreen ? 'border-t shrink-0' : 'rounded-box border'}`}>
                       <div className="flex items-center justify-between">
                         <p className="text-xs font-bold text-ink flex items-center gap-1.5">
                           <Edit3 className="size-3.5 text-navy" aria-hidden="true" />
@@ -1339,27 +1339,27 @@ export function MathStepSolver() {
                           value={customTokenText}
                           onChange={(e) => setCustomTokenText(e.target.value)}
                           onFocus={(e) => e.target.select()}
-                          className="flex-1 rounded-xl border border-hairline bg-white px-3 py-2 text-sm font-mono font-bold text-ink outline-none"
+                          className="flex-1 rounded-box border border-hairline bg-white px-3 py-2 text-sm font-mono font-bold text-ink outline-none"
                           placeholder="შეცვალეთ ტექსტი..."
                           autoFocus
                         />
                         <button
                           type="submit"
-                          className="rounded-xl bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-navy-strong transition"
+                          className="rounded-box bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-navy-strong transition"
                         >
                           განახლება
                         </button>
                         <button
                           type="button"
                           onClick={() => handleToggleTargetToken(selectedTokenId)}
-                          className="rounded-xl border border-hairline bg-white px-4 py-2 text-xs font-bold text-ink hover:bg-paper-deep transition"
+                          className="rounded-box border border-hairline bg-white px-4 py-2 text-xs font-bold text-ink hover:bg-paper-deep transition"
                         >
                           მონიშვნა (Target)
                         </button>
                       </form>
                     </div>
                   ) : (
-                    <div className={`text-center py-6 bg-paper-deep/50 ${isFullscreen ? 'border-t border-hairline shrink-0' : 'rounded-2xl border border-dashed border-hairline'}`}>
+                    <div className={`text-center py-6 bg-paper-deep/50 ${isFullscreen ? 'border-t border-hairline shrink-0' : 'rounded-box border border-dashed border-hairline'}`}>
                       <p className="text-xs text-muted font-medium">
                         👆 დააჭირეთ ზემოთ მოცემული ფორმულის რომელიმე სიმბოლოს, რომ გახსნათ მისი რედაქტორი.
                       </p>
@@ -1375,14 +1375,14 @@ export function MathStepSolver() {
               type="button"
               disabled={isAtVeryStart || isFlying || isManualPlayground}
               onClick={handlePrev}
-              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-muted hover:text-ink hover:bg-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/30 transition disabled:opacity-30"
+              className="inline-flex items-center gap-1.5 rounded-box px-4 py-2.5 text-xs font-bold text-muted hover:text-ink hover:bg-paper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/30 transition disabled:opacity-30"
             >
               <ChevronLeft className="size-4" aria-hidden="true" />
               {phase === 2 ? "საწყისი ფორმა" : "წინა ნაბიჯი"}
             </button>
 
             {isFinalStep && phase === 2 && !isManualPlayground ? (
-              <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 border border-emerald-200 px-5 py-2.5 text-xs font-bold text-emerald-700 shadow-xs">
+              <span className="inline-flex items-center gap-1.5 rounded-box bg-emerald-50 border border-emerald-200 px-5 py-2.5 text-xs font-bold text-emerald-700 shadow-xs">
                 <CheckCircle2 className="size-4" aria-hidden="true" />
                 ამოხსნა დასრულებულია
               </span>
@@ -1391,7 +1391,7 @@ export function MathStepSolver() {
                 type="button"
                 onClick={handleNext}
                 disabled={isFlying || isManualPlayground}
-                className="inline-flex items-center gap-2 rounded-xl bg-navy px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-navy-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 transition disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-box bg-navy px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-navy-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 transition disabled:opacity-50"
               >
                 {isManualPlayground
                   ? "ხელით მართვის რეჟიმი აქტიურია"
