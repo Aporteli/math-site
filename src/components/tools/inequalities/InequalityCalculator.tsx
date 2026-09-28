@@ -15,8 +15,6 @@ import {
   X,
 } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
-import { ToolHeader } from '@/components/ui/ToolHeader';
-import { BackButton } from '@/components/ui/BackButton';
 import type { Dictionary } from '@/i18n/types';
 import { INEQ_EXAMPLES, INEQ_HISTORY_KEY, INEQ_VARIABLES, type IneqHistoryItem, type IneqResult } from './inequalities';
 import { NumberLine } from './NumberLine';
@@ -58,7 +56,7 @@ const TYPE_BADGE: Record<IneqResult['type'], { label: string; className: string 
   },
 };
 
-export function InequalityCalculator({ locale, copy, title, description }: Props) {
+export function InequalityCalculator({ copy }: Props) {
   const [inequality, setInequality] = useState('x^2 - 5x + 6 < 0');
   const [variable, setVariable] = useState('x');
   const [showKeyboard, setShowKeyboard] = useState(false);
@@ -254,14 +252,6 @@ export function InequalityCalculator({ locale, copy, title, description }: Props
 
   return (
     <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
-      <BackButton href={`/${locale}/tools`} />
-      <ToolHeader
-        title={title}
-        description={description}
-        category={copy.eyebrow}
-        icon={<Calculator className="size-4" />}
-      />
-
       <div className="my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         {/* ══════════ LEFT: Input ══════════ */}
         <section

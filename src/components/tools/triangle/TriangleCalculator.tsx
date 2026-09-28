@@ -8,11 +8,8 @@ import {
   RotateCcw,
   History,
   Sparkles,
-  Triangle as TriangleIcon,
 } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
-import { ToolHeader } from '@/components/ui/ToolHeader';
-import { BackButton } from '@/components/ui/BackButton';
 import type { Dictionary } from '@/i18n/types';
 import {
   TRIANGLE_EXAMPLES,
@@ -63,10 +60,7 @@ function fmt(n: number, digits = 4): string {
 }
 
 export function TriangleCalculator({
-  locale,
   copy,
-  title,
-  description,
 }: Props) {
   const [values, setValues] = useState<Record<FieldKey, string>>({
     ...EMPTY,
@@ -188,14 +182,6 @@ export function TriangleCalculator({
 
   return (
     <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
-      <BackButton href={`/${locale}/tools`} />
-      <ToolHeader
-        title={title}
-        description={description}
-        category={copy.eyebrow}
-        icon={<TriangleIcon className="size-4" />}
-      />
-
       <div className="my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         {/* ═════ LEFT: Input ═════ */}
         <section className={panelClass}>

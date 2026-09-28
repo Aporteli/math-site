@@ -21,8 +21,6 @@ import {
 } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 import { RichText } from '@/components/math/RichText';
-import { ToolHeader } from '@/components/ui/ToolHeader';
-import { BackButton } from '@/components/ui/BackButton';
 import type { Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/types';
 import {
@@ -65,7 +63,7 @@ const SYNTAX_HINTS = [
   'ფუნქციები: sin(x), cos(y), exp(x)',
 ];
 
-export function SystemSolver({ locale, copy, title, description }: Props) {
+export function SystemSolver({ copy }: Props) {
   const [size, setSize] = useState<VarCount>(2);
   const [equations, setEquations] = useState<string[]>(DEFAULT_2);
   const [activeMethod, setActiveMethod] = useState<SolveMethod | null>(null);
@@ -240,14 +238,6 @@ export function SystemSolver({ locale, copy, title, description }: Props) {
 
   return (
     <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
-      <BackButton href={`/${locale}/tools`} />
-      <ToolHeader
-        title={title}
-        description={description}
-        category={copy.eyebrow}
-        icon={<Calculator className="size-4" />}
-      />
-
       <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         {/* ══════════ Left: Input ══════════ */}
         <div className="space-y-4">

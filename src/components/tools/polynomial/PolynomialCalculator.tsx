@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
-import { Check, Copy, Delete, Divide, History, Keyboard, RotateCcw, X, Calculator, Sparkles } from 'lucide-react';
+import { Check, Copy, Delete, Divide, History, Keyboard, RotateCcw, X, Sparkles } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 import type { Dictionary } from '@/i18n/types';
 import {
@@ -11,9 +11,6 @@ import {
   type PolynomialHistoryItem,
   type PolyResult,
 } from './polynomial';
-import { ToolHeader } from '@/components/ui/ToolHeader';
-import { BackButton } from '@/components/ui/BackButton';
-
 type Copy = Dictionary['polynomialTool'];
 
 interface Props {
@@ -40,10 +37,7 @@ function applyKey(current: string, key: string): string {
 }
 
 export function PolynomialCalculator({
-  locale,
   copy,
-  title,
-  description,
 }: Props & { title: string; description: string }) {
   const [expression, setExpression] = useState('x^3 - 6x^2 + 11x - 6');
   const [divisor, setDivisor] = useState('x - 1');
@@ -258,13 +252,6 @@ export function PolynomialCalculator({
 
   return (
     <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
-      <BackButton href={`/${locale}/tools`} />
-      <ToolHeader
-        title={title}
-        description={description}
-        category={copy.eyebrow}
-        icon={<Calculator className="size-4" />}
-      />
       <div className="my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         <section
           className="rounded-2xl border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800"

@@ -1,868 +1,607 @@
 import Link from 'next/link';
-import {
-  ArrowRight,
-  BarChart3,
-  BookOpen,
-  Calculator,
-  CheckCircle2,
-  GraduationCap,
-  LineChart,
-  Users,
-  Video,
-} from 'lucide-react';
+import { ArrowRight, ArrowUpRight, BarChart3, BookOpen, Calculator, Video } from 'lucide-react';
 
 import { localePath, type Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/types';
+import { TOOL_SECTIONS, type ToolItemId } from '@/lib/tools';
 
 interface HomePageProps {
   locale: Locale;
   dict: Dictionary;
 }
 
-export default function HomeLandPage({ locale, dict: _dict }: HomePageProps) {
+const FEATURED_TOOLS: ToolItemId[] = [
+  'graphing',
+  'quadratic-equations',
+  'fractions',
+  'systemSolver',
+  'polynomials',
+  'triangle',
+  'unitCircle',
+  'geometry',
+];
+
+const toolsById = new Map(TOOL_SECTIONS.flatMap((section) => section.tools.map((tool) => [tool.id, tool] as const)));
+
+const toolCount = TOOL_SECTIONS.reduce((sum, section) => sum + section.tools.length, 0);
+
+const primaryButton =
+  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-navy px-6 text-sm font-semibold text-white transition-colors hover:bg-navy-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 focus-visible:ring-offset-paper sm:w-auto dark:bg-white dark:text-[#10233f] dark:hover:bg-white/90 dark:focus-visible:ring-white';
+
+const secondaryButton =
+  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-hairline bg-surface px-6 text-sm font-semibold text-ink transition-colors hover:border-navy/40 hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 focus-visible:ring-offset-paper sm:w-auto';
+
+export default function HomeLandPage({ locale, dict }: HomePageProps) {
+  const copy = landingCopy[locale];
+  const featured = FEATURED_TOOLS.flatMap((id) => {
+    const tool = toolsById.get(id);
+    return tool ? [tool] : [];
+  });
+
   return (
-    <main className="overflow-hidden bg-background text-ink antialiased selection:bg-navy/20 selection:text-navy">
-      {/* ─────────────────────────────────────────────
-          HERO
-      ───────────────────────────────────────────── */}
-
-      <section className="relative">
-        <GridPattern id="hero-grid" />
-
-        <div className="mx-auto max-w-7xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24 lg:px-8 lg:pb-32 lg:pt-32">
-          <div className="grid items-center gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
-            {/* Hero copy */}
-
-            <div className="relative z-10 max-w-2xl">
-              <h1 className="max-w-2xl text-[2.7rem] font-semibold leading-[1.04] tracking-[-0.04em] text-ink sm:text-5xl lg:text-[4.5rem]">
-                მათემატიკის სწავლება
-                <span className="block text-body/50">
-                  ერთ სამუშაო სივრცეში.
-                </span>
-              </h1>
-
-              <p className="mt-7 max-w-xl text-base leading-7 text-body/75 sm:text-lg sm:leading-8">
-                შექმენი და მართე დავალებები, იმუშავე მოსწავლეებთან,
-                ჩაატარე ონლაინ გაკვეთილები და გამოიყენე მათემატიკური
-                ხელსაწყოები — ერთი სასწავლო პროცესის ფარგლებში.
-              </p>
-
-              <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
-                <Link
-                  href={localePath(locale, '/signup')}
-                  className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-navy px-7 text-sm font-medium text-white transition-[transform,background-color,box-shadow] hover:bg-navy/90 hover:shadow-lg hover:shadow-navy/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/30 active:scale-[0.98]"
-                >
-                  დაიწყე გამოყენება
-                  <ArrowRight
-                    className="size-4 transition-transform group-hover:translate-x-0.5"
-                    aria-hidden="true"
-                  />
-                </Link>
-
-                <span className="flex items-center justify-center gap-2 text-sm text-body/60 sm:justify-start">
-                  <CheckCircle2
-                    className="size-4 text-brass"
-                    aria-hidden="true"
-                  />
-                  უფასო სატესტო პერიოდი
-                </span>
-              </div>
-            </div>
-
-            {/* Product visual */}
-
-            <div className="relative lg:pl-4">
-              <ProductFlowVisual />
-            </div>
+    <div className="bg-paper text-ink">
+      <section className="mx-auto max-w-6xl px-4 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
+        <div className="max-w-3xl border-l-2 border-brass pl-5 sm:pl-7">
+          <p className="text-sm font-medium text-brass">{copy.heroKicker}</p>
+          <h1 className="mt-3 text-[2.45rem] font-semibold leading-[1.12] tracking-[-0.03em] text-balance text-ink sm:text-6xl sm:leading-[1.08]">
+            {copy.heroTitleA}
+            <span className="mt-1 block text-navy">{copy.heroTitleB}</span>
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-7 text-pretty text-body sm:text-lg sm:leading-8">{copy.heroBody}</p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link href={localePath(locale, '/signup')} className={primaryButton}>
+              {copy.createAccount}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+            <Link href={localePath(locale, '/tools')} className={secondaryButton}>
+              {copy.browseTools}
+            </Link>
           </div>
+          <p className="mt-4 text-sm text-muted">{copy.heroNote}</p>
+        </div>
+
+        <GraphStage locale={locale} copy={copy} />
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <h2 className="max-w-md text-3xl font-semibold tracking-[-0.03em] text-balance text-ink sm:text-4xl">
+            {copy.workspaceTitle}
+          </h2>
+          <p className="max-w-sm text-sm leading-6 text-pretty text-body sm:text-base sm:leading-7">{copy.workspaceBody}</p>
+        </div>
+
+        <div className="mt-8 grid gap-4 lg:grid-cols-5">
+          <TeacherPanel copy={copy} />
+          <StudentPanel copy={copy} />
+          <LivePanel copy={copy} />
         </div>
       </section>
 
-      {/* ─────────────────────────────────────────────
-          PROCESS + WORKSPACES
-          (merged: the 4-step explainer and the teacher/
-          student panels used to repeat the same idea in
-          two separate sections — now told once)
-      ───────────────────────────────────────────── */}
-
-      <section className="border-y border-hairline/70 bg-surface/35">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-32">
-          <SectionHeader
-            eyebrow="ერთი უწყვეტი პროცესი"
-            title="მასწავლებლიდან მოსწავლემდე"
-            description="სამი ნაბიჯი — დავალების შექმნიდან შედეგის ნახვამდე. ორივესთვის, ერთ სივრცეში."
-          />
-
-          <div className="mt-16 lg:mt-20">
-            <Process />
-          </div>
-
-          <div className="mt-16 border-t border-hairline pt-16 lg:mt-24 lg:pt-20">
-            <p className="mb-8 text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-              სამუშაო სივრცე პრაქტიკაში
-            </p>
-
-            <div className="grid gap-10 sm:grid-cols-2 lg:gap-16">
-              <TeacherWorkspace />
-              <StudentWorkspace />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────
-          MATH-NATIVE TOOLS
-      ───────────────────────────────────────────── */}
-
-      <section className="bg-background">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-32">
-          <div className="grid items-center gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
-            <SectionHeader
-              eyebrow="მათემატიკის ხელსაწყოები"
-              title="მათემატიკა პროცესის ნაწილია."
-              description="ალგებრა, გრაფიკები, გეომეტრია და ანალიზის ხელსაწყოები იქ არის, სადაც მათ რეალურად იყენებ — სასწავლო პროცესში."
-              align="left"
-            />
-
-            <MathWorkspace />
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────
-          LIVE LESSONS
-      ───────────────────────────────────────────── */}
-
-      <section className="border-y border-hairline/70 bg-surface/35">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-32">
-          <div className="overflow-hidden rounded-[2rem] border border-hairline/80 bg-navy text-white">
-            <div className="grid lg:grid-cols-[0.8fr_1.2fr]">
-              <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-14">
-                <div className="mb-6 flex size-11 items-center justify-center rounded-xl bg-white/10">
-                  <Video className="size-5" aria-hidden="true" />
-                </div>
-
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/50">
-                  Live სწავლება
-                </p>
-
-                <h2 className="mt-3 max-w-md text-3xl font-semibold tracking-tight sm:text-4xl">
-                  გააგრძელე გაკვეთილი ონლაინ.
-                </h2>
-
-                <p className="mt-5 max-w-md text-sm leading-7 text-white/65 sm:text-base">
-                  ვიდეო ზარები და ინტერაქტიული სამუშაო სივრცე პირდაპირ
-                  იმავე პლატფორმაში, სადაც დანარჩენი სასწავლო პროცესიც
-                  მიმდინარეობს.
-                </p>
-              </div>
-
-              <LiveLessonPreview />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────
-          FINAL CTA
-      ───────────────────────────────────────────── */}
-
-      <section className="bg-background">
-        <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-28 lg:px-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brass">
-            დაიწყე აქედან
-          </p>
-
-          <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-            ერთი სივრცე მათემატიკის სწავლებისთვის.
+      <section className="border-t border-hairline">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+          <p className="text-sm font-medium text-brass">{copy.processKicker}</p>
+          <h2 className="mt-2 max-w-xl text-3xl font-semibold tracking-[-0.03em] text-balance text-ink sm:text-4xl">
+            {copy.processTitle}
           </h2>
 
-          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-body/70">
-            შექმენი ანგარიში და მოაწესრიგე დავალებები, მოსწავლეები და
-            გაკვეთილები ერთ სამუშაო პროცესში — დღესვე, უფასოდ.
-          </p>
-
-          <Link
-            href={localePath(locale, '/signup')}
-            className="group mt-9 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-navy px-7 text-sm font-medium text-white transition-[transform,background-color,box-shadow] hover:bg-navy/90 hover:shadow-lg hover:shadow-navy/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/30 active:scale-[0.98]"
-          >
-            ანგარიშის შექმნა
-            <ArrowRight
-              className="size-4 transition-transform group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
-          </Link>
+          <ol className="mt-8 grid gap-px overflow-hidden rounded-[1.75rem] border border-hairline bg-hairline md:grid-cols-3">
+            {copy.steps.map((step, index) => {
+              const Icon = [BookOpen, Calculator, BarChart3][index] ?? BookOpen;
+              return (
+                <li key={step.title} className="bg-surface px-6 py-7 sm:px-7 sm:py-8">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-sm text-brass">0{index + 1}</span>
+                    <Icon className="size-5 text-navy" aria-hidden="true" />
+                  </div>
+                  <h3 className="mt-8 text-xl font-semibold tracking-tight text-ink">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-pretty text-body">{step.body}</p>
+                </li>
+              );
+            })}
+          </ol>
         </div>
       </section>
-    </main>
+
+      <section className="border-t border-hairline">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-brass">{copy.toolsKicker}</p>
+              <h2 className="mt-2 flex flex-wrap items-center gap-3 text-3xl font-semibold tracking-[-0.03em] text-balance text-ink sm:text-4xl">
+                {copy.toolsTitle}
+                <span className="rounded-full bg-navy-tint px-2.5 py-1 font-mono text-sm font-semibold text-navy">
+                  {toolCount}
+                </span>
+              </h2>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-pretty text-body sm:text-base sm:leading-7">{copy.toolsBody}</p>
+            </div>
+            <Link
+              href={localePath(locale, '/tools')}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
+            >
+              {copy.browseTools}
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+
+          <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {featured.map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <li key={tool.id}>
+                  <Link
+                    href={localePath(locale, tool.href)}
+                    className="group flex h-full min-h-36 flex-col justify-between rounded-2xl border border-hairline bg-surface p-5 transition-colors hover:border-navy/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
+                  >
+                    <span className="flex size-11 items-center justify-center rounded-2xl bg-navy-tint text-navy transition-colors group-hover:bg-navy/15">
+                      <Icon className="size-5" aria-hidden="true" />
+                    </span>
+                    <span className="mt-6 flex items-end justify-between gap-3">
+                      <span className="line-clamp-2 text-sm font-semibold leading-5 text-ink">
+                        {dict.toolsPage.items[tool.id].title}
+                      </span>
+                      <ArrowUpRight
+                        className="size-4 shrink-0 text-muted transition-colors group-hover:text-navy"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+
+      <section className="border-t border-hairline">
+        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+          <div className="overflow-hidden rounded-[1.75rem] bg-[#0c2340] text-white">
+            <div className="h-1 bg-brass" aria-hidden="true" />
+            <div className="flex flex-col gap-8 px-6 py-10 sm:px-10 sm:py-12 lg:flex-row lg:items-end lg:justify-between">
+              <div className="max-w-xl">
+                <h2 className="text-3xl font-semibold tracking-[-0.03em] text-balance sm:text-4xl">{copy.ctaTitle}</h2>
+                <p className="mt-4 text-base leading-7 text-pretty text-white/75">{copy.ctaBody}</p>
+              </div>
+              <Link
+                href={localePath(locale, '/signup')}
+                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-[#0c2340] transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c2340]"
+              >
+                {copy.createAccount}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   HERO PRODUCT VISUAL
-───────────────────────────────────────────── */
-
-function ProductFlowVisual() {
+function GraphStage({ locale, copy }: { locale: Locale; copy: LandingCopy }) {
   return (
-    <div className="relative">
-      <div className="absolute -inset-8 -z-10 bg-[radial-gradient(circle_at_50%_40%,rgba(20,40,80,0.08),transparent_65%)]" />
-
-      <div className="relative overflow-hidden rounded-[1.75rem] border border-hairline bg-surface shadow-[0_24px_70px_rgba(20,30,50,0.08)]">
-        <div className="flex items-center justify-between border-b border-hairline/70 px-5 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-navy/5 text-navy">
-              <BookOpen className="size-3.5" />
-            </div>
-
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
-                დავალება
-              </p>
-              <p className="text-xs font-semibold text-ink">
-                კვადრატული განტოლებები
-              </p>
-            </div>
-          </div>
-
-          <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-semibold text-emerald-700">
-            აქტიური
-          </span>
+    <div className="mt-12 overflow-hidden rounded-[1.75rem] border border-hairline bg-surface shadow-[0_24px_50px_-28px_rgba(16,40,80,0.35)] dark:shadow-none sm:mt-16">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-hairline px-5 py-4 sm:px-7">
+        <div>
+          <p className="text-sm text-muted">{copy.graphCaption}</p>
+          <p className="mt-1 font-mono text-lg font-medium tracking-tight text-ink sm:text-xl">f(x) = x² − 4x + 3</p>
         </div>
+        <Link
+          href={localePath(locale, '/tools/graphing')}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
+        >
+          {copy.openGraph}
+          <ArrowUpRight className="size-4" aria-hidden="true" />
+        </Link>
+      </div>
 
-        <div className="grid gap-4 p-5 sm:grid-cols-[1fr_0.8fr]">
-          <div className="rounded-xl border border-hairline bg-background p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">
-                მოსწავლეები
-              </span>
+      <QuadraticPlot />
 
-              <Users className="size-3.5 text-muted" />
-            </div>
-
-            <div className="mt-4 space-y-2">
-              <MiniStudentRow
-                name="ანა ბერიძე"
-                status="დასრულებული"
-                completed
-              />
-              <MiniStudentRow name="ლუკა გიორგაძე" status="მუშავდება" />
-              <MiniStudentRow name="ნინო მაისურაძე" status="არ დაუწყია" />
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-navy p-4 text-white">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-white/50">
-                მოსწავლის სივრცე
-              </span>
-
-              <GraduationCap className="size-4 text-white/60" />
-            </div>
-
-            <p className="mt-8 text-xs font-medium text-white/60">
-              მიმდინარე დავალება
-            </p>
-
-            <p className="mt-1 text-sm font-semibold">
-              კვადრატული განტოლებები
-            </p>
-
-            <div className="mt-5 flex items-center gap-2">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full w-[40%] rounded-full bg-white" />
-              </div>
-
-              <span className="text-[10px] font-medium text-white/50">
-                40%
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-hairline/70 bg-paper-deep/40 px-5 py-4">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <ProductCapability
-              icon={Calculator}
-              label="ალგებრა"
-            />
-            <ProductCapability
-              icon={LineChart}
-              label="გრაფიკები"
-            />
-            <ProductCapability
-              icon={Video}
-              label="Live გაკვეთილი"
-            />
-          </div>
-        </div>
+      <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-hairline px-5 py-3.5 text-sm text-body sm:px-7">
+        <span className="inline-flex items-center gap-2">
+          <span className="size-2 rounded-full bg-navy" aria-hidden="true" />
+          {copy.rootsLabel}
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <span className="size-2 rounded-full bg-brass" aria-hidden="true" />
+          {copy.vertexLabel}
+        </span>
       </div>
     </div>
   );
 }
 
-/* ─────────────────────────────────────────────
-   PROCESS
-   Three real moments in the workflow — not four.
-   Auto-syncing an assignment to a student isn't a
-   step either person takes, so it isn't numbered
-   as one; it's described as the outcome of step 1.
-───────────────────────────────────────────── */
+function TeacherPanel({ copy }: { copy: LandingCopy }) {
+  return (
+    <article className="flex flex-col rounded-[1.75rem] border border-hairline bg-surface p-6 sm:p-8 lg:col-span-3">
+      <p className="text-sm font-medium text-brass">{copy.teacherKicker}</p>
+      <h3 className="mt-3 text-2xl font-semibold tracking-tight text-ink">{copy.teacherTitle}</h3>
+      <p className="mt-3 max-w-md text-sm leading-6 text-pretty text-body">{copy.teacherBody}</p>
 
-function Process() {
-  const steps = [
-    {
-      number: '01',
-      title: 'შექმენი',
-      description:
-        'მოამზადე დავალება ერთხელ — ის ავტომატურად ჩნდება მოსწავლის სამუშაო სივრცეში.',
-      icon: BookOpen,
-    },
-    {
-      number: '02',
-      title: 'იმუშავე',
-      description:
-        'მოსწავლე ხსნის დავალებას და საჭიროებისას იყენებს ალგებრის, გრაფიკების თუ გეომეტრიის ხელსაწყოებს იმავე სივრცეში.',
-      icon: Calculator,
-    },
-    {
-      number: '03',
-      title: 'გააკონტროლე',
-      description:
-        'შედეგი მაშინვე გამოჩნდება შენთან — ნახე, ვინ დაასრულა და ვის სჭირდება დახმარება.',
-      icon: BarChart3,
-    },
+      <div className="mt-8 flex items-center justify-between gap-3 border-b border-hairline pb-4">
+        <div>
+          <p className="text-xs text-muted">{copy.assignmentLabel}</p>
+          <p className="mt-1 text-sm font-semibold text-ink">{copy.assignment}</p>
+        </div>
+        <span className="rounded-full bg-win-tint px-2.5 py-1 text-xs font-semibold text-win">{copy.active}</span>
+      </div>
+
+      <ul className="mt-2">
+        {copy.students.map((student) => (
+          <li key={student.name} className="grid grid-cols-[2.25rem_minmax(0,1fr)_2.5rem] items-center gap-3 border-b border-hairline/80 py-3.5 last:border-b-0">
+            <span className="flex size-9 items-center justify-center rounded-full bg-navy-tint text-xs font-semibold text-navy">
+              {student.name.charAt(0)}
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-ink">{student.name}</p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-paper-deep">
+                <div
+                  className={`h-full rounded-full ${student.progress === 100 ? 'bg-win' : 'bg-navy'}`}
+                  style={{ width: `${student.progress}%` }}
+                />
+              </div>
+            </div>
+            <span className="text-right font-mono text-xs text-muted">{student.progress}%</span>
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
+}
+
+function StudentPanel({ copy }: { copy: LandingCopy }) {
+  return (
+    <article className="flex flex-col rounded-[1.75rem] border border-brass/30 bg-brass-tint p-6 sm:p-8 lg:col-span-2">
+      <p className="text-sm font-medium text-brass-strong">{copy.studentKicker}</p>
+      <h3 className="mt-3 text-2xl font-semibold tracking-tight text-ink">{copy.studentTitle}</h3>
+      <p className="mt-3 text-sm leading-6 text-pretty text-body">{copy.studentBody}</p>
+
+      <div className="mt-auto pt-8">
+        <p className="text-xs text-muted">{copy.current}</p>
+        <p className="mt-1 text-base font-semibold text-ink">{copy.assignment}</p>
+        <p className="mt-5 font-mono text-5xl font-semibold tracking-tight text-navy">40%</p>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface/80">
+          <div className="h-full w-[40%] rounded-full bg-navy" />
+        </div>
+        <div className="mt-6 border-t border-brass/25 pt-4">
+          <p className="text-xs text-muted">{copy.next}</p>
+          <p className="mt-1 text-sm font-medium text-ink">{copy.nextLesson}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function LivePanel({ copy }: { copy: LandingCopy }) {
+  return (
+    <article className="overflow-hidden rounded-[1.75rem] bg-[#0c2340] text-white ring-1 ring-white/10 lg:col-span-5">
+      <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
+          <div className="flex items-center gap-2 text-sm font-medium text-brass">
+            <span className="relative flex size-2" aria-hidden="true">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-brass opacity-60 motion-reduce:hidden" />
+              <span className="relative size-2 rounded-full bg-brass" />
+            </span>
+            {copy.liveKicker}
+          </div>
+          <h3 className="mt-4 max-w-md text-2xl font-semibold tracking-tight text-balance sm:text-3xl">{copy.liveTitle}</h3>
+          <p className="mt-4 max-w-md text-sm leading-6 text-pretty text-white/70 sm:text-base sm:leading-7">{copy.liveBody}</p>
+          <div className="mt-8 flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium">
+              <Video className="size-3.5" aria-hidden="true" />
+              {copy.teacherPresence}
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium">
+              {copy.studentPresence}
+            </span>
+          </div>
+        </div>
+
+        <div className="border-t border-white/10 p-6 sm:p-8 lg:border-t-0 lg:border-l lg:p-10">
+          <p className="text-xs text-white/50">{copy.liveNow}</p>
+          <p className="mt-1 text-sm font-semibold">{copy.nextLesson}</p>
+          <BoardSketch />
+          <p className="text-xs text-white/50">{copy.liveMeta}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function BoardSketch() {
+  return (
+    <svg viewBox="0 0 360 200" className="my-4 block h-44 w-full sm:h-52" aria-hidden="true">
+      <rect x="0.5" y="0.5" width="359" height="199" rx="16" fill="white" fillOpacity="0.04" stroke="white" strokeOpacity="0.12" />
+      <path d="M70 158 L180 36 L292 158 Z" fill="none" stroke="white" strokeOpacity="0.85" strokeWidth="1.75" />
+      <path d="M180 36 L180 158" fill="none" stroke="#e2a462" strokeWidth="1.25" strokeDasharray="4 4" />
+      <path d="M180 158 L210 158 L210 128" fill="none" stroke="white" strokeOpacity="0.45" strokeWidth="1.25" />
+      <circle cx="180" cy="36" r="3.5" fill="#e2a462" />
+      <circle cx="70" cy="158" r="3" fill="white" />
+      <circle cx="292" cy="158" r="3" fill="white" />
+      <text x="58" y="176" fill="white" fillOpacity="0.55" fontSize="12">
+        B
+      </text>
+      <text x="174" y="26" fill="#e2a462" fontSize="12">
+        A
+      </text>
+      <text x="298" y="176" fill="white" fillOpacity="0.55" fontSize="12">
+        C
+      </text>
+    </svg>
+  );
+}
+
+const CURVE =
+  'M96,61.3L114.7,92L133.3,120L152,145.3L170.7,168L189.3,188L208,205.3L226.7,220L245.3,232L264,241.3L282.7,248L301.3,252L320,253.3L338.7,252L357.3,248L376,241.3L394.7,232L413.3,220L432,205.3L450.7,188L469.3,168L488,145.3L506.7,120L525.3,92L544,61.3';
+
+const NEGATIVE_REGION =
+  'M226.7,220L245.3,232L264,241.3L282.7,248L301.3,252L320,253.3L338.7,252L357.3,248L376,241.3L394.7,232L413.3,220Z';
+
+function QuadraticPlot() {
+  const vertical = [133.3, 226.7, 320, 413.3, 506.7];
+  const horizontal = [120, 153.3, 186.7, 220, 253.3];
+  const ticks = [
+    { x: 133.3, label: '0' },
+    { x: 226.7, label: '1' },
+    { x: 320, label: '2' },
+    { x: 413.3, label: '3' },
+    { x: 506.7, label: '4' },
   ];
 
   return (
-    <div className="grid gap-0 lg:grid-cols-3">
-      {steps.map((step, index) => {
-        const Icon = step.icon;
-        const isLast = index === steps.length - 1;
-
-        return (
-          <div
-            key={step.number}
-            className="relative border-l border-hairline px-6 pb-10 first:border-l-0 first:pl-0 last:pb-0 lg:min-h-[220px] lg:border-l lg:px-8 lg:pb-0 lg:first:border-l lg:first:pl-8 lg:last:pr-0"
-          >
-            {!isLast && (
-              <div className="absolute right-0 top-3 hidden h-px w-8 translate-x-1/2 bg-hairline lg:block" />
-            )}
-
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-[11px] font-medium text-brass">
-                {step.number}
-              </span>
-
-              <div className="flex size-8 items-center justify-center rounded-lg bg-navy/5 text-navy">
-                <Icon className="size-4" aria-hidden="true" />
-              </div>
-            </div>
-
-            <h3 className="mt-6 text-xl font-semibold tracking-tight text-ink">
-              {step.title}
-            </h3>
-
-            <p className="mt-3 max-w-xs text-sm leading-6 text-body/65">
-              {step.description}
-            </p>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   WORKSPACES
-   (illustration for the Process above — not a
-   separate claim, so no section header of its own)
-───────────────────────────────────────────── */
-
-function TeacherWorkspace() {
-  return (
-    <div>
-      <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-navy/5 text-navy">
-          <Users className="size-4" />
-        </div>
-
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-            მასწავლებელი
-          </p>
-          <h3 className="mt-0.5 text-lg font-semibold text-ink">
-            მართე სწავლება
-          </h3>
-        </div>
-      </div>
-
-      <div className="mt-6 space-y-2">
-        <WorkspaceItem
-          label="დავალებები"
-          value="3 აქტიური"
-          active
-        />
-        <WorkspaceItem
-          label="მოსწავლეები"
-          value="24"
-        />
-        <WorkspaceItem
-          label="პროგრესი"
-          value="ამ კვირის შედეგები"
-        />
-      </div>
-    </div>
-  );
-}
-
-function StudentWorkspace() {
-  return (
-    <div className="border-t border-hairline pt-8 sm:border-t-0 sm:border-l sm:pl-10">
-      <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-brass/10 text-brass">
-          <GraduationCap className="size-4" />
-        </div>
-
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-            მოსწავლე
-          </p>
-          <h3 className="mt-0.5 text-lg font-semibold text-ink">
-            იმუშავე მშვიდად
-          </h3>
-        </div>
-      </div>
-
-      <div className="mt-6 space-y-2">
-        <WorkspaceItem
-          label="მიმდინარე დავალება"
-          value="კვადრატული განტოლებები"
-          active
-        />
-        <WorkspaceItem
-          label="შემდეგი გაკვეთილი"
-          value="გეომეტრია"
-        />
-        <WorkspaceItem
-          label="პროგრესი"
-          value="40% დასრულებული"
-        />
-      </div>
-    </div>
-  );
-}
-
-function WorkspaceItem({
-  label,
-  value,
-  active = false,
-}: {
-  label: string;
-  value: string;
-  active?: boolean;
-}) {
-  return (
-    <div
-      className={`flex items-center justify-between gap-4 border-b border-hairline/60 py-3 ${
-        active ? 'text-ink' : 'text-body/70'
-      }`}
-    >
-      <span className="text-xs font-medium">{label}</span>
-
-      <span className="max-w-[58%] text-right text-xs text-body/60">
-        {value}
-      </span>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   MATH WORKSPACE
-───────────────────────────────────────────── */
-
-function MathWorkspace() {
-  return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-hairline bg-surface shadow-sm">
-      <div className="flex items-center justify-between border-b border-hairline/70 px-5 py-4">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
-            გრაფიკული კალკულატორი
-          </p>
-
-          <p className="mt-1 font-mono text-sm font-medium text-ink">
-            f(x) = x² − 4x + 3
-          </p>
-        </div>
-
-        <div className="flex size-8 items-center justify-center rounded-lg bg-navy/5 text-navy">
-          <LineChart className="size-4" />
-        </div>
-      </div>
-
-      <div className="p-4 sm:p-6">
-        <div className="overflow-hidden rounded-xl border border-hairline bg-white">
-          <GraphVisual />
-        </div>
-      </div>
-
-      {/*
-        Previously four tab-styled buttons with no onClick — looked
-        interactive, wasn't. Replaced with a plain capability list,
-        matching the honest, non-clickable style used in the hero
-        visual's capability row. Graphing is already demonstrated
-        above, so it isn't repeated here.
-      */}
-      <div className="border-t border-hairline/70 bg-paper-deep/40 px-5 py-4">
-        <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-muted">
-          ასევე შეიცავს
-        </p>
-
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <ProductCapability
-            icon={Calculator}
-            label="ალგებრა"
-          />
-          <ProductCapability
-            icon={BookOpen}
-            label="გეომეტრია"
-          />
-          <ProductCapability
-            icon={BarChart3}
-            label="ანალიზი"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   LIVE LESSON
-───────────────────────────────────────────── */
-
-function LiveLessonPreview() {
-  return (
-    <div className="relative min-h-[320px] border-t border-white/10 bg-[#111827] p-5 sm:p-7 lg:min-h-full lg:border-l lg:border-t-0">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.08),transparent_35%)]" />
-
-      <div className="relative h-full rounded-2xl border border-white/10 bg-white/[0.035] p-4 backdrop-blur-sm sm:p-5">
-        <div className="border-b border-white/10 pb-4">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-            ონლაინ გაკვეთილი
-          </p>
-          <p className="mt-1 text-sm font-medium text-white/90">
-            გეომეტრია · სამკუთხედები
-          </p>
-        </div>
-
-        <div className="mt-5 grid grid-cols-[1fr_auto] gap-4">
-          <div className="rounded-xl border border-white/10 bg-white/[0.025] p-4">
-            <div className="flex h-40 items-center justify-center">
-              <svg
-                viewBox="0 0 240 150"
-                className="h-full w-full max-w-[240px]"
-                aria-hidden="true"
-              >
-                <path
-                  d="M40 120 L120 25 L205 120 Z"
-                  fill="none"
-                  stroke="currentColor"
-                  className="text-white/60"
-                  strokeWidth="2"
-                />
-
-                <path
-                  d="M120 25 L120 120"
-                  fill="none"
-                  stroke="currentColor"
-                  className="text-white/30"
-                  strokeWidth="1"
-                  strokeDasharray="4 4"
-                />
-
-                <circle
-                  cx="120"
-                  cy="25"
-                  r="3"
-                  className="fill-white/80"
-                />
-              </svg>
-            </div>
-          </div>
-
-          <div className="hidden w-28 space-y-2 sm:block">
-            <div className="aspect-video rounded-lg border border-white/10 bg-white/5" />
-            <div className="aspect-video rounded-lg border border-white/10 bg-white/5" />
-          </div>
-        </div>
-
-        <div className="mt-4 text-[10px] text-white/40">
-          ვიდეო ზარი და ინტერაქტიული დაფა ერთ ეკრანზე
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   SMALL UI
-───────────────────────────────────────────── */
-
-function MiniStudentRow({
-  name,
-  status,
-  completed = false,
-}: {
-  name: string;
-  status: string;
-  completed?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-2 rounded-lg bg-paper-deep/50 px-2.5 py-2">
-      <div className="flex min-w-0 items-center gap-2">
-        <div
-          className={`flex size-5 shrink-0 items-center justify-center rounded-full text-[9px] font-medium ${
-            completed
-              ? 'bg-emerald-500/10 text-emerald-600'
-              : 'bg-navy/5 text-navy'
-          }`}
-        >
-          {completed ? (
-            <CheckCircle2 className="size-3" aria-hidden="true" />
-          ) : (
-            name.charAt(0)
-          )}
-        </div>
-
-        <span className="truncate text-[10px] font-medium text-ink">
-          {name}
-        </span>
-      </div>
-
-      <span
-        className={`shrink-0 text-[9px] font-medium ${
-          completed ? 'text-emerald-700' : 'text-muted'
-        }`}
-      >
-        {status}
-      </span>
-    </div>
-  );
-}
-
-function ProductCapability({
-  icon: Icon,
-  label,
-}: {
-  icon: typeof Calculator;
-  label: string;
-}) {
-  return (
-    <div className="flex items-center gap-2 text-[10px] font-medium text-body/65">
-      <Icon className="size-3.5 text-muted" aria-hidden="true" />
-      {label}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   GRAPH
-───────────────────────────────────────────── */
-
-function GraphVisual() {
-  return (
-    <svg
-      viewBox="0 0 440 260"
-      className="block w-full"
-      aria-hidden="true"
-    >
-      <g
-        stroke="currentColor"
-        className="text-hairline/70"
-        strokeWidth="1"
-      >
-        {[50, 111.7, 173.3, 235, 296.7, 358.3, 419].map((x) => (
-          <line
-            key={`vertical-${x}`}
-            x1={x}
-            y1={0}
-            x2={x}
-            y2={260}
-          />
+    <svg viewBox="0 0 640 340" className="block w-full" aria-hidden="true">
+      <g stroke="currentColor" className="text-hairline" strokeWidth="1">
+        {vertical.map((x) => (
+          <line key={`v-${x}`} x1={x} y1={24} x2={x} y2={286} />
         ))}
-
-        {[20, 70, 120, 170, 220].map((y) => (
-          <line
-            key={`horizontal-${y}`}
-            x1={50}
-            y1={y}
-            x2={419}
-            y2={y}
-          />
+        {horizontal.map((y) => (
+          <line key={`h-${y}`} x1={72} y1={y} x2={568} y2={y} />
         ))}
       </g>
-
-      <g
-        stroke="currentColor"
-        className="text-muted/40"
-        strokeWidth="1.5"
-      >
-        <line x1={50} y1={170} x2={419} y2={170} />
-        <line x1={111.7} y1={0} x2={111.7} y2={260} />
+      <g stroke="currentColor" className="text-muted/50" strokeWidth="1.25">
+        <line x1={72} y1={220} x2={568} y2={220} />
+        <line x1={133.3} y1={24} x2={133.3} y2={286} />
       </g>
-
-      <path
-        d="M80.8,0 Q235,370 389.2,0"
-        fill="none"
-        stroke="currentColor"
-        className="text-navy"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-
-      <circle
-        cx={173.3}
-        cy={170}
-        r={4.5}
-        className="fill-white stroke-navy"
-        strokeWidth="2"
-      />
-
-      <circle
-        cx={296.7}
-        cy={170}
-        r={4.5}
-        className="fill-white stroke-navy"
-        strokeWidth="2"
-      />
-
-      <text
-        x={173.3}
-        y={194}
-        textAnchor="middle"
-        className="fill-muted text-[11px] font-medium"
-      >
-        x₁=1
-      </text>
-
-      <text
-        x={296.7}
-        y={194}
-        textAnchor="middle"
-        className="fill-muted text-[11px] font-medium"
-      >
-        x₂=3
-      </text>
-
-      <circle
-        cx={235}
-        cy={175}
-        r={4.5}
-        className="fill-brass"
-      />
-
-      <text
-        x={235}
-        y={218}
-        textAnchor="middle"
-        className="fill-ink text-[11px] font-medium"
-      >
-        Min (2, −1)
-      </text>
+      <path d={NEGATIVE_REGION} className="fill-navy/15" />
+      <path d={CURVE} fill="none" className="stroke-navy" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={226.7} cy={220} r={5} className="fill-surface stroke-navy" strokeWidth="2" />
+      <circle cx={413.3} cy={220} r={5} className="fill-surface stroke-navy" strokeWidth="2" />
+      <circle cx={320} cy={253.3} r={5} className="fill-brass" />
+      {ticks.map((tick) => (
+        <text key={tick.label} x={tick.x} y={312} textAnchor="middle" className="fill-muted text-[13px]">
+          {tick.label}
+        </text>
+      ))}
     </svg>
   );
 }
 
-/* ─────────────────────────────────────────────
-   SECTION HEADER
-───────────────────────────────────────────── */
+type LandingCopy = {
+  heroKicker: string;
+  heroTitleA: string;
+  heroTitleB: string;
+  heroBody: string;
+  heroNote: string;
+  createAccount: string;
+  browseTools: string;
+  graphCaption: string;
+  openGraph: string;
+  rootsLabel: string;
+  vertexLabel: string;
+  workspaceTitle: string;
+  workspaceBody: string;
+  teacherKicker: string;
+  teacherTitle: string;
+  teacherBody: string;
+  assignmentLabel: string;
+  assignment: string;
+  active: string;
+  students: { name: string; progress: number }[];
+  studentKicker: string;
+  studentTitle: string;
+  studentBody: string;
+  current: string;
+  next: string;
+  nextLesson: string;
+  liveKicker: string;
+  liveTitle: string;
+  liveBody: string;
+  liveNow: string;
+  liveMeta: string;
+  teacherPresence: string;
+  studentPresence: string;
+  processKicker: string;
+  processTitle: string;
+  steps: { title: string; body: string }[];
+  toolsKicker: string;
+  toolsTitle: string;
+  toolsBody: string;
+  ctaTitle: string;
+  ctaBody: string;
+};
 
-interface SectionHeaderProps {
-  eyebrow?: string;
-  title: string;
-  description?: string;
-  align?: 'left' | 'center';
-}
-
-function SectionHeader({
-  eyebrow,
-  title,
-  description,
-  align = 'center',
-}: SectionHeaderProps) {
-  const centered = align === 'center';
-
-  return (
-    <div
-      className={`flex flex-col ${
-        centered
-          ? 'mx-auto max-w-2xl items-center text-center'
-          : 'items-start text-left'
-      }`}
-    >
-      {eyebrow && (
-        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brass">
-          {eyebrow}
-        </span>
-      )}
-
-      <h2 className="mt-3 text-3xl font-semibold tracking-[-0.025em] text-ink sm:text-4xl">
-        {title}
-      </h2>
-
-      {description && (
-        <p
-          className={`mt-4 text-base leading-7 text-body/70 ${
-            centered ? 'max-w-2xl' : 'max-w-xl'
-          }`}
-        >
-          {description}
-        </p>
-      )}
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────
-   GRID
-───────────────────────────────────────────── */
-
-function GridPattern({
-  id,
-  className = '',
-}: {
-  id: string;
-  className?: string;
-}) {
-  return (
-    <svg
-      aria-hidden="true"
-      className={`pointer-events-none absolute inset-0 -z-10 h-full w-full ${className}`}
-      style={{
-        maskImage:
-          'radial-gradient(ellipse 70% 60% at 50% 20%, black 0%, transparent 78%)',
-        WebkitMaskImage:
-          'radial-gradient(ellipse 70% 60% at 50% 20%, black 0%, transparent 78%)',
-      }}
-    >
-      <defs>
-        <pattern
-          id={id}
-          width="32"
-          height="32"
-          patternUnits="userSpaceOnUse"
-        >
-          <path
-            d="M0 32V.5H32"
-            fill="none"
-            stroke="currentColor"
-            className="text-hairline/50"
-            strokeWidth="1"
-          />
-        </pattern>
-      </defs>
-
-      <rect width="100%" height="100%" fill={`url(#${id})`} />
-    </svg>
-  );
-}
+const landingCopy: Record<Locale, LandingCopy> = {
+  ka: {
+    heroKicker: 'MathLab',
+    heroTitleA: 'მათემატიკის სწავლება',
+    heroTitleB: 'ერთ სამუშაო სივრცეში.',
+    heroBody:
+      'შექმენი დავალება, შეხვდი კლასს პირდაპირ ეთერში და გახსენი კალკულატორი იმ გვერდზე, სადაც ამოცანა იხსნება.',
+    heroNote: 'კალკულატორები ანგარიშის გარეშეც იხსნება.',
+    createAccount: 'ანგარიშის შექმნა',
+    browseTools: 'ხელსაწყოები',
+    graphCaption: 'კვადრატული ფუნქცია',
+    openGraph: 'გრაფიკის გახსნა',
+    rootsLabel: 'ფესვები x = 1 და x = 3',
+    vertexLabel: 'წვერო (2, −1)',
+    workspaceTitle: 'ორი მხარე, ერთი გაკვეთილი',
+    workspaceBody: 'მასწავლებელი ხედავს ჯგუფს. მოსწავლე ხედავს თავის დავალებას. ონლაინ გაკვეთილი იქვე რჩება.',
+    teacherKicker: 'მასწავლებელი',
+    teacherTitle: 'მთელი ჯგუფი ერთ ხედში',
+    teacherBody: 'დავალება ერთხელ იქმნება და მოსწავლესთან თვითონ ჩნდება. პროგრესი გიჩვენებს, ვის სჭირდება შენი დრო.',
+    assignmentLabel: 'დავალება',
+    assignment: 'კვადრატული განტოლებები',
+    active: 'აქტიური',
+    students: [
+      { name: 'ანა ბერიძე', progress: 100 },
+      { name: 'ლუკა გიორგაძე', progress: 40 },
+      { name: 'ნინო მაისურაძე', progress: 0 },
+    ],
+    studentKicker: 'მოსწავლე',
+    studentTitle: 'ერთი დავალება, მშვიდი ადგილი',
+    studentBody: 'მოსწავლე ხედავს, რა უნდა გააკეთოს, რამდენი დარჩა და რომელი გაკვეთილია შემდეგი.',
+    current: 'მიმდინარე',
+    next: 'შემდეგი გაკვეთილი',
+    nextLesson: 'გეომეტრია · სამკუთხედები',
+    liveKicker: 'პირდაპირი გაკვეთილი',
+    liveTitle: 'გააგრძელე გაკვეთილი ონლაინ, იმავე სივრცეში',
+    liveBody: 'ვიდეო და სამუშაო დაფა დგას დავალებებთან და ხელსაწყოებთან ერთად, ერთ ეკრანზე.',
+    liveNow: 'მიმდინარე გაკვეთილი',
+    liveMeta: 'დაფა და ზარი ერთ ეკრანზე',
+    teacherPresence: 'მასწავლებელი',
+    studentPresence: 'მოსწავლე',
+    processKicker: 'როგორ მუშაობს',
+    processTitle: 'სამი ნაბიჯი. ერთი პროცესი.',
+    steps: [
+      {
+        title: 'შექმენი',
+        body: 'მოამზადე დავალება ერთხელ. ის თვითონ ჩნდება მოსწავლის სამუშაო სივრცეში.',
+      },
+      {
+        title: 'იმუშავე',
+        body: 'ამოცანის გვერდით იხსნება გრაფიკი, ალგებრა ან გეომეტრია — იმავე გვერდზე.',
+      },
+      {
+        title: 'შეამოწმე',
+        body: 'შედეგი მაშინვე ბრუნდება: ვინ დაასრულა და ვის სჭირდება დახმარება.',
+      },
+    ],
+    toolsKicker: 'კატალოგი',
+    toolsTitle: 'ხელსაწყოები, რომლებიც უკვე მუშაობს',
+    toolsBody: 'გახსენი გრაფიკი, განტოლება ან გეომეტრია პირდაპირ აქედან. სრულ კატალოგში კიდევ უფრო მეტია.',
+    ctaTitle: 'ერთი სივრცე მათემატიკის სწავლებისთვის.',
+    ctaBody: 'შექმენი ანგარიში და მოაწესრიგე დავალებები, მოსწავლეები და გაკვეთილები ერთ პროცესში.',
+  },
+  en: {
+    heroKicker: 'MathLab',
+    heroTitleA: 'Teach mathematics',
+    heroTitleB: 'in one workspace.',
+    heroBody:
+      'Prepare an assignment, meet the class live, and open a calculator on the same page where the problem is solved.',
+    heroNote: 'Calculators open without an account.',
+    createAccount: 'Create an account',
+    browseTools: 'Tools',
+    graphCaption: 'Quadratic function',
+    openGraph: 'Open the grapher',
+    rootsLabel: 'Roots at x = 1 and x = 3',
+    vertexLabel: 'Vertex (2, −1)',
+    workspaceTitle: 'Two sides of one lesson',
+    workspaceBody: 'The teacher sees the class. The student sees their assignment. The live lesson stays in the same place.',
+    teacherKicker: 'Teacher',
+    teacherTitle: 'The whole class in one view',
+    teacherBody: 'An assignment is created once and appears in the student’s workspace. Progress shows who needs your time.',
+    assignmentLabel: 'Assignment',
+    assignment: 'Quadratic equations',
+    active: 'Active',
+    students: [
+      { name: 'Ana Beridze', progress: 100 },
+      { name: 'Luka Giorgadze', progress: 40 },
+      { name: 'Nino Maisuradze', progress: 0 },
+    ],
+    studentKicker: 'Student',
+    studentTitle: 'One assignment, a quiet place',
+    studentBody: 'Students see what to do, how far along they are, and which lesson comes next.',
+    current: 'Now',
+    next: 'Next lesson',
+    nextLesson: 'Geometry · triangles',
+    liveKicker: 'Live lesson',
+    liveTitle: 'Continue the lesson online, in the same place',
+    liveBody: 'Video and a shared board sit with the assignments and the tools, on one screen.',
+    liveNow: 'Current lesson',
+    liveMeta: 'Board and call on one screen',
+    teacherPresence: 'Teacher',
+    studentPresence: 'Student',
+    processKicker: 'How it works',
+    processTitle: 'Three steps. One process.',
+    steps: [
+      {
+        title: 'Create',
+        body: 'Prepare the assignment once. It appears in the student’s workspace on its own.',
+      },
+      {
+        title: 'Work',
+        body: 'A graph, algebra, or geometry opens beside the problem, on the same page.',
+      },
+      {
+        title: 'Review',
+        body: 'Results come back immediately: who finished, and who needs help.',
+      },
+    ],
+    toolsKicker: 'Catalog',
+    toolsTitle: 'Tools that already work',
+    toolsBody: 'Open a graph, an equation, or a geometry figure from here. The full catalog goes further.',
+    ctaTitle: 'One workspace for teaching mathematics.',
+    ctaBody: 'Create an account and put assignments, students, and lessons into one process.',
+  },
+  ru: {
+    heroKicker: 'MathLab',
+    heroTitleA: 'Преподавание математики',
+    heroTitleB: 'в одном пространстве.',
+    heroBody:
+      'Подготовьте задание, проведите урок в эфире и откройте калькулятор на той же странице, где решается задача.',
+    heroNote: 'Калькуляторы открываются без аккаунта.',
+    createAccount: 'Создать аккаунт',
+    browseTools: 'Инструменты',
+    graphCaption: 'Квадратичная функция',
+    openGraph: 'Открыть графопостроитель',
+    rootsLabel: 'Корни x = 1 и x = 3',
+    vertexLabel: 'Вершина (2, −1)',
+    workspaceTitle: 'Две стороны одного урока',
+    workspaceBody: 'Учитель видит класс. Ученик видит своё задание. Онлайн-урок остаётся там же.',
+    teacherKicker: 'Учитель',
+    teacherTitle: 'Весь класс в одном виде',
+    teacherBody: 'Задание создаётся один раз и само появляется у ученика. Прогресс показывает, кому нужно ваше время.',
+    assignmentLabel: 'Задание',
+    assignment: 'Квадратные уравнения',
+    active: 'Активно',
+    students: [
+      { name: 'Ана Беридзе', progress: 100 },
+      { name: 'Лука Гиоргадзе', progress: 40 },
+      { name: 'Нино Маисурадзе', progress: 0 },
+    ],
+    studentKicker: 'Ученик',
+    studentTitle: 'Одно задание и спокойное место',
+    studentBody: 'Ученик видит, что делать, сколько уже сделано и какой урок следующий.',
+    current: 'Сейчас',
+    next: 'Следующий урок',
+    nextLesson: 'Геометрия · треугольники',
+    liveKicker: 'Урок онлайн',
+    liveTitle: 'Продолжите урок онлайн, в том же пространстве',
+    liveBody: 'Видео и общая доска стоят рядом с заданиями и инструментами, на одном экране.',
+    liveNow: 'Текущий урок',
+    liveMeta: 'Доска и звонок на одном экране',
+    teacherPresence: 'Учитель',
+    studentPresence: 'Ученик',
+    processKicker: 'Как это устроено',
+    processTitle: 'Три шага. Один процесс.',
+    steps: [
+      {
+        title: 'Создайте',
+        body: 'Подготовьте задание один раз. Оно само появится в пространстве ученика.',
+      },
+      {
+        title: 'Работайте',
+        body: 'График, алгебра или геометрия открываются рядом с задачей, на той же странице.',
+      },
+      {
+        title: 'Проверьте',
+        body: 'Результат возвращается сразу: кто закончил и кому нужна помощь.',
+      },
+    ],
+    toolsKicker: 'Каталог',
+    toolsTitle: 'Инструменты, которые уже работают',
+    toolsBody: 'Откройте график, уравнение или геометрию прямо отсюда. В полном каталоге их больше.',
+    ctaTitle: 'Одно пространство для преподавания математики.',
+    ctaBody: 'Создайте аккаунт и соберите задания, учеников и уроки в одном процессе.',
+  },
+};

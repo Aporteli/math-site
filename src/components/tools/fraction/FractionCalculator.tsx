@@ -582,19 +582,19 @@ export function FractionCalculator({ copy }: Props) {
       <button
         type="button"
         onClick={() => applyExample('add')}
-        className="text-xs font-semibold text-navy hover:text-navy-strong">
+        className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
         1/2 + 1/3
       </button>
       <button
         type="button"
         onClick={() => applyExample('mixed')}
-        className="text-xs font-semibold text-navy hover:text-navy-strong">
+        className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
         2 1/3 − 1 1/6
       </button>
       <button
         type="button"
         onClick={() => applyExample('whole')}
-        className="text-xs font-semibold text-navy hover:text-navy-strong">
+        className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
         5 + 1/2
       </button>
     </div>

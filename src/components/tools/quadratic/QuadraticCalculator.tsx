@@ -18,14 +18,10 @@ import {
   FileText,
   BookOpen,
   Table2,
-  FunctionSquare,
 } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
-import { PageHero } from '@/components/ui/PageHero';
-import { ToolHeader } from '@/components/ui/ToolHeader';
 import { localePath, type Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/types';
-import { BackButton } from '@/components/ui/BackButton';
 import {
   solve,
   type MethodId,
@@ -276,17 +272,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
 
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <BackButton href="/ka/tools" />
-      <ToolHeader
-        title="კვადრატული განტოლების ამომხსნელი"
-        description="ეტაპობრივი ამონახსნი დისკრიმინანტით, ვიეტათი და გრაფიკით"
-        category=""
-        icon={<FunctionSquare className="size-4" />}
-      />
-
-      {/* აქედან ეგრევე იწყება კალკულატორის Form / Input ბლოკი */}
-
-      <div className="mt-6 grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+      <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         {/* ─── Left: input ─── */}
         <div className="space-y-4">
           <section className={panelClass}>

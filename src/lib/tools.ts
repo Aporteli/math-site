@@ -40,6 +40,7 @@ import {
   PenTool,
   Pi,
   Printer,
+  Radical,
   Shuffle,
   Shapes,
   Sigma,
@@ -77,34 +78,6 @@ export interface ToolSection {
   tools: ToolItem[];
 }
 
-/**
-[{
-	"resource": "/d:/Wep development/React/math-site/src/lib/tools.ts",
-	"owner": "typescript",
-	"code": "2322",
-	"severity": 8,
-	"message": "Type '\"quadratic-equations\"' is not assignable to type '\"graphing\" | \"equations\" | \"fractions\" | \"systemSolver\" | \"polynomials\" | \"inequalities\" | \"logarithms\" | \"triangle\" | \"unitCircle\" | \"geometry\" | \"vectors\" | \"derivatives\" | ... 58 more ... | \"animations\"'.",
-	"source": "ts",
-	"startLineNumber": 98,
-	"startColumn": 9,
-	"endLineNumber": 98,
-	"endColumn": 11,
-	"relatedInformation": [
-		{
-			"startLineNumber": 69,
-			"startColumn": 3,
-			"endLineNumber": 69,
-			"endColumn": 5,
-			"message": "The expected type comes from property 'id' which is declared here on type 'ToolItem'",
-			"resource": "/d:/Wep development/React/math-site/src/lib/tools.ts"
-		}
-	],
-	"modelVersionId": 16,
-	"origin": "extHost1"
-}]*
- * To add a section later: append an entry to `TOOL_SECTIONS` and add matching
- * keys under `toolsPage.sections` / `toolsPage.items` in ka/en/ru.
- */
 export const TOOL_SECTIONS: ToolSection[] = [
   {
     id: "calculators",
@@ -182,30 +155,6 @@ export const TOOL_SECTIONS: ToolSection[] = [
         href: "/tools/vectors",
       },
       {
-        id: "derivatives",
-        icon: Gauge,
-        badgeColor: "navy",
-        href: "/tools/derivatives",
-      },
-      {
-        id: "integrals",
-        icon: Sigma,
-        badgeColor: "navy",
-        href: "/tools/integrals",
-      },
-      {
-        id: "ode",
-        icon: Activity,
-        badgeColor: "navy",
-        href: "/tools/ode-solver",
-      },
-      {
-        id: "matrices",
-        icon: Grid3x3,
-        badgeColor: "brass",
-        href: "/tools/matrix",
-      },
-      {
         id: "combinatorics",
         icon: Shuffle,
         badgeColor: "ink",
@@ -218,116 +167,16 @@ export const TOOL_SECTIONS: ToolSection[] = [
         href: "/tools/sequences",
       },
       {
-        id: "numberTheory",
-        icon: Hash,
-        badgeColor: "ink",
-        href: "/tools/number-theory",
-      },
-    ],
-  },
-  {
-    id: "advanced",
-    tools: [
-      {
-        id: "calculusSolver",
-        icon: Sigma,
+        id: "radicals",
+        icon: Radical,
         badgeColor: "navy",
-        href: "/tools/calculus-solver",
+        href: "/tools/radicals",
       },
       {
-        id: "linearAlgebra",
-        icon: Grid3x3,
-        badgeColor: "brass",
-        href: "/tools/linear-algebra",
-      },
-      {
-        id: "odeLab",
-        icon: Activity,
-        badgeColor: "soft",
-        href: "/tools/ode",
-      },
-      {
-        id: "limitsSeries",
-        icon: InfinityIcon,
+        id: "rearrange",
+        icon: ArrowLeftRight,
         badgeColor: "navy",
-        href: "/tools/limits-series",
-      },
-      {
-        id: "multivariable",
-        icon: Layers,
-        badgeColor: "brass",
-        href: "/tools/multivariable-3d",
-      },
-      {
-        id: "vectorCalculus",
-        icon: Compass,
-        badgeColor: "ink",
-        href: "/tools/vector-calculus",
-      },
-      {
-        id: "vectorFunction",
-        icon: Spline,
-        badgeColor: "navy",
-        href: "/tools/vector-function",
-      },
-      {
-        id: "complexAnalysis",
-        icon: CircleDot,
-        badgeColor: "brass",
-        href: "/tools/complex-analysis",
-      },
-      {
-        id: "transforms",
-        icon: AudioWaveform,
-        badgeColor: "navy",
-        href: "/tools/transforms",
-      },
-    ],
-  },
-  {
-    id: "applied",
-    tools: [
-      {
-        id: "probability",
-        icon: Dices,
-        badgeColor: "ink",
-        href: "/tools/probability",
-      },
-      {
-        id: "statistics",
-        icon: BarChart3,
-        badgeColor: "navy",
-        href: "/tools/statistics",
-      },
-      {
-        id: "finance",
-        icon: TrendingUp,
-        badgeColor: "brass",
-        href: "/tools/financial-math",
-      },
-      {
-        id: "physicsSim",
-        icon: Orbit,
-        badgeColor: "soft",
-        href: "/tools/physics-simulations",
-      },
-      {
-        id: "gameTheory",
-        icon: Target,
-        badgeColor: "navy",
-        href: "/tools/game-theory",
-      },
-      {
-        id: "graphTheory",
-        icon: Network,
-        badgeColor: "ink",
-        href: "/tools/graph-theory",
-      },
-      {
-        id: "optimization",
-        icon: Sliders,
-        badgeColor: "brass",
-        href: "/tools/optimization",
+        href: "/tools/rearrange",
       },
     ],
   },
@@ -381,41 +230,6 @@ export const TOOL_SECTIONS: ToolSection[] = [
         icon: Award,
         badgeColor: "navy",
         href: "/tools/university-exams",
-      },
-    ],
-  },
-  {
-    id: "teacher",
-    tools: [
-      {
-        id: "worksheetBuilder",
-        icon: Printer,
-        badgeColor: "navy",
-        href: "/tools/worksheet-builder",
-      },
-      {
-        id: "whiteboard",
-        icon: PenTool,
-        badgeColor: "brass",
-        href: "/tools/whiteboard",
-      },
-      {
-        id: "diagramExporter",
-        icon: Image,
-        badgeColor: "ink",
-        href: "/tools/diagram-exporter",
-      },
-      {
-        id: "classroomTimer",
-        icon: Timer,
-        badgeColor: "soft",
-        href: "/tools/classroom-timer",
-      },
-      {
-        id: "gradeCalculator",
-        icon: Calculator,
-        badgeColor: "brass",
-        href: "/tools/grade-calculator",
       },
     ],
   },
