@@ -115,6 +115,7 @@ export async function getTeacherStudents(
       if (!existing.paymentDate && e.paymentDate) {
         existing.paymentDate = e.paymentDate;
       }
+      if (!existing.note && e.note) existing.note = e.note;
     } else {
       const parts = u.name.trim().split(/\s+/);
       const firstName = parts[0] ?? u.name;
@@ -132,6 +133,7 @@ export async function getTeacherStudents(
         monthlyPrice: price,
         priceType: e.priceType,
         paymentDate: e.paymentDate ?? undefined,
+        note: e.note ?? undefined,
         paidAmount: 0,
         lessons,
         status: 'active',

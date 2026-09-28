@@ -145,6 +145,7 @@ export async function updateStudentPriceAction(input: {
   groupId: string;
   monthlyPrice?: number;
   priceType?: 'MONTHLY' | 'WEEKLY' | 'BIWEEKLY' | 'PER_LESSON';
+  note?: string | null;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const user = await getSession();
   if (!user?.user?.id) return { ok: false, error: 'Unauthorized' };
@@ -167,6 +168,9 @@ export async function updateStudentPriceAction(input: {
       }),
       ...(input.priceType !== undefined && {
         priceType: input.priceType,
+      }),
+      ...(input.note !== undefined && {
+        note: input.note?.trim() || null,
       }),
     },
   });

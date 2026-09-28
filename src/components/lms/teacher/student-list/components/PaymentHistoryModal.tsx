@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import {
-  CalendarDays, Plus, Trash2, Wallet, X, Save, Receipt, DollarSign, ChevronDown,
+  CalendarDays, Trash2, Wallet, X, Save, Receipt, DollarSign, ChevronDown,
 } from 'lucide-react';
 import {
   formatMonthLabel,
@@ -37,11 +37,6 @@ const METHOD_LABEL: Record<string, string> = {
   transfer: 'გადარიცხვა',
 };
 
-function todayIso() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 export function PaymentHistoryModal({
   open,
   embedded = false,
@@ -57,21 +52,18 @@ export function PaymentHistoryModal({
 
   /* ── accordion state ── */
   const [priceSectionOpen, setPriceSectionOpen] = useState(false);
-  const [paymentSectionOpen, setPaymentSectionOpen] = useState(false);
 
-  /* ── payment form ── */
-  const [amount, setAmount] = useState('');
-  const [paidAt, setPaidAt] = useState(todayIso());
-  const [method, setMethod] = useState<'cash' | 'card' | 'transfer'>('cash');
-  const [note, setNote] = useState('');
+  /* ── payment ── */
   const [error, setError] = useState<string | null>(null);
+
+  /* ── student notes ── */
+  const [comment, setComment] = useState('');
+  const [commentSaved, setCommentSaved] = useState(false);
 
   /* ── price form ── */
   const [priceDraft, setPriceDraft] = useState('');
   const [priceTypeDraft, setPriceTypeDraft] = useState<PriceType>('MONTHLY');
   const [priceSaved, setPriceSaved] = useState(false);
-
-  const isIndividual = student?.kind === 'individual';
 
   const monthPayments = useMemo(
     () =>
@@ -92,16 +84,12 @@ export function PaymentHistoryModal({
     if (!open || !student) return;
     setError(null);
     setMonthKey(getMonthKey(new Date()));
-    setAmount('');
-    setNote('');
-    setPaidAt(todayIso());
-    setMethod('cash');
     setPriceDraft(String(student.monthlyPrice));
     setPriceTypeDraft(student.priceType ?? 'MONTHLY');
     setPriceSaved(false);
-    /* default: both collapsed */
     setPriceSectionOpen(false);
-    setPaymentSectionOpen(false);
+    setComment(student.note ?? '');
+    setCommentSaved(false);
   }, [open, student?.id]);
 
   /* ── sync drafts when student updates externally ── */
@@ -134,35 +122,24 @@ export function PaymentHistoryModal({
     }, 800);
   };
 
-  /* ─────── Add payment ─────── */
-  const handleAdd = () => {
+  /* ─────── Pay the chosen amount ─────── */
+  const handlePay = () => {
+    if (monthOwed <= 0) return;
     setError(null);
-    const value = Number(amount);
-    if (!Number.isFinite(value) || value <= 0) {
-      setError('შეიყვანე სწორი თანხა');
-      return;
-    }
-    if (!paidAt) {
-      setError('აირჩიე თარიღი');
-      return;
-    }
-
     startTransition(async () => {
       const res = await onAddPayment({
         studentId: student.id,
-        amount: value,
-        paidAt: new Date(`${paidAt}T12:00:00`).toISOString(),
-        method,
-        note: note.trim() || undefined,
+        amount: monthOwed,
+        paidAt: new Date().toISOString(),
+        method: 'cash',
       });
-      if (!res.ok) {
-        setError(res.error ?? 'შეცდომა');
-        return;
-      }
-      setAmount('');
-      setNote('');
-      setPaymentSectionOpen(false);
+      if (!res.ok) setError(res.error ?? 'შეცდომა');
     });
+  };
+
+  const handleSaveComment = () => {
+    onUpdateStudent(student.id, { note: comment.trim() });
+    setCommentSaved(true);
   };
 
   const handleDelete = (id: string) => {
@@ -237,7 +214,7 @@ export function PaymentHistoryModal({
           </div>
 
           {/* ─── Summary cards ─── */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <div className="rounded-box border border-hairline bg-paper px-3 py-2.5">
               <p className="text-[10px] font-bold tracking-wide text-muted">თვის ფასი</p>
               <p className="mt-1 truncate text-sm font-bold tabular-nums text-ink">{formatPrice(expected)}</p>
@@ -245,12 +222,9 @@ export function PaymentHistoryModal({
             <div className="rounded-box border border-hairline bg-paper px-3 py-2.5">
               <p className="text-[10px] font-bold tracking-wide text-muted">გადახდილი</p>
               <p className="mt-1 truncate text-sm font-bold tabular-nums text-win">{formatPrice(monthPaid)}</p>
-            </div>
-            <div className="rounded-box border border-hairline bg-paper px-3 py-2.5">
-              <p className="text-[10px] font-bold tracking-wide text-muted">დარჩენილი</p>
-              <p className={`mt-1 truncate text-sm font-bold tabular-nums ${monthOwed > 0 ? 'text-loss' : 'text-win'}`}>
-                {formatPrice(monthOwed)}
-              </p>
+              {expected > 0 && monthOwed <= 0 ? (
+                <p className="mt-0.5 text-[10px] font-bold text-win">გადახდილია</p>
+              ) : null}
             </div>
           </div>
 
@@ -329,74 +303,44 @@ export function PaymentHistoryModal({
           {/* ═══════════════════════════════════════════════════════
               ADD PAYMENT — accordion
              ═══════════════════════════════════════════════════════ */}
-          <div className="overflow-hidden rounded-box border border-navy/20 bg-navy-tint/30">
-            {/* toggle header */}
+          {expected > 0 && monthOwed > 0 ? (
             <button
               type="button"
-              onClick={() => setPaymentSectionOpen((v) => !v)}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 px-3.5 py-3 transition hover:bg-navy-tint/50">
-              <span className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-navy">
-                <Wallet className="h-3 w-3" /> გადასახდელი თანხა
-              </span>
-              <ChevronDown
-                className={`h-3.5 w-3.5 text-navy transition-transform duration-200 ${
-                  paymentSectionOpen ? 'rotate-180' : ''
-                }`}
-              />
+              onClick={handlePay}
+              disabled={isPending}
+              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50"
+            >
+              {isPending ? 'ინახება...' : `გადახდა · ${formatPrice(monthOwed)}`}
             </button>
+          ) : null}
 
-            {/* collapsible body */}
-            {paymentSectionOpen && (
-              <div className="space-y-2 border-t border-navy/15 p-3.5">
-                <div>
-                  <label className="mb-1 block text-[10px] font-bold text-muted">თანხა (₾)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0"
-                    className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
-                  />
-                </div>
+          {error ? (
+            <p className="rounded-box bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">{error}</p>
+          ) : null}
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="mb-1 block text-[10px] font-bold text-muted">თარიღი</label>
-                    <input
-                      type="date"
-                      value={paidAt}
-                      onChange={(e) => setPaidAt(e.target.value)}
-                      className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-[10px] font-bold text-muted">მეთოდი</label>
-                    <select
-                      value={method}
-                      onChange={(e) => setMethod(e.target.value as 'cash' | 'card' | 'transfer')}
-                      className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15">
-                      <option value="cash">ნაღდი</option>
-                      <option value="card">ბარათი</option>
-                      <option value="transfer">გადარიცხვა</option>
-                    </select>
-                  </div>
-                </div>
-
-                {error ? (
-                  <p className="rounded-box bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">{error}</p>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={handleAdd}
-                  disabled={isPending}
-                  className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50">
-                  <Plus className="h-3.5 w-3.5" />
-                  {isPending ? 'ინახება...' : 'დამატება'}
-                </button>
-              </div>
-            )}
+          <div className="space-y-2 rounded-box border border-hairline bg-paper p-3.5">
+            <label className="block text-[11px] font-bold tracking-wide text-muted" htmlFor="student-note">
+              შენიშვნა
+            </label>
+            <textarea
+              id="student-note"
+              value={comment}
+              onChange={(event) => {
+                setComment(event.target.value);
+                setCommentSaved(false);
+              }}
+              rows={4}
+              placeholder="მოვლენები და შენიშვნები ამ მოსწავლეზე"
+              className="w-full resize-y rounded-box border border-hairline bg-surface px-3 py-2.5 text-sm font-medium text-ink outline-none focus:border-navy"
+            />
+            <button
+              type="button"
+              onClick={handleSaveComment}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-bold text-white transition hover:bg-navy-strong"
+            >
+              <Save className="h-3.5 w-3.5" />
+              {commentSaved ? 'შენახულია' : 'შენახვა'}
+            </button>
           </div>
 
           {/* ═══ History ═══ */}

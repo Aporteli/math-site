@@ -8,22 +8,18 @@ import {
   Wallet,
   CalendarClock,
   Filter,
-  CalendarDays,
   Table2 as TableIcon,
   UserPlus,
   AlertCircle,
   BarChart3,
-  ClipboardList,
 } from 'lucide-react';
 import { StudentListTable } from './StudentListTable';
-import { PaymentCalendar } from './PaymentCalendar';
 import { DebtTracker } from './DebtTracker';
 import { ReportsView } from './ReportsView';
 import { LessonEditorModal } from './LessonEditorModal';
 import { PhoneEditorModal } from './PhoneEditorModal';
 import { IndividualStudentModal } from './IndividualStudentModal';
 import { PaymentHistoryModal } from './PaymentHistoryModal';
-import { StudentContactCard } from './StudentContactCard';
 import { formatPrice, countTodayLessonSessions, sectionStudents } from '../studentList.helpers';
 import { getMonthKey, sumPaymentsForMonth, computeExpectedForMonth, parseMonthKey } from '../paymentCalendar.helpers';
 import {
@@ -32,7 +28,7 @@ import {
   addIndividualLessonAction,
   deleteIndividualLessonAction,
 } from '@/components/lms/teacher/student-list/actions';
-import type { PaymentRecord, StudentAssignmentItem, StudentGroup, StudentRecord } from '../studentList.types';
+import type { PaymentRecord, StudentGroup, StudentRecord } from '../studentList.types';
 import { defaultLocale, isLocale, localePath } from '@/i18n/config';
 
 interface Props {
@@ -41,7 +37,6 @@ interface Props {
   initialPayments?: PaymentRecord[];
   onSelectStudent?: (student: StudentRecord) => void;
   studentId?: string;
-  assignments?: StudentAssignmentItem[];
   onUpdateStudent?: (id: string, patch: Partial<StudentRecord>) => void;
   onUpdatePayments?: (payments: PaymentRecord[]) => void;
   onUpdatePhones?: (
@@ -92,15 +87,7 @@ interface Props {
   onToggleMissed?: (studentId: string, lessonId: string, date: string, missed: boolean) => void;
 }
 
-type View = 'table' | 'calendar' | 'debt' | 'reports';
-
-const ASSIGNMENT_STATUS_LABEL: Record<string, string> = {
-  DRAFT: 'დრაფტი',
-  SUBMITTED: 'ჩაბარებული',
-  RETURNED: 'დაბრუნებული',
-  PUBLISHED: 'გამოქვეყნებული',
-  CLOSED: 'დახურული',
-};
+type View = 'table' | 'debt' | 'reports';
 
 export function StudentList({
   students,
@@ -108,9 +95,7 @@ export function StudentList({
   initialPayments = [],
   onSelectStudent,
   studentId,
-  assignments = [],
   onUpdateStudent,
-  onUpdatePayments,
   onUpdatePhones,
   onCreateIndividual,
   onUpdateIndividual,
@@ -121,7 +106,6 @@ export function StudentList({
   onDeleteGroupPayment,
   onAddIndividualPayment,
   onDeleteIndividualPayment,
-  onToggleMissed,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -129,7 +113,7 @@ export function StudentList({
   const locale = isLocale(localeSegment) ? localeSegment : defaultLocale;
 
   const [view, setView] = useState<View>('table');
-  const [studentSection, setStudentSection] = useState<'phones' | 'pricing' | 'schedule' | 'tasks'>('phones');
+  const [studentSection, setStudentSection] = useState<'pricing' | 'schedule'>('pricing');
   const [query, setQuery] = useState('');
   const [activeGroupId, setActiveGroupId] = useState<string | 'all'>('all');
   const [monthKey, setMonthKey] = useState(() => getMonthKey(new Date()));
@@ -138,9 +122,6 @@ export function StudentList({
 
   const studentsRef = useRef(students);
   studentsRef.current = students;
-
-  const paymentsRef = useRef(payments);
-  paymentsRef.current = payments;
 
   const [lessonEditorStudent, setLessonEditorStudent] = useState<StudentRecord | null>(null);
   const [phoneEditorStudent, setPhoneEditorStudent] = useState<StudentRecord | null>(null);
@@ -180,27 +161,6 @@ export function StudentList({
 
   const handleUpdateStudent = (id: string, patch: Partial<StudentRecord>) => {
     onUpdateStudent?.(id, patch);
-  };
-
-  const handleSetPaid = (studentId: string, mk: string, amount: number) => {
-    const prev = paymentsRef.current;
-    const withoutThis = prev.filter((p) => !(p.studentId === studentId && p.monthKey === mk));
-    const next =
-      amount > 0
-        ? [
-            ...withoutThis,
-            {
-              id: `pay-${studentId}-${mk}`,
-              studentId,
-              monthKey: mk,
-              amount,
-              paidAt: new Date().toISOString(),
-            },
-          ]
-        : withoutThis;
-
-    setPayments(next);
-    onUpdatePayments?.(next);
   };
 
   /* ─── Unified payment handlers for modal ─── */
@@ -496,13 +456,11 @@ export function StudentList({
 
         {student ? (
           <div className="flex min-w-0 flex-col gap-4">
-            <div className="grid grid-cols-4 gap-1 rounded-box border border-hairline bg-paper p-1">
+            <div className="grid grid-cols-2 gap-1 rounded-box border border-hairline bg-paper p-1">
               {(
                 [
-                  ['phones', 'ტელეფონი'],
                   ['pricing', 'ფასი'],
                   ['schedule', 'განრიგი'],
-                  ['tasks', 'დავალებები'],
                 ] as const
               ).map(([key, label]) => (
                 <button
@@ -517,28 +475,6 @@ export function StudentList({
                 </button>
               ))}
             </div>
-
-            {studentSection === 'phones' ? (
-              <StudentContactCard
-                student={student}
-                onSave={async (id, phone, parentPhone, email) => {
-                  if (student.kind === 'individual') {
-                    onUpdateStudent?.(id, {
-                      phone: phone ?? '',
-                      parentPhone: parentPhone ?? undefined,
-                      email: email ?? undefined,
-                    });
-                    return { ok: true };
-                  }
-                  return (
-                    (await onUpdatePhones?.(id, phone, parentPhone, email)) ?? {
-                      ok: false,
-                      error: 'Not configured',
-                    }
-                  );
-                }}
-              />
-            ) : null}
 
             {studentSection === 'pricing' ? (
               <PaymentHistoryModal
@@ -565,34 +501,6 @@ export function StudentList({
                 onDelete={handleDeleteLesson}
               />
             ) : null}
-
-            {studentSection === 'tasks' ? (
-              <div className="overflow-hidden rounded-box border border-hairline bg-surface shadow-sm">
-                <div className="flex shrink-0 items-center gap-2.5 border-b border-hairline px-4 py-3">
-                  <span className="inline-flex size-8 items-center justify-center rounded-box bg-navy-tint text-navy">
-                    <ClipboardList className="size-3.5" />
-                  </span>
-                  <p className="text-sm font-bold text-ink">დავალებები</p>
-                  <span className="rounded-box bg-paper px-1.5 py-0.5 text-[10px] font-bold text-muted">
-                    {assignments.length}
-                  </span>
-                </div>
-                <div className="space-y-2 p-3">
-                  {assignments.length === 0 ? (
-                    <p className="px-2 py-8 text-center text-xs font-medium text-muted">დავალება არ არის</p>
-                  ) : (
-                    assignments.map((item) => (
-                      <div key={item.id} className="rounded-box border border-hairline bg-paper px-3 py-2">
-                        <p className="truncate text-xs font-bold text-ink">{item.title}</p>
-                        <p className="mt-0.5 text-[10px] font-medium text-muted">
-                          {ASSIGNMENT_STATUS_LABEL[item.status] ?? item.status}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            ) : null}
           </div>
         ) : null}
       </div>
@@ -615,7 +523,7 @@ export function StudentList({
           </div>
 
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="grid w-full grid-cols-4 gap-1 rounded-box border border-hairline bg-paper p-1 sm:w-auto sm:min-w-[22rem]">
+            <div className="grid w-full grid-cols-3 gap-1 rounded-box border border-hairline bg-paper p-1 sm:w-auto sm:min-w-[16rem]">
               <button
                 type="button"
                 onClick={() => setView('table')}
@@ -624,16 +532,6 @@ export function StudentList({
                 className={viewButtonClass(view === 'table')}>
                 <TableIcon className="size-4 shrink-0" />
                 <span className="truncate text-[11px] sm:text-xs">ცხრილი</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setView('calendar')}
-                title="კალენდრის ხედი"
-                aria-pressed={view === 'calendar'}
-                className={viewButtonClass(view === 'calendar')}>
-                <CalendarDays className="size-4 shrink-0" />
-                <span className="truncate text-[11px] sm:text-xs">კალენდარი</span>
               </button>
 
               <button
@@ -781,18 +679,7 @@ export function StudentList({
         ) : null}
       </div>
 
-      {view === 'calendar' ? (
-        <PaymentCalendar
-          students={students}
-          groups={groups}
-          payments={payments}
-          monthKey={monthKey}
-          onMonthChange={setMonthKey}
-          onSetPaid={handleSetPaid}
-          onSelectStudent={onSelectStudent}
-          onToggleMissed={onToggleMissed}
-        />
-      ) : view === 'debt' ? (
+      {view === 'debt' ? (
         <DebtTracker
           students={students}
           groups={groups}

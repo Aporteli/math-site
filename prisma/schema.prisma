@@ -175,6 +175,7 @@ model Enrollment {
   monthlyPrice  Decimal?         @db.Decimal(10, 2)
   priceType     PriceType        @default(MONTHLY)   // ← ახალი
   paymentDate   String?          @db.VarChar(10)
+  note          String?          @db.Text
   status        EnrollmentStatus @default(ACTIVE)
   enrolledAt    DateTime         @default(now())
 

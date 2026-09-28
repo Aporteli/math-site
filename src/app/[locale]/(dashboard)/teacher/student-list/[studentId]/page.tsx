@@ -8,7 +8,6 @@ import {
   getTeacherPayments,
   getTeacherIndividualStudents,
   getTeacherIndividualPayments,
-  getStudentAssignments,
 } from '@/components/lms/teacher/student-list/queries';
 import { getSession } from '@/lib/auth/session';
 
@@ -25,20 +24,18 @@ export default async function TeacherStudentPage({ params }: PageProps) {
   const { studentId } = await params;
   const teacherId = session.user.id;
 
-  const [groups, groupStudents, individualStudents, groupPayments, individualPayments, assignments] =
+  const [groups, groupStudents, individualStudents, groupPayments, individualPayments] =
     await Promise.all([
       getTeacherGroups(teacherId),
       getTeacherStudents(teacherId),
       getTeacherIndividualStudents(teacherId),
       getTeacherPayments(teacherId),
       getTeacherIndividualPayments(teacherId),
-      getStudentAssignments(teacherId, studentId),
     ]);
 
   return (
     <StudentListClient
       studentId={studentId}
-      assignments={assignments}
       initialStudents={[...groupStudents, ...individualStudents]}
       groups={groups}
       initialPayments={[...groupPayments, ...individualPayments]}

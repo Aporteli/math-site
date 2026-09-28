@@ -22,7 +22,6 @@ import type {
   MissedLesson,
   PaymentRecord,
   PriceType,
-  StudentAssignmentItem,
   StudentGroup,
   StudentRecord,
 } from '../studentList.types';
@@ -32,7 +31,6 @@ interface Props {
   groups: StudentGroup[];
   initialPayments?: PaymentRecord[];
   studentId?: string;
-  assignments?: StudentAssignmentItem[];
 }
 
 export function StudentListClient({
@@ -40,7 +38,6 @@ export function StudentListClient({
   groups,
   initialPayments = [],
   studentId,
-  assignments = [],
 }: Props) {
   const [students, setStudents] = useState<StudentRecord[]>(initialStudents);
   const [groupList, setGroupList] = useState<StudentGroup[]>(groups);
@@ -105,13 +102,18 @@ export function StudentListClient({
     const groupId = student.groupIds[0];
     if (!groupId) return;
 
-    if (patch.monthlyPrice !== undefined || patch.priceType !== undefined) {
+    if (
+      patch.monthlyPrice !== undefined ||
+      patch.priceType !== undefined ||
+      patch.note !== undefined
+    ) {
       startTransition(async () => {
         const res = await updateStudentPriceAction({
           studentId: id,
           groupId,
           monthlyPrice: patch.monthlyPrice,
           priceType: patch.priceType,
+          ...(patch.note !== undefined && { note: patch.note ?? null }),
         });
         if (!res.ok) console.error('[updateStudentPrice]', res.error);
       });
@@ -381,7 +383,6 @@ export function StudentListClient({
     <div className="min-w-0">
       <StudentList
         studentId={studentId}
-        assignments={assignments}
         students={students}
         groups={groupList}
         onCreateHomeGroup={async (input) => {
