@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import {
-  CalendarDays, Trash2, Wallet, X, Save, Receipt, DollarSign, ChevronDown,
+  CalendarDays, Trash2, Wallet, X, Save, Receipt, DollarSign,
 } from 'lucide-react';
 import {
   formatMonthLabel,
@@ -50,8 +50,7 @@ export function PaymentHistoryModal({
   const [isPending, startTransition] = useTransition();
   const [monthKey, setMonthKey] = useState(() => getMonthKey(new Date()));
 
-  /* ── accordion state ── */
-  const [priceSectionOpen, setPriceSectionOpen] = useState(false);
+  const [priceModalOpen, setPriceModalOpen] = useState(false);
 
   /* ── payment ── */
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +86,7 @@ export function PaymentHistoryModal({
     setPriceDraft(String(student.monthlyPrice));
     setPriceTypeDraft(student.priceType ?? 'MONTHLY');
     setPriceSaved(false);
-    setPriceSectionOpen(false);
+    setPriceModalOpen(false);
     setComment(student.note ?? '');
     setCommentSaved(false);
   }, [open, student?.id]);
@@ -118,7 +117,7 @@ export function PaymentHistoryModal({
     setPriceSaved(true);
     setTimeout(() => {
       setPriceSaved(false);
-      setPriceSectionOpen(false);
+      setPriceModalOpen(false);
     }, 800);
   };
 
@@ -137,9 +136,16 @@ export function PaymentHistoryModal({
     });
   };
 
+  const savedNote = (student.note ?? '').trim();
+  const noteDirty = comment.trim() !== savedNote;
+
   const handleSaveComment = () => {
-    onUpdateStudent(student.id, { note: comment.trim() });
+    if (!noteDirty) return;
+    const next = comment.trim();
+    onUpdateStudent(student.id, { note: next });
+    setComment(next);
     setCommentSaved(true);
+    window.setTimeout(() => setCommentSaved(false), 800);
   };
 
   const handleDelete = (id: string) => {
@@ -180,19 +186,6 @@ export function PaymentHistoryModal({
               </p>
             </div>
           </div>
-          {embedded ? null : (
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink">
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-
-        {/* ═══ Scrollable body ═══ */}
-        <div className="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
-          {/* ─── Month navigation ─── */}
           <div className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-paper p-1">
             <button
               type="button"
@@ -212,11 +205,34 @@ export function PaymentHistoryModal({
               ›
             </button>
           </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setPriceModalOpen(true)}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-box border border-brass/40 bg-brass-tint px-2.5 py-2 text-[11px] font-bold text-brass-strong transition hover:bg-brass-tint/80">
+              <DollarSign className="h-3.5 w-3.5" />
+              ფასის მართვა
+            </button>
+            {embedded ? null : (
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ═══ Scrollable body ═══ */}
+        <div className="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
+          {/* ─── Month navigation ─── */}
+          
 
           {/* ─── Summary cards ─── */}
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-box border border-hairline bg-paper px-3 py-2.5">
-              <p className="text-[10px] font-bold tracking-wide text-muted">თვის ფასი</p>
+              <p className="text-[10px] font-bold tracking-wide text-muted">ფასი</p>
               <p className="mt-1 truncate text-sm font-bold tabular-nums text-ink">{formatPrice(expected)}</p>
             </div>
             <div className="rounded-box border border-hairline bg-paper px-3 py-2.5">
@@ -229,80 +245,38 @@ export function PaymentHistoryModal({
           </div>
 
           {/* ═══════════════════════════════════════════════════════
-              PRICE MANAGEMENT — accordion
+              ADD PAYMENT
              ═══════════════════════════════════════════════════════ */}
-          <div className="overflow-hidden rounded-box border border-brass/30 bg-brass-tint/20">
-            {/* toggle header */}
-            <button
-              type="button"
-              onClick={() => setPriceSectionOpen((v) => !v)}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 px-3.5 py-3 transition hover:bg-brass-tint/40">
-              <span className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-brass-strong">
-                <DollarSign className="h-3 w-3" /> ფასის მართვა
-              </span>
-              <span className="flex items-center gap-2">
-                {/* preview value */}
-                {!priceSectionOpen && (
-                  <span className="text-[11px] font-bold text-ink">
-                    {student.monthlyPrice.toLocaleString('ka-GE')} ₾
-                    <span className="ml-1 text-muted">
-                      / {PRICE_TYPE_SHORT[student.priceType ?? 'MONTHLY']}
-                    </span>
-                  </span>
-                )}
-                <ChevronDown
-                  className={`h-3.5 w-3.5 text-brass-strong transition-transform duration-200 ${
-                    priceSectionOpen ? 'rotate-180' : ''
-                  }`}
-                />
-              </span>
-            </button>
+        
 
-           
-            {priceSectionOpen && (
-              <div className="space-y-2.5 border-t border-brass/20 p-3.5">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="mb-1 block text-[10px] font-bold text-muted">ფასი (₾)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={priceDraft}
-                      onChange={(e) => setPriceDraft(e.target.value)}
-                      placeholder="0"
-                      className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-brass focus:ring-2 focus:ring-brass/20 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-[10px] font-bold text-muted">ფასის ტიპი</label>
-                    <select
-                      value={priceTypeDraft}
-                      onChange={(e) => setPriceTypeDraft(e.target.value as PriceType)}
-                      className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-brass focus:ring-2 focus:ring-brass/20">
-                      {PRICE_TYPE_OPTIONS.map((pt) => (
-                        <option key={pt} value={pt}>
-                          {PRICE_TYPE_SHORT[pt]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+          {error ? (
+            <p className="rounded-box bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">{error}</p>
+          ) : null}
 
-                <button
-                  type="button"
-                  onClick={handleSavePrice}
-                  disabled={isPending}
-                  className="inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-box border border-brass/40 bg-brass-strong px-4 py-2 text-sm font-bold text-white transition hover:bg-brass disabled:opacity-50">
-                  <Save className="h-3.5 w-3.5" />
-                  {priceSaved ? '✓ შენახულია' : 'ფასის შენახვა'}
-                </button>
-              </div>
-            )}
+          <div className="relative rounded-box border border-hairline bg-surface">
+            <textarea
+              id="student-note"
+              value={comment}
+              onChange={(event) => {
+                setComment(event.target.value);
+                setCommentSaved(false);
+              }}
+              rows={4}
+              placeholder="მოვლენები და შენიშვნები ამ მოსწავლეზე"
+              className="w-full resize-y rounded-box bg-surface px-3 py-2.5 text-sm font-medium text-ink outline-none"
+            />
+            {noteDirty || commentSaved ? (
+              <button
+                type="button"
+                onClick={handleSaveComment}
+                disabled={!noteDirty}
+                className="absolute right-3 top-3 inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-bold text-white transition hover:bg-navy-strong disabled:cursor-default disabled:opacity-70"
+              >
+                <Save className="h-3.5 w-3.5" />
+                {noteDirty ? 'შენახვა' : 'შენახულია'}
+              </button>
+            ) : null}
           </div>
-
-          {/* ═══════════════════════════════════════════════════════
-              ADD PAYMENT — accordion
-             ═══════════════════════════════════════════════════════ */}
           {expected > 0 && monthOwed > 0 ? (
             <button
               type="button"
@@ -313,81 +287,71 @@ export function PaymentHistoryModal({
               {isPending ? 'ინახება...' : `გადახდა · ${formatPrice(monthOwed)}`}
             </button>
           ) : null}
-
-          {error ? (
-            <p className="rounded-box bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">{error}</p>
-          ) : null}
-
-          <div className="space-y-2 rounded-box border border-hairline bg-paper p-3.5">
-            <label className="block text-[11px] font-bold tracking-wide text-muted" htmlFor="student-note">
-              შენიშვნა
-            </label>
-            <textarea
-              id="student-note"
-              value={comment}
-              onChange={(event) => {
-                setComment(event.target.value);
-                setCommentSaved(false);
-              }}
-              rows={4}
-              placeholder="მოვლენები და შენიშვნები ამ მოსწავლეზე"
-              className="w-full resize-y rounded-box border border-hairline bg-surface px-3 py-2.5 text-sm font-medium text-ink outline-none focus:border-navy"
-            />
-            <button
-              type="button"
-              onClick={handleSaveComment}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-bold text-white transition hover:bg-navy-strong"
-            >
-              <Save className="h-3.5 w-3.5" />
-              {commentSaved ? 'შენახულია' : 'შენახვა'}
-            </button>
-          </div>
-
-          {/* ═══ History ═══ */}
-          <div>
-            <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-muted">
-              <Receipt className="h-3 w-3" />
-              ამ თვის გადახდები ({monthPayments.length})
-            </p>
-
-            {monthPayments.length === 0 ? (
-              <p className="rounded-box border border-dashed border-hairline bg-paper px-3 py-4 text-center text-xs text-muted">
-                ამ თვეში ჯერ არ არის გადახდა
-              </p>
-            ) : (
-              <div className="space-y-1.5">
-                {monthPayments.map((p) => {
-                  const d = new Date(p.paidAt);
-                  const dateLabel = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
-                  return (
-                    <div
-                      key={p.id}
-                      className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-paper px-3 py-2">
-                      <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-muted" />
-                        <span className="text-xs font-bold text-ink">{dateLabel}</span>
-                        <span className="text-[10px] font-medium text-muted">
-                          {p.method ? METHOD_LABEL[p.method] : '—'}
-                        </span>
-                        {p.note ? <span className="truncate text-[10px] text-muted">— {p.note}</span> : null}
-                      </div>
-                      <span className="shrink-0 text-sm font-bold tabular-nums text-win">+{p.amount} ₾</span>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(p.id)}
-                        disabled={isPending}
-                        title="წაშლა"
-                        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-loss-tint hover:text-loss disabled:opacity-40">
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
         </div>
       </div>
+
+      {priceModalOpen ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/45 p-3 backdrop-blur-[2px]"
+          onClick={(e) => {
+            e.stopPropagation();
+            setPriceModalOpen(false);
+          }}>
+          <div
+            role="dialog"
+            aria-modal
+            aria-label="ფასის მართვა"
+            className="w-full max-w-sm space-y-2.5 rounded-box border border-hairline bg-surface p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                <DollarSign className="h-3.5 w-3.5 text-brass-strong" />
+                ფასის მართვა
+              </h3>
+              <button
+                type="button"
+                onClick={() => setPriceModalOpen(false)}
+                className="flex size-8 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="mb-1 block text-[10px] font-bold text-muted">ფასი (₾)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={priceDraft}
+                  onChange={(e) => setPriceDraft(e.target.value)}
+                  placeholder="0"
+                  className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-brass focus:ring-2 focus:ring-brass/20 sm:text-sm"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-bold text-muted">ფასის ტიპი</label>
+                <select
+                  value={priceTypeDraft}
+                  onChange={(e) => setPriceTypeDraft(e.target.value as PriceType)}
+                  className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-brass focus:ring-2 focus:ring-brass/20">
+                  {PRICE_TYPE_OPTIONS.map((pt) => (
+                    <option key={pt} value={pt}>
+                      {PRICE_TYPE_SHORT[pt]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleSavePrice}
+              disabled={isPending}
+              className="inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-box border border-brass/40 bg-brass-strong px-4 py-2 text-sm font-bold text-white transition hover:bg-brass disabled:opacity-50">
+              <Save className="h-3.5 w-3.5" />
+              {priceSaved ? '✓ შენახულია' : 'ფასის შენახვა'}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

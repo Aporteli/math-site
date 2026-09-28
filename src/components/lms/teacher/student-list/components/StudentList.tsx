@@ -8,6 +8,7 @@ import {
   Wallet,
   CalendarClock,
   Filter,
+  ChevronDown,
   Table2 as TableIcon,
   UserPlus,
   AlertCircle,
@@ -135,6 +136,7 @@ export function StudentList({
   const [editingIndividual, setEditingIndividual] = useState<StudentRecord | null>(null);
   const [paymentHistoryStudent, setPaymentHistoryStudent] = useState<StudentRecord | null>(null);
   const [showTodayOnly, setShowTodayOnly] = useState(false);
+  const [groupMenuOpen, setGroupMenuOpen] = useState(false);
 
   useEffect(() => setPayments(initialPayments), [initialPayments]);
 
@@ -441,41 +443,40 @@ export function StudentList({
 
     return (
       <div className="flex min-w-0 flex-col gap-4">
-        <div className="flex shrink-0 items-center gap-3">
-          <button
-            type="button"
-            onClick={() => router.push(localePath(locale, '/teacher/student-list'))}
-            className="cursor-pointer rounded-box border border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-navy-tint"
-          >
-            უკან
-          </button>
-          <p className="truncate text-sm font-bold text-ink">
-            {student ? `${student.firstName} ${student.lastName}` : 'მოსწავლე ვერ მოიძებნა'}
-          </p>
+        <div className="flex shrink-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push(localePath(locale, '/teacher/student-list'))}
+              className="cursor-pointer rounded-box border border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-navy-tint">
+              უკან
+            </button>
+            <p className="truncate text-sm font-bold text-ink">
+              {student ? `${student.firstName} ${student.lastName}` : 'მოსწავლე ვერ მოიძებნა'}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-1 rounded-box border border-hairline bg-paper p-1">
+            {(
+              [
+                ['pricing', 'ფასი'],
+                ['schedule', 'განრიგი'],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setStudentSection(key)}
+                className={`cursor-pointer rounded-box px-2 py-2 text-xs font-bold transition ${
+                  studentSection === key ? 'bg-navy text-white' : 'text-body hover:bg-surface hover:text-ink'
+                }`}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {student ? (
           <div className="flex min-w-0 flex-col gap-4">
-            <div className="grid grid-cols-2 gap-1 rounded-box border border-hairline bg-paper p-1">
-              {(
-                [
-                  ['pricing', 'ფასი'],
-                  ['schedule', 'განრიგი'],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setStudentSection(key)}
-                  className={`cursor-pointer rounded-box px-2 py-2 text-xs font-bold transition ${
-                    studentSection === key ? 'bg-navy text-white' : 'text-body hover:bg-surface hover:text-ink'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
             {studentSection === 'pricing' ? (
               <PaymentHistoryModal
                 embedded
@@ -618,62 +619,102 @@ export function StudentList({
               </div>
             </div>
 
-            <div className="custom-scrollbar -mx-1 flex items-center gap-1.5 overflow-x-auto px-1 pb-0.5">
+            <div className="relative w-fit max-w-full">
               <button
                 type="button"
-                onClick={() => {
-                  setActiveGroupId('all');
-                  setShowTodayOnly(false);
-                }}
-                className={`shrink-0 cursor-pointer rounded-box border px-3 py-1.5 text-[11px] font-bold transition ${
-                  activeGroupId === 'all' && !showTodayOnly
-                    ? 'border-navy bg-navy text-white shadow-sm'
-                    : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
-                }`}>
-                ყველა
+                onClick={() => setGroupMenuOpen((open) => !open)}
+                className="inline-flex h-8 max-w-full cursor-pointer items-center justify-between gap-1.5 rounded-box border border-hairline bg-paper px-2.5 text-[11px] font-bold text-ink transition hover:border-navy/40"
+              >
+                <span className="flex min-w-0 items-center gap-1">
+                  <Filter className="size-3 shrink-0 text-muted" />
+                  <span className="truncate">
+                    {showTodayOnly
+                      ? 'დღეს'
+                      : activeGroupId === 'all'
+                        ? 'ყველა'
+                        : (groups.find((g) => g.id === activeGroupId)?.name ?? 'ყველა')}
+                  </span>
+                </span>
+                <ChevronDown
+                  className={`size-3 shrink-0 text-muted transition-transform ${groupMenuOpen ? 'rotate-180' : ''}`}
+                />
               </button>
 
-              <button
-                type="button"
-                onClick={() => setShowTodayOnly(true)}
-                className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-box border px-3 py-1.5 text-[11px] font-bold transition ${
-                  showTodayOnly
-                    ? 'border-navy bg-navy text-white shadow-sm'
-                    : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
-                }`}>
-                <span>დღეს</span>
-              </button>
-              {groups.map((g) => {
-                const active = activeGroupId === g.id;
-                const count = students.filter((s) => s.groupIds.includes(g.id)).length;
-                return (
+              {groupMenuOpen ? (
+                <>
                   <button
-                    key={g.id}
                     type="button"
-                    onClick={() => {
-                      setActiveGroupId(g.id);
-                      setShowTodayOnly(false);
-                    }}
-                    className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-box border px-3 py-1.5 text-[11px] font-bold transition ${
-                      g.home
-                        ? active
-                          ? 'border-brass-strong bg-brass-strong text-white shadow-sm'
-                          : 'border-brass/40 bg-brass-tint text-brass-strong hover:border-brass-strong'
-                        : active
-                          ? 'border-navy bg-navy text-white shadow-sm'
-                          : 'border-hairline bg-paper text-body hover:border-navy/40 hover:bg-navy-tint'
-                    }`}>
-                    {g.home ? <span className="text-[9px] font-bold uppercase">სახლში</span> : null}
-                    <span>{g.name}</span>
-                    <span
-                      className={`rounded-box px-1.5 py-0.5 text-[9px] font-bold ${
-                        active ? 'bg-white/20 text-white' : 'bg-paper-deep text-muted'
-                      }`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
+                    aria-label="დახურვა"
+                    className="fixed inset-0 z-10 cursor-default"
+                    onClick={() => setGroupMenuOpen(false)}
+                  />
+                  <div className="absolute left-0 top-full z-20 mt-1 max-h-52 w-max min-w-full max-w-[16rem] overflow-y-auto rounded-box border border-hairline bg-surface p-0.5 shadow-lg">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveGroupId('all');
+                        setShowTodayOnly(false);
+                        setGroupMenuOpen(false);
+                      }}
+                      className={`flex w-full cursor-pointer items-center rounded-box px-2 py-1.5 text-left text-[11px] font-bold transition ${
+                        activeGroupId === 'all' && !showTodayOnly
+                          ? 'bg-navy text-white'
+                          : 'text-body hover:bg-navy-tint'
+                      }`}
+                    >
+                      ყველა
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowTodayOnly(true);
+                        setGroupMenuOpen(false);
+                      }}
+                      className={`flex w-full cursor-pointer items-center rounded-box px-2 py-1.5 text-left text-[11px] font-bold transition ${
+                        showTodayOnly ? 'bg-navy text-white' : 'text-body hover:bg-navy-tint'
+                      }`}
+                    >
+                      დღეს
+                    </button>
+                    {groups.map((g) => {
+                      const active = activeGroupId === g.id && !showTodayOnly;
+                      const count = students.filter((s) => s.groupIds.includes(g.id)).length;
+                      return (
+                        <button
+                          key={g.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveGroupId(g.id);
+                            setShowTodayOnly(false);
+                            setGroupMenuOpen(false);
+                          }}
+                          className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-box px-2 py-1.5 text-left text-[11px] font-bold transition ${
+                            g.home
+                              ? active
+                                ? 'bg-brass-strong text-white'
+                                : 'text-brass-strong hover:bg-brass-tint'
+                              : active
+                                ? 'bg-navy text-white'
+                                : 'text-body hover:bg-navy-tint'
+                          }`}
+                        >
+                          <span className="flex min-w-0 items-center gap-1.5">
+                            {g.home ? <span className="text-[9px] font-bold uppercase">სახლში</span> : null}
+                            <span className="truncate">{g.name}</span>
+                          </span>
+                          <span
+                            className={`rounded-box px-1.5 py-0.5 text-[9px] font-bold ${
+                              active ? 'bg-white/20 text-white' : 'bg-paper-deep text-muted'
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : null}
             </div>
           </>
         ) : null}
@@ -800,7 +841,9 @@ export function StudentList({
                         <label
                           key={student.id}
                           className={`flex cursor-pointer items-center gap-2 rounded-box border px-3 py-2 text-xs font-bold ${
-                            checked ? 'border-brass/40 bg-brass-tint text-brass-strong' : 'border-hairline bg-paper text-ink'
+                            checked
+                              ? 'border-brass/40 bg-brass-tint text-brass-strong'
+                              : 'border-hairline bg-paper text-ink'
                           }`}>
                           <input
                             type="checkbox"

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 
-import { ChevronDown, Clock3, Plus, Trash2, X } from 'lucide-react';
+import { Clock3, Plus, Trash2, X } from 'lucide-react';
 
 import { DAY_LABELS } from '../studentList.helpers';
 
@@ -75,7 +75,11 @@ export function LessonEditorModal({
         endTime,
       });
 
-      if (!res.ok) setError(res.error ?? 'შეცდომა');
+      if (!res.ok) {
+        setError(res.error ?? 'შეცდომა');
+        return;
+      }
+      setIsAddOpen(false);
     });
   };
 
@@ -155,15 +159,28 @@ export function LessonEditorModal({
             </div>
           </div>
 
-          {embedded ? null : (
+          <div className="flex shrink-0 items-center gap-1">
             <button
               type="button"
-              onClick={onClose}
-              className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink"
+              onClick={() => {
+                setIsAddOpen(true);
+                setError(null);
+              }}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-box border border-navy/30 bg-navy-tint px-2.5 py-2 text-[11px] font-bold text-navy transition hover:bg-navy-tint/80"
             >
-              <X className="h-4 w-4" />
+              <Plus className="h-3.5 w-3.5" />
+              ახალი გაკვეთილი
             </button>
-          )}
+            {embedded ? null : (
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Body */}
@@ -224,138 +241,131 @@ export function LessonEditorModal({
                 })}
               </div>
             )}
-          </div>
 
-          {/* ახალი გაკვეთილი */}
-          <div className="overflow-hidden rounded-box border border-navy/20 bg-navy-tint/30">
-            <button
-              type="button"
-              onClick={() => {
-                setIsAddOpen((value) => !value);
-                setError(null);
-              }}
-              className="flex min-h-12 w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-navy-tint/50"
-              aria-expanded={isAddOpen}
-            >
-              <span className="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-navy">
-                <Plus className="h-3 w-3" />
-                ახალი გაკვეთილი
-              </span>
-
-              <ChevronDown
-                className={`h-4 w-4 text-navy transition-transform duration-200 ${
-                  isAddOpen ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-
-            {isAddOpen ? (
-              <div className="border-t border-navy/15 p-4">
-                {!isIndividual || inHomeGroup ? (
-                  <p
-                    className={`mb-3 rounded-box border px-2.5 py-2 text-[11px] font-medium leading-snug text-muted ${
-                      inHomeGroup ? 'border-brass/30 bg-brass-tint/40' : 'border-navy/15 bg-surface'
-                    }`}>
-                    ეს დრო დაემატება ჯგუფის ყველა მოსწავლეს. გადახდები რჩება ცალ-ცალკე.
-                  </p>
-                ) : null}
-
-                <div className="space-y-2.5">
-                  {/* ჯგუფი — მხოლოდ ჯგუფურისთვის */}
-                  {!isIndividual && (
-                    <div>
-                      <label className="mb-1 block text-[10px] font-bold text-muted">
-                        ჯგუფი
-                      </label>
-
-                      <select
-                        value={groupId}
-                        onChange={(e) => setGroupId(e.target.value)}
-                        className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
-                      >
-                        {student.groupIds.map((gid) => (
-                          <option key={gid} value={gid}>
-                            {groups.find((g) => g.id === gid)?.name ?? gid}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* დღე */}
-                  <div>
-                    <label className="mb-1 block text-[10px] font-bold text-muted">
-                      დღე
-                    </label>
-
-                    <div className="grid grid-cols-7 gap-1">
-                      {DAYS.map((d) => (
-                        <button
-                          key={d}
-                          type="button"
-                          onClick={() => setDayOfWeek(d)}
-                          className={`min-h-10 cursor-pointer rounded-box border px-0.5 py-2 text-[10px] font-bold transition sm:text-[11px] ${
-                            dayOfWeek === d
-                              ? 'border-navy bg-navy text-white'
-                              : 'border-hairline bg-surface text-body hover:border-navy/40'
-                          }`}
-                        >
-                          {DAY_SHORT_KA[d - 1]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* დრო */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="mb-1 block text-[10px] font-bold text-muted">
-                        დაწყება
-                      </label>
-
-                      <input
-                        type="time"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-[10px] font-bold text-muted">
-                        დასრულება
-                      </label>
-
-                      <input
-                        type="time"
-                        value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                        className="w-full rounded-box border border-hairline bg-surface px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15 sm:text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {error ? (
-                    <p className="rounded-box bg-loss-tint px-2.5 py-1.5 text-[11px] font-bold text-loss">
-                      {error}
-                    </p>
-                  ) : null}
-
-                  <button
-                    type="button"
-                    onClick={handleAdd}
-                    disabled={isPending}
-                    className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    {isPending ? 'ინახება...' : 'დამატება'}
-                  </button>
-                </div>
-              </div>
+            {!isAddOpen && error ? (
+              <p className="mt-2 rounded-box bg-loss-tint px-2.5 py-1.5 text-[11px] font-bold text-loss">
+                {error}
+              </p>
             ) : null}
           </div>
         </div>
       </div>
+
+      {isAddOpen ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/45 p-3 backdrop-blur-[2px]"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsAddOpen(false);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal
+            aria-label="ახალი გაკვეთილი"
+            className="w-full max-w-sm space-y-2.5 rounded-box border border-hairline bg-surface p-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="flex items-center gap-1.5 text-sm font-bold text-ink">
+                <Plus className="h-3.5 w-3.5 text-navy" />
+                ახალი გაკვეთილი
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsAddOpen(false)}
+                className="flex size-8 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {!isIndividual || inHomeGroup ? (
+              <p
+                className={`rounded-box border px-2.5 py-2 text-[11px] font-medium leading-snug text-muted ${
+                  inHomeGroup ? 'border-brass/30 bg-brass-tint/40' : 'border-navy/15 bg-paper'
+                }`}
+              >
+                ეს დრო დაემატება ჯგუფის ყველა მოსწავლეს. გადახდები რჩება ცალ-ცალკე.
+              </p>
+            ) : null}
+
+            {!isIndividual && (
+              <div>
+                <label className="mb-1 block text-[10px] font-bold text-muted">ჯგუფი</label>
+                <select
+                  value={groupId}
+                  onChange={(e) => setGroupId(e.target.value)}
+                  className="w-full rounded-box border border-hairline bg-surface px-3 py-2 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15"
+                >
+                  {student.groupIds.map((gid) => (
+                    <option key={gid} value={gid}>
+                      {groups.find((g) => g.id === gid)?.name ?? gid}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="mb-1 block text-[10px] font-bold text-muted">დღე</label>
+              <div className="grid grid-cols-7 gap-1">
+                {DAYS.map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setDayOfWeek(d)}
+                    className={`min-h-9 cursor-pointer rounded-box border px-0.5 py-1.5 text-[10px] font-bold transition ${
+                      dayOfWeek === d
+                        ? 'border-navy bg-navy text-white'
+                        : 'border-hairline bg-surface text-body hover:border-navy/40'
+                    }`}
+                  >
+                    {DAY_SHORT_KA[d - 1]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="mb-1 block text-[10px] font-bold text-muted">დაწყება</label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full rounded-box border border-hairline bg-surface px-3 py-2 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] font-bold text-muted">დასრულება</label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full rounded-box border border-hairline bg-surface px-3 py-2 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:ring-2 focus:ring-navy/15"
+                />
+              </div>
+            </div>
+
+            {error ? (
+              <p className="rounded-box bg-loss-tint px-2.5 py-1.5 text-[11px] font-bold text-loss">
+                {error}
+              </p>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={handleAdd}
+              disabled={isPending}
+              className="inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {isPending ? 'ინახება...' : 'დამატება'}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
