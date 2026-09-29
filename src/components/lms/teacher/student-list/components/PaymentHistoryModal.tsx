@@ -101,6 +101,7 @@ export function PaymentHistoryModal({
   if (!open || !student) return null;
 
   /* ─────── Save price + type ─────── */
+  
   const handleSavePrice = () => {
     setError(null);
     const value = Number(priceDraft);
