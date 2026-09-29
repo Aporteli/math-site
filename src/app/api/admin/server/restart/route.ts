@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import { isLocale } from '@/i18n/config';
 import { requireRole } from '@/lib/auth/session';
@@ -11,10 +10,17 @@ const SERVICES = {
 
 type Service = keyof typeof SERVICES;
 
+function isService(value: unknown): value is Service {
+  return (
+    typeof value === 'string' &&
+    value in SERVICES
+  );
+}
+
 export async function POST(request: Request) {
   const { searchParams } = new URL(request.url);
   const locale = searchParams.get('locale');
-  
+
   if (!locale || !isLocale(locale)) {
     return NextResponse.json(
       { error: 'Invalid locale' },
@@ -25,9 +31,9 @@ export async function POST(request: Request) {
   await requireRole(locale, ['TEACHER', 'ADMIN']);
 
   const body = await request.json().catch(() => null);
-  const service = body?.service as Service | undefined;
+  const service = body?.service;
 
-  if (!service || !(service in SERVICES)) {
+  if (!isService(service)) {
     return NextResponse.json(
       { error: 'Invalid service' },
       { status: 400 },
@@ -76,4 +82,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

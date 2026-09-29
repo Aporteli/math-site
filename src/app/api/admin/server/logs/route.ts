@@ -2,13 +2,30 @@ import { NextResponse } from 'next/server';
 import { isLocale } from '@/i18n/config';
 import { requireRole } from '@/lib/auth/session';
 
+const SERVICES = ['livekit', 'caddy', 'redis'] as const;
+
+type Service = (typeof SERVICES)[number];
+
+function isService(value: string | null): value is Service {
+  return value !== null && SERVICES.includes(value as Service);
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
+
   const locale = searchParams.get('locale');
+  const service = searchParams.get('service');
 
   if (!locale || !isLocale(locale)) {
     return NextResponse.json(
       { error: 'Invalid locale' },
+      { status: 400 },
+    );
+  }
+
+  if (!isService(service)) {
+    return NextResponse.json(
+      { error: 'Invalid service' },
       { status: 400 },
     );
   }
@@ -26,12 +43,15 @@ export async function GET(request: Request) {
   }
 
   try {
-    const response = await fetch(`${agentUrl}/status`, {
-      headers: {
-        'X-Agent-Token': agentToken,
+    const response = await fetch(
+      `${agentUrl}/logs/${service}?lines=150`,
+      {
+        headers: {
+          'X-Agent-Token': agentToken,
+        },
+        cache: 'no-store',
       },
-      cache: 'no-store',
-    });
+    );
 
     const data = await response.json().catch(() => null);
 

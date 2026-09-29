@@ -26,7 +26,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const response = await fetch(`${agentUrl}/status`, {
+    const response = await fetch(`${agentUrl}/rooms`, {
       headers: {
         'X-Agent-Token': agentToken,
       },

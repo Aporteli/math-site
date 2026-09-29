@@ -1,109 +1,289 @@
-
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
 import {
+  Activity,
   CheckCircle2,
   CircleAlert,
+  Cpu,
+  Database,
+  HardDrive,
   Loader2,
+  MemoryStick,
   RefreshCw,
   RotateCcw,
   Server,
+  Terminal,
+  Users,
+  Video,
 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+
 import type { Locale } from '@/i18n/config';
-
-type DockerServices = Record<string, string>;
-
-type ServerStatus = {
-  status: string;
-  docker: DockerServices;
-};
 
 type ServiceId = 'livekit' | 'caddy' | 'redis';
 
-const SERVICES = [
-  {
-    id: 'livekit' as const,
-    dockerName: 'livekitpinfcomge-livekit-1',
-    name: 'LiveKit',
-    description: 'ვიდეოზარების მთავარი სერვისი',
-  },
-  {
-    id: 'caddy' as const,
-    dockerName: 'livekitpinfcomge-caddy-1',
-    name: 'Caddy',
-    description: 'HTTPS და ქსელური proxy',
-  },
-  {
-    id: 'redis' as const,
-    dockerName: 'livekitpinfcomge-redis-1',
-    name: 'Redis',
-    description: 'LiveKit-ის დამხმარე მონაცემთა სერვისი',
-  },
-] as const;
+type ServiceInfo = {
+  service: ServiceId;
+  container: string;
+  status: string;
+  running: boolean;
+  started_at?: string | null;
+};
 
-function isServiceOnline(status: string | undefined) {
-  return status?.startsWith('Up') ?? false;
+type Metrics = {
+  cpu: {
+    percent: number;
+    cores: number;
+    load_1m: number;
+    load_5m: number;
+    load_15m: number;
+  };
+  memory: {
+    total: number;
+    used: number;
+    available: number;
+    percent: number;
+  };
+  disk: {
+    total: number;
+    used: number;
+    available: number;
+    percent: number;
+  };
+  uptime: {
+    seconds: number;
+  };
+};
+
+type Room = {
+  name: string;
+  sid: string;
+  num_participants: number;
+  num_publishers: number;
+  creation_time: number;
+};
+
+type RoomsData = {
+  configured: boolean;
+  rooms: Room[];
+  room_count: number;
+  participant_count: number;
+  error?: string;
+};
+
+type StatusData = {
+  status: string;
+  docker: Record<string, string>;
+  services: Record<ServiceId, ServiceInfo>;
+};
+
+type LogsData = {
+  service: ServiceId;
+  lines: number;
+  logs: string;
+};
+
+const SERVICES: Array<{
+  id: ServiceId;
+  name: string;
+  description: string;
+  icon: typeof Video;
+}> = [
+  {
+    id: 'livekit',
+    name: 'LiveKit',
+    description: 'Video rooms and real-time communication',
+    icon: Video,
+  },
+  {
+    id: 'caddy',
+    name: 'Caddy',
+    description: 'TLS, HTTPS and reverse proxy',
+    icon: Server,
+  },
+  {
+    id: 'redis',
+    name: 'Redis',
+    description: 'LiveKit state and coordination',
+    icon: Database,
+  },
+];
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024 ** 3) {
+    return `${Math.round(bytes / 1024 ** 2)} MB`;
+  }
+
+  return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
 }
 
-export function ServerManager({
-  locale,
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  }
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  return `${minutes}m`;
+}
+
+function MetricCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
 }: {
-  locale: Locale;
+  icon: typeof Cpu;
+  label: string;
+  value: string;
+  detail: string;
 }) {
-  const [data, setData] = useState<ServerStatus | null>(null);
+  return (
+    <div className="rounded-2xl border border-hairline bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-tint text-navy">
+          <Icon className="h-4 w-4" />
+        </div>
+
+        <span className="text-xs text-muted">{label}</span>
+      </div>
+
+      <div className="mt-4 text-2xl font-semibold tracking-tight text-ink">
+        {value}
+      </div>
+
+      <div className="mt-1 text-xs text-body">{detail}</div>
+    </div>
+  );
+}
+
+export function ServerManager({ locale }: { locale: Locale }) {
+  const [status, setStatus] = useState<StatusData | null>(null);
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [rooms, setRooms] = useState<RoomsData | null>(null);
+  const [logs, setLogs] = useState<LogsData | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [restarting, setRestarting] = useState<ServiceId | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [logsLoading, setLogsLoading] = useState(false);
+
+  const [selectedLogService, setSelectedLogService] =
+    useState<ServiceId>('livekit');
+
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadStatus = useCallback(async () => {
-    try {
-      setError(null);
-
-      const response = await fetch(
-        `/api/admin/server/status?locale=${locale}`,
-        {
-          method: 'GET',
-          cache: 'no-store',
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to load server status');
+  const loadData = useCallback(
+    async (silent = false) => {
+      if (!silent) {
+        setRefreshing(true);
       }
 
-      const result: ServerStatus = await response.json();
+      try {
+        setError(null);
 
-      setData(result);
-    } catch {
-      setError('სერვერის მდგომარეობის მიღება ვერ მოხერხდა');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [locale]);
+        const response = await fetch(
+          `/api/admin/server/overview?locale=${encodeURIComponent(locale)}`,
+          {
+            cache: 'no-store',
+          },
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            typeof data?.error === 'string'
+              ? data.error
+              : 'Failed to load server status',
+          );
+        }
+
+        setStatus(data);
+        setMetrics(data.metrics);
+        setRooms(data.rooms);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to load server status',
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [locale],
+  );
+
+  const loadLogs = useCallback(
+    async (service: ServiceId) => {
+      setLogsLoading(true);
+
+      try {
+        const response = await fetch(
+          `/api/admin/server/logs?locale=${encodeURIComponent(
+            locale,
+          )}&service=${service}`,
+          {
+            cache: 'no-store',
+          },
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            typeof data?.error === 'string'
+              ? data.error
+              : 'Failed to load logs',
+          );
+        }
+
+        setLogs(data);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to load logs',
+        );
+      } finally {
+        setLogsLoading(false);
+      }
+    },
+    [locale],
+  );
 
   useEffect(() => {
-    void loadStatus();
-  }, [loadStatus]);
+    void loadData();
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setMessage(null);
-    void loadStatus();
-  };
+    const interval = window.setInterval(() => {
+      void loadData(true);
+    }, 15000);
 
-  const restartService = async (service: ServiceId) => {
-    const serviceInfo = SERVICES.find((item) => item.id === service);
+    return () => window.clearInterval(interval);
+  }, [loadData]);
 
-    if (!serviceInfo) {
+  useEffect(() => {
+    void loadLogs(selectedLogService);
+  }, [loadLogs, selectedLogService]);
+
+  async function restartService(service: ServiceId) {
+    const item = SERVICES.find((entry) => entry.id === service);
+
+    if (!item) {
       return;
     }
 
     const confirmed = window.confirm(
-      `ნამდვილად გსურთ ${serviceInfo.name}-ის გადატვირთვა?`,
+      `Restart ${item.name}? This may temporarily interrupt service.`,
     );
 
     if (!confirmed) {
@@ -116,7 +296,7 @@ export function ServerManager({
       setMessage(null);
 
       const response = await fetch(
-        `/api/admin/server/restart?locale=${locale}`,
+        `/api/admin/server/restart?locale=${encodeURIComponent(locale)}`,
         {
           method: 'POST',
           headers: {
@@ -128,222 +308,445 @@ export function ServerManager({
         },
       );
 
-      const result = await response.json().catch(() => null);
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          result?.error ?? 'Restart failed',
+          typeof data?.error === 'string'
+            ? data.error
+            : `Failed to restart ${item.name}`,
         );
       }
 
-      setMessage(`${serviceInfo.name} წარმატებით გადაიტვირთა`);
+      setMessage(`${item.name} restarted successfully.`);
 
       await new Promise((resolve) => {
-        setTimeout(resolve, 1500);
+        window.setTimeout(resolve, 1500);
       });
 
-      await loadStatus();
-    } catch {
+      await loadData(true);
+      await loadLogs(selectedLogService);
+    } catch (err) {
       setError(
-        `${serviceInfo.name}-ის გადატვირთვა ვერ მოხერხდა`,
+        err instanceof Error
+          ? err.message
+          : 'Failed to restart service',
       );
     } finally {
       setRestarting(null);
     }
-  };
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-60 items-center justify-center rounded-2xl border border-hairline bg-white shadow-sm">
+        <div className="flex items-center gap-2 text-sm text-muted">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Loading server...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex size-10 items-center justify-center rounded-xl bg-navy-tint text-navy">
-              <Server
-                className="size-5"
-                aria-hidden="true"
-              />
-            </span>
+      {(message || error) && (
+        <div
+          className={[
+            'flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm',
+            error
+              ? 'border-red-200 bg-red-50 text-red-700'
+              : 'border-emerald-200 bg-emerald-50 text-emerald-700',
+          ].join(' ')}
+        >
+          {error ? (
+            <CircleAlert className="h-4 w-4 shrink-0" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4 shrink-0" />
+          )}
 
-            <div>
-              <h3 className="text-sm font-semibold text-ink">
-                LiveKit ინფრასტრუქტურა
-              </h3>
+          <span>{error ?? message}</span>
+        </div>
+      )}
 
-              <p className="mt-0.5 text-xs text-muted">
-                VPS-ზე გაშვებული სერვისების მიმდინარე მდგომარეობა
-              </p>
-            </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          icon={Cpu}
+          label="CPU"
+          value={`${metrics?.cpu.percent.toFixed(1) ?? '0'}%`}
+          detail={`${metrics?.cpu.cores ?? 0} logical cores`}
+        />
+
+        <MetricCard
+          icon={MemoryStick}
+          label="Memory"
+          value={`${metrics?.memory.percent.toFixed(1) ?? '0'}%`}
+          detail={
+            metrics
+              ? `${formatBytes(metrics.memory.used)} / ${formatBytes(
+                  metrics.memory.total,
+                )}`
+              : '-'
+          }
+        />
+
+        <MetricCard
+          icon={HardDrive}
+          label="Disk"
+          value={`${metrics?.disk.percent.toFixed(1) ?? '0'}%`}
+          detail={
+            metrics
+              ? `${formatBytes(metrics.disk.used)} / ${formatBytes(
+                  metrics.disk.total,
+                )}`
+              : '-'
+          }
+        />
+
+        <MetricCard
+          icon={Activity}
+          label="Uptime"
+          value={
+            metrics
+              ? formatUptime(metrics.uptime.seconds)
+              : '-'
+          }
+          detail={
+            metrics
+              ? `Load ${metrics.cpu.load_1m.toFixed(2)}`
+              : '-'
+          }
+        />
+      </div>
+
+      <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-ink">
+              Services
+            </h2>
+            <p className="mt-1 text-sm text-body">
+              Manage the LiveKit infrastructure.
+            </p>
           </div>
 
           <button
             type="button"
-            onClick={handleRefresh}
-            disabled={loading || refreshing || restarting !== null}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-body transition-colors hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => void loadData()}
+            disabled={refreshing}
+            className="inline-flex items-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw
               className={[
-                'size-4',
+                'h-4 w-4',
                 refreshing ? 'animate-spin' : '',
               ].join(' ')}
-              aria-hidden="true"
             />
-
-            {refreshing ? 'განახლება...' : 'განახლება'}
+            Refresh
           </button>
+        </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-3">
+          {SERVICES.map((service) => {
+            const Icon = service.icon;
+            const serviceStatus = status?.services[service.id];
+            const isRestarting = restarting === service.id;
+
+            return (
+              <div
+                key={service.id}
+                className="rounded-2xl border border-hairline p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-tint text-navy">
+                      <Icon className="h-5 w-5" />
+                    </div>
+
+                    <div>
+                      <div className="font-medium text-ink">
+                        {service.name}
+                      </div>
+                      <div className="mt-0.5 text-xs text-muted">
+                        {service.description}
+                      </div>
+                    </div>
+                  </div>
+
+                  <span
+                    className={[
+                      'rounded-full px-2 py-1 text-[11px] font-medium',
+                      serviceStatus?.running
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'bg-red-50 text-red-700',
+                    ].join(' ')}
+                  >
+                    {serviceStatus?.running
+                      ? 'Running'
+                      : 'Offline'}
+                  </span>
+                </div>
+
+                <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2">
+                  <div className="truncate font-mono text-[11px] text-muted">
+                    {serviceStatus?.container ??
+                      service.id}
+                  </div>
+
+                  <div className="mt-1 text-xs text-body">
+                    {serviceStatus?.status ?? 'Unknown'}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    void restartService(service.id)
+                  }
+                  disabled={restarting !== null}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isRestarting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RotateCcw className="h-4 w-4" />
+                  )}
+
+                  {isRestarting ? 'Restarting...' : 'Restart'}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {error ? (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700">
-          <CircleAlert
-            className="mt-0.5 size-5 shrink-0"
-            aria-hidden="true"
-          />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-ink">
+                LiveKit rooms
+              </h2>
 
-          <div>
-            <p className="text-sm font-semibold">
-              ოპერაცია ვერ შესრულდა
-            </p>
+              <p className="mt-1 text-sm text-body">
+                Active rooms and participants.
+              </p>
+            </div>
 
-            <p className="mt-1 text-xs text-red-600">
-              {error}
-            </p>
+            <Video className="h-5 w-5 text-muted" />
           </div>
-        </div>
-      ) : null}
 
-      {message ? (
-        <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-700">
-          <CheckCircle2
-            className="size-5 shrink-0"
-            aria-hidden="true"
-          />
+          {!rooms?.configured ? (
+            <div className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-700">
+              LiveKit API credentials are not configured on the
+              server agent.
+            </div>
+          ) : rooms?.error ? (
+            <div className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">
+              {rooms.error}
+            </div>
+          ) : (
+            <>
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="text-xs text-muted">
+                    Rooms
+                  </div>
 
-          <p className="text-sm font-medium">
-            {message}
-          </p>
-        </div>
-      ) : null}
-
-      <div className="grid gap-4 md:grid-cols-3">
-        {SERVICES.map((service) => {
-          const status = data?.docker?.[service.dockerName];
-          const online = isServiceOnline(status);
-          const isRestarting = restarting === service.id;
-
-          return (
-            <div
-              key={service.id}
-              className="rounded-2xl border border-hairline bg-white p-5 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-ink">
-                    {service.name}
-                  </h3>
-
-                  <p className="mt-1 text-xs leading-5 text-muted">
-                    {service.description}
-                  </p>
+                  <div className="mt-1 text-2xl font-semibold text-ink">
+                    {rooms.room_count}
+                  </div>
                 </div>
 
-                {loading || isRestarting ? (
-                  <Loader2
-                    className="size-5 shrink-0 animate-spin text-muted"
-                    aria-label="იტვირთება"
-                  />
-                ) : online ? (
-                  <CheckCircle2
-                    className="size-5 shrink-0 text-emerald-500"
-                    aria-label="Online"
-                  />
-                ) : (
-                  <CircleAlert
-                    className="size-5 shrink-0 text-red-500"
-                    aria-label="Offline"
-                  />
-                )}
+                <div className="rounded-xl bg-slate-50 p-4">
+                  <div className="text-xs text-muted">
+                    Participants
+                  </div>
+
+                  <div className="mt-1 flex items-center gap-2 text-2xl font-semibold text-ink">
+                    <Users className="h-5 w-5 text-muted" />
+                    {rooms.participant_count}
+                  </div>
+                </div>
               </div>
 
-              <div className="mt-5 flex items-center gap-2">
-                <span
-                  className={[
-                    'size-2 rounded-full',
-                    loading || isRestarting
-                      ? 'bg-muted'
-                      : online
-                        ? 'bg-emerald-500'
-                        : 'bg-red-500',
-                  ].join(' ')}
-                />
+              <div className="mt-4 space-y-2">
+                {rooms.rooms.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-hairline p-5 text-center text-sm text-muted">
+                    No active rooms.
+                  </div>
+                ) : (
+                  rooms.rooms.map((room) => (
+                    <div
+                      key={room.sid}
+                      className="rounded-xl border border-hairline p-3"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="truncate text-sm font-medium text-ink">
+                          {room.name}
+                        </span>
 
-                <span
-                  className={[
-                    'text-sm font-medium',
-                    loading || isRestarting
-                      ? 'text-muted'
-                      : online
-                        ? 'text-emerald-600'
-                        : 'text-red-600',
-                  ].join(' ')}
-                >
-                  {isRestarting
-                    ? 'იტვირთება...'
-                    : loading
-                      ? 'იტვირთება'
-                      : online
-                        ? 'Online'
-                        : 'Offline'}
+                        <span className="shrink-0 text-xs text-muted">
+                          {room.num_participants}{' '}
+                          participant
+                          {room.num_participants === 1
+                            ? ''
+                            : 's'}
+                        </span>
+                      </div>
+
+                      <div className="mt-1 truncate font-mono text-[10px] text-muted">
+                        {room.sid}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-ink">
+                System load
+              </h2>
+
+              <p className="mt-1 text-sm text-body">
+                Current server resource usage.
+              </p>
+            </div>
+
+            <Activity className="h-5 w-5 text-muted" />
+          </div>
+
+          <div className="mt-5 space-y-5">
+            <div>
+              <div className="flex justify-between text-xs">
+                <span className="text-body">CPU</span>
+                <span className="font-medium text-ink">
+                  {metrics?.cpu.percent.toFixed(1)}%
                 </span>
               </div>
 
-              {status ? (
-                <p className="mt-3 truncate border-t border-hairline pt-3 text-[11px] text-muted">
-                  {status}
-                </p>
-              ) : null}
-
-              <button
-                type="button"
-                onClick={() => void restartService(service.id)}
-                disabled={
-                  loading ||
-                  refreshing ||
-                  restarting !== null
-                }
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-body transition-colors hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <RotateCcw
-                  className={[
-                    'size-4',
-                    isRestarting ? 'animate-spin' : '',
-                  ].join(' ')}
-                  aria-hidden="true"
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-navy"
+                  style={{
+                    width: `${Math.min(
+                      metrics?.cpu.percent ?? 0,
+                      100,
+                    )}%`,
+                  }}
                 />
-
-                {isRestarting
-                  ? 'იტვირთება...'
-                  : 'Restart'}
-              </button>
+              </div>
             </div>
-          );
-        })}
-      </div>
 
-      {data ? (
-        <div className="rounded-2xl border border-hairline bg-white px-5 py-4 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-xs font-medium text-muted">
-              Agent status
-            </span>
+            <div>
+              <div className="flex justify-between text-xs">
+                <span className="text-body">Memory</span>
+                <span className="font-medium text-ink">
+                  {metrics?.memory.percent.toFixed(1)}%
+                </span>
+              </div>
 
-            <span className="text-xs font-semibold text-emerald-600">
-              {data.status}
-            </span>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-navy"
+                  style={{
+                    width: `${Math.min(
+                      metrics?.memory.percent ?? 0,
+                      100,
+                    )}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between text-xs">
+                <span className="text-body">Disk</span>
+                <span className="font-medium text-ink">
+                  {metrics?.disk.percent.toFixed(1)}%
+                </span>
+              </div>
+
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-navy"
+                  style={{
+                    width: `${Math.min(
+                      metrics?.disk.percent ?? 0,
+                      100,
+                    )}%`,
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      ) : null}
+      </div>
+
+      <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
+              <Terminal className="h-4 w-4" />
+              Service logs
+            </h2>
+
+            <p className="mt-1 text-sm text-body">
+              Latest container output.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {SERVICES.map((service) => (
+              <button
+                key={service.id}
+                type="button"
+                onClick={() =>
+                  setSelectedLogService(service.id)
+                }
+                className={[
+                  'rounded-xl px-3 py-2 text-xs font-medium transition',
+                  selectedLogService === service.id
+                    ? 'bg-navy text-white'
+                    : 'border border-hairline text-body hover:bg-slate-50',
+                ].join(' ')}
+              >
+                {service.name}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() =>
+                void loadLogs(selectedLogService)
+              }
+              disabled={logsLoading}
+              className="inline-flex items-center gap-2 rounded-xl border border-hairline px-3 py-2 text-xs font-medium text-ink transition hover:bg-slate-50 disabled:opacity-50"
+            >
+              <RefreshCw
+                className={[
+                  'h-3.5 w-3.5',
+                  logsLoading ? 'animate-spin' : '',
+                ].join(' ')}
+              />
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-hidden rounded-xl border border-hairline bg-slate-950">
+          <pre className="max-h-[420px] overflow-auto p-4 font-mono text-[11px] leading-5 text-slate-200">
+            {logsLoading
+              ? 'Loading logs...'
+              : logs?.logs || 'No logs available.'}
+          </pre>
+        </div>
+      </div>
     </div>
   );
 }
