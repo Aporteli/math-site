@@ -1,23 +1,46 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
-import {
-  Calculator,
-  ChevronDown,
-  Divide,
-  GitBranch,
-  LineChart,
-  Percent,
-  Sigma,
-  SquareFunction,
-  Triangle as TriangleIcon,
-  Grid3x3,
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { LayoutGrid, Search } from 'lucide-react';
 import type { Dictionary } from '@/i18n/types';
 import type { Locale } from '@/i18n/config';
+import { PageHero } from '@/components/ui/PageHero';
+import { TOOL_SECTIONS, type ToolItemId, type ToolSectionId } from '@/lib/tools';
 
 const LogarithmLoader = dynamic(() => import('./logarithms/LogarithmLoader').then((m) => m.LogarithmLoader), {
+  ssr: false,
+  loading: () => <Loading />,
+});
+const ExponentLoader = dynamic(() => import('./exponents/ExponentLoader').then((m) => m.ExponentLoader), {
+  ssr: false,
+  loading: () => <Loading />,
+});
+const UnitCircleLoader = dynamic(() => import('./unit-circle/UnitCircleLoader').then((m) => m.UnitCircleLoader), {
+  ssr: false,
+  loading: () => <Loading />,
+});
+const GeometryLoader = dynamic(() => import('./geometry/GeometryLoader').then((m) => m.GeometryLoader), {
+  ssr: false,
+  loading: () => <Loading />,
+});
+const VectorLoader = dynamic(() => import('./vectors/VectorLoader').then((m) => m.VectorLoader), {
+  ssr: false,
+  loading: () => <Loading />,
+});
+const CombinatoricsLoader = dynamic(() => import('./combinatorics/CombinatoricsLoader').then((m) => m.CombinatoricsLoader), {
+  ssr: false,
+  loading: () => <Loading />,
+});
+const SequenceLoader = dynamic(() => import('./sequences/SequenceLoader').then((m) => m.SequenceLoader), {
+  ssr: false,
+  loading: () => <Loading />,
+});
+const RadicalLoader = dynamic(() => import('./radicals/RadicalLoader').then((m) => m.RadicalLoader), {
+  ssr: false,
+  loading: () => <Loading />,
+});
+const RearrangeLoader = dynamic(() => import('./rearrange/RearrangeLoader').then((m) => m.RearrangeLoader), {
   ssr: false,
   loading: () => <Loading />,
 });
@@ -52,6 +75,14 @@ const GraphingToolLoader = dynamic(() => import('./graphing/GraphingLoader').the
 
 type ToolId =
   | 'logarithms'
+  | 'exponents'
+  | 'unitCircle'
+  | 'geometry'
+  | 'vectors'
+  | 'combinatorics'
+  | 'sequences'
+  | 'radicals'
+  | 'rearrange'
   | 'quadratic-equations'
   | 'systemSolver'
   | 'polynomials'
@@ -60,138 +91,192 @@ type ToolId =
   | 'fractions'
   | 'graphing';
 
-const TABS: { id: ToolId; icon: typeof Calculator }[] = [
-  { id: 'logarithms', icon: Sigma },
-  { id: 'quadratic-equations', icon: SquareFunction },
-  { id: 'systemSolver', icon: Grid3x3 },
-  { id: 'polynomials', icon: Divide },
-  { id: 'inequalities', icon: GitBranch },
-  { id: 'triangle', icon: TriangleIcon },
-  { id: 'fractions', icon: Percent },
-  { id: 'graphing', icon: LineChart },
+const IMPLEMENTED: ToolId[] = [
+  'logarithms',
+  'exponents',
+  'unitCircle',
+  'geometry',
+  'vectors',
+  'combinatorics',
+  'sequences',
+  'radicals',
+  'rearrange',
+  'quadratic-equations',
+  'systemSolver',
+  'polynomials',
+  'inequalities',
+  'triangle',
+  'fractions',
+  'graphing',
 ];
 
-export function CalculatorHub({ locale, dict }: { locale: Locale; dict: Dictionary }) {
-  const [activeId, setActiveId] = useState<ToolId>('logarithms');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+type FilterId = 'all' | ToolSectionId;
+
+function isImplemented(id: string): id is ToolId {
+  return (IMPLEMENTED as string[]).includes(id);
+}
+
+function sectionForTool(id: string) {
+  return TOOL_SECTIONS.find((section) => section.tools.some((tool) => tool.id === id));
+}
+
+function normalize(value: string) {
+  return value.trim().toLocaleLowerCase();
+}
+
+function FilterPill({ active, onClick, children }: { active: boolean; onClick: () => void; children: string }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`max-w-full rounded-box border px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:px-4 ${
+        active
+          ? 'border-navy bg-navy text-white shadow-sm'
+          : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink'
+      }`}>
+      {children}
+    </button>
+  );
+}
+
+export function CalculatorHub({
+  locale,
+  dict,
+  initialId,
+}: {
+  locale: Locale;
+  dict: Dictionary;
+  initialId?: string;
+}) {
+  const copy = dict.toolsPage;
+  const [activeId, setActiveId] = useState<ToolItemId>(
+    initialId && initialId in dict.toolsPage.items ? (initialId as ToolItemId) : 'logarithms',
+  );
+  const [filter, setFilter] = useState<FilterId>('calculators');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
-    const hash = window.location.hash.slice(1) as ToolId;
-    if (TABS.some((t) => t.id === hash)) setActiveId(hash);
-    function onHash() {
-      const h = window.location.hash.slice(1) as ToolId;
-      if (TABS.some((t) => t.id === h)) setActiveId(h);
+    function applyHash() {
+      const hash = window.location.hash.slice(1);
+      if (!hash) return;
+      const section = TOOL_SECTIONS.find((entry) => entry.id === hash);
+      if (section) {
+        setFilter(section.id);
+        return;
+      }
+      const owner = sectionForTool(hash);
+      if (owner) {
+        setFilter(owner.id);
+        setActiveId(hash as ToolItemId);
+      }
     }
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
+    applyHash();
+    window.addEventListener('hashchange', applyHash);
+    return () => window.removeEventListener('hashchange', applyHash);
   }, []);
 
-  useEffect(() => {
-    if (!dropdownOpen) return;
-    function onClick() {
-      setDropdownOpen(false);
-    }
-    document.addEventListener('click', onClick);
-    return () => document.removeEventListener('click', onClick);
-  }, [dropdownOpen]);
-
-  function switchTo(id: ToolId) {
+  function switchTo(id: ToolItemId) {
+    const owner = sectionForTool(id);
+    if (owner) setFilter(owner.id);
     setActiveId(id);
-    setDropdownOpen(false);
     window.history.replaceState(null, '', `#${id}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  const items = dict.toolsPage.items;
-  const activeTab = TABS.find((t) => t.id === activeId);
-  const ActiveIcon = activeTab?.icon ?? Calculator;
-  const activeItem = activeTab ? items[activeTab.id] : null;
+  const normalizedQuery = normalize(query);
+  const matchedTools = useMemo(() => {
+    const sections = filter === 'all' ? TOOL_SECTIONS : TOOL_SECTIONS.filter((section) => section.id === filter);
+    return sections.flatMap((section) =>
+      section.tools.filter((tool) => {
+        if (!normalizedQuery) return true;
+        const item = copy.items[tool.id];
+        if (!item) return false;
+        return normalize(`${item.title} ${item.description} ${item.badge}`).includes(normalizedQuery);
+      }),
+    );
+  }, [copy.items, filter, normalizedQuery]);
+
+  const subcategoryTools = filter === 'all' && !normalizedQuery ? [] : matchedTools;
+  const showSubcategories = filter !== 'all' || normalizedQuery.length > 0;
+  const activeItem = copy.items[activeId];
+  const activeImplemented = isImplemented(activeId);
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
-      {/* Header */}
-      <header className="flex items-center gap-2">
-        <Calculator className="size-5 text-navy dark:text-sky-400" aria-hidden="true" />
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">კალკულატორები</h1>
-      </header>
-
-      {/* ── Desktop: Tabs (wrap, full height) ── */}
-      <nav
-        aria-label="კალკულატორები"
-        className="hidden rounded-2xl border border-hairline bg-white p-2 shadow-sm dark:bg-slate-900/60 dark:border-slate-800 sm:block">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const item = items[t.id];
-            if (!item) return null;
-            const active = t.id === activeId;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => switchTo(t.id)}
-                aria-current={active ? 'page' : undefined}
-                className={
-                  'inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-colors ' +
-                  (active
-                    ? 'bg-navy text-white shadow-sm dark:bg-sky-600'
-                    : 'text-body hover:bg-navy-tint hover:text-navy dark:hover:bg-slate-800 dark:hover:text-sky-400')
-                }>
-                <Icon className="size-3.5 shrink-0" aria-hidden="true" />
-                <span className="whitespace-nowrap">{item.title}</span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* ── Mobile: Dropdown ── */}
-      <div className="relative sm:hidden" onClick={(e) => e.stopPropagation()}>
-        <button
-          type="button"
-          onClick={() => setDropdownOpen((o) => !o)}
-          aria-expanded={dropdownOpen}
-          aria-haspopup="listbox"
-          className="flex w-full items-center justify-between gap-2 rounded-2xl border border-hairline bg-white px-4 py-3 text-sm font-semibold text-ink shadow-sm transition-colors hover:border-navy/30 dark:bg-slate-900/60 dark:border-slate-800">
-          <span className="flex min-w-0 items-center gap-2">
-            <ActiveIcon className="size-4 shrink-0 text-navy dark:text-sky-400" aria-hidden="true" />
-            <span className="truncate">{activeItem?.title ?? ''}</span>
-          </span>
-          <ChevronDown
-            className={`size-4 shrink-0 text-muted transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
-            aria-hidden="true"
-          />
-        </button>
-
-        {dropdownOpen && (
-          <ul
-            role="listbox"
-            className="absolute left-0 right-0 top-full z-30 mt-2 max-h-[70vh] overflow-y-auto rounded-2xl border border-hairline bg-white p-1.5 shadow-lg dark:bg-slate-900 dark:border-slate-700">
-            {TABS.map((t) => {
-              const Icon = t.icon;
-              const item = items[t.id];
-              if (!item) return null;
-              const active = t.id === activeId;
-              return (
-                <li key={t.id} role="option" aria-selected={active}>
-                  <button
-                    type="button"
-                    onClick={() => switchTo(t.id)}
-                    className={
-                      'flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition-colors ' +
-                      (active
-                        ? 'bg-navy text-white dark:bg-sky-600'
-                        : 'text-body hover:bg-navy-tint hover:text-navy dark:hover:bg-slate-800 dark:hover:text-sky-400')
-                    }>
-                    <Icon className="size-4 shrink-0" aria-hidden="true" />
-                    <span className="truncate">{item.title}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+    <div className="mx-auto min-h-screen w-full max-w-[1720px] space-y-6 px-4 py-8 text-ink sm:px-6 lg:px-8">
+      <PageHero
+        icon={LayoutGrid}
+        eyebrow={copy.hero.eyebrow}
+        title={copy.hero.title}
+        description={copy.hero.subtitle}
+        aside={
+          <>
+            <label className="relative block">
+              <span className="sr-only">{copy.hero.searchLabel}</span>
+              <Search
+                className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={copy.hero.searchPlaceholder}
+                autoComplete="off"
+                className="w-full min-w-0 appearance-none rounded-box   border border-hairline bg-white py-3 pr-4 pl-12 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+              />
+            </label>
+            <p className="text-sm text-muted" aria-live="polite">
+              {copy.hero.resultCount.replace('{count}', String(matchedTools.length))}
+            </p>
+          </>
+        }
+        footer={
+          <div className="space-y-3">
+            <nav aria-label={copy.filters.aria}>
+              <div className="flex flex-wrap gap-2">
+                {TOOL_SECTIONS.map((section) => (
+                  <FilterPill
+                    key={section.id}
+                    active={filter === section.id}
+                    onClick={() => setFilter(section.id)}>
+                    {copy.sections[section.id].filter}
+                  </FilterPill>
+                ))}
+              </div>
+            </nav>
+            {showSubcategories ? (
+              subcategoryTools.length === 0 ? (
+                <p className="text-sm font-medium text-body">{copy.hero.empty}</p>
+              ) : (
+                <div className="flex flex-wrap gap-2 border-t border-brass/40 pt-3">
+                  {subcategoryTools.map((tool) => {
+                    const item = copy.items[tool.id];
+                    if (!item) return null;
+                    const Icon = tool.icon;
+                    const active = tool.id === activeId;
+                    return (
+                      <button
+                        key={tool.id}
+                        type="button"
+                        onClick={() => switchTo(tool.id)}
+                        aria-current={active ? 'page' : undefined}
+                        className={
+                          'inline-flex max-w-full items-center gap-1.5 rounded-box border px-3 py-1.5 text-sm font-semibold transition-colors ' +
+                          (active
+                            ? 'border-navy bg-navy text-white shadow-sm'
+                            : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink')
+                        }>
+                        <Icon className="size-3.5 shrink-0" aria-hidden="true" />
+                        <span className="truncate">{item.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )
+            ) : null}
+          </div>
+        }
+      />
 
       {/* ── Active calculator ── */}
       <div>
@@ -199,71 +284,143 @@ export function CalculatorHub({ locale, dict }: { locale: Locale; dict: Dictiona
           <LogarithmLoader
             locale={locale}
             copy={dict.logarithmTool}
-            title={items.logarithms.title}
-            description={items.logarithms.description}
+            title={copy.items.logarithms.title}
+            description={copy.items.logarithms.description}
+          />
+        )}
+        {activeId === 'exponents' && (
+          <ExponentLoader
+            locale={locale}
+            copy={dict.exponentTool}
+            title={copy.items.exponents.title}
+            description={copy.items.exponents.description}
+          />
+        )}
+        {activeId === 'unitCircle' && (
+          <UnitCircleLoader
+            locale={locale}
+            copy={dict.unitCircleTool}
+            title={copy.items.unitCircle.title}
+            description={copy.items.unitCircle.description}
+          />
+        )}
+        {activeId === 'geometry' && (
+          <GeometryLoader
+            locale={locale}
+            copy={dict.geometryTool}
+            title={copy.items.geometry.title}
+            description={copy.items.geometry.description}
+          />
+        )}
+        {activeId === 'vectors' && (
+          <VectorLoader
+            locale={locale}
+            copy={dict.vectorTool}
+            title={copy.items.vectors.title}
+            description={copy.items.vectors.description}
+          />
+        )}
+        {activeId === 'combinatorics' && (
+          <CombinatoricsLoader
+            locale={locale}
+            copy={dict.combinatoricsTool}
+            title={copy.items.combinatorics.title}
+            description={copy.items.combinatorics.description}
+          />
+        )}
+        {activeId === 'sequences' && (
+          <SequenceLoader
+            locale={locale}
+            copy={dict.sequencesTool}
+            title={copy.items.sequences.title}
+            description={copy.items.sequences.description}
+          />
+        )}
+        {activeId === 'radicals' && (
+          <RadicalLoader
+            locale={locale}
+            copy={dict.radicalTool}
+            title={copy.items.radicals.title}
+            description={copy.items.radicals.description}
+          />
+        )}
+        {activeId === 'rearrange' && (
+          <RearrangeLoader
+            locale={locale}
+            copy={dict.rearrangeTool}
+            title={copy.items.rearrange.title}
+            description={copy.items.rearrange.description}
           />
         )}
         {activeId === 'quadratic-equations' && (
           <QuadraticLoader
             locale={locale}
             copy={dict.equations}
-            title={items['quadratic-equations'].title}
-            description={items['quadratic-equations'].description}
+            title={copy.items['quadratic-equations'].title}
+            description={copy.items['quadratic-equations'].description}
           />
         )}
         {activeId === 'systemSolver' && (
           <SystemSolverLoader
             locale={locale}
             copy={dict.systemSolverTool}
-            title={items.systemSolver.title}
-            description={items.systemSolver.description}
+            title={copy.items.systemSolver.title}
+            description={copy.items.systemSolver.description}
           />
         )}
         {activeId === 'polynomials' && (
           <PolynomialLoader
             locale={locale}
             copy={dict.polynomialTool}
-            title={items.polynomials.title}
-            description={items.polynomials.description}
+            title={copy.items.polynomials.title}
+            description={copy.items.polynomials.description}
           />
         )}
         {activeId === 'inequalities' && (
           <InequalityLoader
             locale={locale}
             copy={dict.inequalityTool}
-            title={items.inequalities.title}
-            description={items.inequalities.description}
+            title={copy.items.inequalities.title}
+            description={copy.items.inequalities.description}
           />
         )}
         {activeId === 'triangle' && (
           <TriangleLoader
             locale={locale}
             copy={dict.triangleTool}
-            title={items.triangle.title}
-            description={items.triangle.description}
+            title={copy.items.triangle.title}
+            description={copy.items.triangle.description}
           />
         )}
         {activeId === 'fractions' && (
           <FractionToolLoader
             locale={locale}
             copy={dict.fractionTool}
-            title={items.fractions.title}
-            description={items.fractions.description}
+            title={copy.items.fractions.title}
+            description={copy.items.fractions.description}
           />
         )}
         {activeId === 'graphing' && (
           <GraphingToolLoader
             locale={locale}
             copy={dict.graphingTool}
-            title={items.graphing.title}
-            description={items.graphing.description}
+            title={copy.items.graphing.title}
+            description={copy.items.graphing.description}
           />
         )}
+        {!activeImplemented && activeItem ? (
+          <section className="rounded-box border border-hairline bg-white p-6 shadow-sm sm:p-8">
+            <h2 className="text-xl font-semibold tracking-tight text-ink">{activeItem.title}</h2>
+            <p className="mt-2 max-w-3xl text-base leading-relaxed text-body">{activeItem.description}</p>
+            <h3 className="mt-6 text-lg font-semibold text-ink">{copy.tool.comingSoon}</h3>
+            <p className="mt-2 max-w-3xl text-base leading-relaxed text-body">{copy.tool.comingSoonText}</p>
+          </section>
+        ) : null}
       </div>
     </div>
   );
 }
 
 function Loading() {
-  return <div className="h-80 animate-pulse rounded-2xl border border-hairline bg-white dark:bg-slate-900" />;
+  return <div className="h-80 animate-pulse rounded-box border border-hairline bg-white dark:bg-slate-900" />;
 }

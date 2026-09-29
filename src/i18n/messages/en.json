@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "PinF — mathematics teaching platform",
-    "description": "Mathematics teaching platform for teachers and students."
+    "title": "MathLab — mathematics resources and tools",
+    "description": "Calculators, a formula reference, a problem bank and the lesson schedule in one catalogue."
   },
   "brand": {
-    "name": "PinF",
+    "name": "MathLab",
     "person": "Shota Mikolaichuki",
     "home": "Back to the home page"
   },
@@ -50,7 +50,7 @@
   },
   "home": {
     "index": {
-      "title": "pinf · Mathematics resources and tools",
+      "title": "MathLab · Mathematics resources and tools",
       "badge": "Open workspace / catalogue",
       "searchLabel": "Search the catalogue",
       "searchPlaceholder": "Find a topic, formula or calculator…",
@@ -292,6 +292,16 @@
         "title": "Sequences and series",
         "description": "The nth term of arithmetic and geometric progressions, the sum of the first n terms, and series convergence.",
         "badge": "Foundations"
+      },
+      "radicals": {
+        "title": "Radical simplifier",
+        "description": "Simplify square and higher roots, combine like radicals, rationalize denominators, and denest nested radicals.",
+        "badge": "Algebra"
+      },
+      "rearrange": {
+        "title": "Formula rearrangement",
+        "description": "Rearranges a given formula to solve for a selected variable and shows the algebraic steps.",
+        "badge": "Algebra"
       },
       "numberTheory": {
         "title": "Number theory (GCD / LCM)",
@@ -894,7 +904,7 @@
     },
     "signup": {
       "metaTitle": "Sign up",
-      "metaDescription": "Create a new account on pinf.",
+      "metaDescription": "Create a new account on MathLab.",
       "eyebrow": "New account",
       "title": "Create an account",
       "subtitle": "Register and start learning mathematics.",
@@ -2376,6 +2386,321 @@
     "clearHistory": "Clear",
     "examples": "Examples:"
   },
+  "exponentTool": {
+    "meta": {
+      "title": "Exponents",
+      "description": "Simplify powers and solve exponential equations and inequalities."
+    },
+    "back": "Back to Tools",
+    "eyebrow": "Algebra",
+    "inputTitle": "Exponential expression",
+    "variableLabel": "Variable",
+    "expressionLabel": "Expression",
+    "expressionPlaceholder": "2^(x + 1) = 16",
+    "solveButton": "Solve",
+    "solving": "Solving...",
+    "reset": "Reset",
+    "invalidExpression": "Invalid expression. Check the syntax.",
+    "emptyResult": "Enter an expression, equation, or inequality.",
+    "resultTitle": "Result",
+    "simplifiedLabel": "Simplified form",
+    "expandedLabel": "Expanded form",
+    "numericLabel": "Numeric value",
+    "solutionsLabel": "Solutions",
+    "noSolution": "No solution (empty set).",
+    "identityMessage": "Identity — true for every allowed value.",
+    "solutionSetLabel": "Solution set",
+    "keyboard": "Keyboard",
+    "clear": "Clear",
+    "syntaxTitle": "Syntax",
+    "syntax": [
+      "2^x or 2**(x)",
+      "e^x or exp(x)",
+      "(a^m)^n — power of a power",
+      "2^(x+1) = 16 — equation",
+      "2^x > 8 — inequality"
+    ],
+    "history": "History",
+    "clearHistory": "Clear",
+    "examples": "Examples:"
+  },
+  "unitCircleTool": {
+    "meta": {
+      "title": "Unit circle",
+      "description": "Convert degrees to radians and read exact radical values of the trigonometric functions."
+    },
+    "inputTitle": "Angle or expression",
+    "expressionLabel": "Expression",
+    "expressionPlaceholder": "30",
+    "unitLabel": "Unit",
+    "degrees": "Degrees",
+    "radians": "Radians",
+    "variableLabel": "Variable",
+    "solveButton": "Evaluate",
+    "solving": "Evaluating...",
+    "reset": "Reset",
+    "invalidExpression": "Invalid expression. Check the syntax.",
+    "emptyResult": "Enter an angle or a trigonometric expression.",
+    "degreesLabel": "Degrees",
+    "radiansLabel": "Radians",
+    "exactLabel": "Exact",
+    "numericLabel": "Numeric",
+    "undefined": "Undefined",
+    "simplifiedLabel": "Simplified",
+    "expandedLabel": "Expanded",
+    "solutionsLabel": "Solutions on [0, 2π)",
+    "noSolution": "No solution (empty set).",
+    "identityMessage": "Identity — true for every allowed value.",
+    "solutionSetLabel": "General solution",
+    "keyboard": "Keyboard",
+    "clear": "Clear",
+    "syntaxTitle": "Syntax",
+    "syntax": [
+      "30 or pi/6 — angle (choose the unit)",
+      "sin(30°) or sin(pi/6)",
+      "sin(x)^2 + cos(x)^2",
+      "sin(x) = 1/2 — equation"
+    ],
+    "history": "History",
+    "clearHistory": "Clear",
+    "examples": "Examples:"
+  },
+  "geometryTool": {
+    "inputTitle": "Solid",
+    "shapeLabel": "Shape",
+    "groups": { "2d": "2D", "3d": "3D" },
+    "shapes": {
+      "rectangle": "Rectangle",
+      "square": "Square",
+      "circle": "Circle",
+      "triangle": "Triangle",
+      "rightTriangle": "Right triangle",
+      "trapezoid": "Isosceles trapezoid",
+      "regularPolygon": "Regular polygon",
+      "cube": "Cube",
+      "rectangularPrism": "Rectangular prism",
+      "triangularPrism": "Triangular prism",
+      "cylinder": "Cylinder",
+      "squarePyramid": "Square pyramid",
+      "cone": "Cone",
+      "sphere": "Sphere"
+    },
+    "fields": { "a": "a", "b": "b", "c": "c", "r": "r", "h": "h", "l": "l", "n": "n" },
+    "hints": {
+      "rectangle": "a, b — sides",
+      "square": "a — side",
+      "circle": "r — radius",
+      "triangle": "a, b, c — sides",
+      "rightTriangle": "a, b — legs",
+      "trapezoid": "a, b — bases, h — height",
+      "regularPolygon": "n — number of sides, a — side",
+      "cube": "a — edge",
+      "rectangularPrism": "a, b, c — edges",
+      "triangularPrism": "a, b, c — base sides, l — length",
+      "cylinder": "r — radius, h — height",
+      "squarePyramid": "a — base edge, h — height",
+      "cone": "r — radius, h — height",
+      "sphere": "r — radius"
+    },
+    "targetLabel": "Known quantity",
+    "targetNone": "None",
+    "targetValueLabel": "Value",
+    "targetPlaceholder": "12*pi",
+    "variableLabel": "Unknown",
+    "solveButton": "Compute",
+    "solving": "Computing...",
+    "reset": "Reset",
+    "invalidExpression": "Check the dimensions.",
+    "emptyResult": "Choose a shape and enter its dimensions.",
+    "solutionsLabel": "Solution",
+    "noSolution": "No solution.",
+    "labels": {
+      "perimeter": "Perimeter",
+      "area": "Area",
+      "surface": "Surface area",
+      "lateral": "Lateral area",
+      "volume": "Volume",
+      "slant": "Slant height",
+      "baseArea": "Base area",
+      "diagonal": "Diagonal",
+      "hypotenuse": "Hypotenuse"
+    },
+    "keyboard": "Keyboard",
+    "clear": "Clear",
+    "syntaxTitle": "Syntax",
+    "syntax": [
+      "3, 4/2, sqrt(2), pi",
+      "r = x and volume 12*pi — solve",
+      "triangle 3, 4, 5 — Heron"
+    ],
+    "history": "History",
+    "clearHistory": "Clear",
+    "examples": "Examples:"
+  },
+  "vectorTool": {
+    "inputTitle": "Points or vectors",
+    "modes": { "points": "Points", "vectors": "Vectors" },
+    "dim2": "2D",
+    "dim3": "3D",
+    "pointA": "Point A",
+    "pointB": "Point B",
+    "vectorU": "Vector u",
+    "vectorV": "Vector v",
+    "solveButton": "Compute",
+    "solving": "Computing...",
+    "reset": "Reset",
+    "invalidExpression": "Check the coordinates.",
+    "emptyResult": "Enter two points or two vectors.",
+    "labels": {
+      "distance": "Distance",
+      "midpoint": "Midpoint",
+      "line": "Line equation",
+      "slope": "Slope",
+      "parametric": "Parametric form",
+      "symmetric": "Symmetric form",
+      "direction": "Direction vector",
+      "dot": "Dot product",
+      "cross": "Cross product",
+      "magnitudeU": "|u|",
+      "magnitudeV": "|v|",
+      "angle": "Angle",
+      "projection": "Projection of u onto v"
+    },
+    "keyboard": "Keyboard",
+    "clear": "Clear",
+    "syntaxTitle": "Syntax",
+    "syntax": [
+      "3, -1/2, sqrt(2), pi",
+      "(0,0) and (3,4) — distance, midpoint, line",
+      "(1,2,3) and (4,-5,6) — dot and cross product"
+    ],
+    "history": "History",
+    "clearHistory": "Clear",
+    "examples": "Examples:"
+  },
+  "combinatoricsTool": {
+    "inputTitle": "Combinatorics",
+    "kinds": {
+      "P": "Permutations P",
+      "A": "Arrangements A",
+      "C": "Combinations C",
+      "binomial": "Binomial"
+    },
+    "repetition": "With repetition",
+    "expressionLabel": "Expression",
+    "expressionPlaceholder": "(x+y)^5",
+    "solveButton": "Compute",
+    "solving": "Computing...",
+    "reset": "Reset",
+    "invalidExpression": "Check the values.",
+    "emptyResult": "Choose P, A, C, or a binomial coefficient.",
+    "formulaLabel": "Formula",
+    "valueLabel": "Value",
+    "expandedLabel": "Expanded",
+    "keyboard": "Keyboard",
+    "clear": "Clear",
+    "syntaxTitle": "Syntax",
+    "syntax": [
+      "P(n) = n!",
+      "A(n,k) = n!/(n-k)!, with repetition n^k",
+      "C(n,k), with repetition C(n+k-1,k)",
+      "(x+y)^n — binomial expansion"
+    ],
+    "history": "History",
+    "clearHistory": "Clear",
+    "examples": "Examples:"
+  },
+  "sequencesTool": {
+    "inputTitle": "Sequence or series",
+    "kinds": {
+      "arithmetic": "Arithmetic",
+      "geometric": "Geometric",
+      "series": "Series"
+    },
+    "firstTerm": "First term a",
+    "difference": "Difference d",
+    "ratio": "Ratio r",
+    "termLabel": "General term",
+    "variableLabel": "Index",
+    "partialN": "n (optional)",
+    "optional": "empty — infinite sum only",
+    "solveButton": "Compute",
+    "solving": "Computing...",
+    "reset": "Reset",
+    "invalidExpression": "Check the values.",
+    "emptyResult": "Enter a progression or a series term.",
+    "converges": "The series converges",
+    "diverges": "The series diverges",
+    "labels": {
+      "nth": "nth term",
+      "sum": "Sum of the first n terms",
+      "infinite": "Infinite sum"
+    },
+    "keyboard": "Keyboard",
+    "clear": "Clear",
+    "syntaxTitle": "Syntax",
+    "syntax": [
+      "a_n = a + (n-1)d",
+      "a_n = a*r^(n-1), |r|<1 converges",
+      "1/n**2, (-1)**(n+1)/n"
+    ],
+    "history": "History",
+    "clearHistory": "Clear",
+    "examples": "Examples:"
+  },
+  "radicalTool": {
+    "inputTitle": "Radical",
+    "variableLabel": "Variable",
+    "expressionLabel": "Expression",
+    "expressionPlaceholder": "sqrt(50)",
+    "solveButton": "Simplify",
+    "solving": "Simplifying...",
+    "reset": "Reset",
+    "invalidExpression": "Invalid expression.",
+    "emptyResult": "Enter a radical expression or equation.",
+    "simplifiedLabel": "Simplified",
+    "rationalizedLabel": "Rationalized denominator",
+    "solutionsLabel": "Solutions",
+    "noSolution": "No solution.",
+    "identityMessage": "Identity.",
+    "keyboard": "Keyboard",
+    "clear": "Clear",
+    "syntaxTitle": "Syntax",
+    "syntax": [
+      "sqrt(50), cbrt(16), root(54, 3)",
+      "1/(sqrt(3)-1) — rationalize",
+      "sqrt(x+1) = 3 — equation"
+    ],
+    "history": "History",
+    "clearHistory": "Clear",
+    "examples": "Examples:"
+  },
+  "rearrangeTool": {
+    "inputTitle": "Formula",
+    "expressionLabel": "Formula",
+    "expressionPlaceholder": "A = pi*r**2",
+    "variableLabel": "Solve for",
+    "solveButton": "Rearrange",
+    "solving": "Rearranging...",
+    "reset": "Reset",
+    "invalidExpression": "Could not rearrange this formula.",
+    "emptyResult": "Enter a formula and the variable to solve for.",
+    "examples": "Examples:",
+    "history": "History",
+    "clearHistory": "Clear",
+    "ops": {
+      "start": "Start",
+      "swap": "Swap sides",
+      "subtract": "Add or subtract",
+      "divide": "Multiply or divide",
+      "root": "Take a root",
+      "log": "Take a logarithm",
+      "inverse": "Apply the inverse",
+      "exp": "Exponentiate",
+      "collect": "Collect terms",
+      "result": "Result"
+    }
+  },
   "triangleTool": {
     "meta": {
       "title": "Triangle solver",
@@ -2489,7 +2814,7 @@
       "address": "1 Chavchavadze Avenue, Tbilisi",
       "telegram": "@mathlabge"
     },
-    "copyright": "© {year} pinf",
+    "copyright": "© {year} MathLab",
     "legal": {
       "privacy": "Privacy",
       "terms": "Terms and conditions"

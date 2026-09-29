@@ -24,11 +24,5 @@ export function GraphingToolLoader({
 }
 
 function GraphingSkeleton() {
-  return (
-    <div className="bg-paper-deep/60">
-      <div className="mx-auto max-w-[1500px] px-4 py-16 sm:px-6 lg:px-8">
-        <div className="h-80 animate-pulse rounded-2xl border border-hairline bg-white" />
-      </div>
-    </div>
-  );
+  return <div className="h-80 animate-pulse rounded-box border border-hairline bg-white" />;
 }

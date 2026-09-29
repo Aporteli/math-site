@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "PinF — მათემატიკური სასწავლო პლატფორმა",
-    "description": "მათემატიკური სასწავლო პლატფორმა მასწავლებლებისა და მოსწავლეებისთვის."
+    "title": "MathLab — მათემატიკური რესურსები და ხელსაწყოები",
+    "description": "კალკულატორები, ფორმულების ცნობარი, ამოცანების ბანკი და სასწავლო განრიგი ერთ კატალოგში."
   },
   "brand": {
-    "name": "PinF",
+    "name": "MathLab",
     "person": "შოთა მიკოლაიჩუკი",
     "home": "მთავარ გვერდზე დაბრუნება"
   },
@@ -50,7 +50,7 @@
   },
   "home": {
     "index": {
-      "title": "pinf · მათემატიკური რესურსები და ხელსაწყოები",
+      "title": "MathLab · მათემატიკური რესურსები და ხელსაწყოები",
       "badge": "ღია სასწავლო სივრცე / კატალოგი",
       "searchLabel": "ძიება კატალოგში",
       "searchPlaceholder": "მოძებნე თემა, ფორმულა ან კალკულატორი…",
@@ -292,6 +292,16 @@
         "title": "მიმდევრობები და მწკრივები",
         "description": "არითმეტიკული და გეომეტრიული პროგრესიის n-ური წევრი, პირველი n წევრის ჯამი და მწკრივის კრებადობა.",
         "badge": "საბაზო"
+      },
+      "radicals": {
+        "title": "რადიკალების გამარტივება",
+        "description": "ფესვების გამარტივება, ერთნაირი რადიკალების შეკრება, მნიშვნელის გათავისუფლება და ჩადგმული ფესვები.",
+        "badge": "ალგებრა"
+      },
+      "rearrange": {
+        "title": "ფორმულის გარდაქმნა",
+        "description": "ფორმულის გარდაქმნა არჩეული ცვლადის მიმართ და ალგებრული ნაბიჯების ჩვენება.",
+        "badge": "ალგებრა"
       },
       "numberTheory": {
         "title": "რიცხვთა თეორია (უსგ / უსჯ)",
@@ -894,7 +904,7 @@
     },
     "signup": {
       "metaTitle": "რეგისტრაცია",
-      "metaDescription": "შექმენი ახალი ანგარიში pinf-ზე.",
+      "metaDescription": "შექმენი ახალი ანგარიში MathLab-ზე.",
       "eyebrow": "ახალი ანგარიში",
       "title": "შექმენი ანგარიში",
       "subtitle": "დარეგისტრირდი და დაიწყე მათემატიკის სწავლა.",
@@ -2438,6 +2448,321 @@
     "clearHistory": "გასუფთავება",
     "examples": "მაგალითები:"
   },
+  "exponentTool": {
+    "meta": {
+      "title": "ხარისხები",
+      "description": "ხარისხების გამარტივება და მაჩვენებლიანი განტოლებებისა და უტოლობების ამოხსნა."
+    },
+    "back": "ხელსაწყოები",
+    "eyebrow": "ალგებრა",
+    "inputTitle": "ხარისხიანი გამოსახულება",
+    "variableLabel": "ცვლადი",
+    "expressionLabel": "გამოსახულება",
+    "expressionPlaceholder": "2^(x + 1) = 16",
+    "solveButton": "გამოთვალე",
+    "solving": "ითვლება...",
+    "reset": "გასუფთავება",
+    "invalidExpression": "გამოსახულება არასწორია.",
+    "emptyResult": "შეიყვანეთ გამოსახულება, განტოლება ან უტოლობა.",
+    "resultTitle": "შედეგი",
+    "simplifiedLabel": "გამარტივებული",
+    "expandedLabel": "გაშლილი",
+    "numericLabel": "რიცხვითი მნიშვნელობა",
+    "solutionsLabel": "ამონახსნები",
+    "noSolution": "ამონახსნი არ არსებობს",
+    "identityMessage": "იდენტობა — სრულდება ყველა დასაშვები მნიშვნელობისთვის",
+    "solutionSetLabel": "ამონახსნის სიმრავლე",
+    "keyboard": "კლავიატურა",
+    "clear": "გასუფთავება",
+    "syntaxTitle": "სინტაქსი",
+    "syntax": [
+      "2^x ან 2**(x)",
+      "e^x ან exp(x)",
+      "(a^m)^n — ხარისხის ხარისხი",
+      "2^(x+1) = 16 — განტოლება",
+      "2^x > 8 — უტოლობა"
+    ],
+    "history": "ისტორია",
+    "clearHistory": "გასუფთავება",
+    "examples": "მაგალითები:"
+  },
+  "unitCircleTool": {
+    "meta": {
+      "title": "ერთეულოვანი წრეწირი",
+      "description": "კუთხეების გადაყვანა (გრადუსი ⟷ რადიანი) და ტრიგონომეტრიული ფუნქციების ზუსტი რადიკალური მნიშვნელობები."
+    },
+    "inputTitle": "კუთხე ან გამოსახულება",
+    "expressionLabel": "გამოსახულება",
+    "expressionPlaceholder": "30",
+    "unitLabel": "ერთეული",
+    "degrees": "გრადუსი",
+    "radians": "რადიანი",
+    "variableLabel": "ცვლადი",
+    "solveButton": "გამოთვალე",
+    "solving": "ითვლება...",
+    "reset": "გასუფთავება",
+    "invalidExpression": "გამოსახულება არასწორია.",
+    "emptyResult": "შეიყვანეთ კუთხე ან ტრიგონომეტრიული გამოსახულება.",
+    "degreesLabel": "გრადუსები",
+    "radiansLabel": "რადიანები",
+    "exactLabel": "ზუსტი",
+    "numericLabel": "რიცხვითი",
+    "undefined": "განუსაზღვრელი",
+    "simplifiedLabel": "გამარტივებული",
+    "expandedLabel": "გაშლილი",
+    "solutionsLabel": "ამონახსნები [0, 2π)",
+    "noSolution": "ამონახსნი არ არსებობს",
+    "identityMessage": "იდენტობა — სრულდება ყველა დასაშვები მნიშვნელობისთვის",
+    "solutionSetLabel": "ზოგადი ამონახსნი",
+    "keyboard": "კლავიატურა",
+    "clear": "გასუფთავება",
+    "syntaxTitle": "სინტაქსი",
+    "syntax": [
+      "30 ან pi/6 — კუთხე (აირჩიეთ ერთეული)",
+      "sin(30°) ან sin(pi/6)",
+      "sin(x)^2 + cos(x)^2",
+      "sin(x) = 1/2 — განტოლება"
+    ],
+    "history": "ისტორია",
+    "clearHistory": "გასუფთავება",
+    "examples": "მაგალითები:"
+  },
+  "geometryTool": {
+    "inputTitle": "ფიგურა",
+    "shapeLabel": "ფიგურა",
+    "groups": { "2d": "2D", "3d": "3D" },
+    "shapes": {
+      "rectangle": "მართკუთხედი",
+      "square": "კვადრატი",
+      "circle": "წრე",
+      "triangle": "სამკუთხედი",
+      "rightTriangle": "მართკუთხა სამკუთხედი",
+      "trapezoid": "ტოლფერდა ტრაპეცია",
+      "regularPolygon": "წესიერი მრავალკუთხედი",
+      "cube": "კუბი",
+      "rectangularPrism": "მართკუთხა პრიზმა",
+      "triangularPrism": "სამკუთხა პრიზმა",
+      "cylinder": "ცილინდრი",
+      "squarePyramid": "ოთხკუთხა პირამიდა",
+      "cone": "კონუსი",
+      "sphere": "სფერო"
+    },
+    "fields": { "a": "a", "b": "b", "c": "c", "r": "r", "h": "h", "l": "l", "n": "n" },
+    "hints": {
+      "rectangle": "a, b — გვერდები",
+      "square": "a — გვერდი",
+      "circle": "r — რადიუსი",
+      "triangle": "a, b, c — გვერდები",
+      "rightTriangle": "a, b — კათეტები",
+      "trapezoid": "a, b — ფუძეები, h — სიმაღლე",
+      "regularPolygon": "n — გვერდების რაოდენობა, a — გვერდი",
+      "cube": "a — წიბო",
+      "rectangularPrism": "a, b, c — წიბოები",
+      "triangularPrism": "a, b, c — ფუძის გვერდები, l — სიგრძე",
+      "cylinder": "r — რადიუსი, h — სიმაღლე",
+      "squarePyramid": "a — ფუძის გვერდი, h — სიმაღლე",
+      "cone": "r — რადიუსი, h — სიმაღლე",
+      "sphere": "r — რადიუსი"
+    },
+    "targetLabel": "ცნობილი სიდიდე",
+    "targetNone": "არცერთი",
+    "targetValueLabel": "მნიშვნელობა",
+    "targetPlaceholder": "12*pi",
+    "variableLabel": "უცნობი",
+    "solveButton": "გამოთვალე",
+    "solving": "ითვლება...",
+    "reset": "გასუფთავება",
+    "invalidExpression": "შეამოწმეთ მონაცემები.",
+    "emptyResult": "აირჩიეთ ფიგურა და შეიყვანეთ ზომები.",
+    "solutionsLabel": "ამონახსნი",
+    "noSolution": "ამონახსნი არ არსებობს",
+    "labels": {
+      "perimeter": "პერიმეტრი",
+      "area": "ფართობი",
+      "surface": "სრული ზედაპირი",
+      "lateral": "გვერდითი ზედაპირი",
+      "volume": "მოცულობა",
+      "slant": "მსახველი",
+      "baseArea": "ფუძის ფართობი",
+      "diagonal": "დიაგონალი",
+      "hypotenuse": "ჰიპოტენუზა"
+    },
+    "keyboard": "კლავიატურა",
+    "clear": "გასუფთავება",
+    "syntaxTitle": "სინტაქსი",
+    "syntax": [
+      "3, 4/2, sqrt(2), pi",
+      "r = x და მოცულობა 12*pi — ამოხსნა",
+      "სამკუთხედი 3, 4, 5 — ჰერონი"
+    ],
+    "history": "ისტორია",
+    "clearHistory": "გასუფთავება",
+    "examples": "მაგალითები:"
+  },
+  "vectorTool": {
+    "inputTitle": "წერტილები ან ვექტორები",
+    "modes": { "points": "წერტილები", "vectors": "ვექტორები" },
+    "dim2": "2D",
+    "dim3": "3D",
+    "pointA": "წერტილი A",
+    "pointB": "წერტილი B",
+    "vectorU": "ვექტორი u",
+    "vectorV": "ვექტორი v",
+    "solveButton": "გამოთვალე",
+    "solving": "ითვლება...",
+    "reset": "გასუფთავება",
+    "invalidExpression": "შეამოწმეთ კოორდინატები.",
+    "emptyResult": "შეიყვანეთ ორი წერტილი ან ორი ვექტორი.",
+    "labels": {
+      "distance": "მანძილი",
+      "midpoint": "შუაწერტილი",
+      "line": "წრფის განტოლება",
+      "slope": "დახრილობა",
+      "parametric": "პარამეტრული სახე",
+      "symmetric": "სიმეტრიული სახე",
+      "direction": "მიმართული ვექტორი",
+      "dot": "სკალარული ნამრავლი",
+      "cross": "ვექტორული ნამრავლი",
+      "magnitudeU": "|u|",
+      "magnitudeV": "|v|",
+      "angle": "კუთხე",
+      "projection": "გეგმილი u v-ზე"
+    },
+    "keyboard": "კლავიატურა",
+    "clear": "გასუფთავება",
+    "syntaxTitle": "სინტაქსი",
+    "syntax": [
+      "3, -1/2, sqrt(2), pi",
+      "(0,0) და (3,4) — მანძილი, შუაწერტილი, წრფე",
+      "(1,2,3) და (4,-5,6) — სკალარული და ვექტორული ნამრავლი"
+    ],
+    "history": "ისტორია",
+    "clearHistory": "გასუფთავება",
+    "examples": "მაგალითები:"
+  },
+  "combinatoricsTool": {
+    "inputTitle": "კომბინატორიკა",
+    "kinds": {
+      "P": "გადანაცვლება P",
+      "A": "განლაგება A",
+      "C": "კომბინაცია C",
+      "binomial": "ბინომი"
+    },
+    "repetition": "გამეორებით",
+    "expressionLabel": "გამოსახულება",
+    "expressionPlaceholder": "(x+y)^5",
+    "solveButton": "გამოთვალე",
+    "solving": "ითვლება...",
+    "reset": "გასუფთავება",
+    "invalidExpression": "შეამოწმეთ მონაცემები.",
+    "emptyResult": "აირჩიეთ P, A, C ან ბინომიალური კოეფიციენტი.",
+    "formulaLabel": "ფორმულა",
+    "valueLabel": "მნიშვნელობა",
+    "expandedLabel": "გაშლილი",
+    "keyboard": "კლავიატურა",
+    "clear": "გასუფთავება",
+    "syntaxTitle": "სინტაქსი",
+    "syntax": [
+      "P(n) = n!",
+      "A(n,k) = n!/(n-k)!, გამეორებით n^k",
+      "C(n,k) = C(n+k-1,k) გამეორებით",
+      "(x+y)^n — ბინომის გაშლა"
+    ],
+    "history": "ისტორია",
+    "clearHistory": "გასუფთავება",
+    "examples": "მაგალითები:"
+  },
+  "sequencesTool": {
+    "inputTitle": "მიმდევრობა ან მწკრივი",
+    "kinds": {
+      "arithmetic": "არითმეტიკული",
+      "geometric": "გეომეტრიული",
+      "series": "მწკრივი"
+    },
+    "firstTerm": "პირველი წევრი a",
+    "difference": "სხვაობა d",
+    "ratio": "მნიშვნელი q",
+    "termLabel": "საერთო წევრი",
+    "variableLabel": "ინდექსი",
+    "partialN": "n (არასავალდებულო)",
+    "optional": "ცარიელი — მხოლოდ უსასრულო ჯამი",
+    "solveButton": "გამოთვალე",
+    "solving": "ითვლება...",
+    "reset": "გასუფთავება",
+    "invalidExpression": "შეამოწმეთ მონაცემები.",
+    "emptyResult": "შეიყვანეთ პროგრესია ან მწკრივის წევრი.",
+    "converges": "მწკრივი კრებადია",
+    "diverges": "მწკრივი განშლადია",
+    "labels": {
+      "nth": "მე-n წევრი",
+      "sum": "პირველი n წევრის ჯამი",
+      "infinite": "უსასრულო ჯამი"
+    },
+    "keyboard": "კლავიატურა",
+    "clear": "გასუფთავება",
+    "syntaxTitle": "სინტაქსი",
+    "syntax": [
+      "a_n = a + (n-1)d",
+      "a_n = a*q^(n-1), |q|<1 — კრებადია",
+      "1/n**2, (-1)**(n+1)/n"
+    ],
+    "history": "ისტორია",
+    "clearHistory": "გასუფთავება",
+    "examples": "მაგალითები:"
+  },
+  "radicalTool": {
+    "inputTitle": "რადიკალი",
+    "variableLabel": "ცვლადი",
+    "expressionLabel": "გამოსახულება",
+    "expressionPlaceholder": "sqrt(50)",
+    "solveButton": "გამარტივება",
+    "solving": "ითვლება...",
+    "reset": "გასუფთავება",
+    "invalidExpression": "გამოსახულება არასწორია.",
+    "emptyResult": "შეიყვანეთ ფესვიანი გამოსახულება ან განტოლება.",
+    "simplifiedLabel": "გამარტივებული",
+    "rationalizedLabel": "რაციონალიზებული მნიშვნელი",
+    "solutionsLabel": "ამონახსნები",
+    "noSolution": "ამონახსნი არ არსებობს",
+    "identityMessage": "იდენტობა",
+    "keyboard": "კლავიატურა",
+    "clear": "გასუფთავება",
+    "syntaxTitle": "სინტაქსი",
+    "syntax": [
+      "sqrt(50), cbrt(16), root(54, 3)",
+      "1/(sqrt(3)-1) — მნიშვნელის გათავისუფლება",
+      "sqrt(x+1) = 3 — განტოლება"
+    ],
+    "history": "ისტორია",
+    "clearHistory": "გასუფთავება",
+    "examples": "მაგალითები:"
+  },
+  "rearrangeTool": {
+    "inputTitle": "ფორმულა",
+    "expressionLabel": "ფორმულა",
+    "expressionPlaceholder": "A = pi*r**2",
+    "variableLabel": "გამოვხატოთ",
+    "solveButton": "გარდაქმნა",
+    "solving": "ითვლება...",
+    "reset": "გასუფთავება",
+    "invalidExpression": "ფორმულა ვერ გარდაიქმნა.",
+    "emptyResult": "შეიყვანეთ ფორმულა და ცვლადი.",
+    "examples": "მაგალითები:",
+    "history": "ისტორია",
+    "clearHistory": "გასუფთავება",
+    "ops": {
+      "start": "საწყისი",
+      "swap": "გვერდების შეცვლა",
+      "subtract": "მიმატება ან გამოკლება",
+      "divide": "გამრავლება ან გაყოფა",
+      "root": "ფესვის ამოღება",
+      "log": "ლოგარითმი",
+      "inverse": "შებრუნებული ფუნქცია",
+      "exp": "ახარისხება",
+      "collect": "წევრების შეკრება",
+      "result": "შედეგი"
+    }
+  },
   "triangleTool": {
     "meta": {
       "title": "სამკუთხედის ამომხსნელი",
@@ -2489,7 +2814,7 @@
       "address": "თბილისი, ჭავჭავაძის გამზირი 1",
       "telegram": "@mathlabge"
     },
-    "copyright": "© {year} pinf",
+    "copyright": "© {year} MathLab",
     "legal": {
       "privacy": "კონფიდენციალურობა",
       "terms": "წესები და პირობები"

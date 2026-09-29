@@ -3,21 +3,21 @@
 import dynamic from 'next/dynamic';
 import type { Dictionary } from '@/i18n/types';
 
-export interface LogarithmLoaderProps {
+export interface CombinatoricsLoaderProps {
   locale: string;
-  copy: Dictionary['logarithmTool'];
+  copy: Dictionary['combinatoricsTool'];
   title: string;
   description: string;
   embedded?: boolean;
 }
 
-const LogarithmCalculator = dynamic<LogarithmLoaderProps>(
-  () => import('./LogarithmCalculator').then((m) => m.LogarithmCalculator),
+const CombinatoricsCalculator = dynamic<CombinatoricsLoaderProps>(
+  () => import('./CombinatoricsCalculator').then((m) => m.CombinatoricsCalculator),
   { ssr: false, loading: () => <Skeleton /> },
 );
 
-export function LogarithmLoader(props: LogarithmLoaderProps) {
-  return <LogarithmCalculator {...props} />;
+export function CombinatoricsLoader(props: CombinatoricsLoaderProps) {
+  return <CombinatoricsCalculator {...props} />;
 }
 
 function Skeleton() {

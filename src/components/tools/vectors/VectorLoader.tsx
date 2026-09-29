@@ -3,20 +3,21 @@
 import dynamic from 'next/dynamic';
 import type { Dictionary } from '@/i18n/types';
 
-export interface InequalityLoaderProps {
+export interface VectorLoaderProps {
   locale: string;
-  copy: Dictionary['inequalityTool'];
+  copy: Dictionary['vectorTool'];
   title: string;
   description: string;
+  embedded?: boolean;
 }
 
-const InequalityCalculatorLoader = dynamic<InequalityLoaderProps>(
-  () => import('./InequalityCalculator').then((m) => m.InequalityCalculator),
+const VectorCalculator = dynamic<VectorLoaderProps>(
+  () => import('./VectorCalculator').then((m) => m.VectorCalculator),
   { ssr: false, loading: () => <Skeleton /> },
 );
 
-export function InequalityLoader(props: InequalityLoaderProps) {
-  return <InequalityCalculatorLoader {...props} />;
+export function VectorLoader(props: VectorLoaderProps) {
+  return <VectorCalculator {...props} />;
 }
 
 function Skeleton() {

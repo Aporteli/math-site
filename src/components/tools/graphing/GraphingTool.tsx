@@ -1,13 +1,11 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, Copy, Download, LineChart, Minus, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import { Copy, Download, Minus, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import type { Chart, FunctionPlotDatum, FunctionPlotDatumScope } from 'function-plot';
 import { KatexPreview } from '@/components/math/katex-preview';
-import { ToolHeader } from '@/components/ui/ToolHeader';
 import { SelectMenu } from '@/components/ui/SelectMenu';
-import { localePath, type Locale } from '@/i18n/config';
+import type { Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/types';
 import {
   compileDerivative,
@@ -56,19 +54,19 @@ interface GraphingToolProps {
 }
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
 const domainFieldClass =
-  'w-full min-w-0 rounded-lg border border-hairline bg-white px-2 py-1 font-mono text-xs text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-2 py-1 font-mono text-xs text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
 
-const panelClass = 'rounded-3xl border border-hairline/40 bg-surface/30 p-4 shadow-sm sm:p-5';
+const panelClass = 'rounded-box border border-hairline/40 bg-surface/30 p-4 shadow-sm sm:p-5';
 
 const iconBtnClass =
-  'inline-flex items-center rounded-full bg-black/40 border border-hairline/40 px-3.5 py-1.5 text-xs font-semibold text-sky-400 hover:bg-black/60 hover:border-hairline transition-colors';
+  'inline-flex items-center rounded-box bg-black/40 border border-hairline/40 px-3.5 py-1.5 text-xs font-semibold text-sky-400 hover:bg-black/60 hover:border-hairline transition-colors';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-export function GraphingTool({ locale, copy, title, description }: GraphingToolProps) {
+export function GraphingTool({ copy }: GraphingToolProps) {
   const [functions, setFunctions] = useState(() => functionsFromExprs(GRAPH_PRESETS.parabola));
   const [domains, setDomains] = useState<DomainMap>({});
   const [showDerivative, setShowDerivative] = useState(false);
@@ -189,175 +187,162 @@ export function GraphingTool({ locale, copy, title, description }: GraphingToolP
   const tableRows = valueTable(functions, Number(tableStart), Number(tableEnd), Number(tableStep));
 
   return (
-    <div className="bg-paper-deep/60">
-      <div className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <Link
-          href={localePath(locale, '/tools')}
-          className="inline-flex items-center gap-2 text-sm font-medium text-navy hover:text-navy-strong">
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          {copy.back}
-        </Link>
-        <div className="mt-5">
-          <ToolHeader title={title} description={description} icon={<LineChart className="size-4" />} />
-        </div>
-
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
-          <aside className="space-y-4">
-            <section className={panelClass}>
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">{copy.presets}</h2>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(
-                  [
-                    ['parabola', copy.presetParabola],
-                    ['trig', copy.presetTrig],
-                    ['hyperbola', copy.presetHyperbola],
-                    ['cubic', copy.presetCubic],
-                    ['params', copy.presetParams],
-                  ] as const
-                ).map(([id, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => applyPreset(id)}
-                    className="inline-flex items-center rounded-full border border-brass/25 bg-brass-tint/40 px-3 py-1 text-xs font-semibold text-ink hover:border-brass/50 hover:bg-brass-tint/70 hover:text-navy transition-colors cursor-pointer shadow-2xs">
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            <section className={panelClass}>
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold text-ink">{copy.functions}</h2>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+        <aside className="space-y-4">
+          <section className={panelClass}>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">{copy.presets}</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(
+                [
+                  ['parabola', copy.presetParabola],
+                  ['trig', copy.presetTrig],
+                  ['hyperbola', copy.presetHyperbola],
+                  ['cubic', copy.presetCubic],
+                  ['params', copy.presetParams],
+                ] as const
+              ).map(([id, label]) => (
                 <button
+                  key={id}
                   type="button"
-                  onClick={addFunction}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
-                  <Plus className="size-3.5" aria-hidden="true" />
-                  {copy.addFunction}
+                  onClick={() => applyPreset(id)}
+                  className="inline-flex items-center rounded-box border border-brass/25 bg-brass-tint/40 px-3 py-1 text-xs font-semibold text-ink hover:border-brass/50 hover:bg-brass-tint/70 hover:text-navy transition-colors cursor-pointer shadow-2xs">
+                  {label}
                 </button>
-              </div>
-              <ul className="mt-4 space-y-3">
-                {functions.map((row, index) => (
-                  <li key={row.id}>
-                    <FunctionRow
-                      row={row}
-                      index={index}
-                      copy={copy}
-                      canRemove={functions.length > 1}
-                      domain={domains[row.id] ?? { min: '', max: '' }}
-                      onChange={updateFunction}
-                      onRemove={removeFunction}
-                      onDomainChange={updateDomain}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
+              ))}
+            </div>
+          </section>
 
-            <IntegralPanel
+          <section className={panelClass}>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold text-ink">{copy.functions}</h2>
+              <button
+                type="button"
+                onClick={addFunction}
+                className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
+                <Plus className="size-3.5" aria-hidden="true" />
+                {copy.addFunction}
+              </button>
+            </div>
+            <ul className="mt-4 space-y-3">
+              {functions.map((row, index) => (
+                <li key={row.id}>
+                  <FunctionRow
+                    row={row}
+                    index={index}
+                    copy={copy}
+                    canRemove={functions.length > 1}
+                    domain={domains[row.id] ?? { min: '', max: '' }}
+                    onChange={updateFunction}
+                    onRemove={removeFunction}
+                    onDomainChange={updateDomain}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <IntegralPanel
+            copy={copy}
+            functions={visible}
+            shade={shadeIntegral}
+            onShade={setShadeIntegral}
+            a={integralA}
+            b={integralB}
+            onA={setIntegralA}
+            onB={setIntegralB}
+            mode={integralMode}
+            onMode={setIntegralMode}
+            upperId={upper?.id ?? ''}
+            lowerId={lower?.id ?? ''}
+            onUpper={setUpperId}
+            onLower={setLowerId}
+            value={integralValue}
+            bounds={bounds}
+          />
+
+          <details className={panelClass}>
+            <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.tableTitle}</summary>
+            <ValuesTable
               copy={copy}
               functions={visible}
-              shade={shadeIntegral}
-              onShade={setShadeIntegral}
-              a={integralA}
-              b={integralB}
-              onA={setIntegralA}
-              onB={setIntegralB}
-              mode={integralMode}
-              onMode={setIntegralMode}
-              upperId={upper?.id ?? ''}
-              lowerId={lower?.id ?? ''}
-              onUpper={setUpperId}
-              onLower={setLowerId}
-              value={integralValue}
-              bounds={bounds}
+              rows={tableRows}
+              start={tableStart}
+              end={tableEnd}
+              step={tableStep}
+              copied={copied}
+              onStart={setTableStart}
+              onEnd={setTableEnd}
+              onStep={setTableStep}
+              onCopied={setCopied}
             />
+          </details>
 
-            <details className={panelClass}>
-              <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.tableTitle}</summary>
-              <ValuesTable
-                copy={copy}
-                functions={visible}
-                rows={tableRows}
-                start={tableStart}
-                end={tableEnd}
-                step={tableStep}
-                copied={copied}
-                onStart={setTableStart}
-                onEnd={setTableEnd}
-                onStep={setTableStep}
-                onCopied={setCopied}
+          <details className={panelClass} open>
+            <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.syntaxTitle}</summary>
+            <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-body">
+              <li>{copy.syntaxPowers}</li>
+              <li>{copy.syntaxMult}</li>
+              <li>{copy.syntaxTrig}</li>
+              <li>{copy.syntaxConst}</li>
+              <li>{copy.syntaxParams}</li>
+            </ul>
+          </details>
+        </aside>
+
+        <div className="space-y-4">
+          <GraphCanvas
+            copy={copy}
+            functions={functions}
+            domains={resolvedDomains}
+            showDerivative={showDerivative}
+            showTangent={showTangent}
+            showMarkers={showMarkers}
+            xDomain={xDomain}
+            yDomain={yDomain}
+            domainTick={domainTick}
+            shadeIntegral={shadeIntegral}
+            integralBounds={bounds}
+            integralMode={integralMode}
+            upper={upper}
+            lower={lower}
+            onDomainChange={(x, y) => {
+              setXDomain(x);
+              setYDomain(y);
+              setDomainTick((value) => value + 1);
+            }}
+          />
+          <div className="flex flex-col gap-2 text-sm text-ink">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={showTangent}
+                onChange={(event) => setShowTangent(event.target.checked)}
+                className="size-4 rounded border-hairline accent-navy"
               />
-            </details>
-
-            <details className={panelClass} open>
-              <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.syntaxTitle}</summary>
-              <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-body">
-                <li>{copy.syntaxPowers}</li>
-                <li>{copy.syntaxMult}</li>
-                <li>{copy.syntaxTrig}</li>
-                <li>{copy.syntaxConst}</li>
-                <li>{copy.syntaxParams}</li>
-              </ul>
-            </details>
-          </aside>
-
-          <div className="space-y-4">
-            <GraphCanvas
-              copy={copy}
-              functions={functions}
-              domains={resolvedDomains}
-              showDerivative={showDerivative}
-              showTangent={showTangent}
-              showMarkers={showMarkers}
-              xDomain={xDomain}
-              yDomain={yDomain}
-              domainTick={domainTick}
-              shadeIntegral={shadeIntegral}
-              integralBounds={bounds}
-              integralMode={integralMode}
-              upper={upper}
-              lower={lower}
-              onDomainChange={(x, y) => {
-                setXDomain(x);
-                setYDomain(y);
-                setDomainTick((value) => value + 1);
-              }}
-            />
-            <div className="flex flex-col gap-2 text-sm text-ink">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={showTangent}
-                  onChange={(event) => setShowTangent(event.target.checked)}
-                  className="size-4 rounded border-hairline accent-navy"
-                />
-                {copy.showTangent}
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={showDerivative}
-                  onChange={(event) => setShowDerivative(event.target.checked)}
-                  className="size-4 rounded border-hairline accent-navy"
-                />
-                {copy.showDerivative}
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={showMarkers}
-                  onChange={(event) => setShowMarkers(event.target.checked)}
-                  className="size-4 rounded border-hairline accent-navy"
-                />
-                {copy.showMarkers}
-              </label>
-            </div>
+              {copy.showTangent}
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={showDerivative}
+                onChange={(event) => setShowDerivative(event.target.checked)}
+                className="size-4 rounded border-hairline accent-navy"
+              />
+              {copy.showDerivative}
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={showMarkers}
+                onChange={(event) => setShowMarkers(event.target.checked)}
+                className="size-4 rounded border-hairline accent-navy"
+              />
+              {copy.showMarkers}
+            </label>
           </div>
         </div>
       </div>
-    </div>
+    
   );
 }
 
@@ -393,10 +378,10 @@ function FunctionRow({
     (!Number.isFinite(minN) || !Number.isFinite(maxN) || minN >= maxN);
 
   return (
-    <div className="rounded-xl border border-hairline bg-paper/60 p-3">
+    <div className="rounded-box border border-hairline bg-paper/60 p-3">
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold text-muted">f{index + 1}(x)</span>
-        <label className="relative size-6 shrink-0 overflow-hidden rounded-full border border-hairline">
+        <label className="relative size-6 shrink-0 overflow-hidden rounded-box border border-hairline">
           <span className="sr-only">{copy.color}</span>
           <span className="absolute inset-0" style={{ backgroundColor: row.color }} aria-hidden="true" />
           <input
@@ -414,7 +399,7 @@ function FunctionRow({
               type="button"
               aria-label={color}
               onClick={() => onChange(row.id, { color })}
-              className="size-3.5 rounded-full ring-offset-1 ring-offset-paper"
+              className="size-3.5 rounded-box ring-offset-1 ring-offset-paper"
               style={{
                 backgroundColor: color,
                 outline: row.color === color ? '2px solid var(--color-navy)' : undefined,
@@ -651,7 +636,7 @@ function IntegralPanel({
           />
         </div>
       ) : null}
-      <div className="mt-4 rounded-xl bg-paper-deep px-3 py-3 text-sm text-ink">
+      <div className="mt-4 rounded-box bg-paper-deep px-3 py-3 text-sm text-ink">
         <p className="text-xs font-semibold tracking-wide text-muted">{copy.integralResult}</p>
         {tex ? (
           <div className="mt-2 overflow-x-auto">
@@ -738,14 +723,14 @@ function ValuesTable({
         <button
           type="button"
           onClick={() => void copyTable()}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-1.5 text-xs font-semibold text-ink hover:border-navy/30">
+          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-1.5 text-xs font-semibold text-ink hover:border-navy/30">
           <Copy className="size-3.5" aria-hidden="true" />
           {copied ? copy.tableCopied : copy.tableCopy}
         </button>
         <button
           type="button"
           onClick={exportCsv}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
+          className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
           <Download className="size-3.5" aria-hidden="true" />
           {copy.tableExport}
         </button>
@@ -753,7 +738,7 @@ function ValuesTable({
       {rows.length === 0 || functions.length === 0 ? (
         <p className="text-sm text-muted">{copy.tableEmpty}</p>
       ) : (
-        <div className="max-h-64 overflow-auto rounded-xl border border-hairline">
+        <div className="max-h-64 overflow-auto rounded-box border border-hairline">
           <table className="min-w-full text-left text-xs">
             <thead className="sticky top-0 bg-paper-deep font-semibold text-ink">
               <tr>
@@ -1050,7 +1035,7 @@ function GraphCanvas({
           type="button"
           title={copy.resetView}
           onClick={resetView}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
+          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
           <RotateCcw className="size-3.5" aria-hidden="true" />
           {copy.resetView}
         </button>
@@ -1058,7 +1043,7 @@ function GraphCanvas({
           type="button"
           title={copy.zoomIn}
           onClick={() => zoomBy(0.8)}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
+          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
           <Plus className="size-3.5" aria-hidden="true" />
           {copy.zoomIn}
         </button>
@@ -1066,7 +1051,7 @@ function GraphCanvas({
           type="button"
           title={copy.zoomOut}
           onClick={() => zoomBy(1.25)}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
+          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
           <Minus className="size-3.5" aria-hidden="true" />
           {copy.zoomOut}
         </button>
@@ -1074,7 +1059,7 @@ function GraphCanvas({
           type="button"
           title={copy.exportPng}
           onClick={exportPng}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong">
+          className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong">
           <Download className="size-3.5" aria-hidden="true" />
           {copy.exportPng}
         </button>
@@ -1082,7 +1067,7 @@ function GraphCanvas({
 
       <div
         ref={hostRef}
-        className="relative mt-4 min-h-[22rem] overflow-hidden rounded-xl border border-hairline bg-white [&_svg]:block [&_svg]:max-w-full"
+        className="relative mt-4 min-h-[22rem] overflow-hidden rounded-box border border-hairline bg-white [&_svg]:block [&_svg]:max-w-full"
       />
       {plotError ? <p className="mt-2 text-sm text-brass-strong">{copy.plotError}</p> : null}
 
@@ -1092,13 +1077,13 @@ function GraphCanvas({
           {cursor ? `(${formatGraphNumber(cursor.x)}, ${formatGraphNumber(cursor.y)})` : copy.cursorEmpty}
         </p>
         {activeMarker && markerLabel ? (
-          <p className="rounded-xl bg-navy-tint px-3 py-2 text-navy">
+          <p className="rounded-box bg-navy-tint px-3 py-2 text-navy">
             <span className="font-semibold">{markerLabel}</span>
             {': '}({formatGraphNumber(activeMarker.x)}, {formatGraphNumber(activeMarker.y)})
           </p>
         ) : null}
         {showTangent ? (
-          <div className="rounded-xl border border-hairline bg-paper px-3 py-2">
+          <div className="rounded-box border border-hairline bg-paper px-3 py-2">
             <p className="text-xs font-semibold tracking-wide text-brass">{copy.tangentTitle}</p>
             {tangent ? (
               <div className="mt-1 space-y-1 text-ink">
@@ -1155,7 +1140,7 @@ function GraphCanvas({
         </fieldset>
         <button
           type="submit"
-          className="rounded-xl bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong sm:col-span-2">
+          className="rounded-box bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong sm:col-span-2">
           {copy.applyDomain}
         </button>
       </form>
@@ -1175,7 +1160,7 @@ function MarkerLegend({ copy }: { copy: Copy }) {
     <ul className="mt-3 flex flex-wrap gap-2 text-xs text-body">
       {items.map(([kind, label, color]) => (
         <li key={kind} className="inline-flex items-center gap-1.5">
-          <span className="size-2.5 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
+          <span className="size-2.5 rounded-box" style={{ backgroundColor: color }} aria-hidden="true" />
           {label}
         </li>
       ))}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ToolsHub } from "@/components/tools/ToolsHub";
+import { CalculatorHub } from "@/components/tools/CalculatorHub";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 
@@ -26,5 +26,5 @@ export default async function ToolsPage({ params }: ToolsPageProps) {
 
   const dict = getDictionary(locale);
 
-  return <ToolsHub locale={locale} copy={dict.toolsPage} />;
+  return <CalculatorHub locale={locale} dict={dict} />;
 }

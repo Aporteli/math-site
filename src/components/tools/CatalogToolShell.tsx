@@ -35,8 +35,8 @@ export function CatalogToolShell({ locale, tool, item, sectionTitle, copy }: Cat
             description={item.description}
           />
         </div>
-        <section className="mt-8 rounded-3xl border border-hairline bg-white p-6 shadow-sm sm:p-8">
-          <span className={`inline-flex size-12 items-center justify-center rounded-2xl ${tone.chip}`}>
+        <section className="mt-8 rounded-box border border-hairline bg-white p-6 shadow-sm sm:p-8">
+          <span className={`inline-flex size-12 items-center justify-center rounded-box ${tone.chip}`}>
             <Icon className="size-6" aria-hidden="true" />
           </span>
           <h2 className="mt-4 text-xl font-semibold tracking-tight text-ink">{copy.comingSoon}</h2>

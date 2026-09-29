@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
-import { Check, Copy, Delete, Divide, History, Keyboard, RotateCcw, X, Calculator, Sparkles } from 'lucide-react';
+import { Check, Copy, Delete, Divide, History, Keyboard, RotateCcw, X, Sparkles } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
 import type { Dictionary } from '@/i18n/types';
 import {
@@ -11,9 +11,6 @@ import {
   type PolynomialHistoryItem,
   type PolyResult,
 } from './polynomial';
-import { ToolHeader } from '@/components/ui/ToolHeader';
-import { BackButton } from '@/components/ui/BackButton';
-
 type Copy = Dictionary['polynomialTool'];
 
 interface Props {
@@ -22,13 +19,13 @@ interface Props {
 }
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';
 
 const keyClass =
-  'inline-flex min-h-11 items-center justify-center rounded-xl border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-navy-tint focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
+  'inline-flex min-h-11 items-center justify-center rounded-box border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-navy-tint focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
 
 const chipClass =
-  'inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-navy-tint disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
+  'inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-navy-tint disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
 
 type FieldId = 'expression' | 'divisor';
 type TabId = 'factor' | 'roots' | 'division';
@@ -40,10 +37,7 @@ function applyKey(current: string, key: string): string {
 }
 
 export function PolynomialCalculator({
-  locale,
   copy,
-  title,
-  description,
 }: Props & { title: string; description: string }) {
   const [expression, setExpression] = useState('x^3 - 6x^2 + 11x - 6');
   const [divisor, setDivisor] = useState('x - 1');
@@ -66,7 +60,7 @@ export function PolynomialCalculator({
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
   const panelClass =
-    'rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
+    'rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
 
   /* ── Load history on mount ── */
   useEffect(() => {
@@ -249,7 +243,7 @@ export function PolynomialCalculator({
           key={ex.label}
           type="button"
           onClick={() => applyExample(ex)}
-          className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
+          className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
           {ex.label}
         </button>
       ))}
@@ -258,16 +252,9 @@ export function PolynomialCalculator({
 
   return (
     <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
-      <BackButton href={`/${locale}/tools`} />
-      <ToolHeader
-        title={title}
-        description={description}
-        category={copy.eyebrow}
-        icon={<Calculator className="size-4" />}
-      />
       <div className="my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         <section
-          className="rounded-2xl border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800"
+          className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800"
           onKeyDown={onExpressionKeyDown}>
           <div ref={keyboardRootRef}>
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -279,7 +266,7 @@ export function PolynomialCalculator({
                 aria-haspopup="true"
                 onClick={() => setShowKeyboard((o) => !o)}
                 className={
-                  'inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ' +
+                  'inline-flex items-center gap-1.5 rounded-box border px-3 py-2 text-xs font-semibold transition-colors ' +
                   (showKeyboard
                     ? 'border-navy/30 bg-navy text-white hover:bg-navy-strong'
                     : 'border-hairline bg-white text-ink hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800')
@@ -300,7 +287,7 @@ export function PolynomialCalculator({
                       type="button"
                       onClick={() => setVariable(v)}
                       className={
-                        'rounded-lg border px-3 py-1.5 text-xs font-semibold font-mono transition-colors ' +
+                        'rounded-box border px-3 py-1.5 text-xs font-semibold font-mono transition-colors ' +
                         (variable === v
                           ? 'border-navy bg-navy text-white'
                           : 'border-hairline bg-white text-muted hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800')
@@ -354,7 +341,7 @@ export function PolynomialCalculator({
                 <button
                   type="submit"
                   disabled={loading || !expression.trim()}
-                  className="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-50">
+                  className="inline-flex items-center gap-2 rounded-box bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-50">
                   <Divide className="size-4" aria-hidden="true" />
                   {loading ? copy.solving : copy.solveButton}
                 </button>
@@ -384,7 +371,7 @@ export function PolynomialCalculator({
 
             {/* Error */}
             {error && (
-              <div className="mt-3 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+              <div className="mt-3 flex items-start gap-2 rounded-box border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
                 <span className="mt-0.5 shrink-0">⚠</span>
                 <span>{error}</span>
               </div>
@@ -392,16 +379,16 @@ export function PolynomialCalculator({
           </div>
         </section>
         {/* ══════════ RIGHT: Results ══════════ */}
-        <section className="rounded-2xl border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800">
+        <section className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800">
           {loading && (
             <div className="flex min-h-[200px] items-center justify-center">
-              <span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-navy border-t-transparent" />
+              <span className="inline-block h-8 w-8 animate-spin rounded-box border-4 border-navy border-t-transparent" />
             </div>
           )}
           {!result && !loading && (
             <section
               className={`${panelClass} flex min-h-[200px] flex-col items-center justify-center gap-3 text-center`}>
-              <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-navy-tint text-navy dark:bg-sky-950/40 dark:text-sky-400">
+              <span className="inline-flex size-12 items-center justify-center rounded-box bg-navy-tint text-navy dark:bg-sky-950/40 dark:text-sky-400">
                 <Sparkles className="size-5" />
               </span>
               <p className="max-w-sm text-sm text-muted">{copy.emptyResult}</p>
@@ -412,7 +399,7 @@ export function PolynomialCalculator({
             <div className="space-y-5">
               {/* Error banner (თუ backend-მა error დააბრუნა) */}
               {result.operations?.division?.some((s) => s.title.toLowerCase().includes('ვერ')) && (
-                <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                <div className="flex items-start gap-2 rounded-box border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
                   <span className="mt-0.5 shrink-0">⚠</span>
                   <span>{result.operations.division[0]?.explanation || 'გაყოფა ვერ შესრულდა'}</span>
                 </div>
@@ -462,7 +449,7 @@ export function PolynomialCalculator({
                     {result.roots.map((r, i) => (
                       <div
                         key={i}
-                        className="overflow-x-auto rounded-lg border border-hairline bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                        className="overflow-x-auto rounded-box border border-hairline bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
                         <div className="min-w-max">
                           <KatexPreview tex={`${variable} = ${r}`} />
                         </div>
@@ -476,7 +463,7 @@ export function PolynomialCalculator({
               {result.division && (
                 <div>
                   <p className="mb-2 text-xs font-semibold text-muted">{copy.divisionTitle}</p>
-                  <div className="space-y-2 overflow-x-auto rounded-xl border border-hairline bg-white px-3 py-3 dark:bg-slate-900 dark:border-slate-700">
+                  <div className="space-y-2 overflow-x-auto rounded-box border border-hairline bg-white px-3 py-3 dark:bg-slate-900 dark:border-slate-700">
                     <div className="flex items-baseline gap-2">
                       <span className="shrink-0 text-xs font-semibold text-muted">{copy.quotient}:</span>
                       <KatexPreview tex={result.division.quotient_latex} />
@@ -500,7 +487,7 @@ export function PolynomialCalculator({
                         type="button"
                         onClick={() => setActiveTab(t)}
                         className={
-                          'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ' +
+                          'rounded-box px-3 py-1.5 text-xs font-medium transition-colors ' +
                           (activeTab === t
                             ? 'bg-navy text-white dark:bg-sky-600'
                             : 'border border-hairline text-muted hover:text-ink dark:border-slate-700')
@@ -513,11 +500,11 @@ export function PolynomialCalculator({
                     {activeSteps.map((st, idx) => (
                       <div
                         key={idx}
-                        className="rounded-xl border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                        className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
                         <h3 className="text-xs font-bold text-navy dark:text-sky-400">{st.title}</h3>
                         <p className="mt-1 text-xs leading-relaxed text-ink/80 dark:text-slate-300">{st.explanation}</p>
                         {st.latex && (
-                          <div className="mt-2 overflow-x-auto rounded-lg border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                          <div className="mt-2 overflow-x-auto rounded-box border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
                             <KatexPreview tex={st.latex} />
                           </div>
                         )}
@@ -548,7 +535,7 @@ export function PolynomialCalculator({
                         <button
                           type="button"
                           onClick={() => applyHistory(h)}
-                          className="w-full overflow-x-auto rounded-lg border border-hairline-soft bg-white px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:border-navy/30 hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800">
+                          className="w-full overflow-x-auto rounded-box border border-hairline-soft bg-white px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:border-navy/30 hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800">
                           {h.expression}
                           {h.divisor ? ` ÷ ${h.divisor}` : ''}
                         </button>
@@ -585,7 +572,7 @@ function ResultRow({
   copiedLabel: string;
 }) {
   return (
-    <div className="rounded-xl border border-hairline bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+    <div className="rounded-box border border-hairline bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-semibold text-muted">{label}</span>
         <button
@@ -629,7 +616,7 @@ function PolynomialKeyboard({
       id={titleId}
       role="region"
       aria-label={copy.keyboard}
-      className="mt-4 rounded-2xl border border-hairline bg-white shadow-sm dark:bg-slate-900 dark:border-slate-700">
+      className="mt-4 rounded-box border border-hairline bg-white shadow-sm dark:bg-slate-900 dark:border-slate-700">
       <div className="flex items-start justify-between gap-3 border-b border-hairline px-4 py-3 dark:border-slate-700">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-ink">{copy.keyboard}</h2>
@@ -639,13 +626,13 @@ function PolynomialKeyboard({
           type="button"
           onClick={onClose}
           aria-label="close"
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-paper hover:text-navy dark:hover:bg-slate-800">
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-box text-muted transition-colors hover:bg-paper hover:text-navy dark:hover:bg-slate-800">
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>
 
       <div className="space-y-3 px-4 py-4">
-        <div className="overflow-x-auto rounded-xl border border-hairline bg-paper px-3 py-2 text-center font-mono text-lg text-ink dark:bg-slate-950 dark:border-slate-700">
+        <div className="overflow-x-auto rounded-box border border-hairline bg-paper px-3 py-2 text-center font-mono text-lg text-ink dark:bg-slate-950 dark:border-slate-700">
           {value || '\u00a0'}
         </div>
 
@@ -655,7 +642,7 @@ function PolynomialKeyboard({
             type="button"
             onClick={() => onFieldChange('expression')}
             className={
-              'flex-1 rounded-lg border px-2 py-1 text-[11px] font-semibold transition-colors ' +
+              'flex-1 rounded-box border px-2 py-1 text-[11px] font-semibold transition-colors ' +
               (activeField === 'expression'
                 ? 'border-navy bg-navy text-white'
                 : 'border-hairline bg-white text-muted dark:bg-slate-800 dark:border-slate-700')
@@ -666,7 +653,7 @@ function PolynomialKeyboard({
             type="button"
             onClick={() => onFieldChange('divisor')}
             className={
-              'flex-1 rounded-lg border px-2 py-1 text-[11px] font-semibold transition-colors ' +
+              'flex-1 rounded-box border px-2 py-1 text-[11px] font-semibold transition-colors ' +
               (activeField === 'divisor'
                 ? 'border-navy bg-navy text-white'
                 : 'border-hairline bg-white text-muted dark:bg-slate-800 dark:border-slate-700')

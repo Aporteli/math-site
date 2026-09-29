@@ -88,7 +88,7 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
         category=""
         icon={<ArrowUpRight className="size-4" />}
       />
-      <div className="rounded-3xl border border-hairline bg-surface p-6 shadow-sm sm:p-8 space-y-6">
+      <div className="rounded-box border border-hairline bg-surface p-6 shadow-sm sm:p-8 space-y-6">
         {/* Presets Selection */}
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
@@ -97,7 +97,7 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
                 key={idx}
                 type="button"
                 onClick={() => applyPreset(p)}
-                className="rounded-lg border border-hairline bg-paper-deep/40 px-3 py-1.5 text-xs font-medium text-ink transition-all hover:bg-navy hover:text-white">
+                className="rounded-box border border-hairline bg-paper-deep/40 px-3 py-1.5 text-xs font-medium text-ink transition-all hover:bg-navy hover:text-white">
                 {p.name}
               </button>
             ))}
@@ -112,7 +112,7 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
               type="text"
               value={xExpr}
               onChange={(e) => setXExpr(e.target.value)}
-              className="w-full rounded-xl border border-hairline bg-paper-deep/30 px-3.5 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+              className="w-full rounded-box border border-hairline bg-paper-deep/30 px-3.5 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
             />
           </div>
           <div>
@@ -121,7 +121,7 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
               type="text"
               value={yExpr}
               onChange={(e) => setYExpr(e.target.value)}
-              className="w-full rounded-xl border border-hairline bg-paper-deep/30 px-3.5 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+              className="w-full rounded-box border border-hairline bg-paper-deep/30 px-3.5 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
             />
           </div>
           <div>
@@ -130,7 +130,7 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
               type="text"
               value={zExpr}
               onChange={(e) => setZExpr(e.target.value)}
-              className="w-full rounded-xl border border-hairline bg-paper-deep/30 px-3.5 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+              className="w-full rounded-box border border-hairline bg-paper-deep/30 px-3.5 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
             />
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
               type="number"
               value={tMin}
               onChange={(e) => setTMin(Number(e.target.value))}
-              className="w-full rounded-lg border border-hairline bg-paper-deep/20 px-3 py-1.5 font-mono text-xs text-ink"
+              className="w-full rounded-box border border-hairline bg-paper-deep/20 px-3 py-1.5 font-mono text-xs text-ink"
             />
           </div>
           <div>
@@ -152,7 +152,7 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
               type="number"
               value={tMax}
               onChange={(e) => setTMax(Number(e.target.value))}
-              className="w-full rounded-lg border border-hairline bg-paper-deep/20 px-3 py-1.5 font-mono text-xs text-ink"
+              className="w-full rounded-box border border-hairline bg-paper-deep/20 px-3 py-1.5 font-mono text-xs text-ink"
             />
           </div>
           <div>
@@ -161,14 +161,14 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
               type="number"
               value={numPoints}
               onChange={(e) => setNumPoints(Number(e.target.value))}
-              className="w-full rounded-lg border border-hairline bg-paper-deep/20 px-3 py-1.5 font-mono text-xs text-ink"
+              className="w-full rounded-box border border-hairline bg-paper-deep/20 px-3 py-1.5 font-mono text-xs text-ink"
             />
           </div>
         </div>
 
         {/* Custom Professional Error Banner */}
         {errorMsg && (
-          <div className="rounded-xl border border-red-200 bg-red-50/50 p-4 text-xs font-medium text-red-600">
+          <div className="rounded-box border border-red-200 bg-red-50/50 p-4 text-xs font-medium text-red-600">
             ⚠️ {errorMsg}
           </div>
         )}
@@ -177,10 +177,10 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
         <button
           onClick={handleCalculate}
           disabled={loading}
-          className="inline-flex w-full items-center justify-center rounded-xl bg-navy px-5 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-navy-strong focus:outline-none focus:ring-2 focus:ring-navy/20 disabled:opacity-50">
+          className="inline-flex w-full items-center justify-center rounded-box bg-navy px-5 py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-navy-strong focus:outline-none focus:ring-2 focus:ring-navy/20 disabled:opacity-50">
           {loading ? (
             <span className="flex items-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              <span className="h-4 w-4 animate-spin rounded-box border-2 border-white border-t-transparent" />
               მიმდინარეობს გამოთვლა...
             </span>
           ) : (
@@ -190,7 +190,7 @@ export default function VectorFunction({ locale, copy, title, description }: Vec
       </div>
 
       {/* Plot Canvas Box */}
-      <div className="overflow-hidden rounded-3xl border border-hairline bg-surface p-2 shadow-sm">
+      <div className="overflow-hidden rounded-box border border-hairline bg-surface p-2 shadow-sm">
         <MathPlot3D data={plotData} />
       </div>
     </main>

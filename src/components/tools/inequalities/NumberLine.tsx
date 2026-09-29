@@ -31,7 +31,7 @@ export function NumberLine({ criticalPoints, intervals }: Props) {
   const cpSet = criticalPoints;
 
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-hairline bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
+    <div className="w-full overflow-x-auto rounded-box border border-hairline bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"

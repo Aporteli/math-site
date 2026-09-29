@@ -18,14 +18,10 @@ import {
   FileText,
   BookOpen,
   Table2,
-  FunctionSquare,
 } from 'lucide-react';
 import { KatexPreview } from '@/components/math/katex-preview';
-import { PageHero } from '@/components/ui/PageHero';
-import { ToolHeader } from '@/components/ui/ToolHeader';
 import { localePath, type Locale } from '@/i18n/config';
 import type { Dictionary } from '@/i18n/types';
-import { BackButton } from '@/components/ui/BackButton';
 import {
   solve,
   type MethodId,
@@ -36,10 +32,10 @@ import {
 import type { AnalysisRow } from '../../../lib/math/tools/quadratic/types/quadratic';
 
 const fieldClass =
-  'w-full min-w-0 rounded-xl border border-hairline bg-white px-3 py-2 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';
+  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';
 
 const panelClass =
-  'rounded-2xl border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
+  'rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
 
 type CopyDict = Dictionary['equations'];
 
@@ -276,17 +272,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
 
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <BackButton href="/ka/tools" />
-      <ToolHeader
-        title="კვადრატული განტოლების ამომხსნელი"
-        description="ეტაპობრივი ამონახსნი დისკრიმინანტით, ვიეტათი და გრაფიკით"
-        category=""
-        icon={<FunctionSquare className="size-4" />}
-      />
-
-      {/* აქედან ეგრევე იწყება კალკულატორის Form / Input ბლოკი */}
-
-      <div className="mt-6 grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+      <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         {/* ─── Left: input ─── */}
         <div className="space-y-4">
           <section className={panelClass}>
@@ -307,7 +293,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                 />
                 <KatexPreview
                   tex={equation}
-                  className="mt-1 border border-hairline rounded-lg p-2 text-dark dark:text-white text-base bg-paper/40 dark:bg-slate-800/40"
+                  className="mt-1 border border-hairline rounded-box p-2 text-dark dark:text-white text-base bg-paper/40 dark:bg-slate-800/40"
                 />
               </div>
               <div className="flex items-center flex-wrap gap-2">
@@ -316,7 +302,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                 </label>
                 <select
                   id="quadratic-var"
-                  className="rounded-lg border border-hairline bg-white px-2 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-700"
+                  className="rounded-box border border-hairline bg-white px-2 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-700"
                   value={solveFor}
                   onChange={(e) => setSolveFor(e.target.value)}>
                   {['x', 'y', 'a', 'b', 'c', 't'].map((v) => (
@@ -328,7 +314,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                 <div className="flex-1" />
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy/90 dark:bg-sky-600 transition">
+                  className="inline-flex items-center gap-2 rounded-box bg-navy px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy/90 dark:bg-sky-600 transition">
                   <Calculator className="size-4" /> ამოხსნა
                 </button>
                 <button
@@ -343,7 +329,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                     setExportPack(null);
                     setError(false);
                   }}
-                  className="inline-flex items-center gap-1 rounded-xl border border-hairline px-3 py-2 text-sm text-muted hover:text-ink dark:border-slate-700 transition">
+                  className="inline-flex items-center gap-1 rounded-box border border-hairline px-3 py-2 text-sm text-muted hover:text-ink dark:border-slate-700 transition">
                   <RotateCcw className="size-3.5" /> გასუფთავება
                 </button>
               </div>
@@ -359,7 +345,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                     setEquation(p.eq);
                     handleSolve(undefined, p.eq, solveFor);
                   }}
-                  className="rounded-lg border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
+                  className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
                   {p.label}
                 </button>
               ))}
@@ -387,7 +373,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                           key={k}
                           type="button"
                           onClick={() => insertKey(k)}
-                          className="min-w-[2rem] rounded-lg border border-hairline bg-paper/50 px-2 py-1.5 font-mono text-xs hover:bg-navy/5 dark:border-slate-700 dark:bg-slate-800 transition">
+                          className="min-w-[2rem] rounded-box border border-hairline bg-paper/50 px-2 py-1.5 font-mono text-xs hover:bg-navy/5 dark:border-slate-700 dark:bg-slate-800 transition">
                           {k === 'BACKSPACE' ? <Delete className="size-3.5" /> : k}
                         </button>
                       ))}
@@ -398,7 +384,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
             )}
 
             {error && (
-              <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+              <p className="mt-3 rounded-box border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
                 {errorMsg || 'შეცდომა'}
               </p>
             )}
@@ -415,7 +401,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                   <li key={i}>
                     <button
                       type="button"
-                      className="w-full rounded-lg px-2 py-1.5 text-left font-mono hover:bg-paper/60 dark:hover:bg-slate-800"
+                      className="w-full rounded-box px-2 py-1.5 text-left font-mono hover:bg-paper/60 dark:hover:bg-slate-800"
                       onClick={() => {
                         setEquation(h.equation);
                         setSolveFor(h.variable);
@@ -444,7 +430,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                   <button
                     type="button"
                     onClick={() => setAcademicMode((v) => !v)}
-                    className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1 rounded-box border px-2.5 py-1 text-[11px] font-medium transition-colors ${
                       academicMode
                         ? 'border-navy/30 bg-navy/5 text-navy dark:border-sky-700 dark:bg-sky-950/40 dark:text-sky-300'
                         : 'border-hairline text-muted dark:border-slate-700'
@@ -455,7 +441,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                   <button
                     type="button"
                     onClick={() => setShowGraph((v) => !v)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1 text-[11px] text-muted hover:text-ink dark:border-slate-700">
+                    className="inline-flex items-center gap-1 rounded-box border border-hairline px-2.5 py-1 text-[11px] text-muted hover:text-ink dark:border-slate-700">
                     <LineChart className="size-3" /> გრაფიკი
                   </button>
                 </div>
@@ -468,7 +454,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                   {solutions.map((s, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between gap-2 rounded-xl border border-hairline bg-paper/40 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/40">
+                      className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-paper/40 px-3 py-2 dark:border-slate-800 dark:bg-slate-800/40">
                       <div className="min-w-0 overflow-x-auto">
                         <KatexPreview tex={`${solveFor}_{${i + 1}} = ${s}`} />
                       </div>
@@ -493,19 +479,19 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                   <button
                     type="button"
                     onClick={() => downloadText(exportPack.markdown, 'quadratic-solution.md', 'text/markdown')}
-                    className="inline-flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-[11px] hover:bg-paper/50 dark:border-slate-700">
+                    className="inline-flex items-center gap-1 rounded-box border border-hairline px-2.5 py-1.5 text-[11px] hover:bg-paper/50 dark:border-slate-700">
                     <FileText className="size-3" /> Markdown
                   </button>
                   <button
                     type="button"
                     onClick={() => downloadText(exportPack.latex, 'quadratic-solution.tex', 'text/plain')}
-                    className="inline-flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-[11px] hover:bg-paper/50 dark:border-slate-700">
+                    className="inline-flex items-center gap-1 rounded-box border border-hairline px-2.5 py-1.5 text-[11px] hover:bg-paper/50 dark:border-slate-700">
                     <Download className="size-3" /> LaTeX
                   </button>
                   <button
                     type="button"
                     onClick={() => copyText(exportPack.summary, 'summary')}
-                    className="inline-flex items-center gap-1 rounded-lg border border-hairline px-2.5 py-1.5 text-[11px] hover:bg-paper/50 dark:border-slate-700">
+                    className="inline-flex items-center gap-1 rounded-box border border-hairline px-2.5 py-1.5 text-[11px] hover:bg-paper/50 dark:border-slate-700">
                     {copiedKey === 'summary' ? (
                       <Check className="size-3 text-emerald-500" />
                     ) : (
@@ -529,7 +515,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                       key={t.id}
                       type="button"
                       onClick={() => setMethod(t.id)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                      className={`rounded-box px-3 py-1.5 text-xs font-medium transition-colors ${
                         method === t.id
                           ? 'bg-navy text-white dark:bg-sky-600'
                           : 'border border-hairline text-muted hover:text-ink dark:border-slate-700'
@@ -543,13 +529,13 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
                 {activeSteps.map((st, idx) => (
                   <div
                     key={idx}
-                    className="rounded-xl border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                    className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
                     <h3 className="text-xs font-bold text-navy dark:text-sky-400">{st.title}</h3>
                     <p className="mt-1 text-xs leading-relaxed text-ink/80 dark:text-slate-300">
                       <KatexPreview tex={st.explanation} />
                     </p>
                     {st.latex && (
-                      <div className="mt-2 overflow-x-auto rounded-lg border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                      <div className="mt-2 overflow-x-auto rounded-box border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
                         <KatexPreview tex={st.latex} />
                       </div>
                     )}
@@ -610,7 +596,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
               <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
                 <LineChart className="size-4 text-navy dark:text-sky-400" /> გრაფიკული ხედი
               </h2>
-              <div className="overflow-hidden rounded-2xl border border-hairline bg-white p-2 shadow-inner dark:border-slate-800 dark:bg-slate-950">
+              <div className="overflow-hidden rounded-box border border-hairline bg-white p-2 shadow-inner dark:border-slate-800 dark:bg-slate-950">
                 <AnnotatedGraph meta={graphMeta} expression={graphExpr} />
               </div>
               <ul className="mt-3 grid gap-1 text-[11px] text-muted sm:grid-cols-2">

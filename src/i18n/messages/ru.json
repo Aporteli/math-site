@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "PinF — математическая платформа для учителей и студентов",
-    "description": "Математическая платформа для учителей и студентов."
+    "title": "MathLab — математические ресурсы и инструменты",
+    "description": "Калькуляторы, справочник формул, банк задач и расписание занятий в одном каталоге."
   },
   "brand": {
-    "name": "PinF",
+    "name": "MathLab",
     "person": "Шота Миколайчук",
     "home": "Вернуться на главную страницу"
   },
@@ -50,7 +50,7 @@
   },
   "home": {
     "index": {
-      "title": "pinf · Математические ресурсы и инструменты",
+      "title": "MathLab · Математические ресурсы и инструменты",
       "badge": "Открытое учебное пространство / каталог",
       "searchLabel": "Поиск по каталогу",
       "searchPlaceholder": "Найти тему, формулу или калькулятор…",
@@ -292,6 +292,16 @@
         "title": "Последовательности и ряды",
         "description": "n-й член арифметической и геометрической прогрессии, сумма первых n членов и сходимость ряда.",
         "badge": "База"
+      },
+      "radicals": {
+        "title": "Упрощение радикалов",
+        "description": "Упрощение корней, сложение подобных радикалов, освобождение от иррациональности в знаменателе и вложенные корни.",
+        "badge": "Алгебра"
+      },
+      "rearrange": {
+        "title": "Преобразование формулы",
+        "description": "Выражение выбранной переменной из формулы и алгебраические шаги.",
+        "badge": "Алгебра"
       },
       "numberTheory": {
         "title": "Теория чисел (НОД / НОК)",
@@ -894,7 +904,7 @@
     },
     "signup": {
       "metaTitle": "Регистрация",
-      "metaDescription": "Создайте новый аккаунт на pinf.",
+      "metaDescription": "Создайте новый аккаунт на MathLab.",
       "eyebrow": "Новый аккаунт",
       "title": "Создайте аккаунт",
       "subtitle": "Зарегистрируйтесь и начните изучать математику.",
@@ -2437,6 +2447,321 @@
     "clearHistory": "Очистить",
     "examples": "Примеры:"
   },
+  "exponentTool": {
+    "meta": {
+      "title": "Степени",
+      "description": "Упрощение степеней и решение показательных уравнений и неравенств."
+    },
+    "back": "Вернуться к инструментам",
+    "eyebrow": "Алгебра",
+    "inputTitle": "Степенное выражение",
+    "variableLabel": "Переменная",
+    "expressionLabel": "Выражение",
+    "expressionPlaceholder": "2^(x + 1) = 16",
+    "solveButton": "Решить",
+    "solving": "Решается...",
+    "reset": "Очистить",
+    "invalidExpression": "Неверное выражение. Проверьте синтаксис.",
+    "emptyResult": "Введите выражение, уравнение или неравенство.",
+    "resultTitle": "Результат",
+    "simplifiedLabel": "Упрощённая форма",
+    "expandedLabel": "Развёрнутая форма",
+    "numericLabel": "Числовое значение",
+    "solutionsLabel": "Решения",
+    "noSolution": "Нет решения (пустое множество).",
+    "identityMessage": "Тождество — верно для всех допустимых значений.",
+    "solutionSetLabel": "Множество решений",
+    "keyboard": "Клавиатура",
+    "clear": "Очистить",
+    "syntaxTitle": "Синтаксис",
+    "syntax": [
+      "2^x или 2**(x)",
+      "e^x или exp(x)",
+      "(a^m)^n — степень степени",
+      "2^(x+1) = 16 — уравнение",
+      "2^x > 8 — неравенство"
+    ],
+    "history": "История",
+    "clearHistory": "Очистить",
+    "examples": "Примеры:"
+  },
+  "unitCircleTool": {
+    "meta": {
+      "title": "Единичная окружность",
+      "description": "Перевод градусов в радианы и точные радикальные значения тригонометрических функций."
+    },
+    "inputTitle": "Угол или выражение",
+    "expressionLabel": "Выражение",
+    "expressionPlaceholder": "30",
+    "unitLabel": "Единица",
+    "degrees": "Градусы",
+    "radians": "Радианы",
+    "variableLabel": "Переменная",
+    "solveButton": "Вычислить",
+    "solving": "Считается...",
+    "reset": "Очистить",
+    "invalidExpression": "Неверное выражение. Проверьте синтаксис.",
+    "emptyResult": "Введите угол или тригонометрическое выражение.",
+    "degreesLabel": "Градусы",
+    "radiansLabel": "Радианы",
+    "exactLabel": "Точное",
+    "numericLabel": "Числовое",
+    "undefined": "Не определено",
+    "simplifiedLabel": "Упрощённое",
+    "expandedLabel": "Развёрнутое",
+    "solutionsLabel": "Решения на [0, 2π)",
+    "noSolution": "Нет решения (пустое множество).",
+    "identityMessage": "Тождество — верно для всех допустимых значений.",
+    "solutionSetLabel": "Общее решение",
+    "keyboard": "Клавиатура",
+    "clear": "Очистить",
+    "syntaxTitle": "Синтаксис",
+    "syntax": [
+      "30 или pi/6 — угол (выберите единицу)",
+      "sin(30°) или sin(pi/6)",
+      "sin(x)^2 + cos(x)^2",
+      "sin(x) = 1/2 — уравнение"
+    ],
+    "history": "История",
+    "clearHistory": "Очистить",
+    "examples": "Примеры:"
+  },
+  "geometryTool": {
+    "inputTitle": "Фигура",
+    "shapeLabel": "Фигура",
+    "groups": { "2d": "2D", "3d": "3D" },
+    "shapes": {
+      "rectangle": "Прямоугольник",
+      "square": "Квадрат",
+      "circle": "Круг",
+      "triangle": "Треугольник",
+      "rightTriangle": "Прямоугольный треугольник",
+      "trapezoid": "Равнобедренная трапеция",
+      "regularPolygon": "Правильный многоугольник",
+      "cube": "Куб",
+      "rectangularPrism": "Прямоугольная призма",
+      "triangularPrism": "Треугольная призма",
+      "cylinder": "Цилиндр",
+      "squarePyramid": "Правильная пирамида",
+      "cone": "Конус",
+      "sphere": "Сфера"
+    },
+    "fields": { "a": "a", "b": "b", "c": "c", "r": "r", "h": "h", "l": "l", "n": "n" },
+    "hints": {
+      "rectangle": "a, b — стороны",
+      "square": "a — сторона",
+      "circle": "r — радиус",
+      "triangle": "a, b, c — стороны",
+      "rightTriangle": "a, b — катеты",
+      "trapezoid": "a, b — основания, h — высота",
+      "regularPolygon": "n — число сторон, a — сторона",
+      "cube": "a — ребро",
+      "rectangularPrism": "a, b, c — рёбра",
+      "triangularPrism": "a, b, c — стороны основания, l — длина",
+      "cylinder": "r — радиус, h — высота",
+      "squarePyramid": "a — сторона основания, h — высота",
+      "cone": "r — радиус, h — высота",
+      "sphere": "r — радиус"
+    },
+    "targetLabel": "Известная величина",
+    "targetNone": "Нет",
+    "targetValueLabel": "Значение",
+    "targetPlaceholder": "12*pi",
+    "variableLabel": "Неизвестная",
+    "solveButton": "Вычислить",
+    "solving": "Считается...",
+    "reset": "Очистить",
+    "invalidExpression": "Проверьте данные.",
+    "emptyResult": "Выберите фигуру и введите размеры.",
+    "solutionsLabel": "Решение",
+    "noSolution": "Нет решения.",
+    "labels": {
+      "perimeter": "Периметр",
+      "area": "Площадь",
+      "surface": "Полная поверхность",
+      "lateral": "Боковая поверхность",
+      "volume": "Объём",
+      "slant": "Апофема",
+      "baseArea": "Площадь основания",
+      "diagonal": "Диагональ",
+      "hypotenuse": "Гипотенуза"
+    },
+    "keyboard": "Клавиатура",
+    "clear": "Очистить",
+    "syntaxTitle": "Синтаксис",
+    "syntax": [
+      "3, 4/2, sqrt(2), pi",
+      "r = x и объём 12*pi — решить",
+      "треугольник 3, 4, 5 — Герон"
+    ],
+    "history": "История",
+    "clearHistory": "Очистить",
+    "examples": "Примеры:"
+  },
+  "vectorTool": {
+    "inputTitle": "Точки или векторы",
+    "modes": { "points": "Точки", "vectors": "Векторы" },
+    "dim2": "2D",
+    "dim3": "3D",
+    "pointA": "Точка A",
+    "pointB": "Точка B",
+    "vectorU": "Вектор u",
+    "vectorV": "Вектор v",
+    "solveButton": "Вычислить",
+    "solving": "Считается...",
+    "reset": "Очистить",
+    "invalidExpression": "Проверьте координаты.",
+    "emptyResult": "Введите две точки или два вектора.",
+    "labels": {
+      "distance": "Расстояние",
+      "midpoint": "Середина",
+      "line": "Уравнение прямой",
+      "slope": "Угловой коэффициент",
+      "parametric": "Параметрический вид",
+      "symmetric": "Канонический вид",
+      "direction": "Направляющий вектор",
+      "dot": "Скалярное произведение",
+      "cross": "Векторное произведение",
+      "magnitudeU": "|u|",
+      "magnitudeV": "|v|",
+      "angle": "Угол",
+      "projection": "Проекция u на v"
+    },
+    "keyboard": "Клавиатура",
+    "clear": "Очистить",
+    "syntaxTitle": "Синтаксис",
+    "syntax": [
+      "3, -1/2, sqrt(2), pi",
+      "(0,0) и (3,4) — расстояние, середина, прямая",
+      "(1,2,3) и (4,-5,6) — скалярное и векторное произведение"
+    ],
+    "history": "История",
+    "clearHistory": "Очистить",
+    "examples": "Примеры:"
+  },
+  "combinatoricsTool": {
+    "inputTitle": "Комбинаторика",
+    "kinds": {
+      "P": "Перестановки P",
+      "A": "Размещения A",
+      "C": "Сочетания C",
+      "binomial": "Бином"
+    },
+    "repetition": "С повторениями",
+    "expressionLabel": "Выражение",
+    "expressionPlaceholder": "(x+y)^5",
+    "solveButton": "Вычислить",
+    "solving": "Считается...",
+    "reset": "Очистить",
+    "invalidExpression": "Проверьте данные.",
+    "emptyResult": "Выберите P, A, C или биномиальный коэффициент.",
+    "formulaLabel": "Формула",
+    "valueLabel": "Значение",
+    "expandedLabel": "Разложение",
+    "keyboard": "Клавиатура",
+    "clear": "Очистить",
+    "syntaxTitle": "Синтаксис",
+    "syntax": [
+      "P(n) = n!",
+      "A(n,k) = n!/(n-k)!, с повторениями n^k",
+      "C(n,k), с повторениями C(n+k-1,k)",
+      "(x+y)^n — разложение бинома"
+    ],
+    "history": "История",
+    "clearHistory": "Очистить",
+    "examples": "Примеры:"
+  },
+  "sequencesTool": {
+    "inputTitle": "Последовательность или ряд",
+    "kinds": {
+      "arithmetic": "Арифметическая",
+      "geometric": "Геометрическая",
+      "series": "Ряд"
+    },
+    "firstTerm": "Первый член a",
+    "difference": "Разность d",
+    "ratio": "Знаменатель q",
+    "termLabel": "Общий член",
+    "variableLabel": "Индекс",
+    "partialN": "n (необязательно)",
+    "optional": "пусто — только бесконечная сумма",
+    "solveButton": "Вычислить",
+    "solving": "Считается...",
+    "reset": "Очистить",
+    "invalidExpression": "Проверьте данные.",
+    "emptyResult": "Введите прогрессию или член ряда.",
+    "converges": "Ряд сходится",
+    "diverges": "Ряд расходится",
+    "labels": {
+      "nth": "n-й член",
+      "sum": "Сумма первых n членов",
+      "infinite": "Бесконечная сумма"
+    },
+    "keyboard": "Клавиатура",
+    "clear": "Очистить",
+    "syntaxTitle": "Синтаксис",
+    "syntax": [
+      "a_n = a + (n-1)d",
+      "a_n = a*q^(n-1), |q|<1 — сходится",
+      "1/n**2, (-1)**(n+1)/n"
+    ],
+    "history": "История",
+    "clearHistory": "Очистить",
+    "examples": "Примеры:"
+  },
+  "radicalTool": {
+    "inputTitle": "Радикал",
+    "variableLabel": "Переменная",
+    "expressionLabel": "Выражение",
+    "expressionPlaceholder": "sqrt(50)",
+    "solveButton": "Упростить",
+    "solving": "Считается...",
+    "reset": "Очистить",
+    "invalidExpression": "Неверное выражение.",
+    "emptyResult": "Введите выражение с корнем или уравнение.",
+    "simplifiedLabel": "Упрощённое",
+    "rationalizedLabel": "Знаменатель без корня",
+    "solutionsLabel": "Решения",
+    "noSolution": "Нет решения.",
+    "identityMessage": "Тождество.",
+    "keyboard": "Клавиатура",
+    "clear": "Очистить",
+    "syntaxTitle": "Синтаксис",
+    "syntax": [
+      "sqrt(50), cbrt(16), root(54, 3)",
+      "1/(sqrt(3)-1) — избавление от корня",
+      "sqrt(x+1) = 3 — уравнение"
+    ],
+    "history": "История",
+    "clearHistory": "Очистить",
+    "examples": "Примеры:"
+  },
+  "rearrangeTool": {
+    "inputTitle": "Формула",
+    "expressionLabel": "Формула",
+    "expressionPlaceholder": "A = pi*r**2",
+    "variableLabel": "Выразить",
+    "solveButton": "Преобразовать",
+    "solving": "Считается...",
+    "reset": "Очистить",
+    "invalidExpression": "Не удалось преобразовать формулу.",
+    "emptyResult": "Введите формулу и переменную.",
+    "examples": "Примеры:",
+    "history": "История",
+    "clearHistory": "Очистить",
+    "ops": {
+      "start": "Начало",
+      "swap": "Поменять стороны",
+      "subtract": "Прибавить или вычесть",
+      "divide": "Умножить или разделить",
+      "root": "Извлечь корень",
+      "log": "Логарифм",
+      "inverse": "Обратная функция",
+      "exp": "Возвести в степень",
+      "collect": "Собрать члены",
+      "result": "Результат"
+    }
+  },
   "triangleTool": {
     "meta": {
       "title": "Решение треугольника",
@@ -2488,7 +2813,7 @@
       "address": "Тбилиси, проспект Чавчавадзе 1",
       "telegram": "@mathlabge"
     },
-    "copyright": "© {year} pinf",
+    "copyright": "© {year} MathLab",
     "legal": {
       "privacy": "Конфиденциальность",
       "terms": "Условия использования"

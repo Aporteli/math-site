@@ -412,8 +412,8 @@ export function MathPlot3D({ data }: MathPlot3DProps) {
 
   if (!data?.curve) {
     return (
-      <div className="flex h-[650px] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/80 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100/80">
+      <div className="flex h-[650px] w-full flex-col items-center justify-center gap-3 rounded-box border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/80 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-box bg-slate-100/80">
           <svg
             width="22"
             height="22"
@@ -446,11 +446,11 @@ export function MathPlot3D({ data }: MathPlot3DProps) {
    * ──────────────────────────────────────────────────────────── */
 
   return (
-    <div className="relative h-[650px] w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
+    <div className="relative h-[650px] w-full overflow-hidden rounded-box border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
       {/* Floating curve badge */}
-      <div className="pointer-events-none absolute left-3.5 top-3.5 z-10 flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/90 px-3 py-1.5 text-[11px] font-medium tracking-wide text-slate-600 shadow-sm backdrop-blur-md">
+      <div className="pointer-events-none absolute left-3.5 top-3.5 z-10 flex items-center gap-2 rounded-box border border-slate-200/70 bg-white/90 px-3 py-1.5 text-[11px] font-medium tracking-wide text-slate-600 shadow-sm backdrop-blur-md">
         <span
-          className="h-2 w-2 rounded-full ring-2 ring-rose-500/20"
+          className="h-2 w-2 rounded-box ring-2 ring-rose-500/20"
           style={{ backgroundColor: COLORS.curve }}
         />
         <span className="font-semibold text-slate-700">r(t)</span>

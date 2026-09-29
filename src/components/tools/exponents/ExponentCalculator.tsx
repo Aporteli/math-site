@@ -8,11 +8,11 @@ import {
 import { KatexPreview } from '@/components/math/katex-preview';
 import type { Dictionary } from '@/i18n/types';
 import {
-  LOG_EXAMPLES, LOG_HISTORY_KEY, LOG_VARIABLES,
-  type LogHistoryItem, type LogResult,
-} from './logarithms';
+  EXP_EXAMPLES, EXP_HISTORY_KEY, EXP_VARIABLES,
+  type ExpHistoryItem, type ExpResult,
+} from './exponents';
 
-type Copy = Dictionary['logarithmTool'];
+type Copy = Dictionary['exponentTool'];
 
 interface Props {
   locale: string;
@@ -34,16 +34,14 @@ const chipClass =
 const panelClass =
   'rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
 
-export function LogarithmCalculator({
-  copy, embedded = false,
-}: Props) {
-  const [expression, setExpression] = useState('log_2(x - 1) = 3');
+export function ExponentCalculator({ copy, embedded = false }: Props) {
+  const [expression, setExpression] = useState('2^(x + 1) = 16');
   const [variable, setVariable] = useState('x');
   const [showKeyboard, setShowKeyboard] = useState(false);
-  const [result, setResult] = useState<LogResult | null>(null);
+  const [result, setResult] = useState<ExpResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<LogHistoryItem[]>([]);
+  const [history, setHistory] = useState<ExpHistoryItem[]>([]);
   const [copied, setCopied] = useState<string | null>(null);
   const [syntaxOpen, setSyntaxOpen] = useState(false);
 
@@ -55,7 +53,7 @@ export function LogarithmCalculator({
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(LOG_HISTORY_KEY);
+      const raw = localStorage.getItem(EXP_HISTORY_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) setHistory(parsed);
@@ -66,9 +64,7 @@ export function LogarithmCalculator({
   useEffect(() => {
     if (!showKeyboard) return;
     function onPointerDown(e: PointerEvent) {
-      if (!keyboardRootRef.current?.contains(e.target as Node)) {
-        setShowKeyboard(false);
-      }
+      if (!keyboardRootRef.current?.contains(e.target as Node)) setShowKeyboard(false);
     }
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
@@ -80,18 +76,12 @@ export function LogarithmCalculator({
     return () => window.clearTimeout(id);
   }, [copied]);
 
-  async function handleSolve(e?: React.FormEvent) {
-    e?.preventDefault();
-    if (!expression.trim()) return;
-    await solveWith(expression, variable);
-  }
-
   async function solveWith(expr: string, v: string) {
     setLoading(true);
     setError(null);
     setResult(null);
     try {
-      const res = await fetch(`${API_BASE}/api/logarithm/analyze`, {
+      const res = await fetch(`${API_BASE}/api/exponent/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ expression: expr, variable: v }),
@@ -100,15 +90,13 @@ export function LogarithmCalculator({
       if (!res.ok) throw new Error(data.detail || copy.invalidExpression);
       setResult(data);
 
-      const item: LogHistoryItem = { expression: expr, variable: v };
+      const item: ExpHistoryItem = { expression: expr, variable: v };
       setHistory((prev) => {
         const next = [
           item,
           ...prev.filter((h) => !(h.expression === item.expression && h.variable === item.variable)),
         ].slice(0, 10);
-        try {
-          localStorage.setItem(LOG_HISTORY_KEY, JSON.stringify(next));
-        } catch { /* ignore */ }
+        try { localStorage.setItem(EXP_HISTORY_KEY, JSON.stringify(next)); } catch { /* ignore */ }
         return next;
       });
     } catch (err) {
@@ -118,32 +106,12 @@ export function LogarithmCalculator({
     }
   }
 
-  function reset() {
-    setExpression('log_2(x - 1) = 3');
-    setVariable('x');
-    setResult(null);
-    setError(null);
-  }
-
-  function applyExample(ex: (typeof LOG_EXAMPLES)[0]) {
+  function applyExample(ex: (typeof EXP_EXAMPLES)[number]) {
     setExpression(ex.expression);
     setVariable(ex.variable);
     setResult(null);
     setError(null);
     setTimeout(() => solveWith(ex.expression, ex.variable), 0);
-  }
-
-  function applyHistory(item: LogHistoryItem) {
-    setExpression(item.expression);
-    setVariable(item.variable);
-    solveWith(item.expression, item.variable);
-  }
-
-  function clearHistory() {
-    setHistory([]);
-    try {
-      localStorage.removeItem(LOG_HISTORY_KEY);
-    } catch { /* ignore */ }
   }
 
   function insertKey(key: string) {
@@ -166,35 +134,9 @@ export function LogarithmCalculator({
     } catch { /* ignore */ }
   }
 
-  const exampleButtons = (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-xs font-semibold text-muted">{copy.examples}</span>
-      {LOG_EXAMPLES.map((ex) => (
-        <button
-          key={ex.label}
-          type="button"
-          onClick={() => applyExample(ex)}
-          className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
-          {ex.label}
-        </button>
-      ))}
-    </div>
-  );
-
   return (
-    <main
-      className={
-        embedded
-          ? 'text-ink'
-          : 'mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink'
-      }>
-      <div
-        className={
-          embedded
-            ? 'grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]'
-            : 'my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]'
-        }>
-        {/* ═════ LEFT: Input ═════ */}
+    <main className={embedded ? 'text-ink' : 'mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink'}>
+      <div className={embedded ? 'grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]' : 'my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]'}>
         <section className={panelClass} onKeyDown={onInputKeyDown}>
           <div ref={keyboardRootRef}>
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -214,17 +156,15 @@ export function LogarithmCalculator({
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs font-semibold text-muted">
-                {copy.variableLabel}
-              </label>
+              <label className="mb-1 block text-xs font-semibold text-muted">{copy.variableLabel}</label>
               <div className="flex flex-wrap gap-1">
-                {LOG_VARIABLES.map((v) => (
+                {EXP_VARIABLES.map((v) => (
                   <button
                     key={v}
                     type="button"
                     onClick={() => setVariable(v)}
                     className={
-                      'rounded-box border px-3 py-1.5 text-xs font-semibold font-mono transition-colors ' +
+                      'rounded-box border px-3 py-1.5 font-mono text-xs font-semibold transition-colors ' +
                       (variable === v
                         ? 'border-navy bg-navy text-white'
                         : 'border-hairline bg-white text-muted hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800')
@@ -235,13 +175,18 @@ export function LogarithmCalculator({
               </div>
             </div>
 
-            <form onSubmit={handleSolve} className="space-y-3">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (expression.trim()) solveWith(expression, variable);
+              }}
+              className="space-y-3">
               <div>
-                <label htmlFor="log-input" className="mb-1 block text-xs font-semibold text-muted">
+                <label htmlFor="exp-input" className="mb-1 block text-xs font-semibold text-muted">
                   {copy.expressionLabel}
                 </label>
                 <input
-                  id="log-input"
+                  id="exp-input"
                   ref={inputRef}
                   value={expression}
                   onChange={(e) => setExpression(e.target.value)}
@@ -252,7 +197,6 @@ export function LogarithmCalculator({
                   className={fieldClass}
                 />
               </div>
-
               <div className="flex flex-wrap gap-2 pt-1">
                 <button
                   type="submit"
@@ -261,7 +205,15 @@ export function LogarithmCalculator({
                   <Calculator className="size-4" aria-hidden="true" />
                   {loading ? copy.solving : copy.solveButton}
                 </button>
-                <button type="button" onClick={reset} className={chipClass}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExpression('2^(x + 1) = 16');
+                    setVariable('x');
+                    setResult(null);
+                    setError(null);
+                  }}
+                  className={chipClass}>
                   <RotateCcw className="size-3.5" aria-hidden="true" />
                   {copy.reset}
                 </button>
@@ -269,7 +221,7 @@ export function LogarithmCalculator({
             </form>
 
             {showKeyboard && (
-              <LogKeyboard
+              <ExpKeyboard
                 copy={copy}
                 titleId={keyboardTitleId}
                 value={expression}
@@ -278,8 +230,17 @@ export function LogarithmCalculator({
               />
             )}
 
-            <div className="mt-4 border-t border-hairline pt-3 dark:border-slate-800">
-              {exampleButtons}
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline pt-3 dark:border-slate-800">
+              <span className="text-xs font-semibold text-muted">{copy.examples}</span>
+              {EXP_EXAMPLES.map((ex) => (
+                <button
+                  key={ex.label}
+                  type="button"
+                  onClick={() => applyExample(ex)}
+                  className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
+                  {ex.label}
+                </button>
+              ))}
             </div>
 
             <div className="mt-3 border-t border-hairline pt-3 dark:border-slate-800">
@@ -292,12 +253,9 @@ export function LogarithmCalculator({
               </button>
               {syntaxOpen && (
                 <ul className="mt-2 space-y-1 rounded-box bg-paper-deep/60 p-3 font-mono text-[11px] text-body dark:bg-slate-800/40 dark:text-slate-300">
-                  <li>· log(x) — ფუძე 10</li>
-                  <li>· ln(x) — ნატურალური</li>
-                  <li>· log_2(x) ან log2(x) — ფუძე 2</li>
-                  <li>· log_5(x) — ფუძე 5</li>
-                  <li>· log_2(x − 1) = 3 — განტოლება</li>
-                  <li>· log(x·y) — გამარტივება</li>
+                  {copy.syntax.map((line) => (
+                    <li key={line}>· {line}</li>
+                  ))}
                 </ul>
               )}
             </div>
@@ -311,7 +269,6 @@ export function LogarithmCalculator({
           </div>
         </section>
 
-        {/* ═════ RIGHT: Results ═════ */}
         <section className={panelClass}>
           {loading && (
             <div className="flex min-h-[200px] items-center justify-center">
@@ -330,93 +287,57 @@ export function LogarithmCalculator({
 
           {result && !loading && (
             <div className="space-y-5">
-              {/* ═══ SIMPLIFY ═══ */}
               {result.mode === 'simplify' && (
-                <div className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
-                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
-                    {copy.simplifiedLabel}
-                  </p>
-                  <div className="overflow-x-auto hide-scrollbar">
-                    <KatexPreview tex={result.simplifiedLatex} />
-                  </div>
-                </div>
-              )}
-
-              {/* ═══ SOLVE ═══ */}
-              {result.mode === 'solve' && (
                 <>
-                  {result.identity ? (
-                    <div className="rounded-box border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
-                      {copy.identityMessage}
-                    </div>
-                  ) : (
-                    <>
-                      {result.domainLatex && (
-                        <div className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
-                          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
-                            {copy.domainLabel}
-                          </p>
-                          <div className="overflow-x-auto hide-scrollbar">
-                            <KatexPreview tex={result.domainLatex} />
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
-                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
-                          {copy.solutionsLabel}
-                        </p>
-                        {!result.solutions || result.solutions.length === 0 ? (
-                          <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">
-                            {copy.noSolution}
-                          </p>
-                        ) : (
-                          <ul className="space-y-2">
-                            {result.solutions.map((s, i) => (
-                              <li
-                                key={i}
-                                className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
-                                <div className="min-w-0 overflow-x-auto hide-scrollbar">
-                                  <KatexPreview tex={`${variable} = ${s.latex}`} />
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => copyText(`${variable} = ${s.latex}`, `sol-${i}`)}
-                                  className="shrink-0 text-muted hover:text-ink">
-                                  {copied === `sol-${i}` ? (
-                                    <Check className="size-3.5 text-emerald-500" />
-                                  ) : (
-                                    <Copy className="size-3.5" />
-                                  )}
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-
-                      {result.rejected && result.rejected.length > 0 && (
-                        <div className="rounded-box border border-amber-200 bg-amber-50 p-3.5 dark:border-amber-900 dark:bg-amber-950/30">
-                          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
-                            {copy.rejectedLabel}
-                          </p>
-                          <ul className="space-y-1.5">
-                            {result.rejected.map((s, i) => (
-                              <li key={i} className="overflow-x-auto hide-scrollbar">
-                                <KatexPreview
-                                  tex={`${variable} = ${s.latex} \\;\\text{— ${copy.rejectedNote}}`}
-                                />
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </>
+                  <ResultBlock label={copy.simplifiedLabel} tex={result.simplifiedLatex} />
+                  {result.expandedLatex && result.expandedLatex !== result.simplifiedLatex && (
+                    <ResultBlock label={copy.expandedLabel} tex={result.expandedLatex} />
+                  )}
+                  {result.numericLatex && result.numericLatex !== result.simplifiedLatex && (
+                    <ResultBlock label={copy.numericLabel} tex={result.numericLatex} />
                   )}
                 </>
               )}
 
-              {/* ═══ History ═══ */}
+              {result.mode === 'solve' && (
+                result.identity ? (
+                  <div className="rounded-box border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
+                    {copy.identityMessage}
+                  </div>
+                ) : result.solutionLatex ? (
+                  <ResultBlock label={copy.solutionSetLabel} tex={result.solutionLatex} />
+                ) : !result.solutions || result.solutions.length === 0 ? (
+                  <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">{copy.noSolution}</p>
+                ) : (
+                  <div className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                      {copy.solutionsLabel}
+                    </p>
+                    <ul className="space-y-2">
+                      {result.solutions.map((s, i) => (
+                        <li
+                          key={i}
+                          className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                          <div className="min-w-0 overflow-x-auto hide-scrollbar">
+                            <KatexPreview tex={`${variable} = ${s.latex}`} />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => copyText(`${variable} = ${s.latex}`, `sol-${i}`)}
+                            className="shrink-0 text-muted hover:text-ink">
+                            {copied === `sol-${i}` ? (
+                              <Check className="size-3.5 text-emerald-500" />
+                            ) : (
+                              <Copy className="size-3.5" />
+                            )}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              )}
+
               {history.length > 0 && (
                 <div className="border-t border-hairline pt-3 dark:border-slate-800">
                   <div className="mb-2 flex items-center justify-between">
@@ -426,7 +347,10 @@ export function LogarithmCalculator({
                     </p>
                     <button
                       type="button"
-                      onClick={clearHistory}
+                      onClick={() => {
+                        setHistory([]);
+                        try { localStorage.removeItem(EXP_HISTORY_KEY); } catch { /* ignore */ }
+                      }}
                       className="text-[11px] font-semibold text-muted hover:text-rose-500">
                       {copy.clearHistory}
                     </button>
@@ -436,8 +360,12 @@ export function LogarithmCalculator({
                       <li key={i}>
                         <button
                           type="button"
-                          onClick={() => applyHistory(h)}
-                          className="w-full overflow-x-auto rounded-box border border-hairline-soft bg-white px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:border-navy/30 hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800">
+                          onClick={() => {
+                            setExpression(h.expression);
+                            setVariable(h.variable);
+                            solveWith(h.expression, h.variable);
+                          }}
+                          className="w-full overflow-x-auto rounded-box border border-hairline-soft bg-white px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:border-navy/30 hover:bg-navy-tint dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800">
                           {h.expression}
                         </button>
                       </li>
@@ -453,14 +381,19 @@ export function LogarithmCalculator({
   );
 }
 
-/* ══════════════════════════════════════════════════════════ */
+function ResultBlock({ label, tex }: { label: string; tex: string }) {
+  return (
+    <div className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
+      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">{label}</p>
+      <div className="overflow-x-auto hide-scrollbar">
+        <KatexPreview tex={tex} />
+      </div>
+    </div>
+  );
+}
 
-function LogKeyboard({
-  copy,
-  titleId,
-  value,
-  onKey,
-  onClose,
+function ExpKeyboard({
+  copy, titleId, value, onKey, onClose,
 }: {
   copy: Copy;
   titleId: string;
@@ -468,17 +401,17 @@ function LogKeyboard({
   onKey: (key: string) => void;
   onClose: () => void;
 }) {
+  const fns = ['^', 'exp(', 'sqrt(', 'e^', '**'];
+  const ops = ['=', '>', '<', '<=', '>=', '+', '-', '*', '/', '(', ')'];
+  const vars = ['x', 'y', 'a', 'n', 't'];
   const digits = ['7', '8', '9', '4', '5', '6', '1', '2', '3'];
-  const logFns = ['log(', 'ln(', 'log_2(', 'log_3(', 'log_5('];
-  const ops = ['=', '+', '-', '*', '/', '^', '(', ')', 'e'];
-  const vars = ['x', 'y', 'z', 't'];
 
   return (
     <div
       id={titleId}
       role="region"
       aria-label={copy.keyboard}
-      className="mt-4 rounded-box border border-hairline bg-white shadow-sm dark:bg-slate-900 dark:border-slate-700">
+      className="mt-4 rounded-box border border-hairline bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-3 border-b border-hairline px-4 py-3 dark:border-slate-700">
         <h2 className="text-sm font-semibold text-ink">{copy.keyboard}</h2>
         <button
@@ -489,58 +422,35 @@ function LogKeyboard({
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>
-
       <div className="space-y-3 px-4 py-4">
-        <div className="overflow-x-auto rounded-box border border-hairline bg-paper px-3 py-2 text-center font-mono text-lg text-ink dark:bg-slate-950 dark:border-slate-700">
+        <div className="overflow-x-auto rounded-box border border-hairline bg-paper px-3 py-2 text-center font-mono text-lg text-ink dark:border-slate-700 dark:bg-slate-950">
           {value || '\u00a0'}
         </div>
-
         <div className="grid grid-cols-5 gap-1.5">
-          {logFns.map((k) => (
-            <button key={k} type="button" className={keyClass} onClick={() => onKey(k)}>
-              {k}
-            </button>
+          {fns.map((k) => (
+            <button key={k} type="button" className={keyClass} onClick={() => onKey(k)}>{k}</button>
           ))}
         </div>
-
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-5 gap-1.5">
           {vars.map((v) => (
-            <button key={v} type="button" className={keyClass} onClick={() => onKey(v)}>
-              {v}
-            </button>
+            <button key={v} type="button" className={keyClass} onClick={() => onKey(v)}>{v}</button>
           ))}
         </div>
-
         <div className="grid grid-cols-3 gap-1.5">
           {digits.map((d) => (
-            <button key={d} type="button" className={keyClass} onClick={() => onKey(d)}>
-              {d}
-            </button>
+            <button key={d} type="button" className={keyClass} onClick={() => onKey(d)}>{d}</button>
           ))}
-          <button type="button" className={keyClass} onClick={() => onKey('.')}>
-            .
-          </button>
-          <button type="button" className={keyClass} onClick={() => onKey('0')}>
-            0
-          </button>
-          <button
-            type="button"
-            aria-label="backspace"
-            className={keyClass}
-            onClick={() => onKey('backspace')}>
+          <button type="button" className={keyClass} onClick={() => onKey('.')}>.</button>
+          <button type="button" className={keyClass} onClick={() => onKey('0')}>0</button>
+          <button type="button" aria-label="backspace" className={keyClass} onClick={() => onKey('backspace')}>
             <Delete className="size-4" aria-hidden="true" />
           </button>
         </div>
-
-        <div className="grid grid-cols-5 gap-1.5">
+        <div className="grid grid-cols-6 gap-1.5">
           {ops.map((k) => (
-            <button key={k} type="button" className={keyClass} onClick={() => onKey(k)}>
-              {k}
-            </button>
+            <button key={k} type="button" className={keyClass} onClick={() => onKey(k)}>{k}</button>
           ))}
-          <button type="button" className={keyClass} onClick={() => onKey('clear')}>
-            {copy.clear}
-          </button>
+          <button type="button" className={keyClass} onClick={() => onKey('clear')}>{copy.clear}</button>
         </div>
       </div>
     </div>
