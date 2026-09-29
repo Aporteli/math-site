@@ -251,8 +251,7 @@ export function AdminPanel({
                 </p>
               </div>
 
-              <ServerManager />
-            </div>
+              <ServerManager locale={locale} />            </div>
           ) : null}
 
           {section !== 'overview' &&

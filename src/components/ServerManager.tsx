@@ -7,8 +7,10 @@ import {
   CircleAlert,
   Loader2,
   RefreshCw,
+  RotateCcw,
   Server,
 } from 'lucide-react';
+import type { Locale } from '@/i18n/config';
 
 type DockerServices = Record<string, string>;
 
@@ -17,19 +19,24 @@ type ServerStatus = {
   docker: DockerServices;
 };
 
+type ServiceId = 'livekit' | 'caddy' | 'redis';
+
 const SERVICES = [
   {
-    id: 'livekitpinfcomge-livekit-1',
+    id: 'livekit' as const,
+    dockerName: 'livekitpinfcomge-livekit-1',
     name: 'LiveKit',
     description: 'ვიდეოზარების მთავარი სერვისი',
   },
   {
-    id: 'livekitpinfcomge-caddy-1',
+    id: 'caddy' as const,
+    dockerName: 'livekitpinfcomge-caddy-1',
     name: 'Caddy',
     description: 'HTTPS და ქსელური proxy',
   },
   {
-    id: 'livekitpinfcomge-redis-1',
+    id: 'redis' as const,
+    dockerName: 'livekitpinfcomge-redis-1',
     name: 'Redis',
     description: 'LiveKit-ის დამხმარე მონაცემთა სერვისი',
   },
@@ -39,20 +46,29 @@ function isServiceOnline(status: string | undefined) {
   return status?.startsWith('Up') ?? false;
 }
 
-export function ServerManager() {
+export function ServerManager({
+  locale,
+}: {
+  locale: Locale;
+}) {
   const [data, setData] = useState<ServerStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [restarting, setRestarting] = useState<ServiceId | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   const loadStatus = useCallback(async () => {
     try {
       setError(null);
 
-      const response = await fetch('/api/admin/server/status', {
-        method: 'GET',
-        cache: 'no-store',
-      });
+      const response = await fetch(
+        `/api/admin/server/status?locale=${locale}`,
+        {
+          method: 'GET',
+          cache: 'no-store',
+        },
+      );
 
       if (!response.ok) {
         throw new Error('Failed to load server status');
@@ -67,7 +83,7 @@ export function ServerManager() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     void loadStatus();
@@ -75,7 +91,65 @@ export function ServerManager() {
 
   const handleRefresh = () => {
     setRefreshing(true);
+    setMessage(null);
     void loadStatus();
+  };
+
+  const restartService = async (service: ServiceId) => {
+    const serviceInfo = SERVICES.find((item) => item.id === service);
+
+    if (!serviceInfo) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `ნამდვილად გსურთ ${serviceInfo.name}-ის გადატვირთვა?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setRestarting(service);
+      setError(null);
+      setMessage(null);
+
+      const response = await fetch(
+        `/api/admin/server/restart?locale=${locale}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            service,
+          }),
+        },
+      );
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          result?.error ?? 'Restart failed',
+        );
+      }
+
+      setMessage(`${serviceInfo.name} წარმატებით გადაიტვირთა`);
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1500);
+      });
+
+      await loadStatus();
+    } catch {
+      setError(
+        `${serviceInfo.name}-ის გადატვირთვა ვერ მოხერხდა`,
+      );
+    } finally {
+      setRestarting(null);
+    }
   };
 
   return (
@@ -104,7 +178,7 @@ export function ServerManager() {
           <button
             type="button"
             onClick={handleRefresh}
-            disabled={loading || refreshing}
+            disabled={loading || refreshing || restarting !== null}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-body transition-colors hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw
@@ -129,7 +203,7 @@ export function ServerManager() {
 
           <div>
             <p className="text-sm font-semibold">
-              სერვერთან დაკავშირება ვერ მოხერხდა
+              ოპერაცია ვერ შესრულდა
             </p>
 
             <p className="mt-1 text-xs text-red-600">
@@ -139,10 +213,24 @@ export function ServerManager() {
         </div>
       ) : null}
 
+      {message ? (
+        <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-700">
+          <CheckCircle2
+            className="size-5 shrink-0"
+            aria-hidden="true"
+          />
+
+          <p className="text-sm font-medium">
+            {message}
+          </p>
+        </div>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-3">
         {SERVICES.map((service) => {
-          const status = data?.docker?.[service.id];
+          const status = data?.docker?.[service.dockerName];
           const online = isServiceOnline(status);
+          const isRestarting = restarting === service.id;
 
           return (
             <div
@@ -160,7 +248,7 @@ export function ServerManager() {
                   </p>
                 </div>
 
-                {loading ? (
+                {loading || isRestarting ? (
                   <Loader2
                     className="size-5 shrink-0 animate-spin text-muted"
                     aria-label="იტვირთება"
@@ -182,7 +270,7 @@ export function ServerManager() {
                 <span
                   className={[
                     'size-2 rounded-full',
-                    loading
+                    loading || isRestarting
                       ? 'bg-muted'
                       : online
                         ? 'bg-emerald-500'
@@ -193,18 +281,20 @@ export function ServerManager() {
                 <span
                   className={[
                     'text-sm font-medium',
-                    loading
+                    loading || isRestarting
                       ? 'text-muted'
                       : online
                         ? 'text-emerald-600'
                         : 'text-red-600',
                   ].join(' ')}
                 >
-                  {loading
-                    ? 'იტვირთება'
-                    : online
-                      ? 'Online'
-                      : 'Offline'}
+                  {isRestarting
+                    ? 'იტვირთება...'
+                    : loading
+                      ? 'იტვირთება'
+                      : online
+                        ? 'Online'
+                        : 'Offline'}
                 </span>
               </div>
 
@@ -213,6 +303,29 @@ export function ServerManager() {
                   {status}
                 </p>
               ) : null}
+
+              <button
+                type="button"
+                onClick={() => void restartService(service.id)}
+                disabled={
+                  loading ||
+                  refreshing ||
+                  restarting !== null
+                }
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-body transition-colors hover:bg-paper hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RotateCcw
+                  className={[
+                    'size-4',
+                    isRestarting ? 'animate-spin' : '',
+                  ].join(' ')}
+                  aria-hidden="true"
+                />
+
+                {isRestarting
+                  ? 'იტვირთება...'
+                  : 'Restart'}
+              </button>
             </div>
           );
         })}
@@ -234,4 +347,3 @@ export function ServerManager() {
     </div>
   );
 }
-
