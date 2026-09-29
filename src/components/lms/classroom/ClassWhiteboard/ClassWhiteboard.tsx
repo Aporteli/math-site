@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { Room } from 'livekit-client';
 import { Loader2 } from 'lucide-react';
@@ -45,6 +45,8 @@ import { AiChatModal } from './components/AiChatModal';
 import { PagesTray } from './components/PagesTray';
 import { TopToolbar } from './components/TopToolbar';
 import { BottomPanel } from './components/BottomPanel';
+
+const BOARD_WIDTH = 1920;
 
 const KonvaCanvas = dynamic(() => import('../KonvaCanvas/KonvaCanvas'), {
   ssr: false,
@@ -259,6 +261,25 @@ export function ClassWhiteboard({
 
   // --- Zoom ---
   const { zoomScale, setZoomScale, handleZoomIn, handleZoomOut, handleZoomReset, zoomPercent } = useZoom();
+
+  // Fit the shared board to this screen's width. User zoom multiplies on top.
+  const boardViewportRef = useRef<HTMLDivElement>(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  useLayoutEffect(() => {
+    const el = boardViewportRef.current;
+    if (!el) return;
+    const update = () => {
+      const width = el.clientWidth;
+      if (width > 0) setViewportWidth(width);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const fitScale = viewportWidth > 0 ? viewportWidth / BOARD_WIDTH : 1;
+  const fitScaleRef = useRef(fitScale);
+  fitScaleRef.current = fitScale;
 
   // --- Board view (pan position is lifted here so it can be synced between teacher/student) ---
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
@@ -526,6 +547,7 @@ export function ClassWhiteboard({
       />
 
       <div
+        ref={boardViewportRef}
         className="relative flex-1 w-full min-h-0 min-w-0 overflow-hidden"
         style={{ backgroundColor: isDark ? '#020617' : '#ffffff' }}>
         {pageLocked && (
@@ -543,8 +565,8 @@ export function ClassWhiteboard({
           strokeWidth={strokeWidth}
           eraserWidth={eraserWidth}
           isDark={isDark}
-          scale={zoomScale}
-          onScaleChange={(newScale) => setZoomScale(newScale)}
+          scale={zoomScale * fitScale}
+          onScaleChange={(newScale) => setZoomScale(newScale / (fitScaleRef.current || 1))}
           stagePos={stagePos}
           onStagePosChange={setStagePos}
           disabled={isLocked}
