@@ -1,15 +1,33 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { RoomAudioRenderer, useLocalParticipant, useRoomContext } from '@livekit/components-react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { RoomAudioRenderer, StartAudio, useLocalParticipant, useRoomContext } from '@livekit/components-react';
 import { RoomEvent, Track } from 'livekit-client';
 import { useAudioDeviceRole } from '../hooks/useAudioDeviceRole';
 
 export function PrimaryRoomAudio({ preferSilence }: { preferSilence: boolean }) {
   const role = useAudioDeviceRole();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
   if (role === 'secondary') return null;
   if (role === 'pending' && preferSilence) return null;
-  return <RoomAudioRenderer />;
+  if (!mounted) return null;
+
+  // The video panel is `display: none` on the board tab. Audio tags inside it
+  // stop or get very quiet in some browsers, so one student loses the teacher.
+  return createPortal(
+    <>
+      <RoomAudioRenderer />
+      <StartAudio
+        label="ხმის ჩასართავად დააჭირე"
+        className="fixed bottom-4 left-1/2 z-[100000] -translate-x-1/2 rounded-box bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 shadow-lg"
+      />
+    </>,
+    document.body,
+  );
 }
 
 /** Keeps a later connection from publishing the microphone or stealing the camera on join. */
