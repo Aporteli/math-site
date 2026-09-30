@@ -40,14 +40,17 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
 
   return (
     <div className="bg-paper text-ink">
-      <section className="mx-auto max-w-6xl px-4 pt-12 sm:px-6 sm:pt-16 lg:px-8 lg:pt-20">
+      <section className="mx-auto w-full min-w-0 max-w-[1800px] py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+        {' '}
         <div className="max-w-3xl border-l-2 border-brass pl-5 sm:pl-7">
           <p className="text-sm font-medium text-brass">{copy.heroKicker}</p>
           <h1 className="mt-3 text-[2.45rem] font-semibold leading-[1.12] tracking-[-0.03em] text-balance text-ink sm:text-6xl sm:leading-[1.08]">
             {copy.heroTitleA}
             <span className="mt-1 block text-navy">{copy.heroTitleB}</span>
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-7 text-pretty text-body sm:text-lg sm:leading-8">{copy.heroBody}</p>
+          <p className="mt-5 max-w-xl text-base leading-7 text-pretty text-body sm:text-lg sm:leading-8">
+            {copy.heroBody}
+          </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link href={localePath(locale, '/signup')} className={primaryButton}>
               {copy.createAccount}
@@ -59,16 +62,17 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
           </div>
           <p className="mt-4 text-sm text-muted">{copy.heroNote}</p>
         </div>
-
         <GraphStage locale={locale} copy={copy} />
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+      <section className="mx-auto w-full min-w-0 max-w-[1800px] py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <h2 className="max-w-md text-3xl font-semibold tracking-[-0.03em] text-balance text-ink sm:text-4xl">
             {copy.workspaceTitle}
           </h2>
-          <p className="max-w-sm text-sm leading-6 text-pretty text-body sm:text-base sm:leading-7">{copy.workspaceBody}</p>
+          <p className="max-w-sm text-sm leading-6 text-pretty text-body sm:text-base sm:leading-7">
+            {copy.workspaceBody}
+          </p>
         </div>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-5">
@@ -79,12 +83,12 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
       </section>
 
       <section className="border-t border-hairline">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+        <div className="mx-auto w-full min-w-0 max-w-[1800px] py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+          {' '}
           <p className="text-sm font-medium text-brass">{copy.processKicker}</p>
           <h2 className="mt-2 max-w-xl text-3xl font-semibold tracking-[-0.03em] text-balance text-ink sm:text-4xl">
             {copy.processTitle}
           </h2>
-
           <ol className="mt-8 grid gap-px overflow-hidden rounded-box border border-hairline bg-hairline md:grid-cols-3">
             {copy.steps.map((step, index) => {
               const Icon = [BookOpen, Calculator, BarChart3][index] ?? BookOpen;
@@ -104,7 +108,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
       </section>
 
       <section className="border-t border-hairline">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+        <div className="mx-auto w-full min-w-0 max-w-[1800px] py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-medium text-brass">{copy.toolsKicker}</p>
@@ -114,12 +118,13 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
                   {toolCount}
                 </span>
               </h2>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-pretty text-body sm:text-base sm:leading-7">{copy.toolsBody}</p>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-pretty text-body sm:text-base sm:leading-7">
+                {copy.toolsBody}
+              </p>
             </div>
             <Link
               href={localePath(locale, '/tools')}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
-            >
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy">
               {copy.browseTools}
               <ArrowUpRight className="size-4" aria-hidden="true" />
             </Link>
@@ -132,8 +137,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
                 <li key={tool.id}>
                   <Link
                     href={localePath(locale, tool.href)}
-                    className="group flex h-full min-h-36 flex-col justify-between rounded-box border border-hairline bg-surface p-5 transition-colors hover:border-navy/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
-                  >
+                    className="group flex h-full min-h-36 flex-col justify-between rounded-box border border-hairline bg-surface p-5 transition-colors hover:border-navy/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy">
                     <span className="flex size-11 items-center justify-center rounded-box bg-navy-tint text-navy transition-colors group-hover:bg-navy/15">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
@@ -155,7 +159,8 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
       </section>
 
       <section className="border-t border-hairline">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mx-auto w-full min-w-0 max-w-[1800px] py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+          {' '}
           <div className="overflow-hidden rounded-box bg-[#0c2340] text-white">
             <div className="h-1 bg-brass" aria-hidden="true" />
             <div className="flex flex-col gap-8 px-6 py-10 sm:px-10 sm:py-12 lg:flex-row lg:items-end lg:justify-between">
@@ -165,8 +170,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
               </div>
               <Link
                 href={localePath(locale, '/signup')}
-                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-box  bg-white px-6 text-sm font-semibold text-[#0c2340] transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c2340]"
-              >
+                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-box  bg-white px-6 text-sm font-semibold text-[#0c2340] transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c2340]">
                 {copy.createAccount}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
@@ -188,8 +192,7 @@ function GraphStage({ locale, copy }: { locale: Locale; copy: LandingCopy }) {
         </div>
         <Link
           href={localePath(locale, '/tools/graphing')}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
-        >
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy">
           {copy.openGraph}
           <ArrowUpRight className="size-4" aria-hidden="true" />
         </Link>
@@ -228,7 +231,9 @@ function TeacherPanel({ copy }: { copy: LandingCopy }) {
 
       <ul className="mt-2">
         {copy.students.map((student) => (
-          <li key={student.name} className="grid grid-cols-[2.25rem_minmax(0,1fr)_2.5rem] items-center gap-3 border-b border-hairline/80 py-3.5 last:border-b-0">
+          <li
+            key={student.name}
+            className="grid grid-cols-[2.25rem_minmax(0,1fr)_2.5rem] items-center gap-3 border-b border-hairline/80 py-3.5 last:border-b-0">
             <span className="flex size-9 items-center justify-center rounded-box bg-navy-tint text-xs font-semibold text-navy">
               {student.name.charAt(0)}
             </span>
@@ -274,7 +279,7 @@ function StudentPanel({ copy }: { copy: LandingCopy }) {
 
 function LivePanel({ copy }: { copy: LandingCopy }) {
   return (
-      <article className="overflow-hidden rounded-box bg-[#0c2340] text-white ring-1 ring-white/10 lg:col-span-5">
+    <article className="overflow-hidden rounded-box bg-[#0c2340] text-white ring-1 ring-white/10 lg:col-span-5">
       <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
           <div className="flex items-center gap-2 text-sm font-medium text-brass">
@@ -284,8 +289,12 @@ function LivePanel({ copy }: { copy: LandingCopy }) {
             </span>
             {copy.liveKicker}
           </div>
-          <h3 className="mt-4 max-w-md text-2xl font-semibold tracking-tight text-balance sm:text-3xl">{copy.liveTitle}</h3>
-          <p className="mt-4 max-w-md text-sm leading-6 text-pretty text-white/70 sm:text-base sm:leading-7">{copy.liveBody}</p>
+          <h3 className="mt-4 max-w-md text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+            {copy.liveTitle}
+          </h3>
+          <p className="mt-4 max-w-md text-sm leading-6 text-pretty text-white/70 sm:text-base sm:leading-7">
+            {copy.liveBody}
+          </p>
           <div className="mt-8 flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-2 rounded-box bg-white/10 px-3 py-1.5 text-xs font-medium">
               <Video className="size-3.5" aria-hidden="true" />
@@ -311,7 +320,17 @@ function LivePanel({ copy }: { copy: LandingCopy }) {
 function BoardSketch() {
   return (
     <svg viewBox="0 0 360 200" className="my-4 block h-44 w-full sm:h-52" aria-hidden="true">
-      <rect x="0.5" y="0.5" width="359" height="199" rx="16" fill="white" fillOpacity="0.04" stroke="white" strokeOpacity="0.12" />
+      <rect
+        x="0.5"
+        y="0.5"
+        width="359"
+        height="199"
+        rx="16"
+        fill="white"
+        fillOpacity="0.04"
+        stroke="white"
+        strokeOpacity="0.12"
+      />
       <path d="M70 158 L180 36 L292 158 Z" fill="none" stroke="white" strokeOpacity="0.85" strokeWidth="1.75" />
       <path d="M180 36 L180 158" fill="none" stroke="#e2a462" strokeWidth="1.25" strokeDasharray="4 4" />
       <path d="M180 158 L210 158 L210 128" fill="none" stroke="white" strokeOpacity="0.45" strokeWidth="1.25" />
@@ -363,7 +382,14 @@ function QuadraticPlot() {
         <line x1={133.3} y1={24} x2={133.3} y2={286} />
       </g>
       <path d={NEGATIVE_REGION} className="fill-navy/15" />
-      <path d={CURVE} fill="none" className="stroke-navy" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d={CURVE}
+        fill="none"
+        className="stroke-navy"
+        strokeWidth="2.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       <circle cx={226.7} cy={220} r={5} className="fill-surface stroke-navy" strokeWidth="2" />
       <circle cx={413.3} cy={220} r={5} className="fill-surface stroke-navy" strokeWidth="2" />
       <circle cx={320} cy={253.3} r={5} className="fill-brass" />
@@ -496,10 +522,12 @@ const landingCopy: Record<Locale, LandingCopy> = {
     rootsLabel: 'Roots at x = 1 and x = 3',
     vertexLabel: 'Vertex (2, −1)',
     workspaceTitle: 'Two sides of one lesson',
-    workspaceBody: 'The teacher sees the class. The student sees their assignment. The live lesson stays in the same place.',
+    workspaceBody:
+      'The teacher sees the class. The student sees their assignment. The live lesson stays in the same place.',
     teacherKicker: 'Teacher',
     teacherTitle: 'The whole class in one view',
-    teacherBody: 'An assignment is created once and appears in the student’s workspace. Progress shows who needs your time.',
+    teacherBody:
+      'An assignment is created once and appears in the student’s workspace. Progress shows who needs your time.',
     assignmentLabel: 'Assignment',
     assignment: 'Quadratic equations',
     active: 'Active',
