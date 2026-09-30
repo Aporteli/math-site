@@ -734,9 +734,7 @@ export function TeacherJournalWorkspace() {
   const virtualChipClass = (source: VirtualScheduleEvent['source']) =>
     source === 'group'
       ? 'bg-sky-500 text-sky-950 border-l-[3px] border-sky-500'
-      : source === 'home'
-        ? 'bg-amber-400 text-amber-950 border-l-[3px] border-amber-700'
-        : 'bg-emerald-500 text-emerald-950 border-l-[3px] border-emerald-500';
+      : 'bg-amber-400 text-amber-950';
 
   const virtualTitle = (v: VirtualScheduleEvent) => {
     if (v.source === 'home' && v.courseTitle) return `სახლში · ${v.courseTitle}`;
@@ -1055,11 +1053,11 @@ export function TeacherJournalWorkspace() {
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block size-3 rounded-box bg-sky-500" />
-          <span className="text-ink">ჯგუფური გაკვეთილი</span>
+          <span className="text-ink">საიტზე რეგისტრირებული</span>
         </span>
         <span className="flex items-center gap-1.5 ">
-          <span className="inline-block size-3 rounded-box bg-emerald-500" />
-          <span className="text-ink">ინდივიდუალური გაკვეთილი</span>
+          <span className="inline-block size-3 rounded-box bg-amber-400" />
+          <span className="text-ink">სახლში</span>
         </span>
         <span className="ml-auto flex items-center gap-1.5 text-navy">
           <Repeat className="size-3" />
