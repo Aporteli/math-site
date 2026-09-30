@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import {
   ChevronDown,
@@ -91,6 +91,7 @@ type ToolId =
   | 'eraser'
   | 'laser';
 
+const BOARD_WIDTH = 1920;
 const STORAGE_KEY_PAGES = 'teacher_whiteboard_permanent_pages_v7';
 const PREFS_KEY = 'teacher_whiteboard_permanent_prefs_v7';
 const DEFAULT_COLOR = '#1e293b';
@@ -501,6 +502,23 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const [stylusPrimaryAction, setStylusPrimaryAction] = useState<StylusButtonAction>('temporary-eraser');
   const [stylusSecondaryAction, setStylusSecondaryAction] = useState<StylusButtonAction>('none');
   const [zoomScale, setZoomScale] = useState<number>(1);
+  const boardViewportRef = useRef<HTMLDivElement>(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
+  useLayoutEffect(() => {
+    const el = boardViewportRef.current;
+    if (!el) return;
+    const update = () => {
+      const width = el.clientWidth;
+      if (width > 0) setViewportWidth(width);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const fitScale = viewportWidth > 0 ? viewportWidth / BOARD_WIDTH : 1;
+  const fitScaleRef = useRef(fitScale);
+  fitScaleRef.current = fitScale;
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -1729,6 +1747,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
 
       {/* Canvas container – inline style guarantees isolation from global theme */}
       <div
+        ref={boardViewportRef}
         className="relative flex-1 w-full min-h-0 min-w-0 overflow-hidden touch-none select-none"
         style={{ backgroundColor: isDark ? '#020617' : '#ffffff' }}
         onDragOver={(e) => e.preventDefault()}
@@ -1751,10 +1770,11 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           strokeColor={effectiveStroke}
           strokeWidth={strokeWidth}
           isDark={isDark}
-          scale={zoomScale}
+          scale={zoomScale * fitScale}
           onScaleChange={(s) => {
-            setZoomScale(s);
-            savePreferencesImmediately({ zoomScale: s });
+            const next = s / (fitScaleRef.current || 1);
+            setZoomScale(next);
+            savePreferencesImmediately({ zoomScale: next });
           }}
           textPlaceholder={copy.textPlaceholder}
           onPasteImage={addImage}
