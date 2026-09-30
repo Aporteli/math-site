@@ -19,6 +19,8 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 
 import type { Locale } from '@/i18n/config';
+import { AuditControls, FileControls, HostControls } from '@/components/server-manager/VpsControls';
+import { CONFIRM, isAllowedContainerName } from '@/lib/admin/vps-policy';
 
 type ServiceId = 'livekit' | 'caddy' | 'redis';
 
@@ -52,6 +54,12 @@ type Metrics = {
   };
   uptime: {
     seconds: number;
+  };
+  network?: {
+    bytes_sent: number;
+    bytes_received: number;
+    packets_sent: number;
+    packets_received: number;
   };
 };
 
@@ -163,7 +171,13 @@ function MetricCard({
   );
 }
 
-export function ServerManager({ locale }: { locale: Locale }) {
+export function ServerManager({
+  locale,
+  canManageHost = false,
+}: {
+  locale: Locale;
+  canManageHost?: boolean;
+}) {
   const [status, setStatus] = useState<StatusData | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [rooms, setRooms] = useState<RoomsData | null>(null);
@@ -172,6 +186,7 @@ export function ServerManager({ locale }: { locale: Locale }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [restarting, setRestarting] = useState<ServiceId | null>(null);
+  const [containerAction, setContainerAction] = useState<string | null>(null);
   const [logsLoading, setLogsLoading] = useState(false);
 
   const [selectedLogService, setSelectedLogService] =
@@ -274,6 +289,41 @@ export function ServerManager({ locale }: { locale: Locale }) {
   useEffect(() => {
     void loadLogs(selectedLogService);
   }, [loadLogs, selectedLogService]);
+
+  async function containerControl(service: ServiceId, action: 'start' | 'stop') {
+    const item = SERVICES.find((entry) => entry.id === service);
+    const container = status?.services[service]?.container;
+    if (!item || !container || !isAllowedContainerName(container)) return;
+    if (!window.confirm(`${action === 'start' ? 'Start' : 'Stop'} ${item.name}?`)) return;
+
+    try {
+      setContainerAction(`${service}:${action}`);
+      setError(null);
+      setMessage(null);
+      const response = await fetch(
+        `/api/admin/server/docker/action?locale=${encodeURIComponent(locale)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            container,
+            action,
+            confirm: action === 'start' ? CONFIRM.START : CONFIRM.STOP,
+          }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(typeof data?.error === 'string' ? data.error : `Failed to ${action} ${item.name}`);
+      }
+      setMessage(`${item.name} ${action} completed.`);
+      await loadData(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to ${action} service`);
+    } finally {
+      setContainerAction(null);
+    }
+  }
 
   async function restartService(service: ServiceId) {
     const item = SERVICES.find((entry) => entry.id === service);
@@ -498,12 +548,33 @@ export function ServerManager({ locale }: { locale: Locale }) {
                   </div>
                 </div>
 
+                {canManageHost ? (
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void containerControl(service.id, 'start')}
+                      disabled={restarting !== null || containerAction !== null}
+                      className="rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {containerAction === `${service.id}:start` ? 'Starting...' : 'Start'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void containerControl(service.id, 'stop')}
+                      disabled={restarting !== null || containerAction !== null}
+                      className="rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {containerAction === `${service.id}:stop` ? 'Stopping...' : 'Stop'}
+                    </button>
+                  </div>
+                ) : null}
+
                 <button
                   type="button"
                   onClick={() =>
                     void restartService(service.id)
                   }
-                  disabled={restarting !== null}
+                  disabled={restarting !== null || containerAction !== null}
                   className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isRestarting ? (
@@ -664,6 +735,19 @@ export function ServerManager({ locale }: { locale: Locale }) {
               </div>
             </div>
 
+            {metrics?.network ? (
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="rounded-xl bg-slate-50 p-3">
+                  <div className="text-muted">Sent</div>
+                  <div className="mt-1 font-medium text-ink">{formatBytes(metrics.network.bytes_sent)}</div>
+                </div>
+                <div className="rounded-xl bg-slate-50 p-3">
+                  <div className="text-muted">Received</div>
+                  <div className="mt-1 font-medium text-ink">{formatBytes(metrics.network.bytes_received)}</div>
+                </div>
+              </div>
+            ) : null}
+
             <div>
               <div className="flex justify-between text-xs">
                 <span className="text-body">Disk</span>
@@ -747,6 +831,14 @@ export function ServerManager({ locale }: { locale: Locale }) {
           </pre>
         </div>
       </div>
+
+      {canManageHost ? (
+        <>
+          <HostControls locale={locale} />
+          <FileControls locale={locale} />
+          <AuditControls locale={locale} />
+        </>
+      ) : null}
     </div>
   );
 }

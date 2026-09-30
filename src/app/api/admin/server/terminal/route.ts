@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isLocale } from '@/i18n/config';
+import { recordAdminAudit } from '@/lib/admin/admin-audit';
 import { clampTerminalOutput, parseTerminalCommand } from '@/lib/admin/terminal-command';
 import { requireRole } from '@/lib/auth/session';
 
@@ -80,7 +81,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid locale' }, { status: 400 });
   }
 
-  await requireRole(locale, ['ADMIN']);
+  const session = await requireRole(locale, ['ADMIN']);
+  const actor = session.user.email ?? 'unknown';
 
   const body: unknown = await request.json().catch(() => null);
   const command = isRecord(body) && typeof body.command === 'string' ? body.command : null;
@@ -113,6 +115,7 @@ export async function POST(request: Request) {
       headers: {
         'Content-Type': 'application/json',
         'X-Agent-Token': agentToken,
+        'X-Admin-Actor': actor,
       },
       body: JSON.stringify({ argv }),
       cache: 'no-store',
@@ -122,6 +125,12 @@ export async function POST(request: Request) {
     const data: unknown = await response.json().catch(() => null);
 
     if (!response.ok) {
+      await recordAdminAudit({
+        actorEmail: actor,
+        action: 'terminal.exec',
+        target: argv.join(' ').slice(0, 300),
+        ok: false,
+      });
       return NextResponse.json(
         { error: agentErrorMessage(data, response.status) },
         { status: response.status },
@@ -136,6 +145,12 @@ export async function POST(request: Request) {
       );
     }
 
+    await recordAdminAudit({
+      actorEmail: actor,
+      action: 'terminal.exec',
+      target: argv.join(' ').slice(0, 300),
+      ok: result.exitCode === 0,
+    });
     return NextResponse.json({
       argv,
       exitCode: result.exitCode,

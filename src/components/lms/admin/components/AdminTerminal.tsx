@@ -181,7 +181,7 @@ export function AdminTerminal({ locale }: { locale: Locale }) {
         <div>
           <h3 className="text-base font-semibold text-ink">VPS terminal</h3>
           <p className="mt-1 text-sm text-body">
-            Commands run on the VPS through the admin agent. Shortcuts only fill the input.
+            Commands run on the VPS through the admin agent. Only diagnostic commands are accepted: docker ps, docker logs, ls, cat, grep, pip show, and systemctl status.
           </p>
         </div>
       </div>

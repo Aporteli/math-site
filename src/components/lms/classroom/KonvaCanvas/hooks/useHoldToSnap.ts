@@ -25,7 +25,7 @@ const HOLD_MS = 2000;
 
 /** სწრაფი ხაზის ამოცნობის დრო (ms) — მხოლოდ ხაზისთვის.
  *  ხაზი მარტივი ფორმაა, 2 წამი ლოდინი ზედმეტია. */
-const HOLD_MS_LINE = 2000;
+const HOLD_MS_LINE = 1200;
 
 /** Leaving this radius counts as drawing and restarts the hold. */
 const HOLD_RADIUS_PX = 8;
@@ -34,6 +34,8 @@ export function useHoldToSnap(opts: Options) {
   const lineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shapeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const anchorRef = useRef<{ x: number; y: number } | null>(null);
+  /** Line has snapped straight; further drag moves the end until pen-up. */
+  const adjustingRef = useRef(false);
 
   const clearTimers = useCallback(() => {
     if (lineTimerRef.current !== null) {
@@ -47,11 +49,18 @@ export function useHoldToSnap(opts: Options) {
   }, []);
 
   const cancelHold = useCallback(() => {
+    const adjusting = adjustingRef.current;
+    adjustingRef.current = false;
     clearTimers();
     anchorRef.current = null;
+    return adjusting;
   }, [clearTimers]);
 
-  useEffect(() => cancelHold, [cancelHold]);
+  useEffect(() => {
+    return () => {
+      cancelHold();
+    };
+  }, [cancelHold]);
 
   /**
    * საერთო commit ლოგიკა — ამოცნობილი ფორმის payload-ის აწყობა,
@@ -161,8 +170,13 @@ export function useHoldToSnap(opts: Options) {
     const line = recognizeLine(points);
     if (!line) return;
 
-    commitRecognized({ kind: 'line', line });
-  }, [opts, commitRecognized]);
+    // Stay in the stroke: straighten in place, no commit and no selection box.
+    // The end follows the pen until pointer-up.
+    clearTimers();
+    shape.points(line.points);
+    opts.drawLayerRef.current?.batchDraw();
+    adjustingRef.current = true;
+  }, [opts, clearTimers]);
 
   const trySnapShape = useCallback(() => {
     shapeTimerRef.current = null;
@@ -183,6 +197,7 @@ export function useHoldToSnap(opts: Options) {
 
   const noteStrokeMove = useCallback(
     (pos: { x: number; y: number }) => {
+      if (adjustingRef.current) return;
       if (opts.activeTool !== 'pen') return;
       if (!opts.isDrawing.current || !opts.activeShapeRef.current) return;
 
@@ -198,5 +213,7 @@ export function useHoldToSnap(opts: Options) {
     [opts, trySnapLine, trySnapShape],
   );
 
-  return { noteStrokeMove, cancelHold };
+  const isAdjustingLine = useCallback(() => adjustingRef.current, []);
+
+  return { noteStrokeMove, cancelHold, isAdjustingLine };
 }

@@ -33,6 +33,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
     onLaserMove,
     syncStylusButtonsFromEvent,
     noteStrokeMove,
+    isAdjustingLine,
   } = ctx;
 
   return useCallback(
@@ -89,8 +90,10 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
       if (eraserCursorPos) setEraserCursorPos(null);
       if (!isDrawing.current || !activeShapeRef.current) return;
 
+      const adjustingLine = isAdjustingLine();
+
       let penPoints: { x: number; y: number }[] | undefined;
-      if (activeTool === 'pen' && !nativeEvt.shiftKey) {
+      if (activeTool === 'pen' && !nativeEvt.shiftKey && !adjustingLine) {
         const stage = stageRef.current;
         const rect = containerRef.current?.getBoundingClientRect();
         if (stage && rect) {
@@ -108,12 +111,12 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
           activeShapeRef,
           drawLayerRef,
           scale,
-          shiftHeld: nativeEvt.shiftKey,
+          shiftHeld: nativeEvt.shiftKey || adjustingLine,
           penPoints,
         },
         pos,
       );
-      noteStrokeMove(pos);
+      if (!adjustingLine) noteStrokeMove(pos);
     },
     [
       isPinching,
@@ -141,6 +144,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
       drawLayerRef,
       elementsRef,
       noteStrokeMove,
+      isAdjustingLine,
     ],
   );
 }

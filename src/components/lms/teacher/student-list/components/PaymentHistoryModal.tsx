@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
-import {
-  CalendarDays, Trash2, Wallet, X, Save, Receipt, DollarSign,
-} from 'lucide-react';
+import { CalendarDays, Trash2, Wallet, X, Save, Receipt, DollarSign } from 'lucide-react';
 import {
   formatMonthLabel,
   getMonthKey,
@@ -101,7 +99,7 @@ export function PaymentHistoryModal({
   if (!open || !student) return null;
 
   /* ─────── Save price + type ─────── */
-  
+
   const handleSavePrice = () => {
     setError(null);
     const value = Number(priceDraft);
@@ -159,12 +157,12 @@ export function PaymentHistoryModal({
 
   return (
     <div
-    className={
-      embedded
-        ? 'flex h-full min-h-0 min-w-0 flex-1'
-        : 'fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-3 backdrop-blur-[2px] sm:p-4'
-    }
-    onClick={embedded ? undefined : onClose}>
+      className={
+        embedded
+          ? 'flex h-full min-h-0 min-w-0 flex-1'
+          : 'fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-3 backdrop-blur-[2px] sm:p-4'
+      }
+      onClick={embedded ? undefined : onClose}>
       <div
         role="dialog"
         aria-modal={embedded ? undefined : true}
@@ -176,18 +174,11 @@ export function PaymentHistoryModal({
         onClick={(e) => e.stopPropagation()}>
         {/* ═══ Header ═══ */}
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
-          <div className="flex items-center gap-2.5">
-            <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-win-tint text-win">
-              <Wallet className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold text-ink">გადახდა</h2>
-              <p className="truncate text-[11px] font-medium text-muted">
-                {student.firstName} {student.lastName}
-              </p>
-            </div>
+          <div className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-box border border-hairline bg-win-tint px-2.5 py-2 text-[11px] font-bold text-win transition hover:bg-win-tint/80">
+            <Wallet className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">გადახდა</span>
           </div>
-          <div className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-paper p-1">
+          <div className="w-[200px] flex items-center justify-between gap-2 rounded-box border border-hairline bg-paper sm:w-auto">
             <button
               type="button"
               onClick={() => setMonthKey(shiftMonth(monthKey, -1))}
@@ -196,7 +187,7 @@ export function PaymentHistoryModal({
               ‹
             </button>
             <div className="min-w-0 flex-1 text-center">
-              <p className="truncate text-sm font-bold text-ink">{formatMonthLabel(monthKey)}</p>
+              <p className="text-[10px] truncate font-bold text-ink sm:text-sm">{formatMonthLabel(monthKey)}</p>
             </div>
             <button
               type="button"
@@ -210,9 +201,9 @@ export function PaymentHistoryModal({
             <button
               type="button"
               onClick={() => setPriceModalOpen(true)}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-box border border-brass/40 bg-brass-tint px-2.5 py-2 text-[11px] font-bold text-brass-strong transition hover:bg-brass-tint/80">
+              className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-box border border-brass/40 bg-brass-tint px-2.5 py-2 text-[11px] font-bold text-brass-strong transition hover:bg-brass-tint/80">
               <DollarSign className="h-3.5 w-3.5" />
-              ფასის მართვა
+              <span className="hidden sm:inline">ფასის მართვა</span>
             </button>
             {embedded ? null : (
               <button
@@ -228,7 +219,6 @@ export function PaymentHistoryModal({
         {/* ═══ Scrollable body ═══ */}
         <div className="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">
           {/* ─── Month navigation ─── */}
-          
 
           {/* ─── Summary cards ─── */}
           <div className="grid grid-cols-2 gap-2">
@@ -248,11 +238,8 @@ export function PaymentHistoryModal({
           {/* ═══════════════════════════════════════════════════════
               ADD PAYMENT
              ═══════════════════════════════════════════════════════ */}
-        
 
-          {error ? (
-            <p className="rounded-box bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">{error}</p>
-          ) : null}
+          {error ? <p className="rounded-box bg-loss-tint px-3 py-2 text-[11px] font-bold text-loss">{error}</p> : null}
 
           <div className="relative rounded-box border border-hairline bg-surface">
             <textarea
@@ -271,8 +258,7 @@ export function PaymentHistoryModal({
                 type="button"
                 onClick={handleSaveComment}
                 disabled={!noteDirty}
-                className="absolute right-3 top-3 inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-bold text-white transition hover:bg-navy-strong disabled:cursor-default disabled:opacity-70"
-              >
+                className="absolute right-3 top-3 inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-bold text-white transition hover:bg-navy-strong disabled:cursor-default disabled:opacity-70">
                 <Save className="h-3.5 w-3.5" />
                 {noteDirty ? 'შენახვა' : 'შენახულია'}
               </button>
@@ -283,8 +269,7 @@ export function PaymentHistoryModal({
               type="button"
               onClick={handlePay}
               disabled={isPending}
-              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50"
-            >
+              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50">
               {isPending ? 'ინახება...' : `გადახდა · ${formatPrice(monthOwed)}`}
             </button>
           ) : null}

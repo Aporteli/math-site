@@ -212,18 +212,6 @@ export function DebtTracker({
                   key={student.id}
                   className="flex items-center gap-3 rounded-box border border-hairline bg-surface p-3 shadow-sm transition hover:border-navy/30 hover:shadow-md sm:p-4"
                 >
-                  {/* Avatar */}
-                  <span
-                    className={`flex size-11 shrink-0 items-center justify-center rounded-box text-base font-bold ${
-                      isPaidFull
-                        ? 'bg-win-tint text-win'
-                        : isPartial
-                          ? 'bg-brass-tint text-brass-strong'
-                          : 'bg-loss-tint text-loss'
-                    }`}
-                  >
-                    {initial}
-                  </span>
 
                   {/* Main info */}
                   <div className="min-w-0 flex-1">
@@ -264,17 +252,6 @@ export function DebtTracker({
                       </div>
                     )}
 
-                    {/* Phone */}
-                    {student.phone && (
-                      <button
-                        type="button"
-                        onClick={() => onEditPhones(student)}
-                        className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-muted transition hover:text-navy"
-                      >
-                        <Phone className="size-2.5" />
-                        <span className="truncate">{student.phone}</span>
-                      </button>
-                    )}
                   </div>
 
                   {/* Debt amounts */}
@@ -293,16 +270,6 @@ export function DebtTracker({
                       {debt > 0 ? 'ვალი' : 'გადახდილი'}
                     </p>
                   </div>
-
-                  {/* Actions */}
-                  <button
-                    type="button"
-                    onClick={() => onManagePayments(student)}
-                    title="გადახდის მართვა"
-                    className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-muted transition hover:border-navy/30 hover:bg-navy-tint hover:text-navy"
-                  >
-                    <Receipt className="size-4" />
-                  </button>
                 </div>
               );
             })}

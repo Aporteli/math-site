@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isLocale } from '@/i18n/config';
+import { recordAdminAudit } from '@/lib/admin/admin-audit';
 import { requireRole } from '@/lib/auth/session';
 
 const SERVICES = {
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     );
   }
 
-  await requireRole(locale, ['TEACHER', 'ADMIN']);
+  const session = await requireRole(locale, ['TEACHER', 'ADMIN']);
 
   const body = await request.json().catch(() => null);
   const service = body?.service;
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
         method: 'POST',
         headers: {
           'X-Agent-Token': agentToken,
+          'X-Admin-Actor': session.user.email ?? 'unknown',
         },
         cache: 'no-store',
       },
@@ -65,15 +67,26 @@ export async function POST(request: Request) {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
+      await recordAdminAudit({
+        actorEmail: session.user.email ?? 'unknown',
+        action: 'container.restart',
+        target: service,
+        ok: false,
+      });
       return NextResponse.json(
         {
           error: 'Admin agent rejected the request',
-          details: data,
         },
         { status: response.status },
       );
     }
 
+    await recordAdminAudit({
+      actorEmail: session.user.email ?? 'unknown',
+      action: 'container.restart',
+      target: service,
+      ok: true,
+    });
     return NextResponse.json(data);
   } catch {
     return NextResponse.json(

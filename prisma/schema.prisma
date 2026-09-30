@@ -590,6 +590,19 @@ model IndividualLesson {
   @@map("individual_lessons")
 }
 
+model AdminAuditEvent {
+  id         String   @id @default(cuid())
+  actorEmail String
+  action     String
+  target     String
+  ok         Boolean
+  detail     String?  @db.VarChar(500)
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("admin_audit_events")
+}
+
 model IndividualPayment {
   id        String         @id @default(cuid())
   studentId String

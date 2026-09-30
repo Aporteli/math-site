@@ -1,3 +1,5 @@
+import { isAllowedContainerName, isTerminalPath } from '@/lib/admin/vps-policy';
+
 const MAX_INPUT_LENGTH = 400;
 const MAX_OUTPUT_CHARS = 64_000;
 
@@ -60,30 +62,7 @@ function tokenize(input: string): string[] | null {
 }
 
 function isSafePath(path: string): boolean {
-  if (path.length === 0 || path.length > 200) return false;
-  if (!/^[A-Za-z0-9_./@+-]+$/.test(path)) return false;
-
-  const segments = path.split('/');
-  if (segments.includes('..')) return false;
-
-  const base = (segments[segments.length - 1] ?? '').toLowerCase();
-  if (
-    base.startsWith('.env') ||
-    base === 'shadow' ||
-    base === 'id_rsa' ||
-    base === 'id_ed25519' ||
-    base === 'id_ecdsa' ||
-    base === 'credentials.json' ||
-    base === 'environ' ||
-    /\.(pem|key|p12|pfx)$/.test(base)
-  ) {
-    return false;
-  }
-
-  return !segments.some((segment) => {
-    const normalized = segment.toLowerCase();
-    return normalized === '.ssh' || normalized === '.env' || normalized === '.aws';
-  });
+  return isTerminalPath(path);
 }
 
 function isBoundedInt(value: string, max: number): boolean {
@@ -97,7 +76,7 @@ function isPackageName(value: string): boolean {
 }
 
 function isContainerName(value: string): boolean {
-  return /^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(value);
+  return isAllowedContainerName(value);
 }
 
 function isGrepPattern(value: string): boolean {

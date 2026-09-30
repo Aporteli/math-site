@@ -268,7 +268,7 @@ export function AdminPanel({
                 </p>
               </div>
 
-              <ServerManager locale={locale} />
+              <ServerManager locale={locale} canManageHost={canUseTerminal} />
             </div>
           ) : null}
 

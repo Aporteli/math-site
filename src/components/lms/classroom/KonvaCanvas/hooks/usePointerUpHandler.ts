@@ -37,13 +37,13 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
 
   return useCallback(
     (e: any) => {
-      cancelHoldToSnap();
-
       const evt = e.evt as PointerEvent;
 
       if (stylusUpPhase({ isStylusActiveRef, syncStylusButtonsFromEvent }, evt)) {
         return;
       }
+
+      const snappedLine = cancelHoldToSnap();
 
       releasePointerOwnership({ activePointerIdRef, isStylusActiveRef }, evt);
 
@@ -73,7 +73,7 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
       if (!newElem) return;
 
       const isLineDrawMode =
-        (activeTool === 'pen' && evt.shiftKey) || activeTool === 'line';
+        snappedLine || (activeTool === 'pen' && evt.shiftKey) || activeTool === 'line';
 
       if (isLineDrawMode && newElem.points && newElem.points.length >= 4) {
         const pts = newElem.points.slice();
