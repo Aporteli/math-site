@@ -69,17 +69,6 @@ export function DebtTracker({
       {/* ═══ Header ═══ */}
       <div className="rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-loss-tint text-loss">
-              <AlertCircle className="size-5" />
-            </span>
-            <div className="min-w-0">
-              <h2 className="truncate text-base font-bold text-ink sm:text-lg">
-                დავალიანებები
-              </h2>
-            </div>
-          </div>
-
           {/* Month navigation */}
           <div className="flex w-full items-center gap-1 rounded-box border border-hairline bg-paper p-1 sm:w-auto">
             <button
@@ -176,15 +165,6 @@ export function DebtTracker({
       <div className="custom-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-surface px-6 py-16 text-center">
-            <span
-              className={`mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline ${
-                filter === 'debtors'
-                  ? 'bg-win-tint text-win'
-                  : 'bg-navy-tint text-navy'
-              }`}
-            >
-              {filter === 'debtors' ? '🎉' : <AlertCircle className="size-5" />}
-            </span>
             <p className="text-sm font-bold text-ink">
               {filter === 'debtors'
                 ? 'ვალები არ არის!'

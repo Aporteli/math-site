@@ -100,20 +100,20 @@ export function StudentFlashcardsWorkspace({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between rounded-2xl border border-hairline bg-white p-3 px-5 shadow-sm">
+      <div className="flex items-center justify-between rounded-box border border-hairline bg-white p-3 px-5 shadow-sm">
         <span className="text-xs font-bold text-ink flex items-center gap-2">
           <Sparkles className="size-4 text-navy" />
           {copy.activeFormulas}
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-paper-deep px-3 py-1 text-xs font-bold text-muted">
+        <span className="inline-flex items-center gap-1.5 rounded-box bg-paper-deep px-3 py-1 text-xs font-bold text-muted">
           <Layers className="size-3.5" />
           {copy.totalCount.replace("{count}", String(assignments.length))}
         </span>
       </div>
 
       {assignments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-hairline bg-white/50 py-24 text-center backdrop-blur-sm">
-          <div className="flex size-16 items-center justify-center rounded-full bg-paper-deep text-muted/50 mb-4">
+        <div className="flex flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-white/50 py-24 text-center backdrop-blur-sm">
+          <div className="flex size-16 items-center justify-center rounded-box bg-paper-deep text-muted/50 mb-4">
             <Sparkles className="size-8" />
           </div>
           <h3 className="text-lg font-bold text-ink">{copy.emptyTitle}</h3>
@@ -129,16 +129,16 @@ export function StudentFlashcardsWorkspace({
             return (
               <div
                 key={item.id}
-                className="flex flex-col lg:flex-row overflow-hidden rounded-3xl border border-hairline bg-white shadow-sm transition-all hover:shadow-md"
+                className="flex flex-col lg:flex-row overflow-hidden rounded-box border border-hairline bg-white shadow-sm transition-all hover:shadow-md"
               >
                 {/* მარცხენა მხარე: ბარათის შინაარსი */}
                 <div className="flex flex-col p-6 lg:w-[60%] xl:w-[65%]">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-lg bg-navy-tint px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-navy">
+                      <span className="rounded-box bg-navy-tint px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-navy">
                         {copy.cardBadge}
                       </span>
-                      <span className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-paper px-2.5 py-1 text-[11px] font-semibold text-muted">
+                      <span className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-paper px-2.5 py-1 text-[11px] font-semibold text-muted">
                         <BookOpen className="size-3" />
                         {item.course.title}
                       </span>
@@ -152,8 +152,8 @@ export function StudentFlashcardsWorkspace({
                   <h3 className="text-xl font-bold text-ink mb-6">{item.title}</h3>
 
                   {cardContent && (
-                    <div className="relative rounded-2xl border border-hairline-soft bg-paper/40 p-5 mb-5 overflow-x-auto">
-                      <div className="absolute -left-px top-4 h-8 w-1 rounded-r-full bg-navy" />
+                    <div className="relative rounded-box border border-hairline-soft bg-paper/40 p-5 mb-5 overflow-x-auto">
+                      <div className="absolute -left-px top-4 h-8 w-1 rounded-box bg-navy" />
                       <div className="text-[15px] font-medium text-ink leading-relaxed">
                         <KatexPreview tex={String(cardContent)} displayMode />
                       </div>
@@ -161,7 +161,7 @@ export function StudentFlashcardsWorkspace({
                   )}
 
                   {item.instructions && (
-                    <div className="mt-auto rounded-2xl border border-amber-200/50 bg-amber-50/50 p-4">
+                    <div className="mt-auto rounded-box border border-amber-200/50 bg-amber-50/50 p-4">
                       <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-700">
                         <Info className="size-4" /> 
                         {copy.teacherNote}
@@ -178,7 +178,7 @@ export function StudentFlashcardsWorkspace({
                   <div className="flex items-center gap-2 border-b border-hairline-soft bg-white/50 px-5 py-4">
                     <MessageCircle className="size-4 text-navy" />
                     <h4 className="text-sm font-bold text-ink">{copy.discussion}</h4>
-                    <span className="ml-auto rounded-full bg-paper-deep px-2 py-0.5 text-[10px] font-bold text-muted">
+                    <span className="ml-auto rounded-box bg-paper-deep px-2 py-0.5 text-[10px] font-bold text-muted">
                       {item.comments.length}
                     </span>
                   </div>
@@ -211,10 +211,10 @@ export function StudentFlashcardsWorkspace({
                               </span>
                             </div>
                             <div
-                              className={`rounded-2xl px-4 py-2.5 text-[13px] leading-relaxed shadow-sm ${
+                              className={`rounded-box px-4 py-2.5 text-[13px] leading-relaxed shadow-sm ${
                                 isTeacher
-                                  ? "bg-white border border-hairline text-ink rounded-tl-sm"
-                                  : "bg-navy text-white rounded-tr-sm"
+                                  ? "bg-white border border-hairline text-ink rounded-box"
+                                  : "bg-navy text-white rounded-box"
                               }`}
                             >
                               {c.body}
@@ -242,16 +242,16 @@ export function StudentFlashcardsWorkspace({
                           }
                         }}
                         placeholder={copy.messagePlaceholder}
-                        className="max-h-[100px] min-h-[44px] flex-1 resize-none rounded-2xl border border-hairline bg-paper px-4 py-3 text-[13px] outline-none transition-colors focus:border-navy focus:bg-white"
+                        className="max-h-[100px] min-h-[44px] flex-1 resize-none rounded-box border border-hairline bg-paper px-4 py-3 text-[13px] outline-none transition-colors focus:border-navy focus:bg-white"
                       />
                       <button
                         type="button"
                         onClick={() => handleSendComment(item.id)}
                         disabled={commentPending === item.id || !commentInputs[item.id]?.trim()}
-                        className="flex size-11 shrink-0 items-center justify-center rounded-full bg-navy text-white transition-transform hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                        className="flex size-11 shrink-0 items-center justify-center rounded-box bg-navy text-white transition-transform hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
                       >
                         {commentPending === item.id ? (
-                          <div className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                          <div className="size-4 animate-spin rounded-box border-2 border-white/30 border-t-white" />
                         ) : (
                           <Send className="size-4 -ml-0.5" />
                         )}

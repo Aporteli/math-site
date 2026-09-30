@@ -57,7 +57,7 @@ export const METHOD_LABELS: Record<SolveMethod, string> = {
   nonlinear: 'არაწრფივი',
 };
 
-export const HISTORY_KEY = 'mathlab.system-solver.history';
+export const HISTORY_KEY = 'pinf.system-solver.history';
 
 export interface HistoryItem {
   equations: string[];

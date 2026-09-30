@@ -34,7 +34,7 @@ export function AssignmentContentTabsHeader({
 
   return (
     <div className="flex flex-col gap-2 border-b border-hairline bg-paper/70 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-      <div className="grid w-full grid-cols-3 gap-1 rounded-2xl border border-hairline bg-surface p-1 sm:flex sm:w-auto">
+      <div className="grid w-full grid-cols-3 gap-1 rounded-box border border-hairline bg-surface p-1 sm:flex sm:w-auto">
         {tabs.map((tab) => {
           const active = activeTab === tab.id;
           const Icon = tab.icon;
@@ -45,14 +45,14 @@ export function AssignmentContentTabsHeader({
               key={tab.id}
               type="button"
               onClick={() => onTabChange(tab.id)}
-              className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition ${
+              className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-box px-3 py-2 text-xs font-bold transition ${
                 active ? 'bg-navy text-white shadow-sm' : 'text-body hover:bg-paper hover:text-ink'
               }`}
             >
               <Icon className="size-3.5 shrink-0" />
               <span className="truncate">{tab.label}</span>
               <span
-                className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                className={`rounded-box px-1.5 py-0.5 text-[10px] font-bold ${
                   active ? 'bg-white/20 text-white' : 'bg-paper-deep text-muted'
                 }`}
               >

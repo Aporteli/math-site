@@ -30,7 +30,7 @@ export interface TriangleResult {
   ambiguous: boolean;
 }
 
-export const TRIANGLE_HISTORY_KEY = 'mathlab.triangle.history';
+export const TRIANGLE_HISTORY_KEY = 'pinf.triangle.history';
 
 export interface TriangleHistoryItem {
   a: string;

@@ -20,7 +20,7 @@ export interface RadicalSolveResult {
 
 export type RadicalResult = RadicalSimplifyResult | RadicalSolveResult;
 
-export const RADICAL_HISTORY_KEY = 'mathlab.radicals.history';
+export const RADICAL_HISTORY_KEY = 'pinf.radicals.history';
 
 export interface RadicalInput {
   expression: string;

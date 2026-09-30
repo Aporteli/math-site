@@ -1145,7 +1145,7 @@ export function ProblemBankWorkspace({
   }
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-7xl">
+    <div className="mx-auto w-full min-w-0 max-w-[2000px] px-4 sm:px-6 lg:px-8">
       <PageHero
         icon={Library}
         eyebrow={copy.eyebrow}
@@ -1162,7 +1162,6 @@ export function ProblemBankWorkspace({
           </div>
         }
       />
-
       {visibleTools.length > 0 ? (
         <section className="mt-6" aria-label={copy.tools.label}>
           <p className="mb-3 text-sm font-semibold tracking-wide text-brass">{copy.tools.label}</p>
@@ -1234,7 +1233,6 @@ export function ProblemBankWorkspace({
           ) : null}
         </section>
       ) : null}
-
       {customCardOpen ? (
         <CreateCustomCardModal
           locale={locale}
@@ -1267,7 +1265,6 @@ export function ProblemBankWorkspace({
           }
         />
       ) : null}
-
       {editingProblem ? (
         <EditProblemModal
           locale={locale}
@@ -1279,7 +1276,6 @@ export function ProblemBankWorkspace({
           onSave={saveEditedProblem}
         />
       ) : null}
-
       {importOpen ? (
         <ImportFamilyModal
           locale={locale}
@@ -1300,7 +1296,6 @@ export function ProblemBankWorkspace({
           }}
         />
       ) : null}
-
       {panel === 'families' ? (
         <FamilyControlCenter
           locale={locale}
@@ -1319,7 +1314,6 @@ export function ProblemBankWorkspace({
           onPreferredConsumed={() => setFocusFamilyId(null)}
         />
       ) : null}
-
       {panel === 'chat' ? (
         <TeacherAiChatPanel
           copy={copy.chat}
@@ -1341,7 +1335,6 @@ export function ProblemBankWorkspace({
           }}
         />
       ) : null}
-
       {problemChatOpen ? (
         <div className="fixed inset-0 z-50 flex items-end justify-end bg-ink/35 p-3 sm:items-center sm:justify-center sm:p-6">
           <button
@@ -1375,7 +1368,6 @@ export function ProblemBankWorkspace({
           </div>
         </div>
       ) : null}
-
       {panel === 'generate' ? (
         <form onSubmit={onGenerate} className={`${panelClass} mt-6 space-y-4`} aria-labelledby="generate-heading">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hairline pb-4">
@@ -1770,7 +1762,6 @@ export function ProblemBankWorkspace({
           ) : null}
         </form>
       ) : null}
-
       {panel === 'variants' ? (
         <form
           onSubmit={onVariants}
@@ -1820,7 +1811,6 @@ export function ProblemBankWorkspace({
           </div>
         </form>
       ) : null}
-
       <div className="mt-6 grid gap-5 xl:h-[calc(100vh-9rem)] xl:min-h-[36rem] xl:grid-cols-[16.5rem_minmax(0,1fr)_21rem] xl:items-stretch">
         <aside className="relative z-20 order-1 flex min-h-0 flex-col rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5">
           <h2 className="shrink-0 border-b border-hairline pb-3 text-sm font-semibold tracking-wide text-brass">
@@ -2177,7 +2167,6 @@ export function ProblemBankWorkspace({
           )}
         </section>
       </div>
-
       {fullSolutionOpen && selected ? (
         <FullSolutionModal
           copy={copy}
@@ -2190,7 +2179,6 @@ export function ProblemBankWorkspace({
           }}
         />
       ) : null}
-
       <section className={`${panelClass} mt-6`} aria-label={copy.lessonSet}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold tracking-tight text-ink">

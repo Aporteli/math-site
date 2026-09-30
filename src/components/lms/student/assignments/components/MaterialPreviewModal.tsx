@@ -21,13 +21,13 @@ export function MaterialPreviewModal({ modal, onClose }: MaterialPreviewModalPro
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
       onClick={onClose}>
       <div
-        className="flex h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-2xl animate-in zoom-in-95 duration-200"
+        className="flex h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-2xl animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}>
         <div className={`h-1 shrink-0 ${modal.isAnswer ? 'bg-win' : 'bg-brass'}`} aria-hidden="true" />
         <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-surface px-5 py-4">
           <div className="flex min-w-0 items-center gap-3 pr-2">
             <div
-              className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${
+              className={`flex size-10 shrink-0 items-center justify-center rounded-box border ${
                 modal.isAnswer
                   ? 'border-win/20 bg-win-tint text-win'
                   : 'border-brass/25 bg-brass-tint text-brass-strong'
@@ -49,14 +49,14 @@ export function MaterialPreviewModal({ modal, onClose }: MaterialPreviewModalPro
               target="_blank"
               rel="noreferrer"
               download
-              className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong">
+              className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong">
               <Download className="size-3.5" />
               <span>გადმოწერა</span>
             </a>
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 cursor-pointer items-center justify-center rounded-xl border border-hairline bg-paper text-muted transition hover:bg-paper-deep hover:text-ink">
+              className="flex size-8 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-muted transition hover:bg-paper-deep hover:text-ink">
               <X className="size-4" />
             </button>
           </div>
@@ -69,10 +69,10 @@ export function MaterialPreviewModal({ modal, onClose }: MaterialPreviewModalPro
             <img
               src={modal.url}
               alt={modal.title}
-              className="max-h-full max-w-full object-contain rounded-lg shadow-md"
+              className="max-h-full max-w-full object-contain rounded-box shadow-md"
             />
           ) : (
-            <iframe src={modal.url} title={modal.title} className="w-full h-full rounded-lg bg-surface border-0" />
+            <iframe src={modal.url} title={modal.title} className="w-full h-full rounded-box bg-surface border-0" />
           )}
         </div>
       </div>

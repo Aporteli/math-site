@@ -153,14 +153,14 @@ export function CoursesManager() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button
             onClick={() => setIsStudentsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-navy/20 bg-white px-4 py-2 text-sm font-bold text-navy shadow-xs transition-all hover:bg-navy-tint hover:border-navy/40 active:scale-95">
+            className="inline-flex items-center gap-1.5 rounded-box border border-navy/20 bg-white px-4 py-2 text-sm font-bold text-navy shadow-xs transition-all hover:bg-navy-tint hover:border-navy/40 active:scale-95">
             <UserCheck className="size-4" />
             მოსწავლეების მართვა & მიბმა ({students.length})
           </button>
   
           <button
             onClick={() => openCourseModal()}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-sm font-bold text-white transition-all hover:bg-navy-strong active:scale-95">
+            className="inline-flex items-center gap-1.5 rounded-box bg-navy px-4 py-2 text-sm font-bold text-white transition-all hover:bg-navy-strong active:scale-95">
             <Plus className="size-4" />
             ჯგუფის დამატება
           </button>

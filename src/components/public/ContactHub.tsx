@@ -37,10 +37,10 @@ type ContactDetails = Dictionary['footer']['contact'];
 type FieldErrors = Partial<Record<keyof ConsultationInput, string>>;
 
 const fieldClass =
-  'w-full min-w-0 appearance-none rounded-xl border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none';
+  'w-full min-w-0 appearance-none rounded-box border border-hairline bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none';
 
 const fieldErrorClass =
-  'w-full min-w-0 appearance-none rounded-xl border border-brass bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none';
+  'w-full min-w-0 appearance-none rounded-box border border-brass bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none';
 
 interface ContactHubProps {
   copy: ContactCopy;
@@ -74,7 +74,7 @@ export function ContactHub({ copy, contact, initialCourse }: ContactHubProps) {
 
 function DirectContactCard({ copy, contact }: { copy: ContactCopy; contact: ContactDetails }) {
   return (
-    <section className="rounded-2xl border border-hairline bg-white p-5 shadow-sm sm:p-6">
+    <section className="rounded-box border border-hairline bg-white p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold text-ink">{copy.channels.title}</h2>
       <ul className="mt-5 space-y-4">
         <ContactRow icon={Phone} label={copy.channels.phone}>
@@ -83,7 +83,7 @@ function DirectContactCard({ copy, contact }: { copy: ContactCopy; contact: Cont
           </a>
         </ContactRow>
         <li className="flex gap-3">
-          <span className="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy-tint text-navy">
+          <span className="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-navy-tint text-navy">
             <MessageCircle className="size-5" aria-hidden="true" />
           </span>
           <div className="flex min-w-0 flex-1 flex-wrap gap-2 pt-1">
@@ -92,7 +92,7 @@ function DirectContactCard({ copy, contact }: { copy: ContactCopy; contact: Cont
               target="_blank"
               rel="noopener noreferrer"
               aria-label={copy.channels.whatsappAria}
-              className="inline-flex items-center rounded-full border border-hairline bg-paper px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-navy/30">
+              className="inline-flex items-center rounded-box border border-hairline bg-paper px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-navy/30">
               {copy.channels.whatsapp}
             </a>
             <a
@@ -100,7 +100,7 @@ function DirectContactCard({ copy, contact }: { copy: ContactCopy; contact: Cont
               target="_blank"
               rel="noopener noreferrer"
               aria-label={copy.channels.telegramAria}
-              className="inline-flex items-center rounded-full border border-hairline bg-paper px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-navy/30">
+              className="inline-flex items-center rounded-box border border-hairline bg-paper px-3 py-1.5 text-sm font-semibold text-navy transition-colors hover:border-navy/30">
               {copy.channels.telegram}
             </a>
           </div>
@@ -124,7 +124,7 @@ function DirectContactCard({ copy, contact }: { copy: ContactCopy; contact: Cont
 function ContactRow({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
   return (
     <li className="flex gap-3">
-      <span className="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy-tint text-navy">
+      <span className="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-navy-tint text-navy">
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <div className="min-w-0">
@@ -137,9 +137,9 @@ function ContactRow({ icon: Icon, label, children }: { icon: LucideIcon; label: 
 
 function HoursCard({ copy }: { copy: ContactCopy }) {
   return (
-    <section className="rounded-2xl border border-hairline bg-white p-5 shadow-sm sm:p-6">
+    <section className="rounded-box border border-hairline bg-white p-5 shadow-sm sm:p-6">
       <div className="flex gap-3">
-        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-navy-tint text-navy">
+        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-navy-tint text-navy">
           <Clock className="size-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
@@ -153,9 +153,9 @@ function HoursCard({ copy }: { copy: ContactCopy }) {
 
 function AssessmentCard({ copy }: { copy: ContactCopy }) {
   return (
-    <aside className="rounded-xl border border-brass/30 bg-brass-tint p-4">
+    <aside className="rounded-box border border-brass/30 bg-brass-tint p-4">
       <div className="flex gap-3">
-        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-white text-brass">
+        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-white text-brass">
           <ClipboardCheck className="size-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
@@ -221,19 +221,19 @@ function ConsultationForm({ copy, initialCourse }: { copy: ContactCopy; initialC
   }
 
   return (
-    <section className="rounded-2xl border border-hairline bg-white p-5 shadow-sm sm:p-6 lg:p-8">
+    <section className="rounded-box border border-hairline bg-white p-5 shadow-sm sm:p-6 lg:p-8">
       <h2 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">{copy.form.title}</h2>
       <p className="mt-2 text-sm leading-relaxed text-body sm:text-base">{copy.form.subtitle}</p>
 
       {sent ? (
-        <div className="mt-8 rounded-xl border border-hairline bg-paper-deep px-5 py-8 text-center">
+        <div className="mt-8 rounded-box border border-hairline bg-paper-deep px-5 py-8 text-center">
           <CheckCircle2 className="mx-auto size-10 text-navy" aria-hidden="true" />
           <p className="mt-4 text-lg font-semibold text-ink">{copy.form.successTitle}</p>
           <p className="mt-2 text-sm leading-relaxed text-body">{copy.form.successText}</p>
           <button
             type="button"
             onClick={resetForm}
-            className="mt-6 inline-flex items-center justify-center rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong">
+            className="mt-6 inline-flex items-center justify-center rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong">
             {copy.form.successAgain}
           </button>
         </div>
@@ -340,7 +340,7 @@ function ConsultationForm({ copy, initialCourse }: { copy: ContactCopy; initialC
           <button
             type="submit"
             disabled={sending}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-3 text-base font-medium text-white shadow-sm transition-all hover:bg-navy-strong disabled:cursor-wait disabled:opacity-70">
+            className="inline-flex w-full items-center justify-center gap-2 rounded-box bg-navy py-3 text-base font-medium text-white shadow-sm transition-all hover:bg-navy-strong disabled:cursor-wait disabled:opacity-70">
             {sending ? copy.form.sending : copy.form.submit}
             <Send className="size-4 shrink-0" aria-hidden="true" />
           </button>
@@ -385,7 +385,7 @@ function ChoicePill({
 }) {
   return (
     <label
-      className={`inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors ${
+      className={`inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-box border px-3.5 py-2 text-sm font-medium transition-colors ${
         checked
           ? 'border-navy bg-navy text-white shadow-sm'
           : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink'
@@ -398,7 +398,7 @@ function ChoicePill({
 
 function MapPlaceholder({ copy, address }: { copy: ContactCopy; address: string }) {
   return (
-    <section className="mt-12 overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm sm:mt-16">
+    <section className="mt-12 overflow-hidden rounded-box border border-hairline bg-white shadow-sm sm:mt-16">
       <div className="border-b border-hairline px-5 py-4 sm:px-6">
         <h2 className="text-lg font-semibold text-ink">{copy.map.title}</h2>
         <p className="mt-1 text-sm text-body">{copy.map.subtitle}</p>
@@ -430,7 +430,7 @@ function MapPlaceholder({ copy, address }: { copy: ContactCopy; address: string 
           />
         </svg>
         <div className="relative flex min-h-64 flex-col items-center justify-center px-4 py-12 sm:min-h-80">
-          <span className="inline-flex size-14 items-center justify-center rounded-2xl bg-white text-navy shadow-md ring-1 ring-hairline">
+          <span className="inline-flex size-14 items-center justify-center rounded-box bg-white text-navy shadow-md ring-1 ring-hairline">
             <MapPin className="size-7" aria-hidden="true" />
           </span>
           <p className="mt-4 text-base font-semibold text-ink">{copy.map.pin}</p>

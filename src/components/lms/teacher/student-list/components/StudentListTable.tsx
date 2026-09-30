@@ -31,15 +31,10 @@ interface Props {
   onManagePayments?: (student: StudentRecord) => void;
   onUpdateStudent?: (id: string, patch: Partial<StudentRecord>) => void;
   onEditIndividual?: (student: StudentRecord) => void;
+  onDisbandHomeGroup?: (groupId: string) => void | Promise<void>;
 }
 
-export function StudentListTable({
-  sections,
-  groups,
-  payments,
-  onSelect,
-  onUpdateStudent,
-}: Props) {
+export function StudentListTable({ sections, groups, payments, onSelect, onUpdateStudent, onDisbandHomeGroup }: Props) {
   const [editingPaymentDateId, setEditingPaymentDateId] = useState<string | null>(null);
 
   const [paymentDateDraft, setPaymentDateDraft] = useState('');
@@ -58,109 +53,112 @@ export function StudentListTable({
   }
   const todayLessons = lessonsForDate(todayStudents, todayDate);
   const todaySessions = groupDayLessons(todayLessons);
+  const [hoveringSection, setHoveringSection] = useState<string | null>(null);
 
   return (
     <div className="flex h-auto flex-col gap-4 lg:h-[calc(100vh-8rem)] lg:flex-row lg:items-stretch">
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto thin-scrollbar rounded-box border border-hairline bg-surface shadow-sm">
         <div className="custom-scrollbar overflow-x-auto overscroll-x-contain">
-        <table className="w-full border-collapse text-left">
-          <thead className="bg-paper">
-            <tr className="border-b border-hairline text-[10px] font-bold uppercase tracking-wider text-muted">
-              <th className="px-4 py-3">მოსწავლე</th>
-              <th className="px-4 py-3 text-right">გადახდის თარიღი</th>
-            </tr>
-          </thead>
+          <table className="w-full border-collapse text-left">
+            <thead className="bg-paper">
+              <tr className="border-b border-hairline text-[10px] font-bold uppercase tracking-wider text-muted">
+                <th className="px-4 py-3">მოსწავლე</th>
+                <th className="px-4 py-3 text-right">გადახდის თარიღი</th>
+              </tr>
+            </thead>
 
-          <tbody>
-            {sections.map((section) => (
-              <Fragment key={section.key}>
-                <tr className="bg-navy-tint/35">
-                  <td colSpan={2} className="px-4 py-2">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`size-1.5 shrink-0 rounded-box ${
-                          section.kind === 'group' ? 'bg-navy' : 'bg-brass-strong'
-                        }`}
-                      />
-                 
-                      <span className="text-[11px] font-bold tracking-wide text-ink">{section.title}</span>
+            <tbody>
+              {sections.map((section) => (
+                <Fragment key={section.key}>
+                  <tr className={`${section.kind === 'home' || section.kind === 'individual' ? 'bg-brass-tint/80' : 'bg-navy-tint/80'}  border-t border-hairline font-bold uppercase tracking-wider text-muted`} onMouseEnter={() => setHoveringSection(section.key)} onMouseLeave={() => setHoveringSection(null)}>
+                    <td colSpan={2} className="pr-4 pl-2 py-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[14px] font-bold tracking-wide text-ink">{section.title}</span>
+                        {section.kind === 'home' && section.groupId && onDisbandHomeGroup ? (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void onDisbandHomeGroup(section.groupId!);
+                            }}
+                            className={` ml-auto cursor-pointer rounded-box px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted transition hover:bg-navy-tint hover:text-ink hover:opacity-100 ${hoveringSection === section.key ? 'opacity-15' : 'opacity-0 pointer-events-none'}`}
+                          >
+                            დაშლა
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
 
-                      <span className="rounded-box bg-surface px-1.5 py-0.5 text-[9px] font-bold text-muted">
-                        {section.students.length}
-                      </span>
-                    </div>
-                  </td>
-                </tr>
+                  {section.students.map((student) => {
+                    const isEditingPaymentDate = editingPaymentDateId === student.id;
 
-                {section.students.map((student) => {
-                  const isEditingPaymentDate = editingPaymentDateId === student.id;
-
-                  return (
-                    <Fragment key={student.id}>
-                      {/* Main row */}
-                      <tr
-                        onClick={() => onSelect(student)}
-                        className="cursor-pointer border-b border-hairline transition hover:bg-navy-tint/25">
-                        {/* Student */}
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="min-w-0">
-                              <p className="truncate rounded-box  text-sm font-bold text-ink">
-                                {student.firstName} {student.lastName}
-                              </p>
+                    return (
+                      <Fragment key={student.id}>
+                        {/* Main row */}
+                        <tr
+                          onClick={() => onSelect(student)}
+                          className="cursor-pointer  transition hover:bg-navy-tint/40">
+                          {/* Student */}
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate rounded-box pl-3 text-sm text-ink">
+                                  {student.firstName} {student.lastName}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        {/* Payment date */}
-                        <td className="px-4 py-3 text-right">
-                          {isEditingPaymentDate ? (
-                            <input
-                              type="date"
-                              autoFocus
-                              value={paymentDateDraft}
-                              onChange={(event) => {
-                                setPaymentDateDraft(event.target.value);
-                              }}
-                              onClick={(event) => event.stopPropagation()}
-                              onBlur={(event) => {
-                                setEditingPaymentDateId((current) => (current === student.id ? null : current));
-                                const next = event.target.value.trim();
-                                if ((student.paymentDate ?? '') === next) {
-                                  return;
-                                }
-                                onUpdateStudent?.(student.id, {
-                                  paymentDate: next,
-                                });
-                              }}
-                              onKeyDown={(event) => {
-                                if (event.key === 'Enter') {
-                                  event.currentTarget.blur();
-                                }
-                              }}
-                              className="ml-auto block w-full max-w-[9rem] rounded-box border border-hairline bg-surface px-2 py-1 text-xs font-medium tabular-nums text-ink outline-none focus:border-navy"
-                            />
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                setPaymentDateDraft(student.paymentDate ?? '');
-                                setEditingPaymentDateId(student.id);
-                              }}
-                              className="ml-auto cursor-pointer rounded-box px-1.5 py-0.5 text-xs font-bold tabular-nums text-ink transition hover:bg-navy-tint">
-                              {student.paymentDate || '—'}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    </Fragment>
-                  );
-                })}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
+                          {/* Payment date */}
+                          <td className="px-4 py-3 text-right">
+                            {isEditingPaymentDate ? (
+                              <input
+                                type="date"
+                                autoFocus
+                                value={paymentDateDraft}
+                                onChange={(event) => {
+                                  setPaymentDateDraft(event.target.value);
+                                }}
+                                onClick={(event) => event.stopPropagation()}
+                                onBlur={(event) => {
+                                  setEditingPaymentDateId((current) => (current === student.id ? null : current));
+                                  const next = event.target.value.trim();
+                                  if ((student.paymentDate ?? '') === next) {
+                                    return;
+                                  }
+                                  onUpdateStudent?.(student.id, {
+                                    paymentDate: next,
+                                  });
+                                }}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter') {
+                                    event.currentTarget.blur();
+                                  }
+                                }}
+                                className="ml-auto block w-full max-w-[9rem] rounded-box border border-hairline bg-surface px-2 py-1 text-xs font-medium tabular-nums text-ink outline-none focus:border-navy"
+                              />
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setPaymentDateDraft(student.paymentDate ?? '');
+                                  setEditingPaymentDateId(student.id);
+                                }}
+                                className="ml-auto cursor-pointer rounded-box px-1.5 py-0.5 text-xs font-bold tabular-nums text-ink transition hover:bg-navy-tint">
+                                {student.paymentDate || '—'}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      </Fragment>
+                    );
+                  })}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

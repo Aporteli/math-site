@@ -73,7 +73,7 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
   }));
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 lg:space-y-8 relative">
+    <div className="mx-auto w-full min-w-0 max-w-[2000px] px-4 sm:px-6 lg:px-8">
       <div className="absolute top-0 right-0 -z-10 h-[400px] w-[600px] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-navy-tint/40 via-transparent to-transparent opacity-50 blur-3xl pointer-events-none" />
 
       <PageHero

@@ -153,9 +153,9 @@ function MetricCard({
   detail: string;
 }) {
   return (
-    <div className="rounded-2xl border border-hairline bg-white p-4 shadow-sm">
+    <div className="rounded-box border border-hairline bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy-tint text-navy">
+        <div className="flex h-9 w-9 items-center justify-center rounded-box bg-navy-tint text-navy">
           <Icon className="h-4 w-4" />
         </div>
 
@@ -389,7 +389,7 @@ export function ServerManager({
 
   if (loading) {
     return (
-      <div className="flex min-h-60 items-center justify-center rounded-2xl border border-hairline bg-white shadow-sm">
+      <div className="flex min-h-60 items-center justify-center rounded-box border border-hairline bg-white shadow-sm">
         <div className="flex items-center gap-2 text-sm text-muted">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading server...
@@ -403,7 +403,7 @@ export function ServerManager({
       {(message || error) && (
         <div
           className={[
-            'flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm',
+            'flex items-center gap-2 rounded-box border px-4 py-3 text-sm',
             error
               ? 'border-red-200 bg-red-50 text-red-700'
               : 'border-emerald-200 bg-emerald-50 text-emerald-700',
@@ -469,7 +469,7 @@ export function ServerManager({
         />
       </div>
 
-      <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-ink">
@@ -484,7 +484,7 @@ export function ServerManager({
             type="button"
             onClick={() => void loadData()}
             disabled={refreshing}
-            className="inline-flex items-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw
               className={[
@@ -505,11 +505,11 @@ export function ServerManager({
             return (
               <div
                 key={service.id}
-                className="rounded-2xl border border-hairline p-4"
+                className="rounded-box border border-hairline p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-tint text-navy">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-box bg-navy-tint text-navy">
                       <Icon className="h-5 w-5" />
                     </div>
 
@@ -525,7 +525,7 @@ export function ServerManager({
 
                   <span
                     className={[
-                      'rounded-full px-2 py-1 text-[11px] font-medium',
+                      'rounded-box px-2 py-1 text-[11px] font-medium',
                       serviceStatus?.running
                         ? 'bg-emerald-50 text-emerald-700'
                         : 'bg-red-50 text-red-700',
@@ -537,7 +537,7 @@ export function ServerManager({
                   </span>
                 </div>
 
-                <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2">
+                <div className="mt-4 rounded-box bg-slate-50 px-3 py-2">
                   <div className="truncate font-mono text-[11px] text-muted">
                     {serviceStatus?.container ??
                       service.id}
@@ -554,7 +554,7 @@ export function ServerManager({
                       type="button"
                       onClick={() => void containerControl(service.id, 'start')}
                       disabled={restarting !== null || containerAction !== null}
-                      className="rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {containerAction === `${service.id}:start` ? 'Starting...' : 'Start'}
                     </button>
@@ -562,7 +562,7 @@ export function ServerManager({
                       type="button"
                       onClick={() => void containerControl(service.id, 'stop')}
                       disabled={restarting !== null || containerAction !== null}
-                      className="rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {containerAction === `${service.id}:stop` ? 'Stopping...' : 'Stop'}
                     </button>
@@ -575,7 +575,7 @@ export function ServerManager({
                     void restartService(service.id)
                   }
                   disabled={restarting !== null || containerAction !== null}
-                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isRestarting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -592,7 +592,7 @@ export function ServerManager({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+        <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-ink">
@@ -608,18 +608,18 @@ export function ServerManager({
           </div>
 
           {!rooms?.configured ? (
-            <div className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-700">
+            <div className="mt-5 rounded-box bg-amber-50 p-4 text-sm text-amber-700">
               LiveKit API credentials are not configured on the
               server agent.
             </div>
           ) : rooms?.error ? (
-            <div className="mt-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">
+            <div className="mt-5 rounded-box bg-red-50 p-4 text-sm text-red-700">
               {rooms.error}
             </div>
           ) : (
             <>
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-slate-50 p-4">
+                <div className="rounded-box bg-slate-50 p-4">
                   <div className="text-xs text-muted">
                     Rooms
                   </div>
@@ -629,7 +629,7 @@ export function ServerManager({
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-slate-50 p-4">
+                <div className="rounded-box bg-slate-50 p-4">
                   <div className="text-xs text-muted">
                     Participants
                   </div>
@@ -643,14 +643,14 @@ export function ServerManager({
 
               <div className="mt-4 space-y-2">
                 {rooms.rooms.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-hairline p-5 text-center text-sm text-muted">
+                  <div className="rounded-box border border-dashed border-hairline p-5 text-center text-sm text-muted">
                     No active rooms.
                   </div>
                 ) : (
                   rooms.rooms.map((room) => (
                     <div
                       key={room.sid}
-                      className="rounded-xl border border-hairline p-3"
+                      className="rounded-box border border-hairline p-3"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <span className="truncate text-sm font-medium text-ink">
@@ -677,7 +677,7 @@ export function ServerManager({
           )}
         </div>
 
-        <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+        <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-ink">
@@ -701,9 +701,9 @@ export function ServerManager({
                 </span>
               </div>
 
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-2 h-2 overflow-hidden rounded-box bg-slate-100">
                 <div
-                  className="h-full rounded-full bg-navy"
+                  className="h-full rounded-box bg-navy"
                   style={{
                     width: `${Math.min(
                       metrics?.cpu.percent ?? 0,
@@ -722,9 +722,9 @@ export function ServerManager({
                 </span>
               </div>
 
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-2 h-2 overflow-hidden rounded-box bg-slate-100">
                 <div
-                  className="h-full rounded-full bg-navy"
+                  className="h-full rounded-box bg-navy"
                   style={{
                     width: `${Math.min(
                       metrics?.memory.percent ?? 0,
@@ -737,11 +737,11 @@ export function ServerManager({
 
             {metrics?.network ? (
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="rounded-xl bg-slate-50 p-3">
+                <div className="rounded-box bg-slate-50 p-3">
                   <div className="text-muted">Sent</div>
                   <div className="mt-1 font-medium text-ink">{formatBytes(metrics.network.bytes_sent)}</div>
                 </div>
-                <div className="rounded-xl bg-slate-50 p-3">
+                <div className="rounded-box bg-slate-50 p-3">
                   <div className="text-muted">Received</div>
                   <div className="mt-1 font-medium text-ink">{formatBytes(metrics.network.bytes_received)}</div>
                 </div>
@@ -756,9 +756,9 @@ export function ServerManager({
                 </span>
               </div>
 
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-2 h-2 overflow-hidden rounded-box bg-slate-100">
                 <div
-                  className="h-full rounded-full bg-navy"
+                  className="h-full rounded-box bg-navy"
                   style={{
                     width: `${Math.min(
                       metrics?.disk.percent ?? 0,
@@ -772,7 +772,7 @@ export function ServerManager({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
@@ -794,7 +794,7 @@ export function ServerManager({
                   setSelectedLogService(service.id)
                 }
                 className={[
-                  'rounded-xl px-3 py-2 text-xs font-medium transition',
+                  'rounded-box px-3 py-2 text-xs font-medium transition',
                   selectedLogService === service.id
                     ? 'bg-navy text-white'
                     : 'border border-hairline text-body hover:bg-slate-50',
@@ -810,7 +810,7 @@ export function ServerManager({
                 void loadLogs(selectedLogService)
               }
               disabled={logsLoading}
-              className="inline-flex items-center gap-2 rounded-xl border border-hairline px-3 py-2 text-xs font-medium text-ink transition hover:bg-slate-50 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-xs font-medium text-ink transition hover:bg-slate-50 disabled:opacity-50"
             >
               <RefreshCw
                 className={[
@@ -823,7 +823,7 @@ export function ServerManager({
           </div>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-xl border border-hairline bg-slate-950">
+        <div className="mt-4 overflow-hidden rounded-box border border-hairline bg-slate-950">
           <pre className="max-h-[420px] overflow-auto p-4 font-mono text-[11px] leading-5 text-slate-200">
             {logsLoading
               ? 'Loading logs...'

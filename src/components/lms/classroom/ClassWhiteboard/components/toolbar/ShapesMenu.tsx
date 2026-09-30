@@ -38,7 +38,7 @@ export function ShapesMenu({ menuRef, isOpen, setIsOpen, activeTool, setActiveTo
           type="button"
           title="ფიგურა"
           onClick={() => { setActiveTool(currentShapeObj.id); setIsOpen(false); closeOtherMenus(); }}
-          className="flex items-center justify-center size-7 sm:size-8 rounded-box-xl focus:outline-none">
+          className="flex items-center justify-center size-7 sm:size-8 rounded-box focus:outline-none">
           <CurrentShapeIcon className="size-3.5 sm:size-4" />
         </button>
 
@@ -46,7 +46,7 @@ export function ShapesMenu({ menuRef, isOpen, setIsOpen, activeTool, setActiveTo
           type="button"
           title="ფიგურების მენიუ"
           onClick={() => { setIsOpen(!isOpen); closeOtherMenus(); }}
-          className={`flex items-center justify-center px-1 h-full rounded-box-xl transition-colors border-l ${
+          className={`flex items-center justify-center px-1 h-full rounded-box transition-colors border-l ${
             isShapeActive
               ? 'border-indigo-500/40 hover:bg-indigo-700'
               : 'border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600'

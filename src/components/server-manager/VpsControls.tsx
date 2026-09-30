@@ -75,7 +75,7 @@ function NoticeBanner({ notice }: { notice: Notice | null }) {
   return (
     <div
       className={[
-        'flex items-center gap-2 rounded-2xl border px-4 py-3 text-sm',
+        'flex items-center gap-2 rounded-box border px-4 py-3 text-sm',
         notice.tone === 'error'
           ? 'border-red-200 bg-red-50 text-red-700'
           : 'border-emerald-200 bg-emerald-50 text-emerald-700',
@@ -281,7 +281,7 @@ export function FileControls({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+    <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-ink">Files</h2>
@@ -293,7 +293,7 @@ export function FileControls({ locale }: { locale: Locale }) {
           type="button"
           onClick={() => void loadPath(filePath ?? path)}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:opacity-50"
         >
           <RefreshCw className={['h-4 w-4', loading ? 'animate-spin' : ''].join(' ')} />
           Refresh
@@ -307,7 +307,7 @@ export function FileControls({ locale }: { locale: Locale }) {
             type="button"
             onClick={() => void loadPath(root)}
             className={[
-              'rounded-xl px-3 py-2 text-xs font-medium transition',
+              'rounded-box px-3 py-2 text-xs font-medium transition',
               path === root || filePath?.startsWith(`${root}/`)
                 ? 'bg-navy text-white'
                 : 'border border-hairline text-body hover:bg-slate-50',
@@ -324,14 +324,14 @@ export function FileControls({ locale }: { locale: Locale }) {
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <div className="max-h-80 space-y-1 overflow-auto rounded-xl border border-hairline p-2">
+        <div className="max-h-80 space-y-1 overflow-auto rounded-box border border-hairline p-2">
           {READ_ROOTS.some((root) => {
             const parent = path.slice(0, path.lastIndexOf('/'));
             return parent === root || parent.startsWith(`${root}/`);
           }) ? (
             <button
               type="button"
-              className="block w-full truncate rounded-lg px-2 py-1.5 text-left text-xs text-body hover:bg-slate-50"
+              className="block w-full truncate rounded-box px-2 py-1.5 text-left text-xs text-body hover:bg-slate-50"
               onClick={() => void loadPath(path.slice(0, path.lastIndexOf('/')))}
             >
               ..
@@ -341,7 +341,7 @@ export function FileControls({ locale }: { locale: Locale }) {
             <button
               key={entry.name}
               type="button"
-              className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs hover:bg-slate-50"
+              className="flex w-full items-center justify-between gap-2 rounded-box px-2 py-1.5 text-left text-xs hover:bg-slate-50"
               onClick={() => void loadPath(`${path}/${entry.name}`)}
             >
               <span className="truncate text-ink">{entry.kind === 'dir' ? `${entry.name}/` : entry.name}</span>
@@ -359,14 +359,14 @@ export function FileControls({ locale }: { locale: Locale }) {
                 onChange={(event) => setDraft(event.target.value)}
                 readOnly={!writable}
                 spellCheck={false}
-                className="h-72 w-full rounded-xl border border-hairline bg-slate-950 p-3 font-mono text-[11px] leading-5 text-slate-200 outline-none"
+                className="h-72 w-full rounded-box border border-hairline bg-slate-950 p-3 font-mono text-[11px] leading-5 text-slate-200 outline-none"
               />
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
                   disabled={!writable || saving || draft === original}
                   onClick={() => void saveFile()}
-                  className="rounded-xl bg-navy px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  className="rounded-box bg-navy px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : important ? 'Save config' : 'Save'}
                 </button>
@@ -374,14 +374,14 @@ export function FileControls({ locale }: { locale: Locale }) {
                   value={renameTo}
                   onChange={(event) => setRenameTo(event.target.value)}
                   disabled={!writable || saving}
-                  className="w-40 rounded-xl border border-hairline px-3 py-2 text-sm text-ink outline-none"
+                  className="w-40 rounded-box border border-hairline px-3 py-2 text-sm text-ink outline-none"
                   aria-label="New file name"
                 />
                 <button
                   type="button"
                   disabled={!writable || saving || renameTo.trim().length === 0}
                   onClick={() => void renameFile()}
-                  className="rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
+                  className="rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
                 >
                   Rename
                 </button>
@@ -392,14 +392,14 @@ export function FileControls({ locale }: { locale: Locale }) {
                     value={deleteConfirm}
                     onChange={(event) => setDeleteConfirm(event.target.value)}
                     placeholder="Type DELETE"
-                    className="w-36 rounded-xl border border-hairline px-3 py-2 text-sm text-ink outline-none"
+                    className="w-36 rounded-box border border-hairline px-3 py-2 text-sm text-ink outline-none"
                     aria-label="Delete confirmation"
                   />
                   <button
                     type="button"
                     disabled={saving || deleteConfirm !== CONFIRM.DELETE}
                     onClick={() => void deleteFile()}
-                    className="rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-700 disabled:opacity-50"
+                    className="rounded-box border border-red-200 px-3 py-2 text-sm font-medium text-red-700 disabled:opacity-50"
                   >
                     Delete
                   </button>
@@ -409,7 +409,7 @@ export function FileControls({ locale }: { locale: Locale }) {
               )}
             </>
           ) : (
-            <div className="rounded-xl border border-dashed border-hairline p-5 text-sm text-muted">
+            <div className="rounded-box border border-dashed border-hairline p-5 text-sm text-muted">
               Choose a file to read it.
               {directoryWritable ? (
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -417,14 +417,14 @@ export function FileControls({ locale }: { locale: Locale }) {
                     value={newName}
                     onChange={(event) => setNewName(event.target.value)}
                     placeholder="notes.txt"
-                    className="w-40 rounded-xl border border-hairline bg-white px-3 py-2 text-sm text-ink outline-none"
+                    className="w-40 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink outline-none"
                     aria-label="New file name"
                   />
                   <button
                     type="button"
                     disabled={saving || newName.trim().length === 0}
                     onClick={() => void createFile()}
-                    className="rounded-xl border border-hairline bg-white px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
+                    className="rounded-box border border-hairline bg-white px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
                   >
                     Create file
                   </button>
@@ -574,7 +574,7 @@ export function HostControls({ locale }: { locale: Locale }) {
   return (
     <div className="space-y-4">
       <NoticeBanner notice={notice} />
-      <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-ink">Host services</h2>
@@ -584,7 +584,7 @@ export function HostControls({ locale }: { locale: Locale }) {
             type="button"
             onClick={() => void loadHost()}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
           >
             <RefreshCw className={['h-4 w-4', loading ? 'animate-spin' : ''].join(' ')} />
             Refresh
@@ -594,13 +594,13 @@ export function HostControls({ locale }: { locale: Locale }) {
           {(Object.keys(HOST_SERVICES) as HostServiceName[]).map((service) => {
             const status = services.find((item) => item.service === service);
             return (
-              <div key={service} className="rounded-2xl border border-hairline p-4">
+              <div key={service} className="rounded-box border border-hairline p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="font-medium text-ink">{HOST_LABELS[service]}</div>
                     <div className="mt-1 font-mono text-[11px] text-muted">{service}</div>
                   </div>
-                  <span className={['rounded-full px-2 py-1 text-[11px] font-medium', status?.running ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-body'].join(' ')}>
+                  <span className={['rounded-box px-2 py-1 text-[11px] font-medium', status?.running ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-body'].join(' ')}>
                     {status?.active ?? (loading ? '...' : 'unknown')}
                   </span>
                 </div>
@@ -611,7 +611,7 @@ export function HostControls({ locale }: { locale: Locale }) {
                       type="button"
                       disabled={acting !== null || !isHostActionAllowed(service, action)}
                       onClick={() => void runService(service, action)}
-                      className="inline-flex items-center gap-2 rounded-xl border border-hairline px-3 py-2 text-xs font-medium capitalize text-ink disabled:opacity-50"
+                      className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-xs font-medium capitalize text-ink disabled:opacity-50"
                     >
                       {acting === `${service}:${action}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                       {action}
@@ -624,11 +624,11 @@ export function HostControls({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
         <h2 className="text-base font-semibold text-ink">Network</h2>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {interfaces.map((item) => (
-            <div key={item.name} className="rounded-xl bg-slate-50 px-3 py-2">
+            <div key={item.name} className="rounded-box bg-slate-50 px-3 py-2">
               <div className="text-sm font-medium text-ink">{item.name}</div>
               <div className="mt-1 text-xs text-body">
                 {formatBytes(item.bytes_received)} in / {formatBytes(item.bytes_sent)} out
@@ -639,7 +639,7 @@ export function HostControls({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
         <h2 className="text-base font-semibold text-ink">Processes</h2>
         <div className="mt-4 overflow-auto">
           <table className="w-full min-w-[640px] text-left text-xs">
@@ -667,7 +667,7 @@ export function HostControls({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-base font-semibold text-ink">VPS logs</h2>
           <div className="flex gap-2">
@@ -676,19 +676,19 @@ export function HostControls({ locale }: { locale: Locale }) {
                 key={source}
                 type="button"
                 onClick={() => setLogSource(source)}
-                className={['rounded-xl px-3 py-2 text-xs font-medium', logSource === source ? 'bg-navy text-white' : 'border border-hairline text-body'].join(' ')}
+                className={['rounded-box px-3 py-2 text-xs font-medium', logSource === source ? 'bg-navy text-white' : 'border border-hairline text-body'].join(' ')}
               >
                 {source}
               </button>
             ))}
           </div>
         </div>
-        <pre className="mt-4 max-h-[320px] overflow-auto rounded-xl bg-slate-950 p-4 font-mono text-[11px] leading-5 text-slate-200">
+        <pre className="mt-4 max-h-[320px] overflow-auto rounded-box bg-slate-950 p-4 font-mono text-[11px] leading-5 text-slate-200">
           {logs || 'No logs available.'}
         </pre>
       </div>
 
-      <div className="rounded-2xl border border-red-200 bg-white p-5 shadow-sm">
+      <div className="rounded-box border border-red-200 bg-white p-5 shadow-sm">
         <h2 className="text-base font-semibold text-ink">Reboot VPS</h2>
         <p className="mt-1 text-sm text-body">This stops every service until the machine starts again. Type REBOOT to enable the button.</p>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -696,14 +696,14 @@ export function HostControls({ locale }: { locale: Locale }) {
             value={rebootText}
             onChange={(event) => setRebootText(event.target.value)}
             placeholder="REBOOT"
-            className="w-36 rounded-xl border border-hairline px-3 py-2 text-sm text-ink outline-none"
+            className="w-36 rounded-box border border-hairline px-3 py-2 text-sm text-ink outline-none"
             aria-label="Reboot confirmation"
           />
           <button
             type="button"
             disabled={acting !== null || rebootText !== CONFIRM.REBOOT}
             onClick={() => void reboot()}
-            className="rounded-xl border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50"
+            className="rounded-box border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50"
           >
             {acting === 'reboot' ? 'Rebooting...' : 'Reboot'}
           </button>
@@ -753,7 +753,7 @@ export function AuditControls({ locale }: { locale: Locale }) {
   }, [load]);
 
   return (
-    <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+    <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-ink">Audit log</h2>
@@ -763,7 +763,7 @@ export function AuditControls({ locale }: { locale: Locale }) {
           type="button"
           onClick={() => void load()}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-xl border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
         >
           <RefreshCw className={['h-4 w-4', loading ? 'animate-spin' : ''].join(' ')} />
           Refresh
@@ -773,7 +773,7 @@ export function AuditControls({ locale }: { locale: Locale }) {
       <div className="mt-4 space-y-2">
         {events.length === 0 && !loading ? <p className="text-sm text-muted">No administrative actions yet.</p> : null}
         {events.map((event) => (
-          <div key={event.id} className="rounded-xl border border-hairline px-3 py-2">
+          <div key={event.id} className="rounded-box border border-hairline px-3 py-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-sm font-medium text-ink">{event.action}</span>
               <span className={['text-[11px] font-medium', event.ok ? 'text-emerald-700' : 'text-red-700'].join(' ')}>

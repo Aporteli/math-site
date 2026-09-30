@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "MathLab — mathematics resources and tools",
-    "description": "Calculators, a formula reference, a problem bank and the lesson schedule in one catalogue."
+    "title": "PinF — mathemathics learning platform",
+    "description": "Platform for learning mathematics and physics"
   },
   "brand": {
-    "name": "MathLab",
+    "name": "PinF",
     "person": "Shota Mikolaichuki",
     "home": "Back to the home page"
   },
@@ -50,7 +50,7 @@
   },
   "home": {
     "index": {
-      "title": "MathLab · Mathematics resources and tools",
+      "title": "PinF · Mathematics learning platform",
       "badge": "Open workspace / catalogue",
       "searchLabel": "Search the catalogue",
       "searchPlaceholder": "Find a topic, formula or calculator…",
@@ -897,14 +897,14 @@
       "submitting": "Signing in…",
       "error": "Email or password is incorrect.",
       "demoTitle": "Demo accounts",
-      "demoTeacher": "Teacher: teacher@mathlab.ge",
-      "demoStudent": "Student: student@mathlab.ge",
-      "demoPassword": "Password: mathlab-demo",
+      "demoTeacher": "Teacher: teacher@pinf.ge",
+      "demoStudent": "Student: student@pinf.ge",
+      "demoPassword": "Password: pinf-demo",
       "signupLink": "Don't have an account? Sign up"
     },
     "signup": {
       "metaTitle": "Sign up",
-      "metaDescription": "Create a new account on MathLab.",
+      "metaDescription": "Create a new account on PinF.",
       "eyebrow": "New account",
       "title": "Create an account",
       "subtitle": "Register and start learning mathematics.",
@@ -2809,12 +2809,12 @@
   },
   "footer": {
     "contact": {
-      "email": "info@mathlab.ge",
+      "email": "info@pinf.ge",
       "phone": "+995 322 00 00 00",
       "address": "1 Chavchavadze Avenue, Tbilisi",
-      "telegram": "@mathlabge"
+      "telegram": "@pinfge"
     },
-    "copyright": "© {year} MathLab",
+    "copyright": "© {year} PinF",
     "legal": {
       "privacy": "Privacy",
       "terms": "Terms and conditions"

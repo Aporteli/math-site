@@ -14,7 +14,7 @@ function ownerEmails(): string[] {
   if (fromEnv.length > 0) return fromEnv;
   // Local demo: site owner usually logs in as teacher@ — not ADMIN.
   if (process.env.NODE_ENV !== "production") {
-    return ["teacher@mathlab.ge", "admin@mathlab.ge"];
+    return ["teacher@pinf.ge", "admin@pinf.ge"];
   }
   return [];
 }

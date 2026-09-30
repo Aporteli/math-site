@@ -38,7 +38,7 @@ export interface CircleSolveResult {
 
 export type CircleResult = AngleResult | CircleSimplifyResult | CircleSolveResult;
 
-export const CIRCLE_HISTORY_KEY = 'mathlab.unitCircle.history';
+export const CIRCLE_HISTORY_KEY = 'pinf.unitCircle.history';
 
 export type AngleUnit = 'deg' | 'rad';
 

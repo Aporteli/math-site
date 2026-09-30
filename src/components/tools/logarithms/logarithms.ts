@@ -20,7 +20,7 @@ export interface LogSolution {
   
   export type LogResult = LogSolveResult | LogSimplifyResult;
   
-  export const LOG_HISTORY_KEY = 'mathlab.logarithm.history';
+  export const LOG_HISTORY_KEY = 'pinf.logarithm.history';
   
   export interface LogHistoryItem {
     expression: string;

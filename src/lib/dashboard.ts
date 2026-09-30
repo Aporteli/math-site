@@ -23,7 +23,7 @@ export type StudentNavId = keyof Dictionary['dashboard']['student']['nav'];
 export type TeacherPageId = keyof Dictionary['dashboard']['teacher']['pages'];
 export type StudentPageId = keyof Dictionary['dashboard']['student']['pages'];
 
-export const SIDEBAR_COOKIE = 'mathlab-sidebar';
+export const SIDEBAR_COOKIE = 'pinf-sidebar';
 
 export interface DashboardLink<Id extends string> {
   id: Id;

@@ -16,7 +16,7 @@ export interface GeometryResult {
   quantities: GeometryQuantity[];
 }
 
-export const GEOMETRY_HISTORY_KEY = 'mathlab.geometry.history';
+export const GEOMETRY_HISTORY_KEY = 'pinf.geometry.history';
 
 export type ShapeId =
   | 'rectangle'

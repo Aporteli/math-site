@@ -40,19 +40,19 @@ export function TeacherWorkspaceHeader({
                 key={student.id}
                 type="button"
                 onClick={() => onSelectStudent(student.id)}
-                className={`relative inline-flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-box border py-1 pe-3.5 ps-1 text-xs font-bold transition ${
+                className={`relative inline-flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-box border p-2 text-xs font-bold transition ${
                   isSelected
                     ? 'border-navy bg-navy text-white shadow-sm'
                     : 'border-hairline bg-paper text-ink hover:border-navy/40 hover:bg-navy-tint'
                 }`}
               >
-                <span
+                {/* <span
                   className={`flex size-7 items-center justify-center rounded-box text-[11px] font-bold ${
                     isSelected ? 'bg-white/20 text-white' : 'bg-navy-tint text-navy'
                   }`}
                 >
                   {initial}
-                </span>
+                </span> */}
                 <span className="max-w-[9rem] truncate sm:max-w-[12rem]">{student.name}</span>
                 {hasUnread ? (
                   <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-box bg-brass ring-2 ring-surface" />

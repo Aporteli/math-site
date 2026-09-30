@@ -14,7 +14,7 @@ export interface RearrangeResult {
   solutions: RearrangeSolution[];
 }
 
-export const REARRANGE_HISTORY_KEY = 'mathlab.rearrange.history';
+export const REARRANGE_HISTORY_KEY = 'pinf.rearrange.history';
 
 export interface RearrangeInput {
   expression: string;

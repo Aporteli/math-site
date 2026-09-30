@@ -51,7 +51,6 @@ export function TeacherWorkspaceTabs({
                 active ? 'bg-navy text-white shadow-sm' : 'text-body hover:bg-paper hover:text-ink'
               }`}
             >
-              <Icon className="size-3.5 shrink-0" />
               <span className="truncate">{tab.label}</span>
               <span
                 className={`rounded-box px-1.5 py-0.5 text-[10px] font-bold ${

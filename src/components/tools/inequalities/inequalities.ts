@@ -24,7 +24,7 @@ export interface IneqStep {
     steps: IneqStep[];
   }
   
-  export const INEQ_HISTORY_KEY = 'mathlab.inequality.history';
+  export const INEQ_HISTORY_KEY = 'pinf.inequality.history';
   
   export interface IneqHistoryItem {
     inequality: string;

@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "MathLab — მათემატიკური რესურსები და ხელსაწყოები",
-    "description": "კალკულატორები, ფორმულების ცნობარი, ამოცანების ბანკი და სასწავლო განრიგი ერთ კატალოგში."
+    "title": "PinF — მათემატიკური სასწავლო პლატფორმა",
+    "description": "პლატფორმა მათემატიკის სასწავლოსთვის"
   },
   "brand": {
-    "name": "MathLab",
+    "name": "PinF",
     "person": "შოთა მიკოლაიჩუკი",
     "home": "მთავარ გვერდზე დაბრუნება"
   },
@@ -50,7 +50,7 @@
   },
   "home": {
     "index": {
-      "title": "MathLab · მათემატიკური რესურსები და ხელსაწყოები",
+      "title": "PinF · მათემატიკური სასწავლო პლატფორმა",
       "badge": "ღია სასწავლო სივრცე / კატალოგი",
       "searchLabel": "ძიება კატალოგში",
       "searchPlaceholder": "მოძებნე თემა, ფორმულა ან კალკულატორი…",
@@ -897,14 +897,14 @@
       "submitting": "შესვლა…",
       "error": "ელფოსტა ან პაროლი არასწორია.",
       "demoTitle": "საცდელი ანგარიშები",
-      "demoTeacher": "მასწავლებელი: teacher@mathlab.ge",
-      "demoStudent": "მოსწავლე: student@mathlab.ge",
-      "demoPassword": "პაროლი: mathlab-demo",
+      "demoTeacher": "მასწავლებელი: teacher@pinf.ge",
+      "demoStudent": "მოსწავლე: student@pinf.ge",
+      "demoPassword": "პაროლი: pinf-demo",
       "signupLink": "არ გაქვს ანგარიში? დარეგისტრირდი"
     },
     "signup": {
       "metaTitle": "რეგისტრაცია",
-      "metaDescription": "შექმენი ახალი ანგარიში MathLab-ზე.",
+      "metaDescription": "შექმენი ახალი ანგარიში PinF-ზე.",
       "eyebrow": "ახალი ანგარიში",
       "title": "შექმენი ანგარიში",
       "subtitle": "დარეგისტრირდი და დაიწყე მათემატიკის სწავლა.",
@@ -2809,12 +2809,12 @@
   },
   "footer": {
     "contact": {
-      "email": "info@mathlab.ge",
+      "email": "info@pinf.ge",
       "phone": "+995 322 00 00 00",
       "address": "თბილისი, ჭავჭავაძის გამზირი 1",
-      "telegram": "@mathlabge"
+      "telegram": "@pinfge"
     },
-    "copyright": "© {year} MathLab",
+    "copyright": "© {year} PinF",
     "legal": {
       "privacy": "კონფიდენციალურობა",
       "terms": "წესები და პირობები"

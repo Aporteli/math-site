@@ -1,6 +1,7 @@
 import { AuthEntry } from '@/components/auth/AuthEntry';
 import { WorkspaceDock } from '@/components/auth/WorkspaceDock';
 import { SignOutButton } from '@/components/auth/SignOutButton';
+import { HeaderToolsMenu } from '@/components/layout/HeaderToolsMenu';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { MobileMenu } from '@/components/layout/MobileMenu';
@@ -50,9 +51,11 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
           <div className="ml-auto flex min-w-0 items-center gap-2 xl:ml-0">
             <div className="hidden min-[500px]:contents">
               {search}
-              <LanguageSwitcher locale={locale} label={dict.header.language} />
-              <ThemeToggle label={dict.header.theme} />
-              {auth}
+              <HeaderToolsMenu label={dict.header.quickActions}>
+                <LanguageSwitcher locale={locale} label={dict.header.language} />
+                <ThemeToggle label={dict.header.theme} />
+                {auth}
+              </HeaderToolsMenu>
             </div>
 
             <MobileMenu locale={locale} header={dict.header} nav={dict.nav} menus={dict.menus}>

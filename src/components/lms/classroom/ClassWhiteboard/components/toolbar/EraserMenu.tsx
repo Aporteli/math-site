@@ -28,7 +28,7 @@ export function EraserMenu({
           type="button"
           title="საშლელი"
           onClick={() => { setActiveTool('eraser'); setIsOpen(false); closeOtherMenus(); }}
-          className="flex items-center gap-1 h-full px-2 rounded-box-xl focus:outline-none">
+          className="flex items-center gap-1 h-full px-2 rounded-box focus:outline-none">
           <Eraser className="size-3.5 sm:size-4" />
           <span className="text-[10px] sm:text-[11px] font-mono font-medium opacity-90">{eraserWidth}px</span>
         </button>
@@ -37,7 +37,7 @@ export function EraserMenu({
           type="button"
           title="საშლელის სისქე"
           onClick={() => { setActiveTool('eraser'); setIsOpen(!isOpen); closeOtherMenus(); }}
-          className={`flex items-center justify-center px-1 h-full rounded-box-xl transition-colors border-l ${
+          className={`flex items-center justify-center px-1 h-full rounded-box transition-colors border-l ${
             activeTool === 'eraser'
               ? 'border-indigo-500/40 hover:bg-indigo-700'
               : 'border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600'

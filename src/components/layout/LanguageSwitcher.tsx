@@ -86,7 +86,7 @@ export function LanguageSwitcher({
         aria-expanded={open}
         aria-label={`${label} — ${localeNames[locale].label}`}
         className={[
-          "group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border py-2 pl-3 pr-2.5 text-sm font-bold transition",
+          "group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-box border py-2 pl-3 pr-2.5 text-sm font-bold transition",
           open
             ? "border-navy/30 bg-navy-tint text-navy"
             : "border-hairline bg-paper text-ink hover:border-navy/40 hover:text-navy",
@@ -111,7 +111,7 @@ export function LanguageSwitcher({
         <ul
           role="menu"
           className={[
-            "absolute z-50 w-48 animate-dropdown rounded-2xl border border-hairline bg-surface p-1.5 shadow-lg shadow-navy/10",
+            "absolute z-50 w-48 animate-dropdown rounded-box border border-hairline bg-surface p-1.5 shadow-lg shadow-navy/10",
             menuPlacement === "above"
               ? "bottom-full mb-2 origin-bottom"
               : "top-full mt-2 origin-top-right",
@@ -131,7 +131,7 @@ export function LanguageSwitcher({
                   hrefLang={code}
                   onClick={() => selectLocale(code)}
                   className={[
-                    "flex items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition-colors",
+                    "flex items-center justify-between gap-3 rounded-box px-3 py-2 text-sm transition-colors",
                     active
                       ? "bg-navy-tint font-bold text-navy"
                       : "font-medium text-body hover:bg-paper hover:text-navy",

@@ -11,7 +11,7 @@ interface IntensityMenuProps {
 
 export function IntensityMenu({ blurRadius, isLoading, onSelect }: IntensityMenuProps) {
   return (
-    <div className="absolute bottom-full right-0 mb-2 z-50 w-32 rounded-xl border border-white/10 bg-slate-800 p-1 shadow-2xl backdrop-blur-xl">
+    <div className="absolute bottom-full right-0 mb-2 z-50 w-32 rounded-box border border-white/10 bg-slate-800 p-1 shadow-2xl backdrop-blur-xl">
       <div className="px-2 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">სიმძლავრე</div>
       {BLUR_LEVELS.map((level) => (
         <button
@@ -19,7 +19,7 @@ export function IntensityMenu({ blurRadius, isLoading, onSelect }: IntensityMenu
           type="button"
           onClick={() => onSelect(level)}
           disabled={isLoading}
-          className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+          className={`flex w-full items-center justify-between rounded-box px-2.5 py-1.5 text-xs font-medium transition-all ${
             blurRadius === level
               ? 'bg-amber-500/15 text-amber-400 font-semibold'
               : 'text-slate-300 hover:bg-white/5 hover:text-white'

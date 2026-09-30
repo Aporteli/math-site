@@ -23,7 +23,7 @@ export interface PolyStep {
     division?: DivisionResult;
   }
   
-  export const POLYNOMIAL_HISTORY_KEY = 'mathlab.polynomial.history';
+  export const POLYNOMIAL_HISTORY_KEY = 'pinf.polynomial.history';
   
   export interface PolynomialHistoryItem {
     expression: string;

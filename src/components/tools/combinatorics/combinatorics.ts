@@ -6,7 +6,7 @@ export interface CombinatoricsResult {
   expandedLatex: string | null;
 }
 
-export const COMB_HISTORY_KEY = 'mathlab.combinatorics.history';
+export const COMB_HISTORY_KEY = 'pinf.combinatorics.history';
 
 export type CombKind = 'P' | 'A' | 'C' | 'binomial';
 

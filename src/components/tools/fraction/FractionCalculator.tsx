@@ -41,7 +41,7 @@ type Props = {
 };
 
 const MAX_FRACTIONS = 8;
-const HISTORY_KEY = 'mathlab.fraction.history';
+const HISTORY_KEY = 'pinf.fraction.history';
 
 const INITIAL_TERMS: Term[] = [
   { type: 'fraction', kind: 'fraction', whole: '', n: '1', d: '2' },
@@ -601,7 +601,7 @@ export function FractionCalculator({ copy }: Props) {
   );
 
   return (
-    <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+    <div className="mx-auto w-full min-w-0 max-w-[2000px] px-4 sm:px-6 lg:px-8">
       <section
         className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5"
         onKeyDown={onExpressionKeyDown}>

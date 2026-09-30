@@ -25,10 +25,10 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
   return (
     isStudentsModalOpen && (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-box bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-hairline px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-navy-tint text-navy">
+            <div className="flex size-10 items-center justify-center rounded-box bg-navy-tint text-navy">
               <UserCheck className="size-5" />
             </div>
             <div>
@@ -55,7 +55,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
               value={studentSearch}
               onChange={(e) => setStudentSearch(e.target.value)}
               placeholder="მოძებნეთ მოსწავლე სახელით ან მეილით..."
-              className="w-full rounded-xl border border-hairline bg-paper py-2.5 pl-10 pr-4 text-sm text-ink outline-none focus:border-navy focus:bg-white"
+              className="w-full rounded-box border border-hairline bg-paper py-2.5 pl-10 pr-4 text-sm text-ink outline-none focus:border-navy focus:bg-white"
             />
           </div>
 
@@ -70,7 +70,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                 return (
                   <div
                     key={st.id}
-                    className={`rounded-2xl border p-4 transition-all ${
+                    className={`rounded-box border p-4 transition-all ${
                       isEditingThis
                         ? 'border-navy bg-navy-tint/20 ring-1 ring-navy/20'
                         : 'border-hairline bg-white hover:border-navy/30'
@@ -84,7 +84,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                       {!isEditingThis && (
                         <button
                           onClick={() => startEditStudentEnrollments(st)}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-hairline bg-paper px-3 py-1.5 text-xs font-bold text-navy hover:bg-paper-deep transition-colors">
+                          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-paper px-3 py-1.5 text-xs font-bold text-navy hover:bg-paper-deep transition-colors">
                           <PenLine className="size-3.5" />
                           ჯგუფების შეცვლა
                         </button>
@@ -104,7 +104,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                               return (
                                 <label
                                   key={course.id}
-                                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer text-xs font-bold transition-colors ${
+                                  className={`flex items-center gap-2.5 p-2.5 rounded-box border cursor-pointer text-xs font-bold transition-colors ${
                                     checked
                                       ? 'bg-navy text-white border-navy'
                                       : 'bg-white text-ink border-hairline hover:bg-paper'
@@ -120,7 +120,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                                     }}
                                   />
                                   <div
-                                    className={`size-4 rounded-md border flex items-center justify-center ${
+                                    className={`size-4 rounded-box border flex items-center justify-center ${
                                       checked ? 'border-white bg-white text-navy' : 'border-hairline bg-white'
                                     }`}>
                                     {checked && <Check className="size-3" />}
@@ -135,13 +135,13 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                             <button
                               onClick={() => setEditingStudent(null)}
                               disabled={isSaving}
-                              className="rounded-xl px-3 py-1.5 text-xs font-bold text-muted hover:bg-paper">
+                              className="rounded-box px-3 py-1.5 text-xs font-bold text-muted hover:bg-paper">
                               გაუქმება
                             </button>
                             <button
                               onClick={handleSaveStudentEnrollments}
                               disabled={isSaving}
-                              className="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-1.5 text-xs font-bold text-white hover:bg-navy-strong transition-colors">
+                              className="inline-flex items-center gap-1.5 rounded-box bg-navy px-4 py-1.5 text-xs font-bold text-white hover:bg-navy-strong transition-colors">
                               {isSaving && <Loader2 className="size-3 animate-spin" />}
                               შენახვა
                             </button>
@@ -151,14 +151,14 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="text-xs text-muted font-medium mr-1">ჯგუფები:</span>
                           {st.enrollments.length === 0 ? (
-                            <span className="text-xs text-rose-500 font-bold bg-rose-50 px-2 py-0.5 rounded-md">
+                            <span className="text-xs text-rose-500 font-bold bg-rose-50 px-2 py-0.5 rounded-box">
                               არცერთ ჯგუფზე არ არის
                             </span>
                           ) : (
                             st.enrollments.map((e: any) => (
                               <span
                                 key={e.courseId}
-                                className="rounded-lg bg-navy-tint px-2 py-0.5 text-xs font-bold text-navy border border-navy/10">
+                                className="rounded-box bg-navy-tint px-2 py-0.5 text-xs font-bold text-navy border border-navy/10">
                                 {e.course.title}
                               </span>
                             ))
@@ -179,7 +179,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
               setIsStudentsModalOpen(false);
               setEditingStudent(null);
             }}
-            className="rounded-xl bg-white border border-hairline px-5 py-2 text-xs font-bold text-ink hover:bg-paper transition-colors">
+            className="rounded-box bg-white border border-hairline px-5 py-2 text-xs font-bold text-ink hover:bg-paper transition-colors">
             დახურვა
           </button>
         </div>

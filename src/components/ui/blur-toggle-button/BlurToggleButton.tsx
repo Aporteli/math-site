@@ -18,7 +18,7 @@ export function BlurToggleButton() {
 
   return (
     <div ref={menuRef} className="relative inline-flex items-center">
-      <div className="flex items-center rounded-xl border border-white/10 bg-slate-800/90 p-1 shadow-lg backdrop-blur-md">
+      <div className="flex items-center rounded-box border border-white/10 bg-slate-800/90 p-1 shadow-lg backdrop-blur-md">
         <BlurToggle isBlurred={isBlurred} isLoading={isLoading} onClick={() => applyBlur(blurRadius, !isBlurred)} />
 
         {isBlurred && (

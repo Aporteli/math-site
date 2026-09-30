@@ -16,7 +16,7 @@ export const ToolHeader: React.FC<ToolHeaderProps> = ({
 }) => {
   return (
     <div 
-      className="relative w-full bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-sm border border-gray-200/80 dark:border-neutral-800 border-t-4 border-t-amber-500 overflow-hidden mb-6"
+      className="relative w-full bg-white dark:bg-neutral-900 rounded-box p-6 shadow-sm border border-gray-200/80 dark:border-neutral-800 border-t-4 border-t-amber-500 overflow-hidden mb-6"
       style={{
         backgroundImage: `
           linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
@@ -27,7 +27,7 @@ export const ToolHeader: React.FC<ToolHeaderProps> = ({
     >
       <div className="relative z-10">
         <div className="flex items-center gap-2 mb-3">
-          <div className="p-2 bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-amber-600 dark:text-amber-400 rounded-xl shadow-xs">
+          <div className="p-2 bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-amber-600 dark:text-amber-400 rounded-box shadow-xs">
             {icon}
           </div>
           <span className="text-xs font-bold text-amber-600 dark:text-amber-400 tracking-wide uppercase">

@@ -202,7 +202,7 @@ export function CalculatorHub({
   const activeImplemented = isImplemented(activeId);
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[1720px] space-y-6 px-4 py-8 text-ink sm:px-6 lg:px-8">
+    <div className="mx-auto w-full min-w-0 max-w-[2000px] px-4 sm:px-6 lg:px-8">
       <PageHero
         icon={LayoutGrid}
         eyebrow={copy.hero.eyebrow}

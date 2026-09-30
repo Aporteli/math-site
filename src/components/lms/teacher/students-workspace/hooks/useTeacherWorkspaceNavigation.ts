@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { StudentItem } from '../types/teacher-workspace.types';
 import { formatDateToKey, getAssignmentViewKey } from '../helpers/teacher-workspace.helpers';
 
-const STORAGE_KEY = 'mathlab_teacher_viewed_assignments_v2';
+const STORAGE_KEY = 'pinf_teacher_viewed_assignments_v2';
 
 interface UseTeacherWorkspaceNavigationProps {
   initialStudents: StudentItem[];

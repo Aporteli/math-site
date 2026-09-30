@@ -27,11 +27,11 @@ export function StudentAssignmentsHeroAside({
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-hairline bg-white px-4 py-3 shadow-sm">
+        <div className="rounded-box border border-hairline bg-white px-4 py-3 shadow-sm">
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted">დღევანდელი</p>
           <p className="mt-1 text-3xl font-bold tracking-tight text-ink">{todayAssignmentsCount}</p>
         </div>
-        <div className="flex flex-col justify-center rounded-2xl border border-hairline bg-white px-4 py-3 shadow-sm">
+        <div className="flex flex-col justify-center rounded-box border border-hairline bg-white px-4 py-3 shadow-sm">
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted">სტატუსი</p>
           <p className={`mt-1 inline-flex items-center gap-1.5 text-sm font-bold ${status.tone}`}>
             <StatusIcon className="size-4 shrink-0" />

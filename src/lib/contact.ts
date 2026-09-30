@@ -35,7 +35,7 @@ export const COURSE_QUERY: Record<string, ContactCourseId> = {
   other: "other",
 };
 
-export const TELEGRAM_HREF = "https://t.me/mathlabge";
+export const TELEGRAM_HREF = "https://t.me/pinfge";
 
 export function parseCourseQuery(value: string | string[] | undefined) {
   const raw = Array.isArray(value) ? value[0] : value;

@@ -23,10 +23,10 @@ export function SignOutButton({
       aria-label={iconOnly ? label : undefined}
       className={
         iconOnly
-          ? "inline-flex size-9 cursor-pointer items-center justify-center rounded-full border border-hairline bg-paper text-body transition hover:border-loss/40 hover:bg-loss-tint hover:text-loss"
+          ? "inline-flex size-9 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-body transition hover:border-loss/40 hover:bg-loss-tint hover:text-loss"
           : header
-            ? "inline-flex cursor-pointer items-center gap-2 rounded-full border border-hairline bg-paper px-3 py-2 text-sm font-bold text-body transition hover:border-loss/40 hover:bg-loss-tint hover:text-loss"
-            : "inline-flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-body transition hover:bg-loss-tint hover:text-loss"
+            ? "inline-flex cursor-pointer items-center gap-2 rounded-box border border-hairline bg-paper px-3 py-2 text-sm font-bold text-body transition hover:border-loss/40 hover:bg-loss-tint hover:text-loss"
+            : "inline-flex w-full cursor-pointer items-center gap-2 rounded-box px-3 py-2 text-sm font-bold text-body transition hover:bg-loss-tint hover:text-loss"
       }
     >
       <LogOut className="size-4 shrink-0" aria-hidden="true" />

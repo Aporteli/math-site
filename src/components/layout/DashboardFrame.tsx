@@ -257,7 +257,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
               <div className="flex items-center gap-3 px-4 py-2.5 sm:px-6">
                 <button
                   type="button"
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-hairline/60 bg-surface/80 text-muted transition-colors hover:border-brass/40 hover:text-brass lg:hidden"
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-box border border-hairline/60 bg-surface/80 text-muted transition-colors hover:border-brass/40 hover:text-brass lg:hidden"
                   aria-label={dict.dashboard.openNav}
                   aria-expanded={mobileOpen}
                   onClick={() => setMobileOpen(true)}>
@@ -272,7 +272,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
 
                 <Link
                   href={localePath(locale, '/')}
-                  className="hidden rounded-xl border border-hairline/60 bg-surface/70 px-3.5 py-2.5 text-xs font-bold text-muted transition-colors hover:border-brass/40 hover:text-brass sm:inline-flex">
+                  className="hidden rounded-box border border-hairline/60 bg-surface/70 px-3.5 py-2.5 text-xs font-bold text-muted transition-colors hover:border-brass/40 hover:text-brass sm:inline-flex">
                   {dict.nav.home}
                 </Link>
                 <LanguageSwitcher locale={locale} label={dict.header.language} />
@@ -337,7 +337,7 @@ function SidebarChrome({
           onClick={onToggle}
           aria-label={toggleLabel}
           aria-expanded={closeLabel ? undefined : !collapsed}
-          className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl text-muted transition-colors hover:bg-surface hover:text-brass">
+          className="inline-flex size-8 shrink-0 items-center justify-center rounded-box text-muted transition-colors hover:bg-surface hover:text-brass">
           {closeLabel ? (
             <X className="size-4" aria-hidden="true" />
           ) : collapsed ? (

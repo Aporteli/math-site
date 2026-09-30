@@ -422,7 +422,7 @@ type LandingCopy = {
 
 const landingCopy: Record<Locale, LandingCopy> = {
   ka: {
-    heroKicker: 'MathLab',
+    heroKicker: 'PinF',
     heroTitleA: 'მათემატიკის სწავლება',
     heroTitleB: 'ერთ სამუშაო სივრცეში.',
     heroBody:
@@ -483,7 +483,7 @@ const landingCopy: Record<Locale, LandingCopy> = {
     ctaBody: 'შექმენი ანგარიში და მოაწესრიგე დავალებები, მოსწავლეები და გაკვეთილები ერთ პროცესში.',
   },
   en: {
-    heroKicker: 'MathLab',
+    heroKicker: 'PinF',
     heroTitleA: 'Teach mathematics',
     heroTitleB: 'in one workspace.',
     heroBody:
@@ -544,7 +544,7 @@ const landingCopy: Record<Locale, LandingCopy> = {
     ctaBody: 'Create an account and put assignments, students, and lessons into one process.',
   },
   ru: {
-    heroKicker: 'MathLab',
+    heroKicker: 'PinF',
     heroTitleA: 'Преподавание математики',
     heroTitleB: 'в одном пространстве.',
     heroBody:

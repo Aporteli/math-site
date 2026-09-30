@@ -10,7 +10,7 @@ export interface SequenceResult {
   quantities: SequenceQuantity[];
 }
 
-export const SEQUENCE_HISTORY_KEY = 'mathlab.sequences.history';
+export const SEQUENCE_HISTORY_KEY = 'pinf.sequences.history';
 
 export type SequenceKind = 'arithmetic' | 'geometric' | 'series';
 

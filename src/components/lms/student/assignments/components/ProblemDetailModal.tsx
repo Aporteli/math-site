@@ -93,14 +93,14 @@ export function ProblemDetailModal({
         onClick={onClose}
       >
         <div
-          className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-2xl animate-in zoom-in-95 duration-150"
+          className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-2xl animate-in zoom-in-95 duration-150"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
           <div className="flex items-center justify-between border-b border-hairline bg-surface px-5 py-4">
             <div className="flex min-w-0 items-center gap-3 pr-2">
               <div
-                className={`flex size-10 shrink-0 items-center justify-center rounded-xl border ${
+                className={`flex size-10 shrink-0 items-center justify-center rounded-box border ${
                   isGraded ? 'border-win/20 bg-win-tint text-win' : 'border-navy/20 bg-navy-tint text-navy'
                 }`}
               >
@@ -116,7 +116,7 @@ export function ProblemDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-hairline bg-paper text-muted transition hover:bg-paper-deep hover:text-ink"
+              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-muted transition hover:bg-paper-deep hover:text-ink"
             >
               <X className="size-4" />
             </button>
@@ -125,13 +125,13 @@ export function ProblemDetailModal({
           {/* Body */}
           <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto bg-paper p-5">
             {hasTextPrompt && (
-              <div className="rounded-xl border border-hairline bg-surface p-4 shadow-2xs">
+              <div className="rounded-box border border-hairline bg-surface p-4 shadow-2xs">
                 <KatexPreview tex={problem.promptTex} className="text-xs text-ink leading-relaxed" />
               </div>
             )}
 
             {isGraded && (
-              <div className="rounded-xl border border-hairline/80 bg-paper-deep/60 px-3.5 py-2.5 space-y-1">
+              <div className="rounded-box border border-hairline/80 bg-paper-deep/60 px-3.5 py-2.5 space-y-1">
                 <span className="text-[10px] font-mono font-bold uppercase text-win block">
                   მასწავლებლის შეფასება
                 </span>
@@ -152,15 +152,15 @@ export function ProblemDetailModal({
                   <div
                     key={idx}
                     onClick={() => setExpandedImage(imgUrl)}
-                    className="group relative flex items-center justify-center rounded-xl border border-hairline bg-white p-2 shadow-2xs cursor-zoom-in overflow-hidden transition-all hover:border-navy/60"
+                    className="group relative flex items-center justify-center rounded-box border border-hairline bg-white p-2 shadow-2xs cursor-zoom-in overflow-hidden transition-all hover:border-navy/60"
                   >
                     <img
                       src={imgUrl}
                       alt="დავალების სურათი"
-                      className="max-h-64 w-full rounded-lg object-contain"
+                      className="max-h-64 w-full rounded-box object-contain"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-surface/95 border border-hairline px-3 py-1.5 text-xs font-bold text-ink shadow-lg backdrop-blur-xs">
+                      <span className="inline-flex items-center gap-1.5 rounded-box bg-surface/95 border border-hairline px-3 py-1.5 text-xs font-bold text-ink shadow-lg backdrop-blur-xs">
                         <ZoomIn className="size-3.5 text-navy" /> სრულად გახსნა
                       </span>
                     </div>
@@ -169,7 +169,7 @@ export function ProblemDetailModal({
               </div>
             ) : (
               !hasTextPrompt && (
-                <div className="rounded-xl border border-dashed border-hairline bg-surface/40 p-8 text-center">
+                <div className="rounded-box border border-dashed border-hairline bg-surface/40 p-8 text-center">
                   <UploadCloud className="size-7 text-muted/50 mx-auto mb-2" />
                   <p className="text-xs font-bold text-ink">სურათი არ მოიძებნა</p>
                 </div>
@@ -182,7 +182,7 @@ export function ProblemDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="cursor-pointer rounded-xl bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong"
+              className="cursor-pointer rounded-box bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong"
             >
               დახურვა
             </button>
@@ -199,14 +199,14 @@ export function ProblemDetailModal({
           <button
             type="button"
             onClick={() => setExpandedImage(null)}
-            className="absolute right-5 top-5 flex size-9 items-center justify-center rounded-xl bg-surface/80 border border-hairline text-white transition-colors hover:bg-surface"
+            className="absolute right-5 top-5 flex size-9 items-center justify-center rounded-box bg-surface/80 border border-hairline text-white transition-colors hover:bg-surface"
           >
             <X className="size-5" />
           </button>
           <img
             src={expandedImage}
             alt="გადიდებული სურათი"
-            className="max-h-[92vh] max-w-[94vw] rounded-xl object-contain shadow-2xl animate-in zoom-in-95"
+            className="max-h-[92vh] max-w-[94vw] rounded-box object-contain shadow-2xl animate-in zoom-in-95"
             onClick={(e) => e.stopPropagation()}
           />
         </div>

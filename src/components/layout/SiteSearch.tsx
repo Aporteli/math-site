@@ -75,7 +75,7 @@ export function SearchTrigger({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={header.search}
-        className={`min-w-0 cursor-pointer items-center gap-2 rounded-full border border-hairline bg-paper py-2 pr-2 pl-3 text-left text-sm font-medium text-muted shadow-sm transition hover:border-navy/40 hover:text-ink ${className}`}
+        className={`min-w-0 cursor-pointer items-center gap-2 rounded-box border border-hairline bg-paper py-2 pr-2 pl-3 text-left text-sm font-medium text-muted shadow-sm transition hover:border-navy/40 hover:text-ink ${className}`}
       >
         <Search className="size-4 shrink-0" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">{header.searchPlaceholder}</span>
@@ -93,7 +93,7 @@ export function SearchTrigger({
       aria-haspopup="dialog"
       aria-expanded={open}
       aria-label={header.search}
-      className={`size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-hairline bg-paper text-ink shadow-sm transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy ${className}`}
+      className={`size-9 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-ink shadow-sm transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy ${className}`}
     >
       <Search className="size-4" aria-hidden="true" />
     </button>
@@ -285,7 +285,7 @@ export function SiteSearch({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className="relative z-10 flex max-h-[min(32rem,70vh)] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-hairline bg-surface shadow-2xl shadow-navy/10"
+                className="relative z-10 flex max-h-[min(32rem,70vh)] w-full max-w-xl flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-2xl shadow-navy/10"
               >
                 <h2 id={titleId} className="sr-only">
                   {header.search}
@@ -316,7 +316,7 @@ export function SiteSearch({
                     type="button"
                     onClick={closeSearch}
                     aria-label={header.searchClose}
-                    className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition hover:bg-paper hover:text-ink"
+                    className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink"
                   >
                     <X className="size-4" aria-hidden="true" />
                   </button>
@@ -324,7 +324,7 @@ export function SiteSearch({
 
                 <div ref={listRef} className="thin-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
                   {hits.length === 0 ? (
-                    <p className="mx-2 my-6 rounded-2xl border border-dashed border-hairline bg-paper px-3 py-10 text-center text-sm font-medium text-muted">
+                    <p className="mx-2 my-6 rounded-box border border-dashed border-hairline bg-paper px-3 py-10 text-center text-sm font-medium text-muted">
                       {header.searchEmpty}
                     </p>
                   ) : (
@@ -350,7 +350,7 @@ export function SiteSearch({
                                     data-search-index={index}
                                     onMouseEnter={() => setActiveIndex(index)}
                                     onClick={() => setOpen(false)}
-                                    className={`flex items-start gap-3 rounded-xl px-3 py-2.5 transition ${
+                                    className={`flex items-start gap-3 rounded-box px-3 py-2.5 transition ${
                                       active
                                         ? "bg-navy text-white"
                                         : "text-ink hover:bg-paper"

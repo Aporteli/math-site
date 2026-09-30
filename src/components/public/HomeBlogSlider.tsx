@@ -38,7 +38,7 @@ export function HomeBlogSlider({ locale, slider, blog }: HomeBlogSliderProps) {
       aria-roledescription="carousel"
       aria-label={slider.title}
       className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
-      <div className="group relative overflow-hidden rounded-2xl border border-hairline bg-white shadow-sm">
+      <div className="group relative overflow-hidden rounded-box border border-hairline bg-white shadow-sm">
         <Slide
           locale={locale}
           post={post}
@@ -53,14 +53,14 @@ export function HomeBlogSlider({ locale, slider, blog }: HomeBlogSliderProps) {
           type="button"
           onClick={() => goTo(index - 1)}
           aria-label={slider.prev}
-          className="absolute top-1/2 left-3 z-10 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-hairline bg-white/95 text-navy shadow-sm transition-colors hover:bg-white hover:text-navy-strong sm:left-4 sm:size-11">
+          className="absolute top-1/2 left-3 z-10 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-box border border-hairline bg-white/95 text-navy shadow-sm transition-colors hover:bg-white hover:text-navy-strong sm:left-4 sm:size-11">
           <ChevronLeft className="size-5" aria-hidden="true" />
         </button>
         <button
           type="button"
           onClick={() => goTo(index + 1)}
           aria-label={slider.next}
-          className="absolute top-1/2 right-3 z-10 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-hairline bg-white/95 text-navy shadow-sm transition-colors hover:bg-white hover:text-navy-strong sm:right-4 sm:size-11">
+          className="absolute top-1/2 right-3 z-10 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-box border border-hairline bg-white/95 text-navy shadow-sm transition-colors hover:bg-white hover:text-navy-strong sm:right-4 sm:size-11">
           <ChevronRight className="size-5" aria-hidden="true" />
         </button>
 
@@ -75,7 +75,7 @@ export function HomeBlogSlider({ locale, slider, blog }: HomeBlogSliderProps) {
                 aria-label={slider.goTo.replace('{n}', String(i + 1))}
                 aria-current={active ? 'true' : undefined}
                 className={[
-                  'size-2.5 rounded-full transition-colors',
+                  'size-2.5 rounded-box transition-colors',
                   active ? 'bg-white ring-1 ring-white/80' : 'bg-white/45 hover:bg-white/75',
                 ].join(' ')}
               />
@@ -122,7 +122,7 @@ function Slide({
         <p className="mt-2 hidden max-w-xl text-sm leading-relaxed text-pretty text-paper/85 sm:block">{excerpt}</p>
         <Link
           href={href}
-          className="mt-4 inline-flex rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-navy shadow-sm transition-colors hover:bg-paper">
+          className="mt-4 inline-flex rounded-box bg-white px-3.5 py-1.5 text-sm font-semibold text-navy shadow-sm transition-colors hover:bg-paper">
           {readMore}
         </Link>
       </div>

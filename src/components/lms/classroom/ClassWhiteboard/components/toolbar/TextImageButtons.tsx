@@ -55,7 +55,7 @@ export function TextImageButtons({
               onFileInputClick();
               setIsOpen(false);
             }}
-            className="flex items-center justify-center size-7 sm:size-8 rounded-box-xl focus:outline-none hover:bg-slate-100 dark:hover:bg-slate-800">
+            className="flex items-center justify-center size-7 sm:size-8 rounded-box focus:outline-none hover:bg-slate-100 dark:hover:bg-slate-800">
             <ImageIcon className="size-3.5 sm:size-4" />
           </button>
 
@@ -66,7 +66,7 @@ export function TextImageButtons({
               setIsOpen(!isOpen);
               closeOtherMenus();
             }}
-            className={`flex items-center justify-center px-1 h-full rounded-box-xl transition-colors border-l ${
+            className={`flex items-center justify-center px-1 h-full rounded-box transition-colors border-l ${
               isOpen
                 ? 'border-indigo-500/40 bg-indigo-600 text-white'
                 : 'border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'

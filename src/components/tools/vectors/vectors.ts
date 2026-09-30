@@ -10,7 +10,7 @@ export interface VectorResult {
   quantities: VectorQuantity[];
 }
 
-export const VECTOR_HISTORY_KEY = 'mathlab.vectors.history';
+export const VECTOR_HISTORY_KEY = 'pinf.vectors.history';
 
 export type VectorMode = 'points' | 'vectors';
 

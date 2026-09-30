@@ -30,10 +30,7 @@ import {
   type ParticipantOption,
   type ParticipantRef,
 } from '@/lib/actions/journal-participants';
-import {
-  getScheduleLessonsAction,
-  type VirtualScheduleEvent,
-} from '@/lib/actions/journal-schedule';
+import { getScheduleLessonsAction, type VirtualScheduleEvent } from '@/lib/actions/journal-schedule';
 import { useDashboardFrame } from '@/components/layout/DashboardFrame';
 
 type EventColor = 'navy' | 'sky' | 'emerald' | 'amber' | 'rose' | 'violet';
@@ -61,6 +58,12 @@ type PopoverState = {
   mode: 'create' | 'edit';
   anchor: { top: number; left: number };
   draft: JournalEvent;
+};
+
+type VirtualPopupState = {
+  event: VirtualScheduleEvent;
+  dateKey: string;
+  anchor: { top: number; left: number };
 };
 
 type DragState = {
@@ -91,8 +94,18 @@ type DragPreview = {
 
 const WEEKDAY_LABELS = ['ორშ', 'სამ', 'ოთხ', 'ხუთ', 'პარ', 'შაბ', 'კვ'];
 const MONTH_LABELS = [
-  'იანვარი','თებერვალი','მარტი','აპრილი','მაისი','ივნისი',
-  'ივლისი','აგვისტო','სექტემბერი','ოქტომბერი','ნოემბერი','დეკემბერი',
+  'იანვარი',
+  'თებერვალი',
+  'მარტი',
+  'აპრილი',
+  'მაისი',
+  'ივნისი',
+  'ივლისი',
+  'აგვისტო',
+  'სექტემბერი',
+  'ოქტომბერი',
+  'ნოემბერი',
+  'დეკემბერი',
 ];
 
 const COLOR_OPTIONS: EventColor[] = ['navy', 'sky', 'emerald', 'amber', 'rose', 'violet'];
@@ -140,6 +153,11 @@ function pad(n: number) {
 
 function toDateKey(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function formatDateLabel(dateKey: string) {
+  const [, m, d] = dateKey.split('-').map(Number);
+  return `${d} ${MONTH_LABELS[m - 1]}`;
 }
 
 function isSameDay(a: Date, b: Date) {
@@ -201,6 +219,7 @@ const POPOVER_QUICK_WIDTH = 320;
 const POPOVER_FULL_WIDTH = 400;
 const POPOVER_QUICK_HEIGHT = 280;
 const POPOVER_EXPANDED_HEIGHT = 540;
+const VIRTUAL_POPUP_WIDTH = 320;
 
 export function TeacherJournalWorkspace() {
   const { toggleSidebarDrawer } = useDashboardFrame();
@@ -215,6 +234,7 @@ export function TeacherJournalWorkspace() {
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [guestDraft, setGuestDraft] = useState('');
+  const [virtualPopup, setVirtualPopup] = useState<VirtualPopupState | null>(null);
 
   /* ── Participant picker state ── */
   const [participantGroups, setParticipantGroups] = useState<ParticipantGroup[]>([]);
@@ -240,7 +260,7 @@ export function TeacherJournalWorkspace() {
           (res.events as JournalEvent[]).map((e) => ({
             ...e,
             participants: (e.participants as ParticipantRef[] | undefined) ?? [],
-          }))
+          })),
         );
       }
       setLoading(false);
@@ -389,13 +409,16 @@ export function TeacherJournalWorkspace() {
   }, [virtualEvents, view, monthGrid, weekGrid, currentDate, today, todayKey]);
 
   useEffect(() => {
-    if (!popover) return;
+    if (!popover && !virtualPopup) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closePopover();
+      if (e.key === 'Escape') {
+        closePopover();
+        setVirtualPopup(null);
+      }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [popover]);
+  }, [popover, virtualPopup]);
 
   function closePopover() {
     setPopover(null);
@@ -425,6 +448,13 @@ export function TeacherJournalWorkspace() {
       anchor: pos,
       draft: emptyDraft(toDateKey(date), startH, (startH + 1) % 24),
     });
+  }
+
+  function openVirtualPopup(el: HTMLElement, v: VirtualScheduleEvent, dateKey: string) {
+    const rect = el.getBoundingClientRect();
+    const width = Math.min(VIRTUAL_POPUP_WIDTH, window.innerWidth - 32);
+    const pos = clampPosition(rect.bottom + 8, rect.left, width, false);
+    setVirtualPopup({ event: v, dateKey, anchor: pos });
   }
 
   function handleEventClick(e: React.MouseEvent<HTMLDivElement>, ev: JournalEvent) {
@@ -732,9 +762,7 @@ export function TeacherJournalWorkspace() {
 
   /* ─── Google Calendar სტილი: ღია ფონი + მარცხენა ფერადი ზოლი ─── */
   const virtualChipClass = (source: VirtualScheduleEvent['source']) =>
-    source === 'group'
-      ? 'bg-sky-500 text-sky-950 border-l-[3px] border-sky-500'
-      : 'bg-amber-400 text-amber-950';
+    source === 'group' ? 'bg-sky-500 text-sky-950 border-l-[3px] border-sky-500' : 'bg-amber-400 text-amber-950';
 
   const virtualTitle = (v: VirtualScheduleEvent) => {
     if (v.source === 'home' && v.courseTitle) return `სახლში · ${v.courseTitle}`;
@@ -742,8 +770,7 @@ export function TeacherJournalWorkspace() {
     return v.students.map((s) => s.name).join(', ') || 'გაკვეთილი';
   };
 
-  const virtualStudentsLabel = (v: VirtualScheduleEvent) =>
-    v.students.map((s) => s.name).join(', ');
+  const virtualStudentsLabel = (v: VirtualScheduleEvent) => v.students.map((s) => s.name).join(', ');
 
   const virtualTooltip = (v: VirtualScheduleEvent) => {
     const names = virtualStudentsLabel(v);
@@ -802,10 +829,12 @@ export function TeacherJournalWorkspace() {
             <div
               key={v.id}
               title={virtualTooltip(v)}
-              className={`relative truncate rounded-box px-1.5 py-0.5 text-[10px] font-medium leading-tight shrink-0 flex items-center gap-1.5 pointer-events-none ${virtualChipClass(v.source)}`}>
-              <span className="opacity-70 font-normal tabular-nums shrink-0">
-                {v.startTime}
-              </span>
+              onClick={(e) => {
+                e.stopPropagation();
+                openVirtualPopup(e.currentTarget, v, dateKey);
+              }}
+              className={`relative truncate rounded-box px-1.5 py-0.5 text-[10px] font-medium leading-tight shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-[0.98] ${virtualChipClass(v.source)}`}>
+              <span className="opacity-70 font-normal tabular-nums shrink-0">{v.startTime}</span>
               <span className="truncate">{virtualTitle(v)}</span>
               {v.students.length > 1 ? (
                 <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] opacity-80 shrink-0">
@@ -867,7 +896,11 @@ export function TeacherJournalWorkspace() {
               key={v.id}
               style={{ top: `${top}px`, height: `${height}px` }}
               title={virtualTooltip(v)}
-              className={`absolute inset-x-1 z-[5] overflow-hidden rounded-box p-1.5 text-xs leading-tight pointer-events-none ${virtualChipClass(v.source)}`}>
+              onClick={(e) => {
+                e.stopPropagation();
+                openVirtualPopup(e.currentTarget, v, dateKey);
+              }}
+              className={`absolute inset-x-1 z-[5] overflow-hidden rounded-box p-1.5 text-xs leading-tight cursor-pointer active:scale-[0.98] ${virtualChipClass(v.source)}`}>
               <div className="flex items-center gap-1 font-semibold">
                 <span className="truncate text-[12px]">{virtualTitle(v)}</span>
                 {v.students.length > 1 ? (
@@ -881,9 +914,7 @@ export function TeacherJournalWorkspace() {
                 {v.startTime} – {v.endTime}
               </div>
               {v.source !== 'individual' ? (
-                <div className="text-[10px] opacity-70 font-normal truncate mt-0.5">
-                  {virtualStudentsLabel(v)}
-                </div>
+                <div className="text-[10px] opacity-70 font-normal truncate mt-0.5">{virtualStudentsLabel(v)}</div>
               ) : null}
             </div>
           );
@@ -954,7 +985,7 @@ export function TeacherJournalWorkspace() {
             <PanelLeftOpen className="size-4" />
           </button>
 
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-box border border-navy/10 bg-navy-tint text-navy">
+          <div className="hidden sm:flex size-9 shrink-0 items-center justify-center rounded-box border border-navy/10 bg-navy-tint text-navy">
             {loading ? (
               <Loader2 className="size-4 animate-spin text-brass-strong" />
             ) : (
@@ -967,35 +998,35 @@ export function TeacherJournalWorkspace() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex h-9 items-center gap-2">
           <button
             type="button"
             onClick={goToToday}
-            className="rounded-box border border-hairline bg-white px-3 py-1.5 text-xs font-bold text-ink shadow-sm hover:border-navy/30 hover:shadow-md transition-all active:scale-95">
+            className="inline-flex h-9 items-center rounded-box border border-hairline bg-white px-3 text-xs font-bold text-ink shadow-sm hover:border-navy/30 hover:shadow-md transition-all active:scale-95">
             დღეს
           </button>
 
-          <div className="flex items-center overflow-hidden rounded-box border border-hairline bg-white shadow-sm transition-all hover:border-navy/30 hover:shadow-md">
+          <div className="flex h-9 items-center overflow-hidden rounded-box border border-hairline bg-white shadow-sm transition-all hover:border-navy/30 hover:shadow-md">
             <button
               type="button"
               onClick={goToPrev}
-              className="flex size-8 items-center justify-center text-muted hover:bg-paper hover:text-ink transition-colors">
+              className="flex h-9 w-8 items-center justify-center text-muted hover:bg-paper hover:text-ink transition-colors">
               <ChevronLeft className="size-4 text-brass-strong" />
             </button>
             <div className="h-4 w-px bg-hairline" />
             <button
               type="button"
               onClick={goToNext}
-              className="flex size-8 items-center justify-center text-muted hover:bg-paper hover:text-ink transition-colors">
+              className="flex h-9 w-8 items-center justify-center text-muted hover:bg-paper hover:text-ink transition-colors">
               <ChevronRight className="size-4 text-brass-strong " />
             </button>
           </div>
 
-          <div className="relative">
+          <div className="relative h-9">
             <button
               type="button"
               onClick={() => setViewMenuOpen(!viewMenuOpen)}
-              className="flex min-w-[100px] items-center justify-between gap-2 rounded-box border border-hairline bg-white px-3 py-1.5 text-xs font-bold text-ink shadow-sm transition-all hover:border-navy/30 hover:shadow-md focus:outline-none active:scale-95">
+              className="inline-flex h-9 min-w-[100px] items-center justify-between gap-2 rounded-box border border-hairline bg-white px-3 text-xs font-bold text-ink shadow-sm transition-all hover:border-navy/30 hover:shadow-md focus:outline-none active:scale-95">
               <span>
                 {view === 'day' && 'დღე'}
                 {view === 'week' && 'კვირა'}
@@ -1038,32 +1069,62 @@ export function TeacherJournalWorkspace() {
           <button
             type="button"
             onClick={handleAddClick}
-            className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-navy-strong transition-colors active:scale-95 ml-1">
+            className="inline-flex h-9 items-center gap-1.5 rounded-box bg-navy px-3.5 text-xs font-bold text-white shadow-sm hover:bg-navy-strong transition-colors active:scale-95 ml-1">
             <Plus className="size-3.5" />
-            ღონისძიება
+            <span className="hidden md:inline text-xs">ღონისძიება</span>
           </button>
         </div>
       </div>
 
       {/* Legend — Google Calendar style */}
-      <div className="flex shrink-0 flex-wrap items-center gap-4 border-b border-hairline bg-white px-4 py-2 text-[11px] font-medium text-muted">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block size-3 rounded-box bg-navy" />
-          <span className="text-ink">ჟურნალის ღონისძიება</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block size-3 rounded-box bg-sky-500" />
-          <span className="text-ink">საიტზე რეგისტრირებული</span>
-        </span>
-        <span className="flex items-center gap-1.5 ">
-          <span className="inline-block size-3 rounded-box bg-amber-400" />
-          <span className="text-ink">სახლში</span>
-        </span>
-        <span className="ml-auto flex items-center gap-1.5 text-navy">
-          <Repeat className="size-3" />
-          <span>ავტომატური სინქრონიზაცია</span>
-        </span>
+      <div className="shrink-0 border-b border-hairline bg-white px-4 py-2 text-[11px] font-medium text-muted">
+        {/* Desktop legend */}
+        <div className="hidden sm:flex flex-wrap items-center gap-4">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block size-3 rounded-box bg-navy" />
+            <span className="text-ink">ჟურნალის ღონისძიება</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block size-3 rounded-box bg-sky-500" />
+            <span className="text-ink">საიტზე რეგისტრირებული</span>
+          </span>
+          <span className="flex items-center gap-1.5 ">
+            <span className="inline-block size-3 rounded-box bg-amber-400" />
+            <span className="text-ink">სახლში</span>
+          </span>
+          <span className="ml-auto flex items-center gap-1.5 text-navy">
+            <Repeat className="size-3" />
+            <span>ავტომატური სინქრონიზაცია</span>
+          </span>
+        </div>
+        {/* Mobile legend dropdown */}
+        <div className="flex items-center sm:hidden relative">
+          <details className="w-full">
+            <summary className="flex w-full items-center gap-2 cursor-pointer select-none py-1 text-navy">
+              <ChevronDown className="size-3.5 text-navy-strong" />
+            </summary>
+            <div className="mt-2 flex flex-col gap-3 bg-white rounded-box p-2 border border-hairline shadow-lg z-10">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block size-3 rounded-box bg-navy" />
+                <span className="text-ink">ჟურნალის ღონისძიება</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block size-3 rounded-box bg-sky-500" />
+                <span className="text-ink">საიტზე რეგისტრირებული</span>
+              </span>
+              <span className="flex items-center gap-1.5 ">
+                <span className="inline-block size-3 rounded-box bg-amber-400" />
+                <span className="text-ink">სახლში</span>
+              </span>
+              <span className="flex items-center gap-1.5 text-navy">
+                <Repeat className="size-3" />
+                <span>ავტომატური სინქრონიზაცია</span>
+              </span>
+            </div>
+          </details>
+        </div>
       </div>
+ 
 
       {/* 1. თვის ხედი */}
       {view === 'month' && (
@@ -1218,7 +1279,11 @@ export function TeacherJournalWorkspace() {
                       {(virtualByDate[dateKey] ?? []).map((v) => (
                         <div
                           key={v.id}
-                          className={`flex items-center gap-4 p-3 rounded-box pointer-events-none ${virtualChipClass(v.source)}`}>
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openVirtualPopup(e.currentTarget, v, dateKey);
+                          }}
+                          className={`flex items-center gap-4 p-3 rounded-box cursor-pointer transition-colors hover:brightness-105 ${virtualChipClass(v.source)}`}>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                               <h4 className="text-xs font-semibold truncate">{virtualTitle(v)}</h4>
@@ -1256,6 +1321,65 @@ export function TeacherJournalWorkspace() {
         </div>
       )}
 
+      {/* ვირტუალური გაკვეთილის დეტალები (ტაპ/hover popup) */}
+      {virtualPopup && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setVirtualPopup(null)} />
+          <div
+            style={{ top: virtualPopup.anchor.top, left: virtualPopup.anchor.left }}
+            className="fixed z-50 w-80 max-w-[calc(100vw-2rem)] max-h-[70vh] overflow-y-auto rounded-box border border-hairline bg-white p-4 shadow-2xl ring-1 ring-black/5 thin-scrollbar animate-in fade-in zoom-in-95">
+            <div
+              className={`mb-3 h-1.5 w-full rounded-box ${virtualPopup.event.source === 'group' ? 'bg-sky-500' : 'bg-amber-400'}`}
+            />
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <span
+                  className={`inline-block rounded-box px-1.5 py-0.5 text-[10px] font-bold ${virtualPopup.event.source === 'group' ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-900'}`}>
+                  {virtualPopup.event.source === 'group'
+                    ? 'ჯგუფური'
+                    : virtualPopup.event.source === 'home'
+                      ? 'სახლში'
+                      : 'ინდივიდუალური'}
+                </span>
+                <h4 className="mt-1.5 truncate text-sm font-bold text-ink">{virtualTitle(virtualPopup.event)}</h4>
+              </div>
+              <button
+                type="button"
+                aria-label="დახურვა"
+                onClick={() => setVirtualPopup(null)}
+                className="flex size-7 shrink-0 items-center justify-center rounded-box text-muted transition-colors hover:bg-paper hover:text-ink">
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="mt-3 space-y-2 text-xs text-ink">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="size-3.5 shrink-0 text-brass-strong" />
+                <span className="font-medium">
+                  {WEEKDAY_LABELS[virtualPopup.event.dayOfWeek - 1]}, {formatDateLabel(virtualPopup.dateKey)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="size-3.5 shrink-0 text-brass-strong" />
+                <span className="font-medium tabular-nums">
+                  {virtualPopup.event.startTime} – {virtualPopup.event.endTime}
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Users className="mt-0.5 size-3.5 shrink-0 text-brass-strong" />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="text-[11px] font-bold text-muted">მოსწავლეები ({virtualPopup.event.students.length})</p>
+                  {virtualPopup.event.students.map((s) => (
+                    <p key={s.id} className="truncate text-xs font-medium text-ink">
+                      {s.name}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Popover — unchanged */}
       {popover && draft && (
         <>
@@ -1265,7 +1389,7 @@ export function TeacherJournalWorkspace() {
             className={`fixed z-50 rounded-box border border-hairline bg-white shadow-2xl ring-1 ring-black/5 transition-[top,width] duration-150 animate-in fade-in zoom-in-95 w-80
             }`}
             onClick={(e) => e.stopPropagation()}>
-            <div className={`h-1.5 w-full rounded-box-2xl ${COLOR_DOT[draft.color]}`} />
+            <div className={`h-1.5 w-full rounded-box ${COLOR_DOT[draft.color]}`} />
 
             <div className="max-h-[85vh] overflow-y-auto p-4 space-y-4 thin-scrollbar">
               <div className="flex items-start gap-2">
@@ -1365,16 +1489,10 @@ export function TeacherJournalWorkspace() {
                                   ? 'bg-navy/10 border-navy/20 text-navy'
                                   : 'bg-emerald-50 border-emerald-200 text-emerald-700'
                               }`}>
-                              {p.type === 'group' ? (
-                                <Users className="size-3" />
-                              ) : (
-                                <UserIcon className="size-3" />
-                              )}
+                              {p.type === 'group' ? <Users className="size-3" /> : <UserIcon className="size-3" />}
                               <span className="truncate max-w-[140px]">{p.name}</span>
                               {p.courseTitle && (
-                                <span className="opacity-60 font-normal truncate max-w-[100px]">
-                                  · {p.courseTitle}
-                                </span>
+                                <span className="opacity-60 font-normal truncate max-w-[100px]">· {p.courseTitle}</span>
                               )}
                               <button
                                 type="button"
@@ -1417,24 +1535,18 @@ export function TeacherJournalWorkspace() {
                                 <Loader2 className="size-3.5 animate-spin inline" />
                               </div>
                             ) : participantGroups.length === 0 ? (
-                              <div className="p-3 text-center text-xs text-muted">
-                                მოსწავლეები ვერ მოიძებნა
-                              </div>
+                              <div className="p-3 text-center text-xs text-muted">მოსწავლეები ვერ მოიძებნა</div>
                             ) : (
                               participantGroups.map((g) => {
                                 const filtered = g.students.filter((s) =>
-                                  s.name.toLowerCase().includes(participantSearch.toLowerCase())
+                                  s.name.toLowerCase().includes(participantSearch.toLowerCase()),
                                 );
                                 if (filtered.length === 0) return null;
                                 return (
-                                  <div
-                                    key={g.label}
-                                    className="border-b border-hairline/60 last:border-b-0">
+                                  <div key={g.label} className="border-b border-hairline/60 last:border-b-0">
                                     <div
                                       className={`px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
-                                        g.type === 'group'
-                                          ? 'bg-navy/5 text-navy'
-                                          : 'bg-emerald-50 text-emerald-700'
+                                        g.type === 'group' ? 'bg-navy/5 text-navy' : 'bg-emerald-50 text-emerald-700'
                                       }`}>
                                       {g.type === 'group' ? (
                                         <Users className="size-3 inline mr-1" />
@@ -1451,14 +1563,10 @@ export function TeacherJournalWorkspace() {
                                           type="button"
                                           onClick={() => toggleParticipant(s)}
                                           className={`flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-xs transition-colors ${
-                                            selected
-                                              ? 'bg-navy/5 text-navy font-bold'
-                                              : 'text-ink hover:bg-paper'
+                                            selected ? 'bg-navy/5 text-navy font-bold' : 'text-ink hover:bg-paper'
                                           }`}>
                                           <span className="truncate">{s.name}</span>
-                                          {selected && (
-                                            <Check className="size-3.5 text-brass-strong shrink-0" />
-                                          )}
+                                          {selected && <Check className="size-3.5 text-brass-strong shrink-0" />}
                                         </button>
                                       );
                                     })}

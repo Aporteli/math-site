@@ -34,7 +34,7 @@ export function NavLinks({
       className={
         isMobile
           ? "flex flex-col gap-1"
-          : "flex items-center gap-1 rounded-full border border-hairline bg-paper p-1"
+          : "flex items-center gap-1 rounded-box  p-1"
       }
     >
       {mainNavLinks.map((link) => {
@@ -63,7 +63,7 @@ export function NavLinks({
                 aria-current={active ? "page" : undefined}
                 aria-expanded={menuItems ? isMenuOpen : undefined}
                 className={[
-                  "flex items-center gap-1 rounded-xl px-3 py-2.5 text-base transition-colors",
+                  "flex items-center gap-1 rounded-box px-3 py-2.5 text-base transition-colors",
                   active
                     ? "bg-navy font-bold text-white shadow-sm"
                     : "font-bold text-body hover:bg-paper hover:text-ink",
@@ -97,7 +97,7 @@ export function NavLinks({
                             onNavigate?.();
                           }}
                           className={[
-                            "block rounded-lg px-3 py-2 text-sm transition-colors duration-200",
+                            "block rounded-box px-3 py-2 text-sm transition-colors duration-200",
                             pathname === itemHref
                               ? "bg-navy-tint font-bold text-navy"
                               : "font-medium text-body hover:bg-paper hover:text-ink",
@@ -182,10 +182,11 @@ function DesktopNavItem({
         aria-expanded={menuItems ? open : undefined}
         aria-haspopup={menuItems ? "true" : undefined}
         className={[
-          "flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors",
+          "relative flex items-center gap-1 whitespace-nowrap px-3 py-1.5 text-sm transition-colors",
+          "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-navy after:transition-[width] after:duration-300 after:ease-out",
           active
-            ? "bg-navy font-bold text-white shadow-sm"
-            : "font-bold text-body hover:bg-surface hover:text-ink",
+            ? "font-bold text-black after:w-full"
+            : "font-bold text-body hover:bg-surface hover:text-ink after:w-0",
         ].join(" ")}
       >
         {label}
@@ -201,7 +202,7 @@ function DesktopNavItem({
 
       {menuItems && menuId && open && (
         <div className="absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2">
-          <ul className="w-72 origin-top animate-dropdown overflow-hidden rounded-2xl border border-hairline bg-surface p-1.5 shadow-lg shadow-navy/10">
+          <ul className="w-72 origin-top animate-dropdown overflow-hidden rounded-box border border-hairline bg-surface p-1.5 shadow-lg shadow-navy/10">
             {menuItems.map(([itemId, itemLabel]) => {
               const itemHref = localePath(
                 locale,
@@ -215,7 +216,7 @@ function DesktopNavItem({
                     prefetch={false}
                     onClick={close}
                     className={[
-                      "block rounded-xl px-3 py-2 text-sm transition-colors duration-200",
+                      "block rounded-box px-3 py-2 text-sm transition-colors duration-200",
                       pathname === itemHref
                         ? "bg-navy-tint font-bold text-navy"
                         : "font-medium text-body hover:bg-paper hover:text-ink",

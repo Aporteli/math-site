@@ -223,7 +223,7 @@ export function ReportsView({
       {/* ═══ Header ═══ */}
       <div className="rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
+          {/* <div className="flex min-w-0 items-center gap-3">
             <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
               <BarChart3 className="size-5" />
             </span>
@@ -232,7 +232,7 @@ export function ReportsView({
                 ანგარიში
               </h2>
             </div>
-          </div>
+          </div> */}
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="grid grid-cols-2 gap-1 rounded-box border border-hairline bg-paper p-1">
@@ -758,7 +758,7 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
                       </span>
                     )}
                     <div
-                      className={`w-full rounded-box-md transition-all ${
+                      className={`w-full rounded-box transition-all ${
                         isEmpty
                           ? 'bg-paper-deep'
                           : isCurrent

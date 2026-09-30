@@ -1,10 +1,10 @@
 {
   "meta": {
-    "title": "MathLab — математические ресурсы и инструменты",
-    "description": "Калькуляторы, справочник формул, банк задач и расписание занятий в одном каталоге."
+    "title": "PinF — математическая платформа для обучения",
+    "description": "Платформа для обучения математике"
   },
   "brand": {
-    "name": "MathLab",
+    "name": "PinF",
     "person": "Шота Миколайчук",
     "home": "Вернуться на главную страницу"
   },
@@ -50,7 +50,7 @@
   },
   "home": {
     "index": {
-      "title": "MathLab · Математические ресурсы и инструменты",
+      "title": "PinF · Математическая платформа для обучения",
       "badge": "Открытое учебное пространство / каталог",
       "searchLabel": "Поиск по каталогу",
       "searchPlaceholder": "Найти тему, формулу или калькулятор…",
@@ -897,14 +897,14 @@
       "submitting": "Вход…",
       "error": "Эл. почта или пароль указаны неверно.",
       "demoTitle": "Демонстрационные аккаунты",
-      "demoTeacher": "Учитель: teacher@mathlab.ge",
-      "demoStudent": "Ученик: student@mathlab.ge",
-      "demoPassword": "Пароль: mathlab-demo",
+      "demoTeacher": "Учитель: teacher@pinf.ge",
+      "demoStudent": "Ученик: student@pinf.ge",
+      "demoPassword": "Пароль: pinf-demo",
       "signupLink": "Нет аккаунта? Зарегистрироваться"
     },
     "signup": {
       "metaTitle": "Регистрация",
-      "metaDescription": "Создайте новый аккаунт на MathLab.",
+      "metaDescription": "Создайте новый аккаунт на PinF.",
       "eyebrow": "Новый аккаунт",
       "title": "Создайте аккаунт",
       "subtitle": "Зарегистрируйтесь и начните изучать математику.",
@@ -2808,12 +2808,12 @@
   },
   "footer": {
     "contact": {
-      "email": "info@mathlab.ge",
+      "email": "info@pinf.ge",
       "phone": "+995 322 00 00 00",
       "address": "Тбилиси, проспект Чавчавадзе 1",
-      "telegram": "@mathlabge"
+      "telegram": "@pinfge"
     },
-    "copyright": "© {year} MathLab",
+    "copyright": "© {year} PinF",
     "legal": {
       "privacy": "Конфиденциальность",
       "terms": "Условия использования"

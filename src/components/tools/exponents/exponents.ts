@@ -21,7 +21,7 @@ export interface ExpSolveResult {
 
 export type ExpResult = ExpSimplifyResult | ExpSolveResult;
 
-export const EXP_HISTORY_KEY = 'mathlab.exponent.history';
+export const EXP_HISTORY_KEY = 'pinf.exponent.history';
 
 export interface ExpHistoryItem {
   expression: string;

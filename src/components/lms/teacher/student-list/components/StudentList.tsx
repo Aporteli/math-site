@@ -517,7 +517,7 @@ export function StudentList({
     <div className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
       <div className="flex min-w-0 flex-col gap-3 rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="hidden sm:flex min-w-0 items-center gap-3">
             <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
               <Users className="size-5" />
             </span>
@@ -592,7 +592,7 @@ export function StudentList({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="სახელი, ტელეფონი ან ელფოსტა"
-                className="w-full rounded-box border border-hairline bg-paper py-2.5 pl-10 pr-3 text-base font-medium text-ink outline-none transition placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-paper py-2.5 pl-10 pr-3 text-base font-medium text-ink outline-none transition placeholder:text-muted/30 focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
               />
             </div>
 
@@ -626,7 +626,6 @@ export function StudentList({
                 className="inline-flex h-8 max-w-full cursor-pointer items-center justify-between gap-1.5 rounded-box border border-hairline bg-paper px-2.5 text-[11px] font-bold text-ink transition hover:border-navy/40"
               >
                 <span className="flex min-w-0 items-center gap-1">
-                  <Filter className="size-3 shrink-0 text-muted" />
                   <span className="truncate">
                     {showTodayOnly
                       ? 'დღეს'

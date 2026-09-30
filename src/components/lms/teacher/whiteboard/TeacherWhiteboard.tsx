@@ -1454,7 +1454,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsShapesMenuOpen(false);
                     setIsColorMenuOpen(false);
                   }}
-                  className="flex items-center gap-1 h-full px-2 rounded-box-xl focus:outline-none">
+                  className="flex items-center gap-1 h-full px-2 rounded-box focus:outline-none">
                   <Pencil className="size-4" />
                   <span className="text-[11px] font-mono font-medium opacity-90">{strokeWidth}px</span>
                 </button>
@@ -1466,7 +1466,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsShapesMenuOpen(false);
                     setIsColorMenuOpen(false);
                   }}
-                  className={`flex items-center justify-center px-1.5 h-full rounded-box-xl transition-colors border-l ${activeTool === 'pen' ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
+                  className={`flex items-center justify-center px-1.5 h-full rounded-box transition-colors border-l ${activeTool === 'pen' ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
                   <ChevronDown
                     className={`size-3 transition-transform duration-200 ${isPenMenuOpen ? 'rotate-180' : ''}`}
                   />
@@ -1556,7 +1556,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setPenSmoothEnabled(next);
                     savePreferencesImmediately({ penSmoothEnabled: next });
                   }}
-                  className="flex items-center justify-center size-8 rounded-box-xl">
+                  className="flex items-center justify-center size-8 rounded-box">
                   <Spline className="size-4" />
                 </button>
                 <button
@@ -1569,7 +1569,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsColorMenuOpen(false);
                     setIsStylusMenuOpen(false);
                   }}
-                  className={`flex items-center justify-center px-1.5 h-full rounded-box-xl border-l ${
+                  className={`flex items-center justify-center px-1.5 h-full rounded-box border-l ${
                     penSmoothEnabled ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'
                   }`}>
                   <ChevronDown className={`size-3 transition-transform ${isSmoothMenuOpen ? 'rotate-180' : ''}`} />
@@ -1621,7 +1621,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsPenMenuOpen(false);
                     setIsColorMenuOpen(false);
                   }}
-                  className="flex items-center justify-center size-8 rounded-box-xl focus:outline-none">
+                  className="flex items-center justify-center size-8 rounded-box focus:outline-none">
                   <CurrentShapeIcon className="size-4" />
                 </button>
                 <button
@@ -1632,7 +1632,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsPenMenuOpen(false);
                     setIsColorMenuOpen(false);
                   }}
-                  className={`flex items-center justify-center px-1.5 h-full rounded-box-xl transition-colors border-l ${isShapeActive ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
+                  className={`flex items-center justify-center px-1.5 h-full rounded-box transition-colors border-l ${isShapeActive ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
                   <ChevronDown
                     className={`size-3 transition-transform duration-200 ${isShapesMenuOpen ? 'rotate-180' : ''}`}
                   />

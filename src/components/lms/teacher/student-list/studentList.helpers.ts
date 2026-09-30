@@ -149,7 +149,7 @@ export function sectionStudents(
   if (individuals.length) {
     sections.push({
       key: '__individual',
-      title: 'სახლში',
+      title: 'ერთეულები',
       kind: 'individual',
       students: individuals,
     });

@@ -54,7 +54,7 @@ export function TriangleSvg({ solution }: Props) {
   const midCA = { x: (Cx + Ax) / 2, y: (Cy + Ay) / 2 };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-hairline bg-white p-2 dark:bg-slate-900 dark:border-slate-700">
+    <div className="overflow-hidden rounded-box border border-hairline bg-white p-2 dark:bg-slate-900 dark:border-slate-700">
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full max-w-2xl mx-auto">
         {/* Fill */}
         <polygon

@@ -44,13 +44,13 @@ export function AssignmentGroupUploader({
               type="button"
               disabled={isWithdrawing}
               onClick={() => onResetGroup(selectedDateKey, taskAssignments)}
-              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-loss/30 bg-loss-tint px-3.5 py-2 text-xs font-bold text-loss transition hover:bg-loss/10 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
+              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box border border-loss/30 bg-loss-tint px-3.5 py-2 text-xs font-bold text-loss transition hover:bg-loss/10 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
             >
               {isWithdrawing ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCcw className="size-3.5" />}
               <span>პასუხის დაბრუნება</span>
             </button>
 
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-hairline bg-paper px-2.5 py-1 text-[10px] font-bold text-muted">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-box border border-hairline bg-paper px-2.5 py-1 text-[10px] font-bold text-muted">
               <Lock className="size-3" />
               <span>დახურულია</span>
             </span>
@@ -67,7 +67,7 @@ export function AssignmentGroupUploader({
             </div>
 
             <div className="flex w-full items-center gap-2 sm:w-auto">
-              <label className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-hairline bg-paper px-3.5 py-2 text-xs font-bold text-ink transition hover:border-navy/40 hover:text-navy sm:flex-none">
+              <label className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box border border-hairline bg-paper px-3.5 py-2 text-xs font-bold text-ink transition hover:border-navy/40 hover:text-navy sm:flex-none">
                 {isUploading ? <Loader2 className="size-3.5 animate-spin text-navy" /> : <UploadCloud className="size-3.5 text-navy" />}
                 <span>ფაილის არჩევა</span>
                 <input
@@ -88,7 +88,7 @@ export function AssignmentGroupUploader({
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => onSubmitGroup(selectedDateKey, taskAssignments)}
-                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
+                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
                 >
                   {isSubmitting ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
                   <span>გაგზავნა ({currentGroupFiles.length})</span>
@@ -100,14 +100,14 @@ export function AssignmentGroupUploader({
           {currentGroupFiles.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-2 border-t border-hairline pt-3">
               {currentGroupFiles.map((attachment) => (
-                <div key={attachment.id} className="relative rounded-xl border border-hairline bg-paper p-1">
+                <div key={attachment.id} className="relative rounded-box border border-hairline bg-paper p-1">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={attachment.url} alt={attachment.fileName} className="size-12 rounded-lg object-cover" />
+                  <img src={attachment.url} alt={attachment.fileName} className="size-12 rounded-box object-cover" />
                   <button
                     type="button"
                     title="წაშლა"
                     onClick={() => onRemoveAttachment(selectedDateKey, attachment.id)}
-                    className="absolute -right-1.5 -top-1.5 flex size-5 cursor-pointer items-center justify-center rounded-full bg-loss text-white shadow-sm transition hover:bg-loss/80"
+                    className="absolute -right-1.5 -top-1.5 flex size-5 cursor-pointer items-center justify-center rounded-box bg-loss text-white shadow-sm transition hover:bg-loss/80"
                   >
                     <X className="size-3" />
                   </button>

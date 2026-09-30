@@ -251,8 +251,8 @@ export function PolynomialCalculator({
   );
 
   return (
-    <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
-      <div className="my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+    
+    <div className="mx-auto w-full min-w-0 max-w-[2000px] mt-7">
         <section
           className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800"
           onKeyDown={onExpressionKeyDown}>
@@ -548,7 +548,7 @@ export function PolynomialCalculator({
           )}
         </section>
       </div>
-    </main>
+   
   );
 }
 
