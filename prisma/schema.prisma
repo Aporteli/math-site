@@ -119,6 +119,7 @@ model User {
   whiteboardsAsStudent WhiteboardAssignment[] @relation("WhiteboardStudent")
   whiteboardsAsTeacher WhiteboardAssignment[] @relation("WhiteboardTeacher")
   journalEvents        JournalEvent[]
+  teacherBoard         TeacherBoard?
 
   paymentsMade         Payment[] @relation("StudentPayments")
   paymentsRecorded     Payment[] @relation("PaymentRecorder")
@@ -481,6 +482,18 @@ model WhiteboardAssignment {
   @@index([teacherId])
   @@index([courseId])
   @@map("whiteboard_assignments")
+}
+
+model TeacherBoard {
+  userId           String   @id
+  pages            Json
+  currentPageIndex Int      @default(0)
+  revision         Int      @default(0)
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("teacher_boards")
 }
 
 model CourseWhiteboard {

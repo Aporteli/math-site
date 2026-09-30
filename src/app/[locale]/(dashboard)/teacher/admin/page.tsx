@@ -19,7 +19,7 @@ export default async function TeacherAdminPage({ params }: PageProps) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
 
-  await requireRole(locale, ['TEACHER', 'ADMIN']);
+  const session = await requireRole(locale, ['TEACHER', 'ADMIN']);
   const dict = getDictionary(locale);
   const nodes = await ensureDefaultTaxonomy();
 
@@ -29,6 +29,7 @@ export default async function TeacherAdminPage({ params }: PageProps) {
       copy={dict.dashboard.teacher.admin}
       taxonomyCopy={dict.dashboard.teacher.taxonomy}
       taxonomyNodes={nodes}
+      canUseTerminal={session.user.role === 'ADMIN'}
     />
   );
 }

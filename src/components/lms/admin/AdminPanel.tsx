@@ -18,6 +18,7 @@ import {
   Server,
   Shield,
   Sparkles,
+  Terminal,
   Users,
   Wrench,
   type LucideIcon,
@@ -29,12 +30,13 @@ import type { Dictionary } from '@/i18n/types';
 import type { TaxonomyNodeDto } from '@/lib/math/problems/taxonomy-shared';
 import { CoursesManager } from './components/CoursesManager';
 import { ComingSoonCard } from './components/ComingSoonCard';
+import { AdminTerminal } from './components/AdminTerminal';
 import { ServerManager } from '@/components/ServerManager';
 
 type AdminCopy = Dictionary['dashboard']['teacher']['admin'];
 type TaxonomyCopy = Dictionary['dashboard']['teacher']['taxonomy'];
 
-export type AdminSectionId = keyof AdminCopy['sections'] | 'courses' | 'server';
+export type AdminSectionId = keyof AdminCopy['sections'] | 'courses' | 'server' | 'terminal';
 
 const SECTION_ICONS: Record<AdminSectionId, LucideIcon> = {
   overview: LayoutDashboard,
@@ -54,22 +56,30 @@ const SECTION_ICONS: Record<AdminSectionId, LucideIcon> = {
   featureFlags: Flag,
   system: Wrench,
   server: Server,
+  terminal: Terminal,
 };
 
-const SECTION_ORDER: AdminSectionId[] = ['taxonomy', 'courses', 'server'];
+function visibleSections(canUseTerminal: boolean): AdminSectionId[] {
+  const sections: AdminSectionId[] = ['taxonomy', 'courses', 'server'];
+  if (canUseTerminal) sections.push('terminal');
+  return sections;
+}
 
 export function AdminPanel({
   locale,
   copy,
   taxonomyCopy,
   taxonomyNodes,
+  canUseTerminal,
 }: {
   locale: Locale;
   copy: AdminCopy;
   taxonomyCopy: TaxonomyCopy;
   taxonomyNodes: TaxonomyNodeDto[];
+  canUseTerminal: boolean;
 }) {
   const [section, setSection] = useState<AdminSectionId>('overview');
+  const sections = useMemo(() => visibleSections(canUseTerminal), [canUseTerminal]);
 
   const getActiveSectionInfo = (id: AdminSectionId) => {
     if (id === 'courses') {
@@ -85,6 +95,13 @@ export function AdminPanel({
         title: 'სერვერი',
         description:
           'LiveKit ვიდეოგაკვეთილის სერვერის მდგომარეობის მონიტორინგი და მართვა',
+      };
+    }
+
+    if (id === 'terminal') {
+      return {
+        title: 'ტერმინალი',
+        description: 'უსაფრთხო დიაგნოსტიკური ბრძანებები VPS-ზე',
       };
     }
 
@@ -115,7 +132,7 @@ export function AdminPanel({
             aria-label={copy.sectionsNav}
             className="space-y-0.5"
           >
-            {SECTION_ORDER.map((id) => {
+            {sections.map((id) => {
               const Icon = SECTION_ICONS[id];
               const item = getActiveSectionInfo(id);
               const selected = section === id;
@@ -165,7 +182,7 @@ export function AdminPanel({
               </div>
 
               <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {SECTION_ORDER.map((id) => {
+                {sections.map((id) => {
                   const Icon = SECTION_ICONS[id];
                   const item = getActiveSectionInfo(id);
 
@@ -251,13 +268,31 @@ export function AdminPanel({
                 </p>
               </div>
 
-              <ServerManager locale={locale} />            </div>
+              <ServerManager locale={locale} />
+            </div>
+          ) : null}
+
+          {section === 'terminal' && canUseTerminal ? (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-hairline bg-white p-5 shadow-sm">
+                <h2 className="text-lg font-semibold tracking-tight text-ink">
+                  {active.title}
+                </h2>
+
+                <p className="mt-1 text-sm text-body">
+                  {active.description}
+                </p>
+              </div>
+
+              <AdminTerminal locale={locale} />
+            </div>
           ) : null}
 
           {section !== 'overview' &&
           section !== 'taxonomy' &&
           section !== 'courses' &&
-          section !== 'server' ? (
+          section !== 'server' &&
+          section !== 'terminal' ? (
             <ComingSoonCard
               title={active.title}
               description={active.description}

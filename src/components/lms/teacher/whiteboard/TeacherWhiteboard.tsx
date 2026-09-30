@@ -505,6 +505,15 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const [canRedo, setCanRedo] = useState(false);
 
   const isHydratedRef = useRef(false);
+  const clientIdRef = useRef('');
+  if (!clientIdRef.current && typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    clientIdRef.current = crypto.randomUUID();
+  }
+  const revisionRef = useRef(0);
+  const applyingRemoteRef = useRef(false);
+  const editEpochRef = useRef(0);
+  const pushTimerRef = useRef<number | null>(null);
+  const schedulePushRef = useRef<() => void>(() => {});
 
   const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
   const [isShapesMenuOpen, setIsShapesMenuOpen] = useState(false);
@@ -629,6 +638,115 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     }
   }, []);
 
+  const schedulePush = useCallback(() => {
+    if (!isHydratedRef.current || applyingRemoteRef.current) return;
+    editEpochRef.current += 1;
+    if (pushTimerRef.current) window.clearTimeout(pushTimerRef.current);
+    pushTimerRef.current = window.setTimeout(() => {
+      pushTimerRef.current = null;
+      const body = JSON.stringify({
+        pages: pagesRef.current,
+        currentPageIndex: currentPageIndexRef.current,
+        clientId: clientIdRef.current,
+      });
+      void fetch('/api/teacher-board', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      })
+        .then(async (res) => {
+          if (!res.ok) return;
+          const data = (await res.json()) as { revision?: number };
+          if (typeof data.revision === 'number') {
+            revisionRef.current = Math.max(revisionRef.current, data.revision);
+          }
+        })
+        .catch(() => {});
+    }, 40);
+  }, []);
+  schedulePushRef.current = schedulePush;
+
+  const applyRemoteBoard = useCallback(
+    (board: { pages: CanvasElement[][]; currentPageIndex: number; revision: number }) => {
+      if (!Array.isArray(board.pages) || board.pages.length === 0) return;
+      applyingRemoteRef.current = true;
+      revisionRef.current = board.revision;
+      const nextPages = board.pages;
+      const pageIndex = Math.min(Math.max(0, board.currentPageIndex || 0), nextPages.length - 1);
+      setPages(nextPages);
+      pagesRef.current = nextPages;
+      setCurrentPageIndex(pageIndex);
+      currentPageIndexRef.current = pageIndex;
+      historyMapRef.current = new Map(nextPages.map((page, idx) => [idx, { states: [page || []], index: 0 }]));
+      updateUndoRedoState();
+      try {
+        localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(nextPages));
+        const raw = localStorage.getItem(PREFS_KEY);
+        const prefs = raw ? JSON.parse(raw) : {};
+        prefs.currentPageIndex = pageIndex;
+        localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+      } catch {}
+      applyingRemoteRef.current = false;
+    },
+    [updateUndoRedoState],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const pull = async () => {
+      const epoch = editEpochRef.current;
+      const res = await fetch('/api/teacher-board', { cache: 'no-store' });
+      if (!res.ok || cancelled) return;
+      const data = (await res.json()) as {
+        board: { pages: CanvasElement[][]; currentPageIndex: number; revision: number } | null;
+      };
+      if (cancelled || editEpochRef.current !== epoch) return;
+      if (!data.board) {
+        schedulePushRef.current();
+        return;
+      }
+      if (data.board.revision <= revisionRef.current) return;
+      applyRemoteBoard(data.board);
+    };
+
+    void pull();
+
+    const source = new EventSource('/api/teacher-board/stream');
+    source.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data) as {
+          revision?: number;
+          clientId?: string;
+          pages?: CanvasElement[][];
+          currentPageIndex?: number;
+        };
+        if (typeof msg.revision !== 'number') return;
+        if (msg.clientId && msg.clientId === clientIdRef.current) {
+          revisionRef.current = Math.max(revisionRef.current, msg.revision);
+          return;
+        }
+        if (msg.revision <= revisionRef.current) return;
+        if (Array.isArray(msg.pages) && msg.pages.length > 0) {
+          applyRemoteBoard({
+            pages: msg.pages,
+            currentPageIndex: typeof msg.currentPageIndex === 'number' ? msg.currentPageIndex : 0,
+            revision: msg.revision,
+          });
+          return;
+        }
+        void pull();
+      } catch {
+        /* ignore malformed event */
+      }
+    };
+
+    return () => {
+      cancelled = true;
+      source.close();
+    };
+  }, [applyRemoteBoard]);
+
   const handleElementsChange = useCallback(
     (next: CanvasElement[]) => {
       const pIndex = currentPageIndexRef.current;
@@ -642,6 +760,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(updated));
         } catch (e) {}
       }
+      schedulePushRef.current();
 
       let hist = historyMapRef.current.get(pIndex);
       if (!hist) {
@@ -670,6 +789,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(updated));
       } catch {}
     }
+    schedulePushRef.current();
     updateUndoRedoState();
   }, [updateUndoRedoState]);
 
@@ -688,6 +808,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(updated));
       } catch {}
     }
+    schedulePushRef.current();
     updateUndoRedoState();
   }, [updateUndoRedoState]);
 
@@ -1026,6 +1147,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     setPages(updated);
     pagesRef.current = updated;
     setCurrentPageIndex(newIdx);
+    currentPageIndexRef.current = newIdx;
     historyMapRef.current.set(newIdx, { states: [[]], index: 0 });
     if (isHydratedRef.current) {
       try {
@@ -1033,6 +1155,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       } catch {}
     }
     savePreferencesImmediately({ pageIdx: newIdx });
+    schedulePushRef.current();
     updateUndoRedoState();
   };
 
@@ -1046,19 +1169,23 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     pagesRef.current = updated;
     const nextIdx = Math.min(currentPageIndex, updated.length - 1);
     setCurrentPageIndex(nextIdx);
+    currentPageIndexRef.current = nextIdx;
     if (isHydratedRef.current) {
       try {
         localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(updated));
       } catch {}
     }
     savePreferencesImmediately({ pageIdx: nextIdx });
+    schedulePushRef.current();
     updateUndoRedoState();
   };
 
   const handleSwitchPage = (idx: number) => {
     if (idx < 0 || idx >= pages.length) return;
     setCurrentPageIndex(idx);
+    currentPageIndexRef.current = idx;
     savePreferencesImmediately({ pageIdx: idx });
+    schedulePushRef.current();
     if (!historyMapRef.current.has(idx)) {
       historyMapRef.current.set(idx, { states: [pages[idx] || []], index: 0 });
     }
