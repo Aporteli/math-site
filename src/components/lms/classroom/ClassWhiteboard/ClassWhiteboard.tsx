@@ -47,6 +47,7 @@ import { TopToolbar } from './components/TopToolbar';
 import { BottomPanel } from './components/BottomPanel';
 
 const BOARD_WIDTH = 1920;
+const BOARD_HEIGHT = 1080;
 
 const KonvaCanvas = dynamic(() => import('../KonvaCanvas/KonvaCanvas'), {
   ssr: false,
@@ -262,27 +263,42 @@ export function ClassWhiteboard({
   // --- Zoom ---
   const { zoomScale, setZoomScale, handleZoomIn, handleZoomOut, handleZoomReset, zoomPercent } = useZoom();
 
-  // Fit the shared board to this screen's width. User zoom multiplies on top.
+  // Fit the shared 1920×1080 page to this screen. One scale keeps strokes proportional.
   const boardViewportRef = useRef<HTMLDivElement>(null);
-  const [viewportWidth, setViewportWidth] = useState(0);
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
   useLayoutEffect(() => {
     const el = boardViewportRef.current;
     if (!el) return;
     const update = () => {
       const width = el.clientWidth;
-      if (width > 0) setViewportWidth(width);
+      const height = el.clientHeight;
+      if (width > 0 && height > 0) {
+        setViewport((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
+      }
     };
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  const fitScale = viewportWidth > 0 ? viewportWidth / BOARD_WIDTH : 1;
+  const fitScale =
+    viewport.width > 0 && viewport.height > 0
+      ? Math.min(viewport.width / BOARD_WIDTH, viewport.height / BOARD_HEIGHT)
+      : 1;
   const fitScaleRef = useRef(fitScale);
   fitScaleRef.current = fitScale;
-
-  // --- Board view (pan position is lifted here so it can be synced between teacher/student) ---
+  const zoomScaleRef = useRef(zoomScale);
+  zoomScaleRef.current = zoomScale;
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+  useLayoutEffect(() => {
+    if (viewport.width === 0 || viewport.height === 0) return;
+    const scale = zoomScaleRef.current * fitScale;
+    setStagePos({
+      x: (viewport.width - BOARD_WIDTH * scale) / 2,
+      y: (viewport.height - BOARD_HEIGHT * scale) / 2,
+    });
+  }, [viewport.width, viewport.height, fitScale]);
+
   // Student-side: true while the teacher has locked this board to their view.
   const [isLocked, setIsLocked] = useState(false);
 
