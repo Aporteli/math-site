@@ -552,6 +552,9 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const applyingRemoteRef = useRef(false);
   const editEpochRef = useRef(0);
   const pushTimerRef = useRef<number | null>(null);
+  const pushSendingRef = useRef(false);
+  const pushQueuedRef = useRef(false);
+  const remoteStoreTimerRef = useRef<number | null>(null);
   const schedulePushRef = useRef<() => void>(() => {});
 
   const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
@@ -683,25 +686,41 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     if (pushTimerRef.current) window.clearTimeout(pushTimerRef.current);
     pushTimerRef.current = window.setTimeout(() => {
       pushTimerRef.current = null;
-      const body = JSON.stringify({
-        pages: pagesRef.current,
-        currentPageIndex: currentPageIndexRef.current,
-        clientId: clientIdRef.current,
-      });
-      void fetch('/api/teacher-board', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
-      })
-        .then(async (res) => {
-          if (!res.ok) return;
-          const data = (await res.json()) as { revision?: number };
-          if (typeof data.revision === 'number') {
-            revisionRef.current = Math.max(revisionRef.current, data.revision);
-          }
+      const send = () => {
+        if (pushSendingRef.current) {
+          pushQueuedRef.current = true;
+          return;
+        }
+        pushSendingRef.current = true;
+        pushQueuedRef.current = false;
+        const body = JSON.stringify({
+          pages: pagesRef.current,
+          currentPageIndex: currentPageIndexRef.current,
+          clientId: clientIdRef.current,
+        });
+        void fetch('/api/teacher-board', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
         })
-        .catch(() => {});
-    }, 40);
+          .then(async (res) => {
+            if (!res.ok) return;
+            const data = (await res.json()) as { revision?: number };
+            if (typeof data.revision === 'number') {
+              revisionRef.current = Math.max(revisionRef.current, data.revision);
+            }
+            try {
+              localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(pagesRef.current));
+            } catch {}
+          })
+          .catch(() => {})
+          .finally(() => {
+            pushSendingRef.current = false;
+            if (pushQueuedRef.current) send();
+          });
+      };
+      send();
+    }, 16);
   }, []);
   schedulePushRef.current = schedulePush;
 
@@ -718,14 +737,18 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       currentPageIndexRef.current = pageIndex;
       historyMapRef.current = new Map(nextPages.map((page, idx) => [idx, { states: [page || []], index: 0 }]));
       updateUndoRedoState();
-      try {
-        localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(nextPages));
-        const raw = localStorage.getItem(PREFS_KEY);
-        const prefs = raw ? JSON.parse(raw) : {};
-        prefs.currentPageIndex = pageIndex;
-        localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
-      } catch {}
       applyingRemoteRef.current = false;
+      if (remoteStoreTimerRef.current) window.clearTimeout(remoteStoreTimerRef.current);
+      remoteStoreTimerRef.current = window.setTimeout(() => {
+        remoteStoreTimerRef.current = null;
+        try {
+          localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(pagesRef.current));
+          const raw = localStorage.getItem(PREFS_KEY);
+          const prefs = raw ? JSON.parse(raw) : {};
+          prefs.currentPageIndex = currentPageIndexRef.current;
+          localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+        } catch {}
+      }, 250);
     },
     [updateUndoRedoState],
   );
@@ -793,12 +816,6 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       updated[pIndex] = next;
       setPages(updated);
       pagesRef.current = updated;
-
-      if (isHydratedRef.current) {
-        try {
-          localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(updated));
-        } catch (e) {}
-      }
       schedulePushRef.current();
 
       let hist = historyMapRef.current.get(pIndex);

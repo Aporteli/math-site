@@ -10,8 +10,15 @@ export type TeacherBoardEvent = {
 
 type Handler = (event: TeacherBoardEvent) => void;
 
+type LiveBoard = {
+  revision: number;
+  pages: unknown;
+  currentPageIndex: number;
+};
+
 type Bus = {
   handlers: Map<string, Set<Handler>>;
+  latest: Map<string, LiveBoard>;
   client: Client | null;
   ready: Promise<void> | null;
 };
@@ -20,9 +27,36 @@ const globalBus = globalThis as typeof globalThis & { __teacherBoardBus?: Bus };
 
 function getBus(): Bus {
   if (!globalBus.__teacherBoardBus) {
-    globalBus.__teacherBoardBus = { handlers: new Map(), client: null, ready: null };
+    globalBus.__teacherBoardBus = { handlers: new Map(), latest: new Map(), client: null, ready: null };
   }
+  if (!globalBus.__teacherBoardBus.latest) globalBus.__teacherBoardBus.latest = new Map();
   return globalBus.__teacherBoardBus;
+}
+
+export function publishLiveTeacherBoard(input: {
+  userId: string;
+  clientId: string;
+  pages: unknown;
+  currentPageIndex: number;
+}) {
+  const bus = getBus();
+  const prev = bus.latest.get(input.userId)?.revision ?? 0;
+  let revision = Date.now();
+  if (revision <= prev) revision = prev + 1;
+  const live = { revision, pages: input.pages, currentPageIndex: input.currentPageIndex };
+  bus.latest.set(input.userId, live);
+  dispatch({
+    userId: input.userId,
+    clientId: input.clientId,
+    revision,
+    pages: input.pages,
+    currentPageIndex: input.currentPageIndex,
+  });
+  return revision;
+}
+
+export function readLiveTeacherBoard(userId: string) {
+  return getBus().latest.get(userId) ?? null;
 }
 
 function dispatch(event: TeacherBoardEvent) {

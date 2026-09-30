@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { getSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
-import { publishTeacherBoard } from '@/lib/teacher-board/bus';
+import { publishLiveTeacherBoard, readLiveTeacherBoard } from '@/lib/teacher-board/bus';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,6 +22,13 @@ function isPages(value: unknown): value is unknown[][] {
 export async function GET() {
   const userId = await teacherId();
   if (!userId) return NextResponse.json({ board: null }, { status: 401 });
+
+  const live = readLiveTeacherBoard(userId);
+  if (live && isPages(live.pages)) {
+    return NextResponse.json({
+      board: { pages: live.pages, currentPageIndex: live.currentPageIndex, revision: live.revision },
+    });
+  }
 
   const record = await prisma.teacherBoard.findUnique({
     where: { userId },
@@ -50,29 +57,41 @@ export async function POST(req: Request) {
   }
   if (!isPages(body.pages)) return NextResponse.json({ ok: false }, { status: 400 });
 
-  const safePages = JSON.parse(JSON.stringify(body.pages)) as Prisma.InputJsonValue;
   const safeIndex = typeof body.currentPageIndex === 'number' && Number.isFinite(body.currentPageIndex)
     ? Math.max(0, Math.floor(body.currentPageIndex))
     : 0;
   const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 64) : '';
 
-  const record = await prisma.teacherBoard.upsert({
-    where: { userId },
-    create: { userId, pages: safePages, currentPageIndex: safeIndex, revision: 1 },
-    update: { pages: safePages, currentPageIndex: safeIndex, revision: { increment: 1 } },
-    select: { revision: true },
-  });
-
-  const event = {
+  const revision = publishLiveTeacherBoard({
     userId,
-    revision: record.revision,
     clientId,
     pages: body.pages,
     currentPageIndex: safeIndex,
-  };
-  publishTeacherBoard(event);
-  const notifyPayload = JSON.stringify({ userId, revision: record.revision, clientId });
-  void prisma.$executeRaw`SELECT pg_notify('teacher_board', ${notifyPayload})`.catch(() => {});
+  });
+  schedulePersist(userId);
 
-  return NextResponse.json({ ok: true, revision: record.revision });
+  return NextResponse.json({ ok: true, revision });
+}
+
+const persistTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+function schedulePersist(userId: string) {
+  const existing = persistTimers.get(userId);
+  if (existing) clearTimeout(existing);
+  persistTimers.set(
+    userId,
+    setTimeout(() => {
+      persistTimers.delete(userId);
+      const live = readLiveTeacherBoard(userId);
+      if (!live || !isPages(live.pages)) return;
+      const pages = live.pages as Prisma.InputJsonValue;
+      void prisma.teacherBoard
+        .upsert({
+          where: { userId },
+          create: { userId, pages, currentPageIndex: live.currentPageIndex, revision: live.revision },
+          update: { pages, currentPageIndex: live.currentPageIndex, revision: live.revision },
+        })
+        .catch(() => {});
+    }, 400),
+  );
 }
