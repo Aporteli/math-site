@@ -92,6 +92,7 @@ type ToolId =
   | 'laser';
 
 const BOARD_WIDTH = 1920;
+const BOARD_HEIGHT = 1080;
 const STORAGE_KEY_PAGES = 'teacher_whiteboard_permanent_pages_v7';
 const PREFS_KEY = 'teacher_whiteboard_permanent_prefs_v7';
 const DEFAULT_COLOR = '#1e293b';
@@ -503,22 +504,42 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const [stylusSecondaryAction, setStylusSecondaryAction] = useState<StylusButtonAction>('none');
   const [zoomScale, setZoomScale] = useState<number>(1);
   const boardViewportRef = useRef<HTMLDivElement>(null);
-  const [viewportWidth, setViewportWidth] = useState(0);
+  const [viewport, setViewport] = useState({ width: 0, height: 0 });
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+  const skipCenterRef = useRef(false);
   useLayoutEffect(() => {
     const el = boardViewportRef.current;
     if (!el) return;
     const update = () => {
       const width = el.clientWidth;
-      if (width > 0) setViewportWidth(width);
+      const height = el.clientHeight;
+      if (width > 0 && height > 0) {
+        setViewport((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
+      }
     };
     update();
     const observer = new ResizeObserver(update);
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  const fitScale = viewportWidth > 0 ? viewportWidth / BOARD_WIDTH : 1;
+  const fitScale =
+    viewport.width > 0 && viewport.height > 0
+      ? Math.min(viewport.width / BOARD_WIDTH, viewport.height / BOARD_HEIGHT)
+      : 1;
   const fitScaleRef = useRef(fitScale);
   fitScaleRef.current = fitScale;
+  useLayoutEffect(() => {
+    if (viewport.width === 0 || viewport.height === 0) return;
+    if (skipCenterRef.current) {
+      skipCenterRef.current = false;
+      return;
+    }
+    const scale = zoomScale * fitScale;
+    setStagePos({
+      x: (viewport.width - BOARD_WIDTH * scale) / 2,
+      y: (viewport.height - BOARD_HEIGHT * scale) / 2,
+    });
+  }, [viewport.width, viewport.height, fitScale, zoomScale]);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -1771,7 +1792,10 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           strokeWidth={strokeWidth}
           isDark={isDark}
           scale={zoomScale * fitScale}
+          stagePos={stagePos}
+          onStagePosChange={setStagePos}
           onScaleChange={(s) => {
+            skipCenterRef.current = true;
             const next = s / (fitScaleRef.current || 1);
             setZoomScale(next);
             savePreferencesImmediately({ zoomScale: next });
