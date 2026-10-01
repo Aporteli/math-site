@@ -289,29 +289,29 @@ export function AssignProblemModal({
           </div>
         )}
 
-        <div className="flex items-center justify-between border-b border-hairline bg-surface px-5 py-3.5">
+        <div className="flex items-center justify-between border-b border-hairline bg-sectionHeader px-5 py-3.5">
           <div className="flex items-center gap-3">
-            <div className="flex size-7 items-center justify-center rounded-box bg-navy/15 text-navy">
-              <Send className="size-3.5" />
+            <div className="flex size-7 items-center justify-center text-navy">
+              <Send className="size-6" strokeWidth={2.5} />
             </div>
             <div className="flex items-baseline gap-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-ink">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-mainText">
                 დავალების გადაცემა
               </h3>
-              <span className="text-xs text-muted">/ {activeStudent.name}</span>
+              <span className="text-xs text-mainText/70">/ {activeStudent.name}</span>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex size-7 items-center justify-center rounded-box border border-hairline/80 bg-surface/50 text-muted hover:bg-paper-deep hover:text-ink transition-colors cursor-pointer"
+            className="flex size-7 items-center justify-center text-mainText hover:text-navy transition-colors cursor-pointer"
           >
-            <X className="size-3.5" />
+            <X className="size-6" strokeWidth={2.5} />
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
-          <div className="md:col-span-7 border-b md:border-b-0 md:border-r border-hairline p-5 bg-paper/40 flex flex-col justify-center">
+          <div className="md:col-span-7 border-b md:border-b-0 md:border-r border-hairline p-5 bg-main flex flex-col justify-center">
             <input
               ref={assignFileRef}
               type="file"
@@ -331,15 +331,15 @@ export function AssignProblemModal({
                   {assignImages.map((image, index) => (
                     <div
                       key={`${image.fileName}-${index}`}
-                      className="relative overflow-hidden rounded-box border border-hairline bg-surface shadow-inner"
+                      className="relative overflow-hidden rounded-box border border-hairline bg-navy/10 shadow-inner"
                     >
                       <img
                         src={image.dataUrl}
                         alt={image.fileName}
                         className="w-full h-24 object-contain bg-black/20"
                       />
-                      <div className="absolute inset-x-0 bottom-0 bg-surface/90 backdrop-blur-xs border-t border-hairline px-2 py-1 flex items-center justify-between">
-                        <span className="text-[10px] font-mono font-medium text-ink truncate">
+                      <div className="absolute inset-x-0 bottom-0 bg-navy/10 backdrop-blur-xs border-t border-hairline px-2 py-1 flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-medium text-mainText truncate">
                           {image.fileName}
                         </span>
                         <button
@@ -369,13 +369,13 @@ export function AssignProblemModal({
               <button
                 type="button"
                 onClick={() => assignFileRef.current?.click()}
-                className="group flex flex-col items-center justify-center gap-2.5 h-52 rounded-box border-2 border-dashed border-hairline/80 bg-surface/30 hover:border-navy hover:bg-surface/80 transition-all cursor-pointer"
+                className="group flex flex-col items-center justify-center gap-2.5 h-52 rounded-box border-2 border-dashed border-hairline/80 bg-navy/5 hover:border-navy hover:bg-surface/80 transition-all cursor-pointer"
               >
                 <div className="flex size-10 items-center justify-center rounded-box bg-paper-deep text-muted group-hover:bg-navy group-hover:text-white transition-all shadow-2xs">
                   <UploadCloud className="size-5" />
                 </div>
                 <div className="text-center space-y-0.5">
-                  <p className="text-xs font-bold text-ink group-hover:text-navy transition-colors">
+                  <p className="text-xs font-bold text-mainText group-hover:text-navy transition-colors">
                     ატვირთეთ ან ჩააგდეთ სურათი
                   </p>
                   <p className="text-[10px] font-mono text-muted">
@@ -389,7 +389,7 @@ export function AssignProblemModal({
             )}
           </div>
 
-          <div className="md:col-span-5 p-5 flex flex-col justify-between bg-surface/20">
+          <div className="md:col-span-5 p-5 flex flex-col justify-between bg-main">
             <div className="space-y-3">
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-brass-strong block">
                 ინსტრუქცია მოსწავლეს
@@ -398,7 +398,7 @@ export function AssignProblemModal({
                 value={assignComment}
                 onChange={(e) => setAssignComment(e.target.value)}
                 placeholder="ჩაწერეთ მითითება ან კითხვა ამოცანის ირგვლივ..."
-                className="w-full resize-none rounded-box border border-hairline bg-surface p-3 text-xs text-ink placeholder:text-muted/70 outline-none focus:border-navy transition-colors"
+                className="w-full resize-none rounded-box border border-hairline bg-inputs p-3 text-xs text-ink placeholder:text-muted/70 outline-none focus:border-navy transition-colors"
                 rows={5}
               />
             </div>
@@ -408,7 +408,7 @@ export function AssignProblemModal({
                 type="button"
                 disabled={isSendDisabled || assigning}
                 onClick={handleSend}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-box bg-navy py-2.5 px-4 text-xs font-bold text-white shadow-xs hover:bg-navy-strong disabled:opacity-40 transition-all active:scale-98 cursor-pointer"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-box bg-navy py-2.5 px-4 text-xs font-bold text-white shadow-xs hover:bg-navy-strong disabled:opacity-40 transition-all active:scale-98 cursor-pointer hover:rounded-box"
               >
                 {assigning ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -421,7 +421,7 @@ export function AssignProblemModal({
                 type="button"
                 disabled={assigning}
                 onClick={onClose}
-                className="w-full py-1.5 text-center text-xs font-semibold text-muted hover:text-ink transition-colors cursor-pointer"
+                className=" py-1.5 text-center text-xs font-semibold text-muted hover:text-ink transition-colors cursor-pointer hover:bg-navy/10 hover:border-white hover:border-white/40 transition-colors hover:rounded-box"
               >
                 გაუქმება
               </button>

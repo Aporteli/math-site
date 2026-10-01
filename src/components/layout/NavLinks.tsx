@@ -65,7 +65,7 @@ export function NavLinks({
                 className={[
                   "flex items-center gap-1 rounded-box px-3 py-2.5 text-base transition-colors",
                   active
-                    ? "bg-navy font-bold text-white shadow-sm"
+                    ? "bg-mainButton font-bold text-mainText shadow-sm"
                     : "font-bold text-body hover:bg-paper hover:text-ink",
                 ].join(" ")}
               >
@@ -99,8 +99,8 @@ export function NavLinks({
                           className={[
                             "block rounded-box px-3 py-2 text-sm transition-colors duration-200",
                             pathname === itemHref
-                              ? "bg-navy-tint font-bold text-navy"
-                              : "font-medium text-body hover:bg-paper hover:text-ink",
+                              ? "bg-mainButton font-bold text-mainText"
+                              : "font-medium text-mainText hover:bg-paper hover:text-ink",
                           ].join(" ")}
                         >
                           {itemLabel}
@@ -185,8 +185,8 @@ function DesktopNavItem({
           "relative flex items-center gap-1 whitespace-nowrap px-3 py-1.5 text-sm transition-colors",
           "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-navy after:transition-[width] after:duration-300 after:ease-out",
           active
-            ? "font-bold text-black after:w-full"
-            : "font-bold text-body hover:bg-surface hover:text-ink after:w-0",
+            ? "font-bold text-mainText after:w-full"
+            : "font-bold text-mainText hover:bg-main hover:text-mainText after:w-0",
         ].join(" ")}
       >
         {label}
@@ -194,7 +194,7 @@ function DesktopNavItem({
           <ChevronDown
             className={`size-4 shrink-0 transition-transform duration-200 ${
               open ? "rotate-180" : ""
-            } ${active ? "text-white" : ""}`}
+            } ${active ? "text-mainText" : ""}`}
             aria-hidden="true"
           />
         )}
@@ -218,8 +218,8 @@ function DesktopNavItem({
                     className={[
                       "block rounded-box px-3 py-2 text-sm transition-colors duration-200",
                       pathname === itemHref
-                        ? "bg-navy-tint font-bold text-navy"
-                        : "font-medium text-body hover:bg-paper hover:text-ink",
+                        ? "bg-mainButton font-bold text-mainText"
+                        : "font-medium text-mainText hover:bg-paper hover:text-ink",
                     ].join(" ")}
                   >
                     {itemLabel}

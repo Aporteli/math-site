@@ -601,8 +601,7 @@ export function FractionCalculator({ copy }: Props) {
   );
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[2000px] px-4 sm:px-6 lg:px-8">
-      <section
+<div className="mx-auto my-6 grid w-full min-w-0 max-w-[2000px] gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">      <section
         className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5"
         onKeyDown={onExpressionKeyDown}>
         <div ref={keyboardRootRef}>

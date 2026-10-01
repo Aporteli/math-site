@@ -16,14 +16,14 @@ export function SiteFooter({
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto w-full border-t border-hairline bg-surface text-body">
+    <footer className="mt-auto w-full border-t border-hairline bg-main text-mainText">
       <div className="h-0.5 bg-brass" aria-hidden="true" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-12 py-12 md:grid-cols-[minmax(0,1fr)_12rem] md:items-start md:gap-20 lg:py-14">
           <div className="max-w-lg">
-            <SiteLogo locale={locale} brand={dict.brand} />
-            <p className="mt-4 text-sm leading-6 text-muted">{dict.brand.person}</p>
+            <SiteLogo  locale={locale} brand={dict.brand} />
+            <p className="mt-4 text-sm leading-6 text-mainText">{dict.brand.person}</p>
 
             <address className="mt-8 not-italic">
 
@@ -33,7 +33,7 @@ export function SiteFooter({
                   <a
                     href={`mailto:${contact.email}`}
                     className="inline-flex items-center gap-2.5 transition-colors hover:text-navy">
-                    <Mail className="size-4 shrink-0 text-brass" aria-hidden="true" />
+                    <Mail className="size-4 shrink-0 text-icons" aria-hidden="true" strokeWidth={2.5} />
                     <span>{contact.email}</span>
                   </a>
                 </li>
@@ -43,7 +43,7 @@ export function SiteFooter({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2.5 transition-colors hover:text-navy">
-                    <Send className="size-4 shrink-0 text-brass" aria-hidden="true" />
+                    <Send className="size-4 shrink-0 text-icons" aria-hidden="true" strokeWidth={2.5} />
                     <span>{contact.telegram}</span>
                   </a>
                 </li>
@@ -52,7 +52,7 @@ export function SiteFooter({
           </div>
 
           <nav aria-label={dict.header.mainNav}>
-            <p className="text-[11px] font-semibold tracking-[0.2em] text-muted uppercase">{dict.header.mainNav}</p>
+            <p className="text-[11px] font-semibold tracking-[0.2em] text-mainText uppercase">{dict.header.mainNav}</p>
             <ul className="mt-4 flex flex-col gap-1">
               {mainNavLinks.map((link) => (
                 <li key={link.id}>

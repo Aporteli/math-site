@@ -88,20 +88,20 @@ export function LanguageSwitcher({
         className={[
           "group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-box border py-2 pl-3 pr-2.5 text-sm font-bold transition",
           open
-            ? "border-navy/30 bg-navy-tint text-navy"
-            : "border-hairline bg-paper text-ink hover:border-navy/40 hover:text-navy",
+            ? "border-mainButton/30 bg-mainButton text-mainText"
+            : "border-hairline bg-mainButton text-mainText hover:border-mainButton/40 hover:bg-mainButtonHover hover:text-mainText",
         ].join(" ")}
       >
         <Globe
           className={`size-4 transition-colors ${
-            open ? "text-navy" : "text-muted group-hover:text-navy"
+            open ? "text-mainText" : "text-muted group-hover:text-mainText"
           }`}
           aria-hidden="true"
         />
         {localeNames[locale].short}
         <ChevronDown
-          className={`size-3.5 text-muted transition-transform ${
-            open ? "rotate-180 text-navy" : "group-hover:text-navy"
+          className={`size-3.5 text-mainText transition-transform ${
+            open ? "rotate-180 text-mainText" : "group-hover:text-mainText"
           }`}
           aria-hidden="true"
         />
@@ -111,7 +111,7 @@ export function LanguageSwitcher({
         <ul
           role="menu"
           className={[
-            "absolute z-50 w-48 animate-dropdown rounded-box border border-hairline bg-surface p-1.5 shadow-lg shadow-navy/10",
+            "absolute z-50 w-48 animate-dropdown rounded-box border border-hairline bg-main p-1.5 shadow-lg ",
             menuPlacement === "above"
               ? "bottom-full mb-2 origin-bottom"
               : "top-full mt-2 origin-top-right",
@@ -133,15 +133,15 @@ export function LanguageSwitcher({
                   className={[
                     "flex items-center justify-between gap-3 rounded-box px-3 py-2 text-sm transition-colors",
                     active
-                      ? "bg-navy-tint font-bold text-navy"
-                      : "font-medium text-body hover:bg-paper hover:text-navy",
+                      ? "bg-navy font-bold text-white"
+                      : "font-medium text-mainText hover:bg-mainButtonHover/20 hover:text-mainText",
                   ].join(" ")}
                 >
                   <span lang={code}>{localeNames[code].label}</span>
                   {active ? (
-                    <Check className="size-4 text-brass" aria-hidden="true" />
+                    <Check className="size-4 text-mainText" aria-hidden="true" />
                   ) : (
-                    <span className="text-xs font-semibold text-muted">
+                    <span className="text-xs font-semibold text-mainText">
                       {localeNames[code].short}
                     </span>
                   )}

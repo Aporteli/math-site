@@ -75,13 +75,14 @@ export function SearchTrigger({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label={header.search}
-        className={`min-w-0 cursor-pointer items-center gap-2 rounded-box border border-hairline bg-paper py-2 pr-2 pl-3 text-left text-sm font-medium text-muted shadow-sm transition hover:border-navy/40 hover:text-ink ${className}`}
+        className={`min-w-0 cursor-pointer items-center gap-2 rounded-box border border-hairline bg-mainButton py-2 pr-2 pl-3 text-left text-sm font-medium text-mainText shadow-sm transition hover:border-mainButton/40 hover:bg-mainButtonHover hover:text-mainText ${className}`}
       >
-        <Search className="size-4 shrink-0" aria-hidden="true" />
+        <Search className="size-4 shrink-0 text-mainText" strokeWidth={2.5}  aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">{header.searchPlaceholder}</span>
-        <kbd className="pointer-events-none hidden rounded border border-hairline bg-paper-deep px-1.5 py-0.5 font-sans text-[11px] font-semibold text-muted lg:inline-block">
+        <kbd className="pointer-events-none hidden rounded border border-hairline bg-mainButton px-1.5 py-0.5 font-sans text-[11px] font-semibold text-mainText lg:inline-block">
           {shortcut}
         </kbd>
+      
       </button>
     );
   }
@@ -93,7 +94,7 @@ export function SearchTrigger({
       aria-haspopup="dialog"
       aria-expanded={open}
       aria-label={header.search}
-      className={`size-9 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-ink shadow-sm transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy ${className}`}
+      className={`size-9 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-mainButton text-mainText shadow-sm transition hover:border-mainButton/40 hover:bg-mainButtonHover hover:text-mainText ${className}`}
     >
       <Search className="size-4" aria-hidden="true" />
     </button>
@@ -278,14 +279,14 @@ export function SiteSearch({
               <button
                 type="button"
                 aria-label={header.searchClose}
-                className="absolute inset-0 bg-navy-strong/40 backdrop-blur-sm"
+                className="absolute inset-0 bg-mainButton/40 backdrop-blur-sm"
                 onClick={closeSearch}
               />
               <div
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className="relative z-10 flex max-h-[min(32rem,70vh)] w-full max-w-xl flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-2xl shadow-navy/10"
+                className="relative z-10 flex max-h-[min(32rem,70vh)] w-full max-w-xl flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-2xl shadow-mainButton"
               >
                 <h2 id={titleId} className="sr-only">
                   {header.search}
@@ -293,7 +294,7 @@ export function SiteSearch({
                 <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
                 <div className="flex items-center gap-2 border-b border-hairline px-4">
                   <Search
-                    className="size-5 shrink-0 text-navy"
+                    className="size-5 shrink-0 text-mainText"
                     aria-hidden="true"
                   />
                   <input

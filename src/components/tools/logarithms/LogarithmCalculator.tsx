@@ -186,14 +186,9 @@ export function LogarithmCalculator({
       className={
         embedded
           ? 'text-ink'
-          : 'mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink'
+          : "mx-auto my-6 grid w-full min-w-0 max-w-[2000px] gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]"
       }>
-      <div
-        className={
-          embedded
-            ? 'grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]'
-            : 'my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]'
-        }>
+
         {/* ═════ LEFT: Input ═════ */}
         <section className={panelClass} onKeyDown={onInputKeyDown}>
           <div ref={keyboardRootRef}>
@@ -448,7 +443,6 @@ export function LogarithmCalculator({
             </div>
           )}
         </section>
-      </div>
     </main>
   );
 }

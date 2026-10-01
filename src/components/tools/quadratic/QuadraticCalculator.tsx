@@ -271,8 +271,7 @@ export function QuadraticCalculator({ locale, copy, title, description }: Quadra
   const graphExpr = graphMeta && solveFor === 'x' ? `${graphMeta.a}*x^2 + (${graphMeta.b})*x + (${graphMeta.c})` : '';
 
   return (
-      <div className="mx-auto w-full min-w-0 max-w-[2000px] mt-7">
-        {/* ─── Left: input ─── */}
+<div className="mx-auto my-6 grid w-full min-w-0 max-w-[2000px] gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">        {/* ─── Left: input ─── */}
         <div className="space-y-4">
           <section className={panelClass}>
             <form onSubmit={handleSolve} className="space-y-2" autoComplete="off" spellCheck={false}>

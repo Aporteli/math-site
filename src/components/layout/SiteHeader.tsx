@@ -39,8 +39,8 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
       nav={dict.nav}
       toolItems={dict.toolsPage.items}
       posts={dict.blogPage.posts}>
-      <header className="sticky top-0 z-50 border-b border-hairline bg-surface/95 shadow-sm backdrop-blur-md">
-        <div className="h-1 bg-brass" aria-hidden="true" />
+      <header className="sticky top-0 z-50  bg-gradient-to-b from-headerTop via-headerMiddle to-headerBottom shadow-sm backdrop-blur-md">
+       
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8 xl:gap-4">
           <SiteLogo locale={locale} brand={dict.brand} className="shrink-0" />
 

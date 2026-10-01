@@ -89,17 +89,17 @@ export function TeacherViewProblemModal({
           className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl animate-in zoom-in-95 duration-150"
           onClick={(e) => e.stopPropagation()}>
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-hairline bg-surface px-5 py-3.5">
+          <div className="flex items-center justify-between border-b border-hairline bg-sectionHeader px-5 py-3.5">
             <div className="flex items-center gap-2.5 min-w-0 pr-2">
               <div
-                className={`flex size-7 items-center justify-center rounded-box shrink-0 ${
-                  mode === 'answer' ? 'bg-win-tint text-win' : 'bg-navy/15 text-navy'
+                className={`flex size-7 items-center justify-center text-navy shrink-0 ${
+                  mode === 'answer' ? 'text-win' : 'text-navy'
                 }`}>
-                {mode === 'answer' ? <CheckCircle2 className="size-4" /> : <BookOpen className="size-4" />}
+                {mode === 'answer' ? <CheckCircle2 className="size-6" strokeWidth={2.5} /> : <BookOpen className="size-6" strokeWidth={2.5} />}
               </div>
               <div className="flex items-baseline gap-2 min-w-0">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-ink truncate">{studentName}</h3>
-                <span className="text-[11px] font-mono text-muted shrink-0">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-mainText truncate">{studentName}</h3>
+                <span className="text-[11px] font-mono text-mainText/70 shrink-0">
                   / {mode === 'answer' ? 'მოსწავლის პასუხი' : 'ამოცანის პირობა'}
                 </span>
               </div>
@@ -107,13 +107,13 @@ export function TeacherViewProblemModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex size-7 shrink-0 items-center justify-center bg-surface text-muted hover:bg-paper-deep hover:text-ink transition-colors cursor-pointer">
-              <X className="size-3.5" />
+              className="flex size-7 shrink-0 items-center justify-center text-mainText hover:text-navy transition-colors cursor-pointer">
+              <X className="size-6" strokeWidth={2.5} />
             </button>
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-5 bg-main space-y-4 custom-scrollbar">
             {hasTextPrompt && (
               <div className="rounded-box border border-hairline bg-surface p-4 shadow-2xs">
                 <KatexPreview tex={rawPrompt} className="text-xs text-ink leading-relaxed" />
@@ -140,7 +140,7 @@ export function TeacherViewProblemModal({
                       className="max-h-[58vh] w-auto max-w-full rounded-box object-contain"
                     />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="inline-flex items-center gap-1.5 rounded-box bg-surface/95 border border-hairline px-3 py-1.5 text-xs font-bold text-ink shadow-lg backdrop-blur-xs">
+                      <span className="inline-flex items-center gap-1.5 rounded-box bg-navy/10 border border-hairline px-3 py-1.5 text-xs font-bold text-mainText shadow-lg backdrop-blur-xs">
                         <ZoomIn className="size-3.5 text-navy" /> სრულად გახსნა
                       </span>
                     </div>
@@ -148,19 +148,19 @@ export function TeacherViewProblemModal({
                 ))}
               </div>
             ) : (
-              <div className="rounded-box border border-dashed border-hairline bg-surface/40 p-8 text-center">
-                <UploadCloud className="size-7 text-muted/50 mx-auto mb-2" />
-                <p className="text-xs font-bold text-ink">სურათი არ მოიძებნა</p>
+              <div className="rounded-box border border-dashed border-hairline bg-navy/5 p-8 text-center">
+                <UploadCloud className="size-7 text-mainText/50 mx-auto mb-2" />
+                <p className="text-xs font-bold text-mainText">სურათი არ მოიძებნა</p>
               </div>
             )}
           </div>
 
           {/* Footer */}
-          <div className="border-t border-hairline bg-surface px-5 py-3 flex items-center justify-end">
+          <div className="border-t border-hairline bg-sectionHeader px-5 py-3 flex items-center justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-box px-4 py-1.5 text-xs font-bold text-ink bg-paper-deep hover:bg-surface border border-hairline transition-all active:scale-98 cursor-pointer">
+              className="rounded-box px-4 py-1.5 text-xs font-bold text-mainText bg-navy/10 hover:bg-surface border border-hairline transition-all active:scale-98 cursor-pointer hover:rounded-box">
               დახურვა
             </button>
           </div>

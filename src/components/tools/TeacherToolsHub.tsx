@@ -102,8 +102,8 @@ export function ToolsHub({ locale, copy }: ToolsHubProps) {
   const visibleCount = visibleSections.reduce((total, { tools }) => total + tools.length, 0);
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[2000px] px-4 sm:px-6 lg:px-8">
-    <div className="mx-auto w-full min-w-0 max-w-[2000px] px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full min-w-0 max-w-[2000px]">
+    <div className="mx-auto w-full min-w-0 max-w-[2000px] ">
     <PageHero
           icon={LayoutGrid}
           eyebrow={copy.hero.eyebrow}

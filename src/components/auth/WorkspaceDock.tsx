@@ -60,7 +60,7 @@ export function WorkspaceDock({
       <Link
         href={href}
         onClick={handleDockClick}
-        className="pointer-events-auto flex max-w-xs items-center gap-3 overflow-hidden rounded-box border border-hairline bg-surface p-3 shadow-md transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-lg"
+        className="pointer-events-auto flex max-w-xs items-center gap-3 overflow-hidden rounded-box border border-hairline bg-main p-3 shadow-md transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-lg"
       >
           <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-box bg-navy text-white shadow-sm">
           {isVisitor ? (

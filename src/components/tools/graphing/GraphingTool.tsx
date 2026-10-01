@@ -187,162 +187,161 @@ export function GraphingTool({ copy }: GraphingToolProps) {
   const tableRows = valueTable(functions, Number(tableStart), Number(tableEnd), Number(tableStep));
 
   return (
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
-        <aside className="space-y-4">
-          <section className={panelClass}>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">{copy.presets}</h2>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {(
-                [
-                  ['parabola', copy.presetParabola],
-                  ['trig', copy.presetTrig],
-                  ['hyperbola', copy.presetHyperbola],
-                  ['cubic', copy.presetCubic],
-                  ['params', copy.presetParams],
-                ] as const
-              ).map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => applyPreset(id)}
-                  className="inline-flex items-center rounded-box border border-brass/25 bg-brass-tint/40 px-3 py-1 text-xs font-semibold text-ink hover:border-brass/50 hover:bg-brass-tint/70 hover:text-navy transition-colors cursor-pointer shadow-2xs">
-                  {label}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className={panelClass}>
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-ink">{copy.functions}</h2>
+    <div className="mx-auto my-6 grid w-full min-w-0 max-w-[2000px] gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+      {' '}
+      <aside className="space-y-4">
+        <section className={panelClass}>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">{copy.presets}</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(
+              [
+                ['parabola', copy.presetParabola],
+                ['trig', copy.presetTrig],
+                ['hyperbola', copy.presetHyperbola],
+                ['cubic', copy.presetCubic],
+                ['params', copy.presetParams],
+              ] as const
+            ).map(([id, label]) => (
               <button
+                key={id}
                 type="button"
-                onClick={addFunction}
-                className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
-                <Plus className="size-3.5" aria-hidden="true" />
-                {copy.addFunction}
+                onClick={() => applyPreset(id)}
+                className="inline-flex items-center rounded-box border border-brass/25 bg-brass-tint/40 px-3 py-1 text-xs font-semibold text-ink hover:border-brass/50 hover:bg-brass-tint/70 hover:text-navy transition-colors cursor-pointer shadow-2xs">
+                {label}
               </button>
-            </div>
-            <ul className="mt-4 space-y-3">
-              {functions.map((row, index) => (
-                <li key={row.id}>
-                  <FunctionRow
-                    row={row}
-                    index={index}
-                    copy={copy}
-                    canRemove={functions.length > 1}
-                    domain={domains[row.id] ?? { min: '', max: '' }}
-                    onChange={updateFunction}
-                    onRemove={removeFunction}
-                    onDomainChange={updateDomain}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
+            ))}
+          </div>
+        </section>
 
-          <IntegralPanel
+        <section className={panelClass}>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-ink">{copy.functions}</h2>
+            <button
+              type="button"
+              onClick={addFunction}
+              className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
+              <Plus className="size-3.5" aria-hidden="true" />
+              {copy.addFunction}
+            </button>
+          </div>
+          <ul className="mt-4 space-y-3">
+            {functions.map((row, index) => (
+              <li key={row.id}>
+                <FunctionRow
+                  row={row}
+                  index={index}
+                  copy={copy}
+                  canRemove={functions.length > 1}
+                  domain={domains[row.id] ?? { min: '', max: '' }}
+                  onChange={updateFunction}
+                  onRemove={removeFunction}
+                  onDomainChange={updateDomain}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <IntegralPanel
+          copy={copy}
+          functions={visible}
+          shade={shadeIntegral}
+          onShade={setShadeIntegral}
+          a={integralA}
+          b={integralB}
+          onA={setIntegralA}
+          onB={setIntegralB}
+          mode={integralMode}
+          onMode={setIntegralMode}
+          upperId={upper?.id ?? ''}
+          lowerId={lower?.id ?? ''}
+          onUpper={setUpperId}
+          onLower={setLowerId}
+          value={integralValue}
+          bounds={bounds}
+        />
+
+        <details className={panelClass}>
+          <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.tableTitle}</summary>
+          <ValuesTable
             copy={copy}
             functions={visible}
-            shade={shadeIntegral}
-            onShade={setShadeIntegral}
-            a={integralA}
-            b={integralB}
-            onA={setIntegralA}
-            onB={setIntegralB}
-            mode={integralMode}
-            onMode={setIntegralMode}
-            upperId={upper?.id ?? ''}
-            lowerId={lower?.id ?? ''}
-            onUpper={setUpperId}
-            onLower={setLowerId}
-            value={integralValue}
-            bounds={bounds}
+            rows={tableRows}
+            start={tableStart}
+            end={tableEnd}
+            step={tableStep}
+            copied={copied}
+            onStart={setTableStart}
+            onEnd={setTableEnd}
+            onStep={setTableStep}
+            onCopied={setCopied}
           />
+        </details>
 
-          <details className={panelClass}>
-            <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.tableTitle}</summary>
-            <ValuesTable
-              copy={copy}
-              functions={visible}
-              rows={tableRows}
-              start={tableStart}
-              end={tableEnd}
-              step={tableStep}
-              copied={copied}
-              onStart={setTableStart}
-              onEnd={setTableEnd}
-              onStep={setTableStep}
-              onCopied={setCopied}
+        <details className={panelClass} open>
+          <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.syntaxTitle}</summary>
+          <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-body">
+            <li>{copy.syntaxPowers}</li>
+            <li>{copy.syntaxMult}</li>
+            <li>{copy.syntaxTrig}</li>
+            <li>{copy.syntaxConst}</li>
+            <li>{copy.syntaxParams}</li>
+          </ul>
+        </details>
+      </aside>
+      <div className="space-y-4">
+        <GraphCanvas
+          copy={copy}
+          functions={functions}
+          domains={resolvedDomains}
+          showDerivative={showDerivative}
+          showTangent={showTangent}
+          showMarkers={showMarkers}
+          xDomain={xDomain}
+          yDomain={yDomain}
+          domainTick={domainTick}
+          shadeIntegral={shadeIntegral}
+          integralBounds={bounds}
+          integralMode={integralMode}
+          upper={upper}
+          lower={lower}
+          onDomainChange={(x, y) => {
+            setXDomain(x);
+            setYDomain(y);
+            setDomainTick((value) => value + 1);
+          }}
+        />
+        <div className="flex flex-col gap-2 text-sm text-ink">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={showTangent}
+              onChange={(event) => setShowTangent(event.target.checked)}
+              className="size-4 rounded border-hairline accent-navy"
             />
-          </details>
-
-          <details className={panelClass} open>
-            <summary className="cursor-pointer text-sm font-semibold text-ink">{copy.syntaxTitle}</summary>
-            <ul className="mt-3 space-y-1.5 text-sm leading-relaxed text-body">
-              <li>{copy.syntaxPowers}</li>
-              <li>{copy.syntaxMult}</li>
-              <li>{copy.syntaxTrig}</li>
-              <li>{copy.syntaxConst}</li>
-              <li>{copy.syntaxParams}</li>
-            </ul>
-          </details>
-        </aside>
-
-        <div className="space-y-4">
-          <GraphCanvas
-            copy={copy}
-            functions={functions}
-            domains={resolvedDomains}
-            showDerivative={showDerivative}
-            showTangent={showTangent}
-            showMarkers={showMarkers}
-            xDomain={xDomain}
-            yDomain={yDomain}
-            domainTick={domainTick}
-            shadeIntegral={shadeIntegral}
-            integralBounds={bounds}
-            integralMode={integralMode}
-            upper={upper}
-            lower={lower}
-            onDomainChange={(x, y) => {
-              setXDomain(x);
-              setYDomain(y);
-              setDomainTick((value) => value + 1);
-            }}
-          />
-          <div className="flex flex-col gap-2 text-sm text-ink">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={showTangent}
-                onChange={(event) => setShowTangent(event.target.checked)}
-                className="size-4 rounded border-hairline accent-navy"
-              />
-              {copy.showTangent}
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={showDerivative}
-                onChange={(event) => setShowDerivative(event.target.checked)}
-                className="size-4 rounded border-hairline accent-navy"
-              />
-              {copy.showDerivative}
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={showMarkers}
-                onChange={(event) => setShowMarkers(event.target.checked)}
-                className="size-4 rounded border-hairline accent-navy"
-              />
-              {copy.showMarkers}
-            </label>
-          </div>
+            {copy.showTangent}
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={showDerivative}
+              onChange={(event) => setShowDerivative(event.target.checked)}
+              className="size-4 rounded border-hairline accent-navy"
+            />
+            {copy.showDerivative}
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={showMarkers}
+              onChange={(event) => setShowMarkers(event.target.checked)}
+              className="size-4 rounded border-hairline accent-navy"
+            />
+            {copy.showMarkers}
+          </label>
         </div>
       </div>
-    
+    </div>
   );
 }
 

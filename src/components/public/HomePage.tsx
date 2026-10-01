@@ -26,10 +26,10 @@ const toolsById = new Map(TOOL_SECTIONS.flatMap((section) => section.tools.map((
 const toolCount = TOOL_SECTIONS.reduce((sum, section) => sum + section.tools.length, 0);
 
 const primaryButton =
-  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-box bg-navy px-6 text-sm font-semibold text-white transition-colors hover:bg-navy-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 focus-visible:ring-offset-paper sm:w-auto dark:bg-white dark:text-[#10233f] dark:hover:bg-white/90 dark:focus-visible:ring-white';
+  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-box bg-mainButton px-6 text-sm font-semibold text-mainText transition-colors hover:bg-mainButtonHover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mainButton focus-visible:ring-offset-2 focus-visible:ring-offset-mainBackground sm:w-auto';
 
 const secondaryButton =
-  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-box border border-hairline bg-surface px-6 text-sm font-semibold text-ink transition-colors hover:border-navy/40 hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy focus-visible:ring-offset-2 focus-visible:ring-offset-paper sm:w-auto';
+  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-box border border-hairline bg-mainButton/50 px-6 text-sm font-semibold text-mainText transition-colors hover:border-mainButton/20 hover:bg-mainButtonHover hover:text-mainText focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mainButton focus-visible:ring-offset-2 focus-visible:ring-offset-mainBackground sm:w-auto';
 
 export default function HomeLandPage({ locale, dict }: HomePageProps) {
   const copy = landingCopy[locale];
@@ -39,9 +39,8 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
   });
 
   return (
-    <div className="bg-paper text-ink">
-      <section className="mx-auto w-full min-w-0 max-w-[1800px] py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
-        {' '}
+    <div className="bg-mainBackground text-mainText">
+      <section className="mx-auto w-full min-w-0 max-w-[2000px] py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl border-l-2 border-brass pl-5 sm:pl-7">
           <p className="text-sm font-medium text-brass">{copy.heroKicker}</p>
           <h1 className="mt-3 text-[2.45rem] font-semibold leading-[1.12] tracking-[-0.03em] text-balance text-ink sm:text-6xl sm:leading-[1.08]">
@@ -67,10 +66,10 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
 
       <section className="mx-auto w-full min-w-0 max-w-[1800px] py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="max-w-md text-3xl font-semibold tracking-[-0.03em] text-balance text-ink sm:text-4xl">
+          <h2 className="max-w-md text-3xl font-semibold tracking-[-0.03em] text-balance text-mainText sm:text-4xl">
             {copy.workspaceTitle}
           </h2>
-          <p className="max-w-sm text-sm leading-6 text-pretty text-body sm:text-base sm:leading-7">
+          <p className="max-w-sm text-sm leading-6 text-pretty text-mainText sm:text-base sm:leading-7">
             {copy.workspaceBody}
           </p>
         </div>
@@ -86,20 +85,20 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
         <div className="mx-auto w-full min-w-0 max-w-[1800px] py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
           {' '}
           <p className="text-sm font-medium text-brass">{copy.processKicker}</p>
-          <h2 className="mt-2 max-w-xl text-3xl font-semibold tracking-[-0.03em] text-balance text-ink sm:text-4xl">
+          <h2 className="mt-2 max-w-xl text-3xl font-semibold tracking-[-0.03em] text-balance text-mainText sm:text-4xl">
             {copy.processTitle}
           </h2>
           <ol className="mt-8 grid gap-px overflow-hidden rounded-box border border-hairline bg-hairline md:grid-cols-3">
             {copy.steps.map((step, index) => {
               const Icon = [BookOpen, Calculator, BarChart3][index] ?? BookOpen;
               return (
-                <li key={step.title} className="bg-surface px-6 py-7 sm:px-7 sm:py-8">
+                <li key={step.title} className="bg-main px-6 py-7 sm:px-7 sm:py-8">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-sm text-brass">0{index + 1}</span>
                     <Icon className="size-5 text-navy" aria-hidden="true" />
                   </div>
-                  <h3 className="mt-8 text-xl font-semibold tracking-tight text-ink">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-6 text-pretty text-body">{step.body}</p>
+                  <h3 className="mt-8 text-xl font-semibold tracking-tight text-mainText">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-pretty text-mainText">{step.body}</p>
                 </li>
               );
             })}
@@ -112,19 +111,19 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-medium text-brass">{copy.toolsKicker}</p>
-              <h2 className="mt-2 flex flex-wrap items-center gap-3 text-3xl font-semibold tracking-[-0.03em] text-balance text-ink sm:text-4xl">
+              <h2 className="mt-2 flex flex-wrap items-center gap-3 text-3xl font-semibold tracking-[-0.03em] text-balance text-mainText sm:text-4xl">
                 {copy.toolsTitle}
-                <span className="rounded-box bg-navy-tint px-2.5 py-1 font-mono text-sm font-semibold text-navy">
+                <span className="rounded-box bg-mainButton px-2.5 py-1 font-mono text-sm font-semibold text-mainText">
                   {toolCount}
                 </span>
               </h2>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-pretty text-body sm:text-base sm:leading-7">
+              <p className="mt-3 max-w-xl text-sm leading-6 text-pretty text-mainText sm:text-base sm:leading-7">
                 {copy.toolsBody}
               </p>
             </div>
             <Link
               href={localePath(locale, '/tools')}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy">
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-mainText hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mainButton focus-visible:ring-offset-2 focus-visible:ring-offset-mainBackground">
               {copy.browseTools}
               <ArrowUpRight className="size-4" aria-hidden="true" />
             </Link>
@@ -137,7 +136,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
                 <li key={tool.id}>
                   <Link
                     href={localePath(locale, tool.href)}
-                    className="group flex h-full min-h-36 flex-col justify-between rounded-box border border-hairline bg-surface p-5 transition-colors hover:border-navy/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy">
+                    className="group flex h-full min-h-36 flex-col justify-between rounded-box border border-hairline bg-main p-5 transition-colors hover:border-navy/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy">
                     <span className="flex size-11 items-center justify-center rounded-box bg-navy-tint text-navy transition-colors group-hover:bg-navy/15">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
@@ -170,7 +169,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
               </div>
               <Link
                 href={localePath(locale, '/signup')}
-                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-box  bg-white px-6 text-sm font-semibold text-[#0c2340] transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c2340]">
+                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-box  bg-[#0a8f32] px-6 text-sm font-semibold text-black transition-colors hover:bg-[#16c049] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mainButton focus-visible:ring-offset-2 focus-visible:ring-offset-mainBackground">
                 {copy.createAccount}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
@@ -184,15 +183,15 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
 
 function GraphStage({ locale, copy }: { locale: Locale; copy: LandingCopy }) {
   return (
-    <div className="mt-12 overflow-hidden rounded-box border border-hairline bg-surface shadow-[0_24px_50px_-28px_rgba(16,40,80,0.35)] dark:shadow-none sm:mt-16">
+    <div className="mt-12 overflow-hidden rounded-box border border-hairline bg-main shadow-[0_24px_50px_-28px_rgba(16,40,80,0.35)] dark:shadow-none sm:mt-16">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-hairline px-5 py-4 sm:px-7">
         <div>
-          <p className="text-sm text-muted">{copy.graphCaption}</p>
+          <p className="text-sm text-mainText">{copy.graphCaption}</p>
           <p className="mt-1 font-mono text-lg font-medium tracking-tight text-ink sm:text-xl">f(x) = x² − 4x + 3</p>
         </div>
         <Link
           href={localePath(locale, '/tools/graphing')}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy">
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-mainText hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mainButton focus-visible:ring-offset-2 focus-visible:ring-offset-mainBackground">
           {copy.openGraph}
           <ArrowUpRight className="size-4" aria-hidden="true" />
         </Link>
@@ -216,7 +215,7 @@ function GraphStage({ locale, copy }: { locale: Locale; copy: LandingCopy }) {
 
 function TeacherPanel({ copy }: { copy: LandingCopy }) {
   return (
-    <article className="flex flex-col rounded-box border border-hairline bg-surface p-6 sm:p-8 lg:col-span-3">
+    <article className="flex flex-col rounded-box border border-hairline bg-main p-6 sm:p-8 lg:col-span-3">
       <p className="text-sm font-medium text-brass">{copy.teacherKicker}</p>
       <h3 className="mt-3 text-2xl font-semibold tracking-tight text-ink">{copy.teacherTitle}</h3>
       <p className="mt-3 max-w-md text-sm leading-6 text-pretty text-body">{copy.teacherBody}</p>
@@ -258,18 +257,18 @@ function StudentPanel({ copy }: { copy: LandingCopy }) {
   return (
     <article className="flex flex-col rounded-box border border-brass/30 bg-brass-tint p-6 sm:p-8 lg:col-span-2">
       <p className="text-sm font-medium text-brass-strong">{copy.studentKicker}</p>
-      <h3 className="mt-3 text-2xl font-semibold tracking-tight text-ink">{copy.studentTitle}</h3>
+      <h3 className="mt-3 text-2xl font-semibold tracking-tight text-mainText">{copy.studentTitle}</h3>
       <p className="mt-3 text-sm leading-6 text-pretty text-body">{copy.studentBody}</p>
 
       <div className="mt-auto pt-8">
-        <p className="text-xs text-muted">{copy.current}</p>
-        <p className="mt-1 text-base font-semibold text-ink">{copy.assignment}</p>
+        <p className="text-xs text-mainText">{copy.current}</p>
+        <p className="mt-1 text-base font-semibold text-mainText">{copy.assignment}</p>
         <p className="mt-5 font-mono text-5xl font-semibold tracking-tight text-navy">40%</p>
         <div className="mt-3 h-1.5 overflow-hidden rounded-box bg-surface/80">
           <div className="h-full w-[40%] rounded-box bg-navy" />
         </div>
         <div className="mt-6 border-t border-brass/25 pt-4">
-          <p className="text-xs text-muted">{copy.next}</p>
+          <p className="text-xs text-mainText">{copy.next}</p>
           <p className="mt-1 text-sm font-medium text-ink">{copy.nextLesson}</p>
         </div>
       </div>

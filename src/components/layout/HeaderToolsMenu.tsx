@@ -48,10 +48,10 @@ export function HeaderToolsMenu({ label, children }: HeaderToolsMenuProps) {
         aria-label={label}
         title={label}
         className={[
-          'inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-box border border-hairline bg-paper px-3 text-sm font-bold transition',
+          'inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-box border border-hairline bg-mainButton px-3 text-sm font-bold transition',
           open
-            ? 'border-navy/40 bg-navy-tint text-navy'
-            : 'text-body hover:border-navy/40 hover:bg-navy-tint hover:text-navy',
+            ? 'border-mainButton/40 bg-mainButton text-mainText'
+            : 'text-mainText hover:border-mainButton hover:bg-mainButtonHover hover:text-mainText',
         ].join(' ')}>
         <SlidersHorizontal className="size-4 shrink-0" aria-hidden="true" />
         <ChevronDown
@@ -61,7 +61,7 @@ export function HeaderToolsMenu({ label, children }: HeaderToolsMenuProps) {
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-50 mt-2 flex w-max items-center gap-1 rounded-box border border-hairline bg-surface p-1.5 shadow-lg shadow-navy/10 origin-top-right animate-dropdown">
+        <div className="absolute right-0 z-50 mt-2 flex w-max items-center gap-1 rounded-box border border-hairline bg-main p-1.5 shadow-lg  origin-top-right animate-dropdown">
           {children}
         </div>
       ) : null}

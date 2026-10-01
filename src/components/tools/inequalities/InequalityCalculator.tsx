@@ -73,8 +73,6 @@ export function InequalityCalculator({ copy }: Props) {
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-  const panelClass =
-    'rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
 
   /* ── History load ── */
   useEffect(() => {
@@ -251,11 +249,10 @@ export function InequalityCalculator({ copy }: Props) {
   const badge = result ? TYPE_BADGE[result.type] : null;
 
   return (
-    <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
-      <div className="my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+    <main className="mx-auto my-6 grid w-full min-w-0 max-w-[2000px] gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         {/* ══════════ LEFT: Input ══════════ */}
         <section
-          className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800"
+        className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800"
           onKeyDown={onInputKeyDown}>
           <div ref={keyboardRootRef}>
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -362,7 +359,7 @@ export function InequalityCalculator({ copy }: Props) {
         </section>
 
         {/* ══════════ RIGHT: Results ══════════ */}
-        <section className={panelClass}>
+        <section className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800">
           {loading && (
             <div className="flex min-h-[200px] items-center justify-center">
               <span className="inline-block h-8 w-8 animate-spin rounded-box border-4 border-navy border-t-transparent" />
@@ -501,7 +498,6 @@ export function InequalityCalculator({ copy }: Props) {
             </div>
           )}
         </section>
-      </div>
     </main>
   );
 }

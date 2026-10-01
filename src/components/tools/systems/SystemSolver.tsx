@@ -237,8 +237,7 @@ export function SystemSolver({ copy }: Props) {
   const solveForLabel = variables.join(', ');
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[2000px] mt-7">
-        {/* ══════════ Left: Input ══════════ */}
+<div className="mx-auto my-6 grid w-full min-w-0 max-w-[2000px] gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">        {/* ══════════ Left: Input ══════════ */}
         <div className="space-y-4">
           <section className={panelClass}>
             <div className="flex items-center justify-between gap-2">

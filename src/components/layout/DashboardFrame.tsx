@@ -170,7 +170,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
         setSidebarActions,
       }}>
       <div
-        className={`bg-paper text-ink ${isJournalPage ? 'h-[100dvh] overflow-hidden flex flex-col' : 'min-h-screen'}`}>
+        className={`text-ink ${isJournalPage ? 'h-[100dvh] overflow-hidden flex flex-col bg-paper' : 'min-h-screen bg-mainBackground'}`}>
         {!isJournalPage && (
           <aside
             className={[
@@ -244,15 +244,16 @@ export function DashboardFrame(props: DashboardFrameProps) {
         <div
           className={[
             'flex-1 flex flex-col min-w-0 transition-[padding] duration-200',
+            !isJournalPage && 'min-h-screen bg-mainBackground',
             !isJournalPage && (collapsed ? 'lg:pl-[4.75rem]' : 'lg:pl-72'),
             isJournalPage ? 'h-full overflow-hidden' : '',
           ].join(' ')}>
           {!isJournalPage && (
             <header
               className={[
-                'sticky top-0 z-30 border-b border-hairline/60 bg-paper/90 backdrop-blur-md shrink-0',
+                'sticky top-0 z-30 bg-gradient-to-b from-headerTop via-headerMiddle to-headerBottom shadow-sm backdrop-blur-md shrink-0',
                 'motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out',
-                headerHidden ? '-translate-y-full' : 'translate-y-0',
+                headerHidden ? 'pointer-events-none -translate-y-full' : 'translate-y-0',
               ].join(' ')}>
               <div className="flex items-center gap-3 px-4 py-2.5 sm:px-6">
                 <button
@@ -285,7 +286,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
             className={
               isJournalPage
                 ? 'h-[100dvh] w-full p-2 sm:p-3 overflow-hidden flex flex-col box-border'
-                : 'px-4 py-6 sm:px-6 lg:px-8'
+                : 'py-6 sm:px-6 lg:px-8 bg-mainBackground'
             }>
             {children}
           </main>

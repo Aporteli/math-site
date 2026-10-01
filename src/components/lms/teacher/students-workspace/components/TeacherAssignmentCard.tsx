@@ -24,43 +24,43 @@ export function TeacherAssignmentCard({ assignment, activeTab, onSelect, onDelet
 
   const isPdfOrDoc = Boolean(assignment.problemImageUrl) && isDocumentString(assignment.problemImageUrl);
 
-  const accent = isMaterial ? 'bg-brass' : isGraded ? 'bg-win' : isSubmitted ? 'bg-navy' : 'bg-hairline';
+  const accent = isMaterial ? 'bg-brass' : isGraded ? 'bg-win' : isSubmitted ? 'bg-brass' : 'bg-brass';
 
   return (
-    <div className="group relative flex min-h-[260px] w-full flex-col overflow-hidden rounded-box border border-hairline bg-surface text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md">
+    <div className="group relative flex min-h-[260px] w-full flex-col rounded-box border border-hairline bg-sectionHeader text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md">
       <button
         type="button"
         onClick={onSelect}
-        className="flex min-h-[260px] w-full cursor-pointer flex-col text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-navy/35"
+        className="flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-[inherit] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-navy/35"
       >
       <span className={`h-1 w-full shrink-0 ${accent}`} aria-hidden="true" />
 
-      <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-box border border-hairline bg-paper">
+      <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-box bg-sectionHeader">
         {displayImageUrl ? (
           <img
             src={displayImageUrl}
             alt=""
-            className="size-full bg-white object-contain p-2 transition duration-200 group-hover:scale-[1.03]"
+            className="size-full bg-sectionHeader object-contain p-2 transition rounded-box duration-200 group-hover:scale-[1.03]"
           />
         ) : isPdfOrDoc ? (
-          <div className="flex size-full flex-col items-center justify-center gap-1.5 px-3 text-center">
+          <div className="flex size-full flex-col items-center justify-center gap-1.5 rounded-box px-3 text-center">
             <FileText className="size-8 text-navy" />
             <span className="text-[11px] font-semibold text-navy">ფაილი</span>
           </div>
         ) : assignment.promptTex ? (
-          <div className="flex size-full items-center justify-center overflow-hidden px-3 py-2">
+          <div className="flex size-full items-center justify-center overflow-hidden rounded-box px-3 py-2">
             <KatexPreview
               tex={assignment.promptTex}
               className="pointer-events-none line-clamp-4 text-sm leading-relaxed text-ink"
             />
           </div>
         ) : isMaterial ? (
-          <div className="flex size-full flex-col items-center justify-center gap-1.5 bg-brass-tint px-3 text-center">
+          <div className="flex size-full flex-col items-center justify-center gap-1.5 rounded-box bg-brass-tint px-3 text-center">
             <Layers className="size-8 text-brass-strong" />
             <span className="text-[11px] font-semibold text-brass-strong">სასწავლო მასალა</span>
           </div>
         ) : (
-          <div className="flex size-full items-center justify-center text-[11px] font-semibold text-muted">
+          <div className="flex size-full items-center justify-center rounded-box text-[11px] font-semibold text-muted">
             პრევიუ არ არის
           </div>
         )}
@@ -78,9 +78,9 @@ export function TeacherAssignmentCard({ assignment, activeTab, onSelect, onDelet
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
+      <div className="flex flex-1 border-t border-white/10 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
         <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{assignment.title}</p>
-        <span className="inline-flex w-fit items-center gap-1 rounded-box bg-navy-tint px-2.5 py-1 text-xs font-bold text-navy transition group-hover:bg-navy group-hover:text-white">
+        <span className="inline-flex w-fit items-center gap-1 rounded-box bg-mainButton border-white/10 border-[1px] px-2.5 py-1 text-xs font-bold text-mainText transition group-hover:bg-navy group-hover:text-white">
           {isMaterial ? 'მასალის გახსნა' : 'ნახვა'}
           <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </span>
@@ -91,9 +91,9 @@ export function TeacherAssignmentCard({ assignment, activeTab, onSelect, onDelet
         type="button"
         title="წაშლა"
         onClick={() => onDelete(assignment.id)}
-        className="absolute bottom-3.5 right-3.5 z-10 flex size-8 cursor-pointer items-center justify-center rounded-box border border-hairline bg-surface text-muted shadow-sm transition hover:border-loss/40 hover:bg-loss-tint hover:text-loss"
+        className="absolute bottom-3.5 right-3.5 z-10 flex size-8 cursor-pointer items-center justify-center text-muted transition  hover:text-loss"
       >
-        <Trash2 className="size-3.5" />
+        <Trash2 className="size-3.5 text-icons hover:text-loss" strokeWidth={2.5}  />
       </button>
     </div>
   );

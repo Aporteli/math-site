@@ -20,7 +20,7 @@ export function TeacherStudentsHeroAside({
   return (
     <div className="flex w-full flex-col gap-3">
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-box border border-hairline bg-white px-4 py-3 shadow-sm">
+        <div className="rounded-box border border-hairline bg-main px-4 py-3 shadow-sm">
           <p className="text-[11px] font-bold uppercase tracking-wide text-muted">სულ მოსწავლე</p>
           <p className="mt-1 text-3xl font-bold tracking-tight text-ink">{studentsCount}</p>
         </div>

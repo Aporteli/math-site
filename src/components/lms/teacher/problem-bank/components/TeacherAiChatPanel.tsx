@@ -566,22 +566,22 @@ export function TeacherAiChatPanel({
 
   return (
     <section
-      className={`${className} space-y-4 rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5 relative`}
+      className={`${className} rounded-box border border-hairline bg-white  shadow-sm relative`}
       aria-labelledby="teacher-ai-chat-heading">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hairline pb-4">
-        <h2 id="teacher-ai-chat-heading" className="text-lg font-semibold tracking-tight text-ink">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hairline bg-sectionHeader p-2">
+        <h2 id="teacher-ai-chat-heading" className="text-lg font-semibold tracking-tight text-mainText">
           {copy.title}
         </h2>
         <button
           type="button"
-          className="inline-flex size-9 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
+          className="inline-flex size-9 items-center justify-center rounded-box text-mainText hover:text-navy transition-colors cursor-pointer"
           aria-label={copy.close}
           onClick={onClose}>
-          <X className="size-4" aria-hidden="true" />
+          <X className="size-6" strokeWidth={2.5} aria-hidden="true" />
         </button>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_10rem_10rem_auto] md:items-center">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_10rem_10rem_auto] md:items-center bg-main p-2">
         <div>
           <label htmlFor={`${inputId}-model`} className="sr-only">
             {copy.model}
@@ -615,7 +615,7 @@ export function TeacherAiChatPanel({
         </div>
         <button
           type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-box border border-hairline bg-white px-4 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-box border border-white/10 bg-mainButton px-2.5 py-2.5 text-xs font-semibold text-mainText shadow-[0_2px_0_rgba(0,0,0,0.35),0_6px_14px_rgba(0,0,0,0.24),inset_0_1px_2px_rgba(255,255,255,0.16),inset_0_-2px_4px_rgba(0,0,0,0.08)] transition-all duration-150 hover:-translate-y-0.5 hover:border-navy/30 hover:text-navy hover:shadow-[0_3px_0_rgba(0,0,0,0.4),0_8px_16px_rgba(0,0,0,0.27),inset_0_1px_3px_rgba(255,255,255,0.2),inset_0_-2px_4px_rgba(0,0,0,0.08)] active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.3),0_3px_6px_rgba(0,0,0,0.18),inset_0_1px_2px_rgba(255,255,255,0.12),inset_0_-1px_3px_rgba(0,0,0,0.1)] "
           disabled={busy || messages.length === 0}
           onClick={() => {
             setMessages([]);
@@ -628,7 +628,7 @@ export function TeacherAiChatPanel({
         </button>
       </div>
 
-      <div className="min-h-[18rem] max-h-[28rem] overflow-y-auto rounded-box border border-hairline bg-paper p-3">
+      <div className="min-h-[18rem] max-h-[28rem] overflow-y-auto rounded-box border border-hairline bg-main p-3">
         {messages.length === 0 ? (
           <div className="flex h-full min-h-[14rem] flex-col items-center justify-center text-center">
             <span className="inline-flex size-10 items-center justify-center rounded-box bg-navy-tint text-navy">
@@ -871,8 +871,8 @@ export function TeacherAiChatPanel({
         )}
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-3">
-        <div className="flex flex-wrap items-center justify-end gap-2">
+      <form onSubmit={onSubmit}>
+        <div className="flex flex-wrap items-center justify-end gap-2 bg-main p-2">
           <label className="sr-only" htmlFor={inputId}>
             {copy.inputLabel}
           </label>
@@ -884,24 +884,6 @@ export function TeacherAiChatPanel({
             className="hidden"
             onChange={onFileChange}
           />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            aria-label={copy.addImage}
-            title={copy.addImage}
-            className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint">
-            <ImagePlus className="size-3.5" aria-hidden="true" />
-            {copy.addImage}
-          </button>
-          {slashEnabled ? (
-            <button
-              type="button"
-              onClick={() => setManageSlashOpen((open) => !open)}
-              className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-2.5 py-1.5 text-xs font-semibold text-navy hover:bg-navy-tint">
-              <Sparkles className="size-3.5" aria-hidden="true" />
-              {copy.slashPrompts.manage}
-            </button>
-          ) : null}
         </div>
         {slashEnabled && manageSlashOpen ? (
           <AdminSlashPromptManager
@@ -934,7 +916,7 @@ export function TeacherAiChatPanel({
             ))}
           </ul>
         ) : null}
-        <p className="text-xs text-muted">{copy.imageHint}</p>
+        <p className="text-xs text-mainText/70">{copy.imageHint}</p>
         <div className="relative">
           {slashEnabled && slashMenuOpen ? (
             <AdminSlashPromptMenu
@@ -948,7 +930,7 @@ export function TeacherAiChatPanel({
           <textarea
             id={inputId}
             ref={textareaRef}
-            className="min-h-[6rem] w-full rounded-box border border-hairline bg-white px-3 py-2 font-sans text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15"
+            className="min-h-[6rem] w-full rounded-box border border-hairline bg-inputs text-mainText px-3 py-2 font-sans text-sm shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15"
             value={draft}
             maxLength={10000}
             placeholder={copy.inputPlaceholder}
@@ -981,7 +963,27 @@ export function TeacherAiChatPanel({
             />
           </div>
         ) : null}
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="bg-sectionHeader p-2 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label={copy.addImage}
+              title={copy.addImage}
+              className="inline-flex items-center gap-1.5 rounded-box border border-white/10 bg-mainButton px-2.5 py-2.5 text-xs font-semibold text-mainText shadow-[0_2px_0_rgba(0,0,0,0.35),0_6px_14px_rgba(0,0,0,0.24),inset_0_1px_2px_rgba(255,255,255,0.16),inset_0_-2px_4px_rgba(0,0,0,0.08)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_3px_0_rgba(0,0,0,0.4),0_8px_16px_rgba(0,0,0,0.27),inset_0_1px_3px_rgba(255,255,255,0.2),inset_0_-2px_4px_rgba(0,0,0,0.08)] active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.3),0_3px_6px_rgba(0,0,0,0.18),inset_0_1px_2px_rgba(255,255,255,0.12),inset_0_-1px_3px_rgba(0,0,0,0.1)]">
+              <ImagePlus className="size-4" aria-hidden="true" />
+              {copy.addImage}
+            </button>
+            {slashEnabled ? (
+              <button
+                type="button"
+                onClick={() => setManageSlashOpen((open) => !open)}
+                className="inline-flex items-center gap-1.5 rounded-box border border-white/10 bg-mainButton px-2.5 py-2.5 text-xs font-semibold text-mainText shadow-[0_2px_0_rgba(0,0,0,0.35),0_6px_14px_rgba(0,0,0,0.24),inset_0_1px_2px_rgba(255,255,255,0.16),inset_0_-2px_4px_rgba(0,0,0,0.08)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_3px_0_rgba(0,0,0,0.4),0_8px_16px_rgba(0,0,0,0.27),inset_0_1px_3px_rgba(255,255,255,0.2),inset_0_-2px_4px_rgba(0,0,0,0.08)] active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.3),0_3px_6px_rgba(0,0,0,0.18),inset_0_1px_2px_rgba(255,255,255,0.12),inset_0_-1px_3px_rgba(0,0,0,0.1)]">
+                <Sparkles className="size-4" aria-hidden="true" />
+                {copy.slashPrompts.manage}
+              </button>
+            ) : null}
+          </div>
           <button
             type="submit"
             disabled={busy || (!draft.trim() && images.length === 0)}

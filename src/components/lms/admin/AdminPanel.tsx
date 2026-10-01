@@ -114,7 +114,7 @@ export function AdminPanel({
   );
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[2000px] px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full min-w-0 max-w-[2000px] ">
       <PageHero
         icon={Shield}
         eyebrow={copy.eyebrow}
@@ -122,7 +122,7 @@ export function AdminPanel({
         description={copy.subtitle}
       />
 
-      <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)] mt-4">
         <aside className="h-fit rounded-box border border-hairline bg-white p-2 shadow-sm lg:sticky lg:top-4">
           <p className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
             {copy.sectionsNav}

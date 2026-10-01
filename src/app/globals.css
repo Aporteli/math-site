@@ -2,19 +2,31 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-
   --radius-box: 6px;
   --font-sans: var(--font-georgian), 'Noto Sans Georgian', ui-sans-serif, system-ui, sans-serif;
 
   /* =========================================================
      LIGHT THEME (Lichess Default Warm Paper Palette)
      ========================================================= */
-
   --color-button_1: #5cb305;
   --color-button_2: #004f99;
   --color-block-header_1: #dfca9f;
   --color-icon: #a7730c;
   --color-text_1: #7ddd1d;
+  --color-inputs: #f3f3f1;
+  --color-main: #ffffff;
+  --color-headerTop: #e0ded9;
+  --color-headerMiddle: #e7e5e1;
+  --color-headerBottom: #eceae7;
+  --color-mainButton: #f2f2f2;
+  --color-mainButtonHover: #ededed;
+  --color-BtnOnSectionHeader: #f2f2f2;;
+  --color-mainBackground: #ecebe8;
+  --color-icons: #858585;
+  --color-mainText: #4d4d4d;
+  --color-sectionHeader: #f0f0f0;
+  --color-searchInput: #f8f8f7;
+  --color-searchInputText: #787878;
 
   /* Neutral surfaces — resolved from lichess --c-bg-page etc. (site-hue: 30) */
   --color-paper: #fafafa; /* c-bg-page */
@@ -40,8 +52,6 @@
   --color-body: #4c4c4c; /* c-font */
   --color-muted: #787878; /* c-font-dim */
 
-
-  
   /* Primary Accent — c-primary */
   --color-navy: #1b78d0;
   --color-navy-light: #6291fe;
@@ -85,12 +95,26 @@
   --color-surface-light: #d59920;
   --color-button_1: #5cb305;
   --color-button_2: #0d0165;
-  --color-block-header_1: #1E1E1E;
+  --color-block-header_1: #1e1e1e;
   --color-icon: #a7730c;
   --color-black: #000000;
   --color-ink: #bababa;
   --color-white: #ffffff;
   --color-text_1: #7ddd1d;
+  --color-inputs: #221f1c;
+  --color-main: #262421;
+  --color-headerTop: #23201c;
+  --color-headerMiddle: #1d1a17;
+  --color-headerBottom: #171513;
+  --color-mainButton: #3f3c38;
+  --color-mainButtonHover: #4d4a47;
+  --color-BtnOnSectionHeader: #2d2b28;
+  --color-mainBackground: #171513;
+  --color-icons: #898988;
+  --color-mainText: ##BABABA;
+  --color-sectionHeader: #33312E;
+  --color-searchInput: #221f1c;
+  --color-searchInputText: #949494;
 
   /* Neutral surfaces */
   --color-paper: #161512; /* Lichess Dark მთავარი ღრმა ნახშირისფერი ფონი */

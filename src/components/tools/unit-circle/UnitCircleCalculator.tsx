@@ -133,8 +133,7 @@ export function UnitCircleCalculator({ copy, embedded = false }: Props) {
   }
 
   return (
-    <main className={embedded ? 'text-ink' : 'mx-auto min-h-screen max-w-[1500px] space-y-6 px-4 py-8 text-ink sm:px-6 lg:px-8'}>
-      <div className={embedded ? 'grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]' : 'my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]'}>
+    <main className={embedded ? 'text-ink' : 'mx-auto my-6 grid w-full min-w-0 max-w-[2000px] gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]'}>
         <section className={panelClass} onKeyDown={onInputKeyDown}>
           <div ref={keyboardRootRef}>
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -450,7 +449,6 @@ export function UnitCircleCalculator({ copy, embedded = false }: Props) {
             </div>
           )}
         </section>
-      </div>
     </main>
   );
 }

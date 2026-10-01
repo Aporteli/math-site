@@ -59,14 +59,14 @@ export function ThemeToggle({
       aria-label={label}
       title={label}
       className={[
-        "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-muted shadow-sm transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy",
+        "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-mainButton text-mainText shadow-sm transition hover:border-mainButton/40 hover:bg-mainButtonHover hover:text-mainText",
         className,
       ].join(" ")}
     >
       {isDark ? (
-        <Sun className="size-4" aria-hidden="true" />
+        <Sun className="size-4 text-mainText" aria-hidden="true" />
       ) : (
-        <Moon className="size-4" aria-hidden="true" />
+        <Moon className="size-4 text-mainText" aria-hidden="true" />
       )}
     </button>
   );

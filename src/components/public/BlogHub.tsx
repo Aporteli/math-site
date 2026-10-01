@@ -185,7 +185,7 @@ export function BlogHub({ locale, author, copy }: BlogHubProps) {
 
   return (
     <div className="overflow-x-clip">
-    <div className="mx-auto w-full min-w-0 max-w-[2000px] px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto my-6 w-full min-w-0 max-w-[2000px] sm:px-6 lg:px-8">
     <PageHero
           icon={BookOpen}
           eyebrow={copy.hero.eyebrow}

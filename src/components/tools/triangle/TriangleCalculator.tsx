@@ -181,8 +181,7 @@ export function TriangleCalculator({
   );
 
   return (
-    <main className="mx-auto max-w-[1500px] space-y-6 px-4 py-8 sm:px-6 lg:px-8 min-h-screen text-ink">
-      <div className="my-6 grid w-full gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+    <main className="mx-auto my-6 grid w-full min-w-0 max-w-[2000px] gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         {/* ═════ LEFT: Input ═════ */}
         <section className={panelClass}>
           <div className="mb-3 flex items-center justify-between gap-2">
@@ -348,7 +347,6 @@ export function TriangleCalculator({
             </div>
           )}
         </section>
-      </div>
     </main>
   );
 }

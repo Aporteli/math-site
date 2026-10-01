@@ -141,7 +141,7 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
   }));
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[2000px] px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full min-w-0 max-w-[2000px]">
       <TeacherStudentsWorkspace
         initialStudents={studentsList}
         courses={coursesSimple}

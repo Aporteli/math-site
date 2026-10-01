@@ -35,11 +35,10 @@ export function TeacherWorkspaceTabs({
   };
 
   return (
-    <div className="flex flex-col gap-2 border-b border-hairline bg-paper/70 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-      <div className="grid w-full grid-cols-3 gap-1 rounded-box border border-hairline bg-surface p-1 sm:flex sm:w-auto">
+    <div className="flex flex-col gap-2 border-b border-hairline bg-main px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+      <div className="grid w-full grid-cols-3 gap-1  bg-main p-1 sm:flex sm:w-auto">
         {tabs.map((tab) => {
           const active = activeTab === tab.id;
-          const Icon = tab.icon;
           const count = counts[tab.id];
 
           return (
@@ -47,14 +46,14 @@ export function TeacherWorkspaceTabs({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-box px-3 py-2 text-xs font-bold transition ${
-                active ? 'bg-navy text-white shadow-sm' : 'text-body hover:bg-paper hover:text-ink'
+              className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-box border px-3 py-2 text-xs font-bold transition ${
+                active ? 'border-navy bg-mainButton text-mainText shadow-sm' : 'text-mainText hover:bg-mainButton/40 hover:text-mainText border-none'
               }`}
             >
               <span className="truncate">{tab.label}</span>
               <span
-                className={`rounded-box px-1.5 py-0.5 text-[10px] font-bold ${
-                  active ? 'bg-white/20 text-white' : 'bg-paper-deep text-muted'
+                className={` px-1.5 py-0.5 text-[12px] font-bold ${
+                  active ? ' text-mainText' : ' text-mainText'
                 }`}
               >
                 {count}
