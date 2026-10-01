@@ -73,6 +73,11 @@ const GraphingToolLoader = dynamic(() => import('./graphing/GraphingLoader').the
   loading: () => <Loading />,
 });
 
+const VectorCurveLoader = dynamic(() => import('./vector-curve/VectorCurveLoader').then((m) => m.VectorCurveLoader), {
+  ssr: false,
+  loading: () => <Loading />,
+});
+
 type ToolId =
   | 'logarithms'
   | 'exponents'
@@ -89,7 +94,8 @@ type ToolId =
   | 'inequalities'
   | 'triangle'
   | 'fractions'
-  | 'graphing';
+  | 'graphing'
+  | 'vectorCurve';
 
 const IMPLEMENTED: ToolId[] = [
   'logarithms',
@@ -108,6 +114,7 @@ const IMPLEMENTED: ToolId[] = [
   'triangle',
   'fractions',
   'graphing',
+  'vectorCurve',
 ];
 
 type FilterId = 'all' | ToolSectionId;
@@ -406,6 +413,14 @@ export function CalculatorHub({
             copy={dict.graphingTool}
             title={copy.items.graphing.title}
             description={copy.items.graphing.description}
+          />
+        )}
+        {activeId === 'vectorCurve' && (
+          <VectorCurveLoader
+            locale={locale}
+            copy={dict.vectorCurveTool}
+            title={copy.items.vectorCurve.title}
+            description={copy.items.vectorCurve.description}
           />
         )}
         {!activeImplemented && activeItem ? (

@@ -572,6 +572,11 @@
         "title": "Mathematical animations",
         "description": "Visualise mathematical ideas through dynamic graphs and interactive experiments.",
         "badge": "Animations"
+      },
+      "vectorCurve": {
+        "title": "Vector curve",
+        "description": "Formulas and graphs for vector curves.",
+        "badge": "Vector curve"
       }
     }
   },
@@ -2528,11 +2533,7 @@
     "keyboard": "Keyboard",
     "clear": "Clear",
     "syntaxTitle": "Syntax",
-    "syntax": [
-      "3, 4/2, sqrt(2), pi",
-      "r = x and volume 12*pi — solve",
-      "triangle 3, 4, 5 — Heron"
-    ],
+    "syntax": ["3, 4/2, sqrt(2), pi", "r = x and volume 12*pi — solve", "triangle 3, 4, 5 — Heron"],
     "history": "History",
     "clearHistory": "Clear",
     "examples": "Examples:"
@@ -2639,11 +2640,7 @@
     "keyboard": "Keyboard",
     "clear": "Clear",
     "syntaxTitle": "Syntax",
-    "syntax": [
-      "a_n = a + (n-1)d",
-      "a_n = a*r^(n-1), |r|<1 converges",
-      "1/n**2, (-1)**(n+1)/n"
-    ],
+    "syntax": ["a_n = a + (n-1)d", "a_n = a*r^(n-1), |r|<1 converges", "1/n**2, (-1)**(n+1)/n"],
     "history": "History",
     "clearHistory": "Clear",
     "examples": "Examples:"
@@ -2666,11 +2663,7 @@
     "keyboard": "Keyboard",
     "clear": "Clear",
     "syntaxTitle": "Syntax",
-    "syntax": [
-      "sqrt(50), cbrt(16), root(54, 3)",
-      "1/(sqrt(3)-1) — rationalize",
-      "sqrt(x+1) = 3 — equation"
-    ],
+    "syntax": ["sqrt(50), cbrt(16), root(54, 3)", "1/(sqrt(3)-1) — rationalize", "sqrt(x+1) = 3 — equation"],
     "history": "History",
     "clearHistory": "Clear",
     "examples": "Examples:"
@@ -2704,8 +2697,7 @@
   "triangleTool": {
     "meta": {
       "title": "Triangle solver",
-      "description":
-        "Find all sides, angles, area and radii of a triangle using sine and cosine theorems."
+      "description": "Find all sides, angles, area and radii of a triangle using sine and cosine theorems."
     },
     "stepsTitle": "Step-by-step solution",
     "back": "Back to Tools",
@@ -2806,6 +2798,42 @@
       "MISMATCHED_OPS": "The expression is incomplete.",
       "EMPTY_EXPRESSION": "Add at least one fraction."
     }
+  },
+  "vectorCurveTool": {
+    "inputTitle": "Curve parameters",
+    "keyboard": "Keyboard",
+    "variableLabel": "Variable",
+    "solveButton": "Analyze",
+    "solving": "Analyzing…",
+    "reset": "Reset",
+    "examples": "Examples:",
+    "syntaxTitle": "Input syntax",
+    "history": "History",
+    "clearHistory": "Clear",
+    "emptyResult": "Enter the parametric curve x(t), y(t) and the value t₀, then press Analyze.",
+    "invalidExpression": "Could not process the expression. Check your input.",
+
+    "rLabel": "Position vector r(t)",
+    "rpLabel": "Derivative r′(t)",
+    "rAtTLabel": "Position at",
+    "rpAtTLabel": "Tangent vector at",
+    "speedLabel": "Speed",
+    "arcLengthLabel": "Arc length",
+    "unitTangentLabel": "Unit tangent T",
+    "unitNormalLabel": "Unit normal N",
+    "curvatureLabel": "Curvature κ",
+    "tangentLineLabel": "Tangent line",
+
+    "plotLegendTitle": "Show on plot",
+    "legendCurve": "Curve",
+    "legendPosition": "Position r(t₀)",
+    "legendTangent": "Tangent r′(t₀)",
+    "legendUnitTangent": "Unit tangent T",
+    "legendUnitNormal": "Unit normal N",
+    "legendAcceleration": "Acceleration r″(t₀)",
+    "legendTangentLine": "Tangent line",
+    "legendNormalLine": "Normal line",
+    "clear": "Clear"
   },
   "footer": {
     "contact": {

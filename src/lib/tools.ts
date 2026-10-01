@@ -229,6 +229,12 @@ export const TOOL_SECTIONS: ToolSection[] = [
     id: "advanced",
     tools: [
       {
+        id: "vectorCurve",
+        icon: Spline,
+        badgeColor: "navy",
+        href: "/tools/vector-curve",
+      },
+      {
         id: "calculusSolver",
         icon: Sigma,
         badgeColor: "navy",
