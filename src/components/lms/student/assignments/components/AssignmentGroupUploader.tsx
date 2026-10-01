@@ -31,10 +31,10 @@ export function AssignmentGroupUploader({
   onRemoveAttachment,
 }: AssignmentGroupUploaderProps) {
   return (
-    <div className="shrink-0 border-t border-hairline bg-surface px-3 py-3 sm:px-4">
+    <div className="shrink-0 border-t border-hairline bg-sectionHeader px-3 py-3 sm:px-4">
       {isGroupAlreadySubmitted ? (
         <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-2 text-xs font-bold text-win">
+          <div className="flex items-center gap-2 text-xs font-bold text-mainText">
             <CheckCircle2 className="size-4 shrink-0" />
             <span>ამ დღის პასუხები უკვე გაგზავნილია (იხილეთ „პასუხების“ ტაბში)</span>
           </div>
@@ -44,13 +44,12 @@ export function AssignmentGroupUploader({
               type="button"
               disabled={isWithdrawing}
               onClick={() => onResetGroup(selectedDateKey, taskAssignments)}
-              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box border border-loss/30 bg-loss-tint px-3.5 py-2 text-xs font-bold text-loss transition hover:bg-loss/10 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
-            >
+              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box border border-loss/30 bg-loss-tint px-3.5 py-2 text-xs font-bold text-loss transition hover:bg-loss/10 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none">
               {isWithdrawing ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCcw className="size-3.5" />}
               <span>პასუხის დაბრუნება</span>
             </button>
 
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-box border border-hairline bg-paper px-2.5 py-1 text-[10px] font-bold text-muted">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-box border border-hairline bg-paper px-2.5 py-1 text-[10px] font-bold text-mainText">
               <Lock className="size-3" />
               <span>დახურულია</span>
             </span>
@@ -60,15 +59,19 @@ export function AssignmentGroupUploader({
         <>
           <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
             <div>
-              <h4 className="text-sm font-bold text-ink">ჯგუფური პასუხების მიმაგრება</h4>
+              <h4 className="text-sm font-bold text-mainText">ჯგუფური პასუხების მიმაგრება</h4>
               <p className="mt-0.5 text-[11px] text-muted">
                 ატვირთეთ ფაილები მთლიანი დღის ({taskAssignments.length} დავალების) პასუხებისთვის ერთად.
               </p>
             </div>
 
             <div className="flex w-full items-center gap-2 sm:w-auto">
-              <label className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box border border-hairline bg-paper px-3.5 py-2 text-xs font-bold text-ink transition hover:border-navy/40 hover:text-navy sm:flex-none">
-                {isUploading ? <Loader2 className="size-3.5 animate-spin text-navy" /> : <UploadCloud className="size-3.5 text-navy" />}
+              <label className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-box bg-mainButton px-4 py-2 text-xs font-bold tracking-wide text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-200 hover:bg-mainButtonHover hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_8px_rgba(0,0,0,0.3)] active:translate-y-[1px] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
+                {isUploading ? (
+                  <Loader2 className="size-3.5 animate-spin text-mainText" />
+                ) : (
+                  <UploadCloud className="size-3.5 text-mainText" />
+                )}
                 <span>ფაილის არჩევა</span>
                 <input
                   type="file"
@@ -88,8 +91,7 @@ export function AssignmentGroupUploader({
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => onSubmitGroup(selectedDateKey, taskAssignments)}
-                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy-strong disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
-                >
+                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-mainButton/80 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none">
                   {isSubmitting ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
                   <span>გაგზავნა ({currentGroupFiles.length})</span>
                 </button>
@@ -107,9 +109,8 @@ export function AssignmentGroupUploader({
                     type="button"
                     title="წაშლა"
                     onClick={() => onRemoveAttachment(selectedDateKey, attachment.id)}
-                    className="absolute -right-1.5 -top-1.5 flex size-5 cursor-pointer items-center justify-center rounded-box bg-loss text-white shadow-sm transition hover:bg-loss/80"
-                  >
-                    <X className="size-3" />
+                    className="absolute -right-1.5 -top-1.5 flex size-5 cursor-pointer items-center justify-center rounded-box bg-loss text-mainText shadow-sm transition hover:bg-loss/80">
+                    <X className="size-3 text-mainText" />
                   </button>
                 </div>
               ))}

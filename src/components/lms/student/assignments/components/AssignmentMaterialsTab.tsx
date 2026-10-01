@@ -25,11 +25,11 @@ export function AssignmentMaterialsTab({
   setActiveProblemModal,
 }: AssignmentMaterialsTabProps) {
   return (
-    <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto bg-paper p-3 pe-2 sm:p-4">
+    <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto bg-main min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
       {materialsForDate.length === 0 ? (
-        <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-surface px-6 py-16 text-center">
-          <span className="mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
-            <Layers className="size-5" />
+        <div className="flex h-full min-h-64 flex-col items-center justify-center  bg-main px-6 py-16 text-center">
+          <span className="mb-3 inline-flex size-12 items-center justify-center  text-brass-strong">
+            <Layers className="size-8" strokeWidth={2.5}/>
           </span>
           <p className="text-sm font-bold text-ink">სასწავლო მასალები არ არის</p>
           <p className="mt-1 max-w-xs text-xs text-muted">ამ თარიღისთვის მასალები არ მოიძებნა.</p>

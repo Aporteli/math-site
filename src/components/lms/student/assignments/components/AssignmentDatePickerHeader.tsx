@@ -1,66 +1,79 @@
 'use client';
 
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AssignmentContentTabsHeader } from './AssignmentContentTabsHeader';
+import { StudentContentTab } from '../types/student-assignment.types';
 
 interface AssignmentDatePickerHeaderProps {
-  tasksCount: number;
   selectedDateKey: string;
   onShiftDate: (days: number) => void;
   onDateChange: (dateKey: string) => void;
+  activeTab: StudentContentTab;
+  onTabChange: (tab: StudentContentTab) => void;
+  tasksCount: number;
+  answersCount: number;
+  materialsCount: number;
+  formattedSelectedDate: string;
 }
 
 export function AssignmentDatePickerHeader({
+  activeTab,
+  onTabChange,
   tasksCount,
+  answersCount,
+  materialsCount,
+  formattedSelectedDate,
   selectedDateKey,
   onShiftDate,
   onDateChange,
 }: AssignmentDatePickerHeaderProps) {
   return (
-    <div className="flex flex-col gap-3 border-b border-hairline bg-surface px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-      <div className="flex items-center gap-2.5">
-        <h3 className="text-sm font-bold text-ink">სამუშაო სივრცე</h3>
-        <span className="inline-flex min-w-6 items-center justify-center rounded-box bg-navy-tint px-2 py-0.5 text-[11px] font-bold text-navy">
-          {tasksCount}
-        </span>
-      </div>
+    <>
+      <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
+      <div className="flex h-18 shrink-0 items-center justify-between gap-3 border-b border-hairline bg-sectionHeader px-3 sm:px-4">
+        <AssignmentContentTabsHeader
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          tasksCount={tasksCount}
+          answersCount={answersCount}
+          materialsCount={materialsCount}
+          formattedSelectedDate={formattedSelectedDate}
+        />
+        <div className="flex w-full shrink-0 items-center justify-end rounded-box border border-hairline p-1 sm:w-auto">
+          <button
+            type="button"
+            onClick={() => onShiftDate(-1)}
+            title="წინა დღე"
+            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box  transition hover:bg-mainButton hover:text-mainText">
+            <ChevronLeft className="size-4" />
+          </button>
 
-      <div className="flex w-full shrink-0 items-center rounded-box border border-hairline bg-paper p-1 sm:w-auto">
-        <button
-          type="button"
-          onClick={() => onShiftDate(-1)}
-          title="წინა დღე"
-          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink"
-        >
-          <ChevronLeft className="size-4" />
-        </button>
-
-        <div
-          onClick={(e) => {
-            const input = e.currentTarget.querySelector('input');
-            input?.showPicker?.();
-          }}
-          className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-2 sm:flex-none"
-        >
-          <CalendarIcon className="size-3.5 shrink-0 text-brass-strong" />
-          <input
-            type="date"
-            value={selectedDateKey}
-            onChange={(e) => {
-              if (e.target.value) onDateChange(e.target.value);
+          <div
+            onClick={(e) => {
+              const input = e.currentTarget.querySelector('input');
+              input?.showPicker?.();
             }}
-            className="cursor-pointer bg-transparent text-center text-xs font-bold text-ink outline-none scheme-light dark:scheme-dark [&::-webkit-calendar-picker-indicator]:hidden"
-          />
-        </div>
+            className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-2 sm:flex-none">
+            <CalendarIcon className="size-3.5 shrink-0 text-brass-strong" />
+            <input
+              type="date"
+              value={selectedDateKey}
+              onChange={(e) => {
+                if (e.target.value) onDateChange(e.target.value);
+              }}
+              className="cursor-pointer bg-transparent text-center text-xs font-bold text-mainText outline-none [&::-webkit-calendar-picker-indicator]:hidden"
+            />
+          </div>
 
-        <button
-          type="button"
-          onClick={() => onShiftDate(1)}
-          title="შემდეგი დღე"
-          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-surface hover:text-ink"
-        >
-          <ChevronRight className="size-4" />
-        </button>
+          <button
+            type="button"
+            onClick={() => onShiftDate(1)}
+            title="შემდეგი დღე"
+            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box  transition hover:bg-mainButton hover:text-mainText">
+            <ChevronRight className="size-4" />
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

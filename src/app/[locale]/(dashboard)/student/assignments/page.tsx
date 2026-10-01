@@ -81,14 +81,9 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
         <section className="flex min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-sm">
           {/* ზედა ზოლი 1: სათაური და კალენდარი */}
           <AssignmentDatePickerHeader
-            tasksCount={taskAssignments.length}
             selectedDateKey={selectedDateKey}
             onShiftDate={handleShiftDate}
             onDateChange={setSelectedDateKey}
-          />
-
-          {/* ზედა ზოლი 2: სამი საკონტროლო ტაბი */}
-          <AssignmentContentTabsHeader
             activeTab={activeTab}
             onTabChange={setActiveTab}
             tasksCount={taskAssignments.length}
@@ -96,6 +91,8 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
             materialsCount={materialsForDate.length}
             formattedSelectedDate={formattedSelectedDate}
           />
+
+          
 
           <div className="flex-1 flex flex-col min-h-0 bg-paper">
             {/* 1. დავალებების ტაბი */}

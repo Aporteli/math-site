@@ -27,6 +27,7 @@
   --color-sectionHeader: #f0f0f0;
   --color-searchInput: #f8f8f7;
   --color-searchInputText: #787878;
+  --color-border: #000000;
 
   /* Neutral surfaces — resolved from lichess --c-bg-page etc. (site-hue: 30) */
   --color-paper: #fafafa; /* c-bg-page */
@@ -111,10 +112,11 @@
   --color-BtnOnSectionHeader: #2d2b28;
   --color-mainBackground: #171513;
   --color-icons: #898988;
-  --color-mainText: ##BABABA;
+  --color-mainText: #BABABA;
   --color-sectionHeader: #33312E;
   --color-searchInput: #221f1c;
   --color-searchInputText: #949494;
+  --color-border: #ffffff;
 
   /* Neutral surfaces */
   --color-paper: #161512; /* Lichess Dark მთავარი ღრმა ნახშირისფერი ფონი */

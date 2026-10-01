@@ -11,17 +11,17 @@ interface AssignmentFiltersSidebarProps {
 
 export function AssignmentFiltersSidebar({ statusFilter, onFilterChange }: AssignmentFiltersSidebarProps) {
   return (
-    <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-sm">
+    <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-box border border-hairline  shadow-sm">
       <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
 
-      <div className="flex shrink-0 items-center gap-2.5 border-b border-hairline px-4 py-4">
-        <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
-          <Filter className="size-4" />
+      <div className="flex h-18 shrink-0 items-center gap-2.5 border-b border-hairline bg-sectionHeader px-4">
+        <span className="inline-flex size-9 items-center justify-center  text-brass-strong">
+          <Filter className="size-6" strokeWidth={2.5} />
         </span>
-        <h3 className="text-sm font-bold text-ink">ფილტრები</h3>
+        <h3 className="text-sm font-bold text-mainText">ფილტრები</h3>
       </div>
 
-      <div className="custom-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
+      <div className="custom-scrollbar bg-main min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
         {FILTERS.map((filter) => {
           const isActive = statusFilter === filter.id;
           return (
@@ -29,18 +29,13 @@ export function AssignmentFiltersSidebar({ statusFilter, onFilterChange }: Assig
               key={filter.id}
               type="button"
               onClick={() => onFilterChange(filter.id)}
-              className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-box border px-3 py-2.5 text-left text-[13px] font-bold transition ${
+              className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-box  px-3 py-2.5 text-left text-[13px] font-bold transition ${
                 isActive
-                  ? 'border-navy/25 bg-navy-tint text-navy-strong shadow-sm'
-                  : 'border-transparent text-body hover:bg-paper hover:text-ink'
+                  ? ' bg-mainButton text-mainText shadow-[0_1px_0px_rgba(0,0,0,0.2)]'
+                  : 'border-transparent text-body hover:bg-mainButton hover:text-mainText'
               }`}
             >
               <span className="truncate">{filter.label}</span>
-              {isActive ? (
-                <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-box bg-navy text-white">
-                  <Check className="size-3" />
-                </span>
-              ) : null}
             </button>
           );
         })}

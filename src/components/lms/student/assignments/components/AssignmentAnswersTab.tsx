@@ -16,11 +16,11 @@ interface AssignmentAnswersTabProps {
 
 export function AssignmentAnswersTab({ answers, onPreviewAnswer }: AssignmentAnswersTabProps) {
   return (
-    <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto bg-paper p-3 pe-2 sm:p-4">
+    <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto bg-main min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
       {answers.length === 0 ? (
-        <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-surface px-6 py-16 text-center">
-          <span className="mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
-            <CheckCircle2 className="size-5" />
+        <div className="flex h-full min-h-64 flex-col items-center justify-center  bg-main px-6 py-16 text-center">
+          <span className="mb-3 inline-flex size-12 items-center justify-center  text-navy">
+            <CheckCircle2 className="size-8" strokeWidth={2.5}/>
           </span>
           <p className="text-sm font-bold text-ink">პასუხები ჯერ არ გაგიგზავნიათ</p>
           <p className="mt-1 max-w-xs text-xs text-muted">გამოიყენეთ ქვედა პანელი პასუხის ასატვირთად და გასაგზავნად.</p>
@@ -38,7 +38,7 @@ export function AssignmentAnswersTab({ answers, onPreviewAnswer }: AssignmentAns
                   isAnswer: true,
                 })
               }
-              className="group flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-box border border-hairline bg-surface text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-navy/35"
+              className="group flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-box border border-hairline bg-sectionHeader text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-navy/35"
             >
               <span className="h-1 w-full shrink-0 bg-win" aria-hidden="true" />
 

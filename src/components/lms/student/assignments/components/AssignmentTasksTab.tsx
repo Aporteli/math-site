@@ -18,16 +18,16 @@ export function AssignmentTasksTab({
   onSelectProblem,
 }: AssignmentTasksTabProps) {
   return (
-    <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto bg-paper p-3 pe-2 sm:p-4">
+    <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto bg-main min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
       {loading ? (
-        <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2 rounded-box border border-dashed border-hairline bg-surface text-sm font-semibold text-muted">
+        <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2  bg-main text-sm font-semibold text-muted">
           <Loader2 className="size-6 animate-spin text-navy" />
           <span>იტვირთება...</span>
         </div>
       ) : taskAssignments.length === 0 ? (
-        <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-surface px-6 py-16 text-center">
-          <span className="mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
-            <BookOpen className="size-5" />
+        <div className="flex h-full min-h-64 flex-col items-center justify-center  bg-main px-6 py-16 text-center">
+          <span className="mb-3 inline-flex size-12 items-center justify-center  text-navy">
+            <BookOpen className="size-8" strokeWidth={2.5}/>
           </span>
           <p className="text-sm font-bold text-ink">ამ თარიღისთვის დავალებები არ არის</p>
           <p className="mt-1 max-w-xs text-xs text-muted">{formattedSelectedDate}-ს დავალებები არ მოიძებნა.</p>
