@@ -39,7 +39,7 @@ export function TeacherAssignmentsGrid({
     <div className="flex min-h-0 flex-1 flex-col bg-main p-3">
       <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto pe-1">
         {!activeStudent ? (
-          <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-main px-6 py-16 text-center">
+          <div className="flex h-full min-h-64 flex-col items-center justify-center  border-hairline bg-main px-6 py-16 text-center">
             <span className="mb-3 inline-flex size-12 items-center justify-center rounded-box  text-brass-strong">
               <Users className="size-8 " strokeWidth={2.5} />
             </span>
@@ -49,7 +49,7 @@ export function TeacherAssignmentsGrid({
             </p>
           </div>
         ) : assignments.length === 0 ? (
-          <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-main px-6 py-16 text-center">
+          <div className="flex h-full min-h-64 flex-col items-center justify-center border-hairline bg-main px-6 py-16 text-center">
             <span className="mb-3 inline-flex size-12 items-center justify-center text-navy">
               <EmptyIcon className="size-8" strokeWidth={2.5} />
             </span>
