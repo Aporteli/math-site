@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, forwardRef, RefObject, useCallback, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 import Konva from 'konva';
 import { Stage, Layer } from 'react-konva';
 import type { CanvasElement, KonvaCanvasHandle, KonvaCanvasProps } from './utils/types';
@@ -45,6 +46,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     elements,
     onElementsChange,
     activeTool,
+    selectionMode = 'rect',
     strokeColor,
     strokeWidth,
     eraserWidth = 40,
@@ -194,6 +196,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     elementsRef,
     marqueeLayerRef: marqueeLayerRef as RefObject<Konva.Layer>,
     setSelectedIds,
+    mode: selectionMode,
   });
 
   // ---- Pointer handlers (draw / erase / laser / marquee) ----
@@ -462,6 +465,39 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     });
   }, [selectedImage, activeTool, isCropping, disabled, isDraggingImage, elements, scale, stagePos.x, stagePos.y]);
 
+  const [deletePos, setDeletePos] = useState<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    if (activeTool !== 'select' || isCropping || disabled || selectedIds.length === 0 || selectedImage) {
+      setDeletePos(null);
+      return;
+    }
+    const stage = stageRef.current;
+    if (!stage) return;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const id of selectedIds) {
+      const node = stage.findOne('#' + id);
+      if (!node) continue;
+      const box = node.getClientRect({ skipStroke: true, skipShadow: true });
+      minX = Math.min(minX, box.x);
+      minY = Math.min(minY, box.y);
+      maxX = Math.max(maxX, box.x + box.width);
+      maxY = Math.max(maxY, box.y + box.height);
+    }
+    if (!Number.isFinite(minX)) {
+      setDeletePos(null);
+      return;
+    }
+    const above = minY - 8;
+    setDeletePos({
+      x: (minX + maxX) / 2,
+      y: above < 28 ? maxY + 8 : above,
+    });
+  }, [selectedIds, selectedImage, activeTool, isCropping, disabled, elements, scale, stagePos.x, stagePos.y]);
+
   return (
     <CanvasContainer containerRef={containerRef as RefObject<HTMLDivElement>} activeTool={activeTool}>
       {editingTextId && (
@@ -579,6 +615,23 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
           onCrop={handleCropImageClick}
           onDelete={() => deleteSelected()}
         />
+      )}
+
+      {!isCropping && deletePos && (
+        <button
+          type="button"
+          title="წაშლა"
+          aria-label="წაშლა"
+          className="pointer-events-auto absolute z-30 flex size-7 -translate-x-1/2 -translate-y-full items-center justify-center rounded-full border border-white/10 bg-slate-900/95 text-red-400 shadow-lg"
+          style={{ left: deletePos.x, top: deletePos.y }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            deleteSelected();
+          }}
+        >
+          <Trash2 className="size-3.5" />
+        </button>
       )}
 
       {isCropping && crop.cropState && (

@@ -71,6 +71,10 @@ interface Props {
   setIsStylusMenuOpen: (v: boolean) => void;
   isImageMenuOpen: boolean;
   setIsImageMenuOpen: (v: boolean) => void;
+  selectMode: 'rect' | 'freeform' | 'draw';
+  setSelectMode: (mode: 'rect' | 'freeform' | 'draw') => void;
+  isSelectMenuOpen: boolean;
+  setIsSelectMenuOpen: (open: boolean) => void;
 }
 
 export function TopToolbar(props: Props) {
@@ -121,6 +125,10 @@ export function TopToolbar(props: Props) {
     setIsStylusMenuOpen,
     isImageMenuOpen,
     setIsImageMenuOpen,
+    selectMode,
+    setSelectMode,
+    isSelectMenuOpen,
+    setIsSelectMenuOpen,
   } = props;
 
   const closeAllMenus = () => {
@@ -139,7 +147,17 @@ export function TopToolbar(props: Props) {
           {isTeacher && (
             <UndoRedoButtons canUndo={canUndo} canRedo={canRedo} onUndo={onUndo} onRedo={onRedo} />
           )}
-          <SelectPanButtons isTeacher={isTeacher} activeTool={activeTool} setActiveTool={setActiveTool} closeAllMenus={closeAllMenus} disabled={disabled} />
+          <SelectPanButtons
+            isTeacher={isTeacher}
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+            closeAllMenus={closeAllMenus}
+            disabled={disabled}
+            selectMode={selectMode}
+            setSelectMode={setSelectMode}
+            isSelectMenuOpen={isSelectMenuOpen}
+            setIsSelectMenuOpen={setIsSelectMenuOpen}
+          />
 
           {isTeacher && (
             <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1.5 dark:border-slate-800">

@@ -19,6 +19,7 @@ import {
   Minimize2,
   Minus,
   Moon,
+  Lasso,
   MousePointer,
   MoveRight,
   PanelLeftOpen,
@@ -484,6 +485,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const canvasRef = useRef<KonvaCanvasHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const penMenuRef = useRef<HTMLDivElement>(null);
+  const selectMenuRef = useRef<HTMLDivElement>(null);
   const eraserMenuRef = useRef<HTMLDivElement>(null);
   const shapesMenuRef = useRef<HTMLDivElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
@@ -566,6 +568,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const lastLaserSentRef = useRef(0);
 
   const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
+  const [isSelectMenuOpen, setIsSelectMenuOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState<'rect' | 'freeform' | 'draw'>('rect');
   const [isEraserMenuOpen, setIsEraserMenuOpen] = useState(false);
   const [isShapesMenuOpen, setIsShapesMenuOpen] = useState(false);
   const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
@@ -1088,6 +1092,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       const target = e.target as Node;
       if (eraserMenuRef.current && !eraserMenuRef.current.contains(target)) setIsEraserMenuOpen(false);
       if (penMenuRef.current && !penMenuRef.current.contains(target)) setIsPenMenuOpen(false);
+      if (selectMenuRef.current && !selectMenuRef.current.contains(target)) setIsSelectMenuOpen(false);
       if (shapesMenuRef.current && !shapesMenuRef.current.contains(target)) setIsShapesMenuOpen(false);
       if (colorMenuRef.current && !colorMenuRef.current.contains(target)) setIsColorMenuOpen(false);
       if (stylusMenuRef.current && !stylusMenuRef.current.contains(target)) setIsStylusMenuOpen(false);
@@ -1566,12 +1571,85 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             </ToolButton>
           </div>
           <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
-            <ToolButton
-              title={copy.tools.select}
-              active={activeTool === 'select'}
-              onClick={() => setAndSaveTool('select')}>
-              <MousePointer className="size-4" />
-            </ToolButton>
+            <div ref={selectMenuRef} className="relative flex shrink-0 items-center">
+              <div
+                className={`flex items-center h-8 rounded-box transition-all shadow-xs ${activeTool === 'select' ? 'bg-navy text-white' : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'}`}>
+                <button
+                  type="button"
+                  title={
+                    selectMode === 'freeform'
+                      ? 'თავისუფალი მონიშვნა'
+                      : selectMode === 'draw'
+                        ? 'დახატვით მონიშვნა'
+                        : copy.tools.select
+                  }
+                  onClick={() => {
+                    setAndSaveTool('select');
+                    setIsSelectMenuOpen(false);
+                  }}
+                  className="flex items-center justify-center size-8 rounded-box focus:outline-none">
+                  {selectMode === 'freeform' ? (
+                    <Lasso className="size-4" />
+                  ) : selectMode === 'draw' ? (
+                    <Pencil className="size-4" />
+                  ) : (
+                    <MousePointer className="size-4" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  title="მონიშვნის ტიპი"
+                  onClick={() => {
+                    setIsSelectMenuOpen((prev) => !prev);
+                    setIsPenMenuOpen(false);
+                    setIsShapesMenuOpen(false);
+                    setIsColorMenuOpen(false);
+                    setIsEraserMenuOpen(false);
+                  }}
+                  className={`flex items-center justify-center px-1 h-full rounded-box transition-colors border-l ${activeTool === 'select' ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
+                  <ChevronDown
+                    className={`size-3 transition-transform duration-200 ${isSelectMenuOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              </div>
+              {isSelectMenuOpen && (
+                <div className="absolute top-full mt-2 left-0 z-[120] w-44 rounded-box bg-white p-1 shadow-2xl border border-hairline">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectMode('rect');
+                      setAndSaveTool('select');
+                      setIsSelectMenuOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-2 rounded-box px-2 py-1.5 text-xs ${selectMode === 'rect' ? 'bg-navy-tint text-navy' : 'text-ink hover:bg-paper'}`}>
+                    <MousePointer className="size-3.5" />
+                    მართკუთხედი
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectMode('freeform');
+                      setAndSaveTool('select');
+                      setIsSelectMenuOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-2 rounded-box px-2 py-1.5 text-xs ${selectMode === 'freeform' ? 'bg-navy-tint text-navy' : 'text-ink hover:bg-paper'}`}>
+                    <Lasso className="size-3.5" />
+                    თავისუფალი
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectMode('draw');
+                      setAndSaveTool('select');
+                      setIsSelectMenuOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-2 rounded-box px-2 py-1.5 text-xs ${selectMode === 'draw' ? 'bg-navy-tint text-navy' : 'text-ink hover:bg-paper'}`}>
+                    <Pencil className="size-3.5" />
+                    დახატვა
+                  </button>
+                </div>
+              )}
+            </div>
             <ToolButton title={copy.tools.hand} active={activeTool === 'hand'} onClick={() => setAndSaveTool('hand')}>
               <Hand className="size-4" />
             </ToolButton>
@@ -2019,6 +2097,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           elements={pages[currentPageIndex] || []}
           onElementsChange={handleElementsChange}
           activeTool={activeTool}
+          selectionMode={selectMode}
           strokeColor={effectiveStroke}
           strokeWidth={strokeWidth}
           eraserWidth={eraserWidth}

@@ -389,6 +389,8 @@ export function ClassWhiteboard({
   const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
   const [isStylusMenuOpen, setIsStylusMenuOpen] = useState(false);
   const [isImageMenuOpen, setIsImageMenuOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState<'rect' | 'freeform' | 'draw'>('rect');
+  const [isSelectMenuOpen, setIsSelectMenuOpen] = useState(false);
 
   // --- Global hooks ---
   useScrollLock(containerRef);
@@ -560,6 +562,10 @@ export function ClassWhiteboard({
         setIsStylusMenuOpen={setIsStylusMenuOpen}
         isImageMenuOpen={isImageMenuOpen}
         setIsImageMenuOpen={setIsImageMenuOpen}
+        selectMode={selectMode}
+        setSelectMode={setSelectMode}
+        isSelectMenuOpen={isSelectMenuOpen}
+        setIsSelectMenuOpen={setIsSelectMenuOpen}
       />
 
       <div
@@ -577,6 +583,7 @@ export function ClassWhiteboard({
           elements={pages[currentPageIndex] || []}
           onElementsChange={handleElementsChange}
           activeTool={activeTool}
+          selectionMode={selectMode}
           strokeColor={effectiveStroke}
           strokeWidth={strokeWidth}
           eraserWidth={eraserWidth}
