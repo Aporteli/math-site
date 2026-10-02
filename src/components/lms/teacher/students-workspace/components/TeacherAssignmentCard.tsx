@@ -31,69 +31,67 @@ export function TeacherAssignmentCard({ assignment, activeTab, onSelect, onDelet
       <button
         type="button"
         onClick={onSelect}
-        className="flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-[inherit] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-navy/35"
-      >
-      <span className={`h-1 w-full shrink-0 ${accent}`} aria-hidden="true" />
+        className="flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-[inherit] text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-navy/35">
+        <span className={`h-1 w-full shrink-0 ${accent}`} aria-hidden="true" />
 
-      <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-box bg-sectionHeader">
-        {displayImageUrl ? (
-          <img
-            src={displayImageUrl}
-            alt=""
-            className="size-full bg-sectionHeader object-contain p-2 transition rounded-box duration-200 group-hover:scale-[1.03]"
-          />
-        ) : isPdfOrDoc ? (
-          <div className="flex size-full flex-col items-center justify-center gap-1.5 rounded-box px-3 text-center">
-            <FileText className="size-8 text-navy" />
-            <span className="text-[11px] font-semibold text-navy">ფაილი</span>
-          </div>
-        ) : assignment.promptTex ? (
-          <div className="flex size-full items-center justify-center overflow-hidden rounded-box px-3 py-2">
-            <KatexPreview
-              tex={assignment.promptTex}
-              className="pointer-events-none line-clamp-4 text-sm leading-relaxed text-ink"
+        <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-box bg-sectionHeader">
+          {displayImageUrl ? (
+            <img
+              src={displayImageUrl}
+              alt=""
+              className="size-full bg-sectionHeader object-contain p-2 transition rounded-box duration-200 group-hover:scale-[1.03]"
             />
-          </div>
-        ) : isMaterial ? (
-          <div className="flex size-full flex-col items-center justify-center gap-1.5 rounded-box bg-brass-tint px-3 text-center">
-            <Layers className="size-8 text-brass-strong" />
-            <span className="text-[11px] font-semibold text-brass-strong">სასწავლო მასალა</span>
-          </div>
-        ) : (
-          <div className="flex size-full items-center justify-center rounded-box text-[11px] font-semibold text-muted">
-            პრევიუ არ არის
-          </div>
-        )}
+          ) : isPdfOrDoc ? (
+            <div className="flex size-full flex-col items-center justify-center gap-1.5 rounded-box px-3 text-center">
+              <FileText className="size-8 text-navy" />
+              <span className="text-[11px] font-semibold text-navy">ფაილი</span>
+            </div>
+          ) : assignment.promptTex ? (
+            <div className="flex size-full items-center justify-center overflow-hidden rounded-box px-3 py-2">
+              <KatexPreview
+                tex={assignment.promptTex}
+                className="pointer-events-none line-clamp-4 text-sm leading-relaxed text-ink"
+              />
+            </div>
+          ) : isMaterial ? (
+            <div className="flex size-full flex-col items-center justify-center gap-1.5 rounded-box bg-brass-tint px-3 text-center">
+              <Layers className="size-8 text-brass-strong" />
+              <span className="text-[11px] font-semibold text-brass-strong">სასწავლო მასალა</span>
+            </div>
+          ) : (
+            <div className="flex size-full items-center justify-center rounded-box text-[11px] font-semibold text-muted">
+              პრევიუ არ არის
+            </div>
+          )}
 
-        {isGraded ? (
-          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-box border border-win/20 bg-win-tint px-2 py-0.5 text-[10px] font-bold text-win shadow-sm">
-            <CheckCircle2 className="size-3" />
-            ჩაბარებულია
-          </span>
-        ) : isSubmitted ? (
-          <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-box border border-navy/15 bg-surface px-2 py-0.5 text-[10px] font-bold text-navy shadow-sm">
-            <span className="size-1.5 rounded-box bg-navy" />
-            პასუხი მიღებულია
-          </span>
-        ) : null}
-      </div>
+          {isGraded ? (
+            <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-box border border-win/20 bg-win-tint px-2 py-0.5 text-[10px] font-bold text-win shadow-sm">
+              <CheckCircle2 className="size-3" />
+              ჩაბარებულია
+            </span>
+          ) : isSubmitted ? (
+            <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-box border border-navy/15 bg-surface px-2 py-0.5 text-[10px] font-bold text-navy shadow-sm">
+              <span className="size-1.5 rounded-box bg-navy" />
+              პასუხი მიღებულია
+            </span>
+          ) : null}
+        </div>
 
-      <div className="flex flex-1 border-t border-white/10 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
-        <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{assignment.title}</p>
-        <span className="inline-flex w-fit items-center gap-1 rounded-box bg-mainButton border-white/10 border-[1px] px-2.5 py-1 text-xs font-bold text-mainText transition group-hover:bg-navy group-hover:text-white">
-          {isMaterial ? 'მასალის გახსნა' : 'ნახვა'}
-          <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </span>
-      </div>
+        <div className="flex flex-1 border-t border-border/10 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
+          <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{assignment.title}</p>
+          <span className="inline-flex w-fit items-center gap-1 rounded-box bg-mainButton border-border border-[1px] px-2.5 py-1 text-xs font-bold text-mainText transition group-hover:bg-navy group-hover:text-white">
+            {isMaterial ? 'მასალის გახსნა' : 'ნახვა'}
+            <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </span>
+        </div>
       </button>
 
       <button
         type="button"
         title="წაშლა"
         onClick={() => onDelete(assignment.id)}
-        className="absolute bottom-3.5 right-3.5 z-10 flex size-8 cursor-pointer items-center justify-center text-muted transition  hover:text-loss"
-      >
-        <Trash2 className="size-3.5 text-icons hover:text-loss" strokeWidth={2.5}  />
+        className="absolute bottom-3.5 right-3.5 z-10 flex size-8 cursor-pointer items-center justify-center text-muted transition  hover:text-loss">
+        <Trash2 className="size-3.5 text-icons hover:text-loss" strokeWidth={2.5} />
       </button>
     </div>
   );

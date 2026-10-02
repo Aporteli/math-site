@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
-import { getSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
+import { teacherBoardUserId } from '@/lib/teacher-board/actor';
 import {
   publishLiveTeacherBoard,
   publishTeacherBoardInk,
@@ -12,20 +12,12 @@ import {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-async function teacherId() {
-  const session = await getSession();
-  const userId = session?.user?.id;
-  const role = session?.user?.role;
-  if (!userId || (role !== 'TEACHER' && role !== 'ADMIN')) return null;
-  return userId;
-}
-
 function isPages(value: unknown): value is unknown[][] {
   return Array.isArray(value) && value.every((page) => Array.isArray(page));
 }
 
-export async function GET() {
-  const userId = await teacherId();
+export async function GET(req: Request) {
+  const userId = await teacherBoardUserId(req);
   if (!userId) return NextResponse.json({ board: null }, { status: 401 });
 
   const live = readLiveTeacherBoard(userId);
@@ -51,7 +43,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const userId = await teacherId();
+  const userId = await teacherBoardUserId(req);
   if (!userId) return NextResponse.json({ ok: false }, { status: 401 });
 
   let body: {
@@ -65,7 +57,9 @@ export async function POST(req: Request) {
     stroke?: unknown;
     strokeWidth?: unknown;
     inkSeq?: unknown;
-  };  try {
+    base?: unknown;
+  };
+  try {
     body = (await req.json()) as typeof body;
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
@@ -102,7 +96,9 @@ export async function POST(req: Request) {
       typeof body.strokeWidth === 'number' && Number.isFinite(body.strokeWidth)
         ? Math.min(64, Math.max(0.5, body.strokeWidth))
         : 2;
-    publishTeacherBoardInk({ userId, clientId, pageIndex, points, stroke, strokeWidth, inkSeq });
+    const base =
+      typeof body.base === 'number' && Number.isFinite(body.base) ? Math.max(0, Math.floor(body.base)) : 0;
+    publishTeacherBoardInk({ userId, clientId, pageIndex, points, stroke, strokeWidth, inkSeq, base });
     return NextResponse.json({ ok: true });
   }
 

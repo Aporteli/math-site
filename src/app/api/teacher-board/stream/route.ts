@@ -1,5 +1,5 @@
-import { getSession } from '@/lib/auth/session';
 import { subscribeTeacherBoard, type TeacherBoardEvent } from '@/lib/teacher-board/bus';
+import { teacherBoardUserId } from '@/lib/teacher-board/actor';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,17 +10,16 @@ function frame(data: unknown) {
   return payload;
 }
 
-export async function GET() {
-  const session = await getSession();
-  const userId = session?.user?.id;
-  const role = session?.user?.role;
-  if (!userId || (role !== 'TEACHER' && role !== 'ADMIN')) {
+export async function GET(req: Request) {
+  const userId = await teacherBoardUserId(req);
+  if (!userId) {
     return new Response('Unauthorized', { status: 401 });
   }
 
   const encoder = new TextEncoder();
   let unsubscribe = () => {};
   let heartbeat: ReturnType<typeof setInterval> | undefined;
+  let retry: ReturnType<typeof setTimeout> | undefined;
   let closed = false;
   let pendingBoard: string | null = null;
   let pendingLive: string | null = null;
@@ -31,6 +30,15 @@ export async function GET() {
     closed = true;
     unsubscribe();
     if (heartbeat) clearInterval(heartbeat);
+    if (retry) clearTimeout(retry);
+  };
+
+  const armRetry = () => {
+    if (retry != null || closed) return;
+    retry = setTimeout(() => {
+      retry = undefined;
+      flush();
+    }, 40);
   };
 
   const tryEnqueue = (chunk: string) => {
@@ -47,11 +55,17 @@ export async function GET() {
   const flush = () => {
     if (closed) return;
     if (pendingBoard != null) {
-      if (!tryEnqueue(pendingBoard)) return;
+      if (!tryEnqueue(pendingBoard)) {
+        armRetry();
+        return;
+      }
       pendingBoard = null;
     }
     if (pendingLive != null) {
-      if (!tryEnqueue(pendingLive)) return;
+      if (!tryEnqueue(pendingLive)) {
+        armRetry();
+        return;
+      }
       pendingLive = null;
     }
   };
@@ -73,6 +87,7 @@ export async function GET() {
           stroke: event.stroke,
           strokeWidth: event.strokeWidth,
           inkSeq: event.inkSeq,
+          base: event.base,
         });
         if (event.type === 'laser' || event.type === 'ink') pendingLive = chunk;
         else {
@@ -92,7 +107,7 @@ export async function GET() {
     cancel() {
       cleanup();
     },
-  });
+  }, { highWaterMark: 32 });
 
   return new Response(stream, {
     headers: {

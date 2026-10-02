@@ -13,6 +13,7 @@ export type TeacherBoardEvent = {
   stroke?: string;
   strokeWidth?: number;
   inkSeq?: number;
+  base?: number;
 };
 
 type Handler = (event: TeacherBoardEvent) => void;
@@ -105,6 +106,7 @@ export function publishTeacherBoardInk(input: {
   stroke: string;
   strokeWidth: number;
   inkSeq?: number;
+  base?: number;
 }) {
   const bus = getBus();
   const floor = bus.inkFloor.get(input.userId) ?? 0;
@@ -119,6 +121,7 @@ export function publishTeacherBoardInk(input: {
     stroke: input.stroke,
     strokeWidth: input.strokeWidth,
     inkSeq: input.inkSeq,
+    base: input.base,
   });
 }
 

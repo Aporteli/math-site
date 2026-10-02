@@ -565,6 +565,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const inkQueuedRef = useRef(false);
   const inkAbortRef = useRef<AbortController | null>(null);
   const inkSeqRef = useRef(0);
+  const inkSentCountRef = useRef(0);
+  const remoteInkRef = useRef<{ seq: number; points: number[] } | null>(null);
   const remoteInkFloorRef = useRef(0);
   const remoteStoreTimerRef = useRef<number | null>(null);
   const schedulePushRef = useRef<() => void>(() => {});
@@ -702,6 +704,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     if (!isHydratedRef.current || applyingRemoteRef.current) return;
     editEpochRef.current += 1;
     inkSeqRef.current += 1;
+    inkSentCountRef.current = 0;
     liveStrokeRef.current = null;
     inkQueuedRef.current = false;
     if (inkTimerRef.current != null) {
@@ -763,12 +766,17 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       const send = () => {
         const current = liveStrokeRef.current;
         if (!current || current.points.length < 4) return;
+        const base = Math.min(inkSentCountRef.current, current.points.length);
+        const points = current.points.slice(base);
+        if (points.length < 2) return;
         if (inkSendingRef.current) {
           inkQueuedRef.current = true;
           return;
         }
         inkSendingRef.current = true;
         inkQueuedRef.current = false;
+        const seq = inkSeqRef.current;
+        const sentCount = base + points.length;
         const controller = new AbortController();
         inkAbortRef.current = controller;
         const killer = window.setTimeout(() => controller.abort(), 2500);
@@ -778,14 +786,20 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           signal: controller.signal,
           body: JSON.stringify({
             type: 'ink',
-            points: current.points.slice(),
+            points,
+            base,
             stroke: current.color,
             strokeWidth: current.width,
             pageIndex: currentPageIndexRef.current,
             clientId: clientIdRef.current,
-            inkSeq: inkSeqRef.current,
+            inkSeq: seq,
           }),
         })
+          .then((res) => {
+            if (res.ok && inkSeqRef.current === seq) {
+              inkSentCountRef.current = Math.max(inkSentCountRef.current, sentCount);
+            }
+          })
           .catch(() => {})
           .finally(() => {
             window.clearTimeout(killer);
@@ -822,6 +836,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       applyingRemoteRef.current = true;
       revisionRef.current = board.revision;
       canvasRef.current?.renderRemoteInk(null);
+      remoteInkRef.current = null;
       const nextPages = board.pages;
       const pageIndex = Math.min(Math.max(0, board.currentPageIndex || 0), nextPages.length - 1);
       setPages(nextPages);
@@ -903,6 +918,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             stroke?: string;
             strokeWidth?: number;
             inkSeq?: number;
+            base?: number;
           };
           if (typeof msg.inkSeq === 'number') {
             remoteInkFloorRef.current = Math.max(remoteInkFloorRef.current, msg.inkSeq);
@@ -913,9 +929,18 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             if (msg.clientId && msg.clientId === clientIdRef.current) return;
             if (typeof msg.pageIndex === 'number' && msg.pageIndex !== currentPageIndexRef.current) {
               canvasRef.current?.renderRemoteInk(null);
+              remoteInkRef.current = null;
               return;
             }
-            const points = Array.isArray(msg.points) ? msg.points.filter((n) => typeof n === 'number') : [];
+            const delta = Array.isArray(msg.points) ? msg.points.filter((n) => typeof n === 'number') : [];
+            const base = typeof msg.base === 'number' && Number.isFinite(msg.base) ? Math.max(0, Math.floor(msg.base)) : 0;
+            const seq = typeof msg.inkSeq === 'number' ? msg.inkSeq : -1;
+            const prev = remoteInkRef.current;
+            const points =
+              prev && prev.seq === seq && base > 0 && base <= prev.points.length
+                ? prev.points.slice(0, base).concat(delta)
+                : delta;
+            if (seq >= 0) remoteInkRef.current = { seq, points };
             canvasRef.current?.renderRemoteInk(
               points.length >= 4
                 ? { points, color: msg.stroke || '#111111', width: msg.strokeWidth || 2 }
