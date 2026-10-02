@@ -563,6 +563,9 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const inkTimerRef = useRef<number | null>(null);
   const inkSendingRef = useRef(false);
   const inkQueuedRef = useRef(false);
+  const inkAbortRef = useRef<AbortController | null>(null);
+  const inkSeqRef = useRef(0);
+  const remoteInkFloorRef = useRef(0);
   const remoteStoreTimerRef = useRef<number | null>(null);
   const schedulePushRef = useRef<() => void>(() => {});
   const lastLaserSentRef = useRef(0);
@@ -698,6 +701,14 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const schedulePush = useCallback(() => {
     if (!isHydratedRef.current || applyingRemoteRef.current) return;
     editEpochRef.current += 1;
+    inkSeqRef.current += 1;
+    liveStrokeRef.current = null;
+    inkQueuedRef.current = false;
+    if (inkTimerRef.current != null) {
+      window.clearTimeout(inkTimerRef.current);
+      inkTimerRef.current = null;
+    }
+    inkAbortRef.current?.abort();
     if (pushTimerRef.current != null) return;
     pushTimerRef.current = window.setTimeout(() => {
       pushTimerRef.current = null;
@@ -714,6 +725,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           pages: pagesRef.current,
           currentPageIndex: currentPageIndexRef.current,
           clientId: clientIdRef.current,
+          inkSeq: inkSeqRef.current,
         });
         void fetch('/api/teacher-board', {
           method: 'POST',
@@ -758,6 +770,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         inkSendingRef.current = true;
         inkQueuedRef.current = false;
         const controller = new AbortController();
+        inkAbortRef.current = controller;
         const killer = window.setTimeout(() => controller.abort(), 2500);
         void fetch('/api/teacher-board', {
           method: 'POST',
@@ -770,6 +783,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             strokeWidth: current.width,
             pageIndex: currentPageIndexRef.current,
             clientId: clientIdRef.current,
+            inkSeq: inkSeqRef.current,
           }),
         })
           .catch(() => {})
@@ -888,9 +902,14 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             points?: number[];
             stroke?: string;
             strokeWidth?: number;
+            inkSeq?: number;
           };
+          if (typeof msg.inkSeq === 'number') {
+            remoteInkFloorRef.current = Math.max(remoteInkFloorRef.current, msg.inkSeq);
+          }
           if (msg.type === 'ping') return;
           if (msg.type === 'ink') {
+            if (typeof msg.inkSeq === 'number' && msg.inkSeq < remoteInkFloorRef.current) return;
             if (msg.clientId && msg.clientId === clientIdRef.current) return;
             if (typeof msg.pageIndex === 'number' && msg.pageIndex !== currentPageIndexRef.current) {
               canvasRef.current?.renderRemoteInk(null);

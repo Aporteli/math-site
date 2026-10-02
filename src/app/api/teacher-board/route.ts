@@ -64,12 +64,14 @@ export async function POST(req: Request) {
     points?: unknown;
     stroke?: unknown;
     strokeWidth?: unknown;
+    inkSeq?: unknown;
   };  try {
     body = (await req.json()) as typeof body;
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
   const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 64) : '';
+  const inkSeq = typeof body.inkSeq === 'number' && Number.isFinite(body.inkSeq) ? body.inkSeq : undefined;
   if (body.type === 'laser') {
     const pageIndex =
       typeof body.pageIndex === 'number' && Number.isFinite(body.pageIndex)
@@ -100,7 +102,7 @@ export async function POST(req: Request) {
       typeof body.strokeWidth === 'number' && Number.isFinite(body.strokeWidth)
         ? Math.min(64, Math.max(0.5, body.strokeWidth))
         : 2;
-    publishTeacherBoardInk({ userId, clientId, pageIndex, points, stroke, strokeWidth });
+    publishTeacherBoardInk({ userId, clientId, pageIndex, points, stroke, strokeWidth, inkSeq });
     return NextResponse.json({ ok: true });
   }
 
@@ -115,6 +117,7 @@ export async function POST(req: Request) {
     clientId,
     pages: body.pages,
     currentPageIndex: safeIndex,
+    inkSeq,
   });
   schedulePersist(userId);
 

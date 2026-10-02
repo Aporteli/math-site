@@ -72,9 +72,13 @@ export async function GET() {
           points: event.points,
           stroke: event.stroke,
           strokeWidth: event.strokeWidth,
+          inkSeq: event.inkSeq,
         });
         if (event.type === 'laser' || event.type === 'ink') pendingLive = chunk;
-        else pendingBoard = chunk;
+        else {
+          pendingBoard = chunk;
+          pendingLive = null;
+        }
         flush();
       });
       heartbeat = setInterval(() => {
