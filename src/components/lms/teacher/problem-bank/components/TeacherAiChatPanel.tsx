@@ -566,7 +566,7 @@ export function TeacherAiChatPanel({
 
   return (
     <section
-      className={`${className} rounded-box border border-hairline bg-white  shadow-sm relative`}
+      className={`${className} rounded-box border border-hairline bg-sectionHeader  shadow-sm relative`}
       aria-labelledby="teacher-ai-chat-heading">
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hairline bg-sectionHeader p-2">
         <h2 id="teacher-ai-chat-heading" className="text-lg font-semibold tracking-tight text-mainText">
@@ -615,7 +615,7 @@ export function TeacherAiChatPanel({
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-box border border-white/10 bg-mainButton px-2.5 py-2.5 text-xs font-semibold text-mainText shadow-[0_2px_0_rgba(0,0,0,0.35),0_6px_14px_rgba(0,0,0,0.24),inset_0_1px_2px_rgba(255,255,255,0.16),inset_0_-2px_4px_rgba(0,0,0,0.08)] transition-all duration-150 hover:-translate-y-0.5 hover:border-navy/30 hover:text-navy hover:shadow-[0_3px_0_rgba(0,0,0,0.4),0_8px_16px_rgba(0,0,0,0.27),inset_0_1px_3px_rgba(255,255,255,0.2),inset_0_-2px_4px_rgba(0,0,0,0.08)] active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.3),0_3px_6px_rgba(0,0,0,0.18),inset_0_1px_2px_rgba(255,255,255,0.12),inset_0_-1px_3px_rgba(0,0,0,0.1)] "
+          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-box border border-black/15 bg-mainButton px-4 py-2 text-xs font-bold tracking-wide text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_1px_3px_rgba(0,0,0,0.08)] transition-all duration-200 hover:border-black/20 hover:bg-mainButtonHover hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_2px_6px_rgba(0,0,0,0.12)] active:translate-y-[1px] active:shadow-[inset_0_2px_3px_rgba(0,0,0,0.08)] dark:border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_4px_rgba(0,0,0,0.2)] dark:hover:border-white/15 dark:hover:bg-mainButtonHover dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_3px_7px_rgba(0,0,0,0.25)] dark:active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
           disabled={busy || messages.length === 0}
           onClick={() => {
             setMessages([]);
@@ -631,8 +631,8 @@ export function TeacherAiChatPanel({
       <div className="min-h-[18rem] max-h-[28rem] overflow-y-auto rounded-box border border-hairline bg-main p-3">
         {messages.length === 0 ? (
           <div className="flex h-full min-h-[14rem] flex-col items-center justify-center text-center">
-            <span className="inline-flex size-10 items-center justify-center rounded-box bg-navy-tint text-navy">
-              <MessageSquare className="size-5" aria-hidden="true" />
+            <span className="inline-flex size-10 items-center justify-center  text-navy">
+              <MessageSquare className="size-8" aria-hidden="true" strokeWidth={2.5} />
             </span>
             <p className="mt-3 text-sm font-medium text-ink">{copy.emptyTitle}</p>
           </div>
@@ -970,16 +970,17 @@ export function TeacherAiChatPanel({
               onClick={() => fileInputRef.current?.click()}
               aria-label={copy.addImage}
               title={copy.addImage}
-              className="inline-flex items-center gap-1.5 rounded-box border border-white/10 bg-mainButton px-2.5 py-2.5 text-xs font-semibold text-mainText shadow-[0_2px_0_rgba(0,0,0,0.35),0_6px_14px_rgba(0,0,0,0.24),inset_0_1px_2px_rgba(255,255,255,0.16),inset_0_-2px_4px_rgba(0,0,0,0.08)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_3px_0_rgba(0,0,0,0.4),0_8px_16px_rgba(0,0,0,0.27),inset_0_1px_3px_rgba(255,255,255,0.2),inset_0_-2px_4px_rgba(0,0,0,0.08)] active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.3),0_3px_6px_rgba(0,0,0,0.18),inset_0_1px_2px_rgba(255,255,255,0.12),inset_0_-1px_3px_rgba(0,0,0,0.1)]">
-              <ImagePlus className="size-4" aria-hidden="true" />
+              className="group relative flex cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-box border border-black/10 bg-mainButton px-3 py-2.5 text-left text-[13px] font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_3px_rgba(0,0,0,0.08)] transition-all duration-200 hover:border-black/15 hover:bg-mainButtonHover hover:text-mainText hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_2px_5px_rgba(0,0,0,0.1)] dark:border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_6px_rgba(0,0,0,0.16)]">
+              <ImagePlus className="size-4 shrink-0" aria-hidden="true" />
               {copy.addImage}
             </button>
+
             {slashEnabled ? (
               <button
                 type="button"
                 onClick={() => setManageSlashOpen((open) => !open)}
-                className="inline-flex items-center gap-1.5 rounded-box border border-white/10 bg-mainButton px-2.5 py-2.5 text-xs font-semibold text-mainText shadow-[0_2px_0_rgba(0,0,0,0.35),0_6px_14px_rgba(0,0,0,0.24),inset_0_1px_2px_rgba(255,255,255,0.16),inset_0_-2px_4px_rgba(0,0,0,0.08)] transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[0_3px_0_rgba(0,0,0,0.4),0_8px_16px_rgba(0,0,0,0.27),inset_0_1px_3px_rgba(255,255,255,0.2),inset_0_-2px_4px_rgba(0,0,0,0.08)] active:translate-y-0.5 active:shadow-[0_1px_0_rgba(0,0,0,0.3),0_3px_6px_rgba(0,0,0,0.18),inset_0_1px_2px_rgba(255,255,255,0.12),inset_0_-1px_3px_rgba(0,0,0,0.1)]">
-                <Sparkles className="size-4" aria-hidden="true" />
+                className="group relative flex  cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-box border border-black/10 bg-mainButton px-3 py-2.5 text-left text-[13px] font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_3px_rgba(0,0,0,0.08)] transition-all duration-200 hover:border-black/15 hover:bg-mainButtonHover hover:text-mainText hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_2px_5px_rgba(0,0,0,0.1)] dark:border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_6px_rgba(0,0,0,0.16)]">
+                <Sparkles className="size-4 shrink-0" aria-hidden="true" />
                 {copy.slashPrompts.manage}
               </button>
             ) : null}
@@ -987,7 +988,7 @@ export function TeacherAiChatPanel({
           <button
             type="submit"
             disabled={busy || (!draft.trim() && images.length === 0)}
-            className="inline-flex items-center justify-center gap-2 rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60">
+            className="group relative flex cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-box bg-navy px-3 py-2.5 text-left text-[13px] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_3px_rgba(0,0,0,0.08)] transition-all duration-200 hover:bg-navy/80 hover:text-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_2px_5px_rgba(0,0,0,0.1)]">
             <Send className="size-4" aria-hidden="true" />
             {busy ? copy.sending : copy.send}
           </button>

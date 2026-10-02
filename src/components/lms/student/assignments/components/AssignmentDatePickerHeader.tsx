@@ -39,40 +39,44 @@ export function AssignmentDatePickerHeader({
           materialsCount={materialsCount}
           formattedSelectedDate={formattedSelectedDate}
         />
-        <div className="flex w-full shrink-0 items-center justify-end rounded-box border border-hairline p-1 sm:w-auto">
-          <button
-            type="button"
-            onClick={() => onShiftDate(-1)}
-            title="წინა დღე"
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box  transition hover:bg-mainButton hover:text-mainText">
-            <ChevronLeft className="size-4" />
-          </button>
+       <div className="flex w-full items-stretch overflow-hidden rounded-box border border-border/10 bg-main shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_4px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.04)] transition-shadow duration-200 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_10px_rgba(0,0,0,0.10),0_1px_2px_rgba(0,0,0,0.05)] sm:w-auto">
+  <button
+    type="button"
+    onClick={() => onShiftDate(-1)}
+    title="წინა დღე"
+    className="flex size-9 shrink-0 items-center justify-center border-r border-border/10 text-muted transition-all duration-200 hover:bg-surface hover:text-ink active:scale-95"
+  >
+    <ChevronLeft className="size-4" />
+  </button>
 
-          <div
-            onClick={(e) => {
-              const input = e.currentTarget.querySelector('input');
-              input?.showPicker?.();
-            }}
-            className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 px-2 sm:flex-none">
-            <CalendarIcon className="size-3.5 shrink-0 text-brass-strong" />
-            <input
-              type="date"
-              value={selectedDateKey}
-              onChange={(e) => {
-                if (e.target.value) onDateChange(e.target.value);
-              }}
-              className="cursor-pointer bg-transparent text-center text-xs font-bold text-mainText outline-none [&::-webkit-calendar-picker-indicator]:hidden"
-            />
-          </div>
+  <div
+    onClick={(e) => {
+      const input = e.currentTarget.querySelector('input');
+      input?.showPicker?.();
+    }}
+    className="group flex min-w-[155px] cursor-pointer items-center justify-center gap-2 px-3 transition-colors duration-200 hover:bg-surface"
+  >
+    <CalendarIcon className="size-3.5 text-brass-strong transition-colors duration-200 group-hover:text-ink" />
 
-          <button
-            type="button"
-            onClick={() => onShiftDate(1)}
-            title="შემდეგი დღე"
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box  transition hover:bg-mainButton hover:text-mainText">
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
+    <input
+      type="date"
+      value={selectedDateKey}
+      onChange={(e) => {
+        if (e.target.value) onDateChange(e.target.value);
+      }}
+      className="cursor-pointer bg-transparent text-center text-xs font-semibold text-mainText outline-none scheme-light dark:scheme-dark [&::-webkit-calendar-picker-indicator]:hidden"
+    />
+  </div>
+
+  <button
+    type="button"
+    onClick={() => onShiftDate(1)}
+    title="შემდეგი დღე"
+    className="flex size-9 shrink-0 items-center justify-center border-l border-border/10 text-muted transition-all duration-200 hover:bg-surface hover:text-ink active:scale-95"
+  >
+    <ChevronRight className="size-4" />
+  </button>
+</div>
       </div>
     </>
   );

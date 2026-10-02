@@ -65,24 +65,55 @@ export function TeacherAssignmentCard({ assignment, activeTab, onSelect, onDelet
           )}
 
           {isGraded ? (
-            <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-box border border-win/20 bg-win-tint px-2 py-0.5 text-[10px] font-bold text-win shadow-sm">
+            <span className="absolute left-2 top-1 inline-flex items-center gap-1 rounded-box border border-win/20 bg-win-tint px-2 py-0.5 text-[10px] font-bold text-win shadow-sm">
               <CheckCircle2 className="size-3" />
               ჩაბარებულია
             </span>
           ) : isSubmitted ? (
-            <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-box border border-navy/15 bg-surface px-2 py-0.5 text-[10px] font-bold text-navy shadow-sm">
+            <span className="absolute left-2 top-1 inline-flex items-center gap-1.5 rounded-box border border-navy/15 bg-surface px-2 py-0.5 text-[10px] font-bold text-navy shadow-sm">
               <span className="size-1.5 rounded-box bg-navy" />
               პასუხი მიღებულია
             </span>
           ) : null}
         </div>
 
-        <div className="flex flex-1 border-t border-border/10 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
+        <div className="flex flex-1 flex-col justify-between gap-3 border-t border-border/10 px-3.5 pb-3.5 pt-3">
           <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{assignment.title}</p>
-          <span className="inline-flex w-fit items-center gap-1 rounded-box bg-mainButton border-border border-[1px] px-2.5 py-1 text-xs font-bold text-mainText transition group-hover:bg-navy group-hover:text-white">
-            {isMaterial ? 'მასალის გახსნა' : 'ნახვა'}
-            <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </span>
+
+          <div className="group inline-flex">
+            <button
+              type="button"
+              className="
+        inline-flex items-center gap-1.5
+        rounded-[10px]
+        border border-border/10
+        bg-mainButton
+        px-3 py-1.5
+        text-xs font-semibold
+        text-mainText
+        shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_1px_2px_rgba(0,0,0,0.06)]
+        transition-all duration-200
+        hover:bg-mainButtonHover
+        hover:text-ink
+        hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)]
+        active:scale-[0.98]
+      ">
+              {isMaterial ? 'მასალის გახსნა' : 'ნახვა'}
+
+              <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                <path
+                  d="M5 15 15 5M7 5h8v8"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </button>
 

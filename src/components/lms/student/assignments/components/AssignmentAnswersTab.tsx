@@ -42,10 +42,10 @@ export function AssignmentAnswersTab({ answers, onPreviewAnswer }: AssignmentAns
             >
               <span className="h-1 w-full shrink-0 bg-win" aria-hidden="true" />
 
-              <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-box border border-hairline bg-paper">
+              <div className="relative mx-3 mt-3 h-36 overflow-hidden  bg-paper">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={answer.url} alt="" className="size-full bg-white object-contain p-2 transition duration-200 group-hover:scale-[1.03]" />
-                <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-box border border-win/20 bg-win-tint px-2 py-0.5 text-[10px] font-bold text-win shadow-sm">
+                <img src={answer.url} alt="" className="size-full bg-sectionHeader object-contain p-2 transition duration-200 group-hover:scale-[1.03]" />
+                <span className="absolute left-2 top-1 inline-flex items-center gap-1 rounded-box border border-win/20 bg-win-tint px-2 py-0.5 text-[10px] font-bold text-win shadow-sm">
                   <CheckCircle2 className="size-3" />
                   ჩაბარებულია
                 </span>
@@ -53,7 +53,20 @@ export function AssignmentAnswersTab({ answers, onPreviewAnswer }: AssignmentAns
 
               <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
                 <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{answer.title}</p>
-                <span className="inline-flex w-fit items-center gap-1 rounded-box bg-navy-tint px-2.5 py-1 text-xs font-bold text-navy transition group-hover:bg-navy group-hover:text-white">
+                <span className="inline-flex items-center gap-1.5
+        rounded-[10px]
+        border border-border/10
+        w-fit
+        bg-mainButton
+        px-3 py-1.5
+        text-xs font-semibold
+        text-mainText
+        shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_1px_2px_rgba(0,0,0,0.06)]
+        transition-all duration-200
+        hover:bg-mainButtonHover
+        hover:text-ink
+        hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)]
+        active:scale-[0.98]">
                   ნახვა
                   <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </span>

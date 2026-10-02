@@ -13,10 +13,7 @@ interface AssignmentMaterialsTabProps {
     isAnswer?: boolean;
     instructions?: string | null;
   }) => void;
-  setActiveProblemModal: (modal: {
-    assignmentId: string;
-    problem: AssignmentProblem;
-  }) => void;
+  setActiveProblemModal: (modal: { assignmentId: string; problem: AssignmentProblem }) => void;
 }
 
 export function AssignmentMaterialsTab({
@@ -29,7 +26,7 @@ export function AssignmentMaterialsTab({
       {materialsForDate.length === 0 ? (
         <div className="flex h-full min-h-64 flex-col items-center justify-center  bg-main px-6 py-16 text-center">
           <span className="mb-3 inline-flex size-12 items-center justify-center  text-brass-strong">
-            <Layers className="size-8" strokeWidth={2.5}/>
+            <Layers className="size-8" strokeWidth={2.5} />
           </span>
           <p className="text-sm font-bold text-ink">სასწავლო მასალები არ არის</p>
           <p className="mt-1 max-w-xs text-xs text-muted">ამ თარიღისთვის მასალები არ მოიძებნა.</p>
@@ -71,17 +68,16 @@ export function AssignmentMaterialsTab({
                     });
                   }
                 }}
-                className="group flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-box border border-hairline bg-surface text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-navy/35"
-              >
+                className="group flex min-h-[260px] w-full cursor-pointer flex-col overflow-hidden rounded-box border border-hairline bg-sectionHeader text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-navy/35">
                 <span className="h-1 w-full shrink-0 bg-brass" aria-hidden="true" />
 
-                <div className="relative mx-3 mt-3 h-36 overflow-hidden rounded-box border border-hairline bg-paper">
+                <div className="relative mx-3 mt-3 h-36 overflow-hidden  bg-sectionHeader">
                   {isImg && fileUrl ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={fileUrl}
                       alt=""
-                      className="size-full bg-white object-contain p-2 transition duration-200 group-hover:scale-[1.03]"
+                      className="size-full bg-sectionHeader object-contain p-2 transition duration-200 group-hover:scale-[1.03]"
                     />
                   ) : isFile ? (
                     <div className="flex size-full flex-col items-center justify-center gap-1.5 px-3 text-center">
@@ -105,8 +101,22 @@ export function AssignmentMaterialsTab({
 
                 <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
                   <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{material.title}</p>
-                  <span className="inline-flex w-fit items-center gap-1 rounded-box bg-navy-tint px-2.5 py-1 text-xs font-bold text-navy transition group-hover:bg-navy group-hover:text-white">
-                    მასალის გახსნა
+                  <span
+                    className="inline-flex items-center gap-1.5
+        rounded-[10px]
+        border border-border/10
+        w-fit
+        bg-mainButton
+        px-3 py-1.5
+        text-xs font-semibold
+        text-mainText
+        shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_1px_2px_rgba(0,0,0,0.06)]
+        transition-all duration-200
+        hover:bg-mainButtonHover
+        hover:text-ink
+        hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)]
+        active:scale-[0.98]">
+                    ნახვა
                     <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </span>
                 </div>

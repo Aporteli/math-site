@@ -33,7 +33,7 @@ export function AssignmentContentTabsHeader({
   };
 
   return (
-    <div className="flex flex-col gap-2  bg-sectionHeader px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+    <div className="flex flex-col gap-2  px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
       <div className="grid w-full grid-cols-3 gap-1  p-1 sm:flex sm:w-auto">
         {tabs.map((tab) => {
           const active = activeTab === tab.id;
@@ -46,7 +46,7 @@ export function AssignmentContentTabsHeader({
               onClick={() => onTabChange(tab.id)}
               className={`group relative inline-flex cursor-pointer items-center justify-center gap-1.5 overflow-hidden  px-3 py-2 text-xs font-bold transition-all duration-200 ${
                 active
-                  ? ' text-mainText shadow-sm'
+                  ? ' text-mainText '
                   : ' text-mainText/60  hover:text-mainText'
               }`}>
               <span className="relative z-10 truncate">{tab.label}</span>

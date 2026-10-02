@@ -66,7 +66,7 @@ export function AssignmentGroupUploader({
             </div>
 
             <div className="flex w-full items-center gap-2 sm:w-auto">
-              <label className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-box bg-mainButton px-4 py-2 text-xs font-bold tracking-wide text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.2)] transition-all duration-200 hover:bg-mainButtonHover hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_8px_rgba(0,0,0,0.3)] active:translate-y-[1px] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
+              <label className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-box border border-black/15 bg-mainButton px-4 py-2 text-xs font-bold tracking-wide text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.65),0_1px_3px_rgba(0,0,0,0.08)] transition-all duration-200 hover:border-black/20 hover:bg-mainButtonHover hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_2px_6px_rgba(0,0,0,0.12)] active:translate-y-[1px] active:shadow-[inset_0_2px_3px_rgba(0,0,0,0.08)] dark:border-white/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_4px_rgba(0,0,0,0.2)] dark:hover:border-white/15 dark:hover:bg-mainButtonHover dark:hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_3px_7px_rgba(0,0,0,0.25)] dark:active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
                 {isUploading ? (
                   <Loader2 className="size-3.5 animate-spin text-mainText" />
                 ) : (
@@ -91,8 +91,8 @@ export function AssignmentGroupUploader({
                   type="button"
                   disabled={isSubmitting}
                   onClick={() => onSubmitGroup(selectedDateKey, taskAssignments)}
-                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-mainButton/80 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none">
-                  {isSubmitting ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+                  className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-navy/80 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none">
+                  {isSubmitting ? <Loader2 className="size-3.5 animate-spin text-white" /> : <Send className="size-3.5 text-white" />}
                   <span>გაგზავნა ({currentGroupFiles.length})</span>
                 </button>
               ) : null}

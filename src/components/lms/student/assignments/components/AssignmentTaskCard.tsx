@@ -97,7 +97,7 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3 border-t border-border/20 bg-sectionHeader">
+      <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3 bg-sectionHeader">
         <div className="space-y-2">
           <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{assignment.title}</p>
           {showNote ? (
@@ -107,7 +107,20 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
             </p>
           ) : null}
         </div>
-        <span className="inline-flex w-fit items-center gap-1 rounded-box bg-mainButton border-white/10 border-[1px] px-2.5 py-1 text-xs font-bold text-mainText transition group-hover:bg-navy group-hover:text-white">
+        <span className="inline-flex items-center gap-1.5
+        rounded-[10px]
+        border border-border/10
+        w-fit
+        bg-mainButton
+        px-3 py-1.5
+        text-xs font-semibold
+        text-mainText
+        shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_1px_2px_rgba(0,0,0,0.06)]
+        transition-all duration-200
+        hover:bg-mainButtonHover
+        hover:text-ink
+        hover:shadow-[0_4px_12px_rgba(0,0,0,0.10)]
+        active:scale-[0.98]">
           ნახვა
           <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </span>
