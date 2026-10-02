@@ -54,13 +54,27 @@ const secondaryPublishDefaults: TrackPublishDefaults = {
   videoEncoding: VideoPresets.h720.encoding,
 };
 
-/** Disconnects worth explaining instead of silently closing the whole classroom. */
+/** Reasons that end the session. Everything else stays in the classroom so the user can reconnect. */
 const DISCONNECT_NOTICE: Partial<Record<DisconnectReason, string>> = {
   [DisconnectReason.DUPLICATE_IDENTITY]:
     'კავშირი გაწყდა: იგივე სესია სხვაგან დაუკავშირდა. სცადეთ თავიდან შესვლა.',
   [DisconnectReason.PARTICIPANT_REMOVED]: 'მასწავლებელმა ოთახიდან ამოგიყვანა.',
   [DisconnectReason.ROOM_DELETED]: 'ოთახი დაიხურა.',
+  [DisconnectReason.ROOM_CLOSED]: 'ოთახი დაიხურა.',
 };
+
+const RECOVERABLE_DISCONNECT = new Set<DisconnectReason>([
+  DisconnectReason.UNKNOWN_REASON,
+  DisconnectReason.SERVER_SHUTDOWN,
+  DisconnectReason.STATE_MISMATCH,
+  DisconnectReason.JOIN_FAILURE,
+  DisconnectReason.MIGRATION,
+  DisconnectReason.SIGNAL_CLOSE,
+  DisconnectReason.CONNECTION_TIMEOUT,
+  DisconnectReason.MEDIA_FAILURE,
+]);
+
+const RECOVERABLE_NOTICE = 'კავშირი გაწყდა. სცადეთ თავიდან შესვლა.';
 
 export function ClassroomVideoPanel({
   token,
@@ -80,9 +94,15 @@ export function ClassroomVideoPanel({
 
   const handleDisconnected = (reason?: DisconnectReason) => {
     if (Date.now() < breakout.ignoreDisconnectUntil.current) return;
+    // Unmount and breakout moves disconnect on purpose. The header closes the class itself.
+    if (reason === DisconnectReason.CLIENT_INITIATED) return;
     const message = reason !== undefined ? DISCONNECT_NOTICE[reason] : undefined;
     if (message) {
       setNotice(message);
+      return;
+    }
+    if (reason === undefined || RECOVERABLE_DISCONNECT.has(reason)) {
+      setNotice(RECOVERABLE_NOTICE);
       return;
     }
     onClose();
@@ -117,11 +137,15 @@ export function ClassroomVideoPanel({
       token={token}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
       options={{
+        // Tiles are ~260px wide. Match subscribed quality to the element, and
+        // stop publishing layers nobody is watching.
+        adaptiveStream: true,
+        dynacast: true,
         videoCaptureDefaults: secondary ? secondaryVideoCapture : primaryVideoCapture,
         audioCaptureDefaults: {
           voiceIsolation: false,
         },
-        publishDefaults: secondary ? secondaryPublishDefaults : { dtx: false },
+        publishDefaults: secondary ? secondaryPublishDefaults : { dtx: false, simulcast: true },
       }}
       data-lk-theme="default"
       className="flex h-full w-full min-h-0 flex-1 flex-col overflow-hidden"

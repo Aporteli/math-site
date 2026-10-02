@@ -47,7 +47,10 @@ export class TemporalBackgroundProcessor
   private rafId?: number;
   private running = false;
   private source?: HTMLVideoElement;
-  private frameCount = 0;
+  private segmentBusy = false;
+  private lastSegmentAt = 0;
+  private personnessPool: Float32Array[] = [];
+  private maskImageData?: ImageData;
 
   constructor(options: TemporalBackgroundOptions) {
     this.imagePath = options.imagePath;
@@ -148,13 +151,19 @@ export class TemporalBackgroundProcessor
     this.smoothedConfidence = undefined;
     this.blurredConfidence = undefined;
     this.confidenceHistory = [];
+    this.personnessPool = [];
+    this.maskImageData = undefined;
+    this.segmentBusy = false;
     this.source = undefined;
-    this.frameCount = 0;
   }
 
   private loop = (): void => {
     if (!this.running) return;
-    this.processFrame();
+    const now = performance.now();
+    if (!this.segmentBusy && now - this.lastSegmentAt >= SEGMENT_INTERVAL_MS) {
+      this.lastSegmentAt = now;
+      this.processFrame();
+    }
     this.rafId = requestAnimationFrame(this.loop);
   };
 
@@ -164,27 +173,39 @@ export class TemporalBackgroundProcessor
     if (source.videoWidth === 0 || source.videoHeight === 0) return;
     if (source.readyState < 2) return;
 
+    this.segmentBusy = true;
     try {
       segmenter.segmentForVideo(source, performance.now(), (result) => {
+        this.segmentBusy = false;
         if (!result) return;
 
-        const confidences = result.confidenceMasks;
-        if (confidences && confidences.length > 0) {
-          const idx = Math.min(PERSON_CLASS_INDEX, confidences.length - 1);
-          const personConfidence = confidences[idx];
-          if (personConfidence) {
-            this.compositeFromMask(personConfidence, false);
+        try {
+          if (!this.running) return;
+          const confidences = result.confidenceMasks;
+          if (confidences && confidences.length > 0) {
+            const idx = Math.min(PERSON_CLASS_INDEX, confidences.length - 1);
+            const personConfidence = confidences[idx];
+            if (personConfidence) {
+              this.compositeFromMask(personConfidence, false);
+            }
+          } else {
+            const cat = result.categoryMask;
+            if (cat) this.compositeFromMask(cat, INVERT_CATEGORY_MASK);
           }
-        } else {
-          const cat = result.categoryMask;
-          if (cat) this.compositeFromMask(cat, INVERT_CATEGORY_MASK);
+        } finally {
+          result.close();
         }
-
-        result.close();
       });
     } catch (err) {
+      this.segmentBusy = false;
       console.warn('[TemporalBG] segmentForVideo failed:', err);
     }
+  }
+
+  private acquirePersonness(length: number): Float32Array {
+    const reused = this.personnessPool.pop();
+    if (reused && reused.length === length) return reused;
+    return new Float32Array(length);
   }
 
   private compositeFromMask(mask: vision.MPMask, invertRaw: boolean): void {
@@ -250,7 +271,7 @@ export class TemporalBackgroundProcessor
     const span = Math.max(1e-6, hi - lo);
 
     // ---- 1. Convert raw → personness and push into history ----------------
-    const personness = new Float32Array(raw.length);
+    const personness = this.acquirePersonness(raw.length);
     for (let i = 0; i < raw.length; i++) {
       let v = raw[i];
       if (v < 0) v = 0;
@@ -260,7 +281,8 @@ export class TemporalBackgroundProcessor
 
     this.confidenceHistory.push(personness);
     while (this.confidenceHistory.length > historyLen) {
-      this.confidenceHistory.shift();
+      const dropped = this.confidenceHistory.shift();
+      if (dropped) this.personnessPool.push(dropped);
     }
 
     // ---- 2. Temporal average of the history + light EMA -------------------
@@ -304,7 +326,14 @@ export class TemporalBackgroundProcessor
     }
 
     // ---- 4. Shape into a clean alpha with steep sigmoid -------------------
-    const imgData = maskCtx.createImageData(mw, mh);
+    if (
+      !this.maskImageData ||
+      this.maskImageData.width !== mw ||
+      this.maskImageData.height !== mh
+    ) {
+      this.maskImageData = maskCtx.createImageData(mw, mh);
+    }
+    const imgData = this.maskImageData;
     const data = imgData.data;
     const smoothed = shapedSource;
 
@@ -349,18 +378,8 @@ export class TemporalBackgroundProcessor
     ctx.clearRect(0, 0, width, height);
     drawImageCover(ctx, backgroundImage, width, height);
     ctx.drawImage(personCanvas, 0, 0, width, height);
-
-    this.frameCount++;
-    if (this.frameCount % 120 === 0) {
-      console.log('[TemporalBG] frame', this.frameCount, {
-        video: `${source.videoWidth}x${source.videoHeight}`,
-        mask: `${mw}x${mh}`,
-        history: hist.length,
-        blur: blurR,
-        low: lo,
-        high: hi,
-        smoothing,
-      });
-    }
   }
 }
+
+/** Segmentation slower than display rate. 15fps is enough for a mask and keeps the class thread free. */
+const SEGMENT_INTERVAL_MS = 66;

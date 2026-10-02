@@ -18,6 +18,22 @@ interface Options {
 /** View-stream throttle (ms). Low enough to feel real-time, high enough to avoid flooding the data channel. */
 const VIEW_STREAM_INTERVAL_MS = 40;
 
+interface BoardViewSnapshot {
+  scale: number;
+  x: number;
+  y: number;
+  pageIndex: number;
+}
+
+function viewChanged(previous: BoardViewSnapshot, next: BoardViewSnapshot): boolean {
+  return (
+    previous.pageIndex !== next.pageIndex ||
+    Math.abs(previous.scale - next.scale) > 0.001 ||
+    Math.abs(previous.x - next.x) > 0.5 ||
+    Math.abs(previous.y - next.y) > 0.5
+  );
+}
+
 /**
  * Streams the teacher's pan/zoom to locked students only.
  */
@@ -43,25 +59,23 @@ export function useBoardViewStream({
     });
     if (ids.length === 0) return;
 
-    let raf = 0;
-    let lastSent = 0;
+    let lastSentView: BoardViewSnapshot | null = null;
 
-    const tick = () => {
-      raf = requestAnimationFrame(tick);
-      const now = performance.now();
-      if (now - lastSent < VIEW_STREAM_INTERVAL_MS) return;
-      lastSent = now;
-
+    const send = () => {
       const view = viewRef.current;
+      if (lastSentView && !viewChanged(lastSentView, view)) return;
+
       const destinations = ids.flatMap((id) =>
         liveIdentitiesFor(room.remoteParticipants.values(), id),
       );
       if (destinations.length === 0) return;
 
+      lastSentView = { ...view };
       void publishDataSafe({ type: 'BOARD_VIEW', view }, false, destinations);
     };
 
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    send();
+    const timer = window.setInterval(send, VIEW_STREAM_INTERVAL_MS);
+    return () => window.clearInterval(timer);
   }, [isTeacher, room, lockedStudentIds, assignedPageByStudent, currentPageIndex, publishDataSafe]);
 }

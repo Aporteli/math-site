@@ -10,6 +10,30 @@ import {
 } from '@/lib/livekit/breakout';
 import type { PresencePerson } from './BreakoutContext';
 
+function sameIds(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i++) {
+    if (left[i] !== right[i]) return false;
+  }
+  return true;
+}
+
+function sameAssignment(left: BreakoutAssignment, right: BreakoutAssignment): boolean {
+  return left.active === right.active && sameIds(left.a, right.a) && sameIds(left.b, right.b);
+}
+
+function samePeople(left: PresencePerson[] | undefined, right: PresencePerson[]): boolean {
+  if (!left || left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i++) {
+    const current = left[i];
+    const next = right[i];
+    if (current.userId !== next.userId || current.name !== next.name || current.speaking !== next.speaking) {
+      return false;
+    }
+  }
+  return true;
+}
+
 interface MediaSession {
   token: string;
   roomKey: BreakoutRoomKey;
@@ -103,7 +127,7 @@ export function useClassroomConnection(courseId: string, isTeacher: boolean) {
         a: Array.isArray(data.a) ? data.a : [],
         b: Array.isArray(data.b) ? data.b : [],
       };
-      setBreakout(next);
+      setBreakout((current) => (sameAssignment(current, next) ? current : next));
       if (!next.active) {
         joinedRef.current = null;
         setJoined(null);
@@ -292,10 +316,13 @@ export function useClassroomConnection(courseId: string, isTeacher: boolean) {
   );
 
   const setPresence = useCallback((key: BreakoutRoomKey, source: string, people: PresencePerson[]) => {
-    setPresenceState((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], [source]: people },
-    }));
+    setPresenceState((prev) => {
+      if (samePeople(prev[key][source], people)) return prev;
+      return {
+        ...prev,
+        [key]: { ...prev[key], [source]: people },
+      };
+    });
   }, []);
 
   const peopleIn = useCallback(
