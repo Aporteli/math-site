@@ -3,6 +3,7 @@
 
 import { useMemo, useState } from 'react';
 import {
+  Activity,
   BarChart3,
   Bot,
   BookOpen,
@@ -32,11 +33,12 @@ import { CoursesManager } from './components/CoursesManager';
 import { ComingSoonCard } from './components/ComingSoonCard';
 import { AdminTerminal } from './components/AdminTerminal';
 import { ServerManager } from '@/components/ServerManager';
+import { LiveKitDiagnostics } from './components/LiveKitDiagnostics';
 
 type AdminCopy = Dictionary['dashboard']['teacher']['admin'];
 type TaxonomyCopy = Dictionary['dashboard']['teacher']['taxonomy'];
 
-export type AdminSectionId = keyof AdminCopy['sections'] | 'courses' | 'server' | 'terminal';
+export type AdminSectionId = keyof AdminCopy['sections'] | 'courses' | 'server' | 'diagnostics' | 'terminal';
 
 const SECTION_ICONS: Record<AdminSectionId, LucideIcon> = {
   overview: LayoutDashboard,
@@ -56,11 +58,12 @@ const SECTION_ICONS: Record<AdminSectionId, LucideIcon> = {
   featureFlags: Flag,
   system: Wrench,
   server: Server,
+  diagnostics: Activity,
   terminal: Terminal,
 };
 
 function visibleSections(canUseTerminal: boolean): AdminSectionId[] {
-  const sections: AdminSectionId[] = ['taxonomy', 'courses', 'server'];
+  const sections: AdminSectionId[] = ['taxonomy', 'courses', 'server', 'diagnostics'];
   if (canUseTerminal) sections.push('terminal');
   return sections;
 }
@@ -95,6 +98,13 @@ export function AdminPanel({
         title: 'სერვერი',
         description:
           'LiveKit ვიდეოგაკვეთილის სერვერის მდგომარეობის მონიტორინგი და მართვა',
+      };
+    }
+
+    if (id === 'diagnostics') {
+      return {
+        title: 'დიაგნოსტიკა',
+        description: 'LiveKit კავშირის რეალური ტელემეტრია და სესიის ისტორია',
       };
     }
 
@@ -272,6 +282,22 @@ export function AdminPanel({
             </div>
           ) : null}
 
+          {section === 'diagnostics' ? (
+            <div className="space-y-4">
+              <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+                <h2 className="text-lg font-semibold tracking-tight text-ink">
+                  {active.title}
+                </h2>
+
+                <p className="mt-1 text-sm text-body">
+                  {active.description}
+                </p>
+              </div>
+
+              <LiveKitDiagnostics />
+            </div>
+          ) : null}
+
           {section === 'terminal' && canUseTerminal ? (
             <div className="space-y-4">
               <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
@@ -292,6 +318,7 @@ export function AdminPanel({
           section !== 'taxonomy' &&
           section !== 'courses' &&
           section !== 'server' &&
+          section !== 'diagnostics' &&
           section !== 'terminal' ? (
             <ComingSoonCard
               title={active.title}

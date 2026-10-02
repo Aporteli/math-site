@@ -21,6 +21,7 @@ import {
 import { ControlBar } from './ControlBar';
 import { AudioVolumeProvider } from './AudioVolumeContext';
 import { CustomChat } from '../custom-chat/CustomChat';
+import { LiveKitDiagnosticsReporter } from '../LiveKitDiagnosticsReporter';
 import { RoomInstanceBridge } from '../RoomInstanceBridge';
 import { MyVideoGrid } from '../video-grid/MyVideoGrid';
 import { ApplyListenMix } from '../../breakout/ApplyListenMix';
@@ -153,6 +154,7 @@ export function ClassroomVideoPanel({
       onConnected={breakout.markMediaConnected}
     >
       <AudioVolumeProvider>
+        <LiveKitDiagnosticsReporter courseId={courseId} secondary={secondary} />
         {breakout.roomKey === 'main' && <RoomInstanceBridge onRoom={onRoom} />}
         <BreakoutSignal />
         {isTeacher && <ReportPresence roomKey={breakout.roomKey} />}

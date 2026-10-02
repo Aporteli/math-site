@@ -619,3 +619,120 @@ model IndividualPayment {
   @@index([studentId, paidAt])
   @@map("individual_payments")
 }
+
+model LiveKitDiagnosticSession {
+  id               String    @id @default(cuid())
+  publicId         String    @unique
+  courseId         String
+  roomName         String
+  roomKey          String
+  status           String    @default("active")
+  health           String    @default("unknown")
+  activeRoomName   String?   @unique
+  startedAt        DateTime  @default(now())
+  endedAt          DateTime?
+  lastActivityAt   DateTime  @default(now())
+  teacherUserId    String?
+  teacherName      String?
+  studentCount     Int       @default(0)
+  reconnects       Int       @default(0)
+  disconnects      Int       @default(0)
+  avgRttMs         Float?
+  maxRttMs         Float?
+  avgPacketLossPct Float?
+  maxPacketLossPct Float?
+  serverRegion     String?
+  serverNodeId     String?
+  serverVersion    String?
+  serverSnapshot   Json?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  participants LiveKitDiagnosticParticipant[]
+  events       LiveKitDiagnosticEvent[]
+
+  @@index([courseId, startedAt])
+  @@index([status, lastActivityAt])
+  @@map("livekit_diagnostic_sessions")
+}
+
+model LiveKitDiagnosticParticipant {
+  id                     String    @id @default(cuid())
+  sessionId              String
+  identity               String
+  userId                 String
+  displayName            String
+  role                   String
+  secondary              Boolean   @default(false)
+  connectionState        String    @default("unknown")
+  quality                String    @default("unknown")
+  reconnects             Int       @default(0)
+  disconnects            Int       @default(0)
+  reconnectingSince      DateTime?
+  rttMs                  Float?
+  avgRttMs               Float?
+  maxRttMs               Float?
+  rttSumMs               Float     @default(0)
+  rttSampleCount         Int       @default(0)
+  sendLossPct            Float?
+  avgSendLossPct         Float?
+  maxSendLossPct         Float?
+  sendLossSumPct         Float     @default(0)
+  sendLossSampleCount    Int       @default(0)
+  receiveLossPct         Float?
+  avgReceiveLossPct      Float?
+  maxReceiveLossPct      Float?
+  receiveLossSumPct      Float     @default(0)
+  receiveLossSampleCount Int       @default(0)
+  jitterMs               Float?
+  avgJitterMs            Float?
+  maxJitterMs            Float?
+  jitterSumMs            Float     @default(0)
+  jitterSampleCount      Int       @default(0)
+  audioBitrateKbps       Float?
+  audioTrackState        String?
+  micPublishing          Boolean   @default(false)
+  subscribedAudioCount   Int       @default(0)
+  iceState               String?
+  iceSubscriberState     String?
+  dtlsState              String?
+  candidateRoute         String?
+  reportedNetworkType    String?
+  reportedRegion         String?
+  reportedNodeId         String?
+  serverState            String?
+  serverRegion           String?
+  serverAudioPublished   Boolean?
+  serverSeenAt           DateTime?
+  lastDisconnectReason   String?
+  joinedAt               DateTime  @default(now())
+  leftAt                 DateTime?
+  lastSeenAt             DateTime  @default(now())
+  samples                Json      @default("[]")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  session LiveKitDiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, identity])
+  @@index([sessionId, role])
+  @@map("livekit_diagnostic_participants")
+}
+
+model LiveKitDiagnosticEvent {
+  id          String   @id @default(cuid())
+  sessionId   String
+  occurredAt  DateTime @default(now())
+  kind        String
+  participant String
+  identity    String
+  role        String
+  dedupeKey   String?
+  detail      Json?
+
+  session LiveKitDiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, dedupeKey])
+  @@index([sessionId, occurredAt])
+  @@map("livekit_diagnostic_events")
+}
