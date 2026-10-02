@@ -557,6 +557,10 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const pushTimerRef = useRef<number | null>(null);
   const pushSendingRef = useRef(false);
   const pushQueuedRef = useRef(false);
+  const liveStrokeRef = useRef<{ points: number[]; color: string; width: number } | null>(null);
+  const inkTimerRef = useRef<number | null>(null);
+  const inkSendingRef = useRef(false);
+  const inkQueuedRef = useRef(false);
   const remoteStoreTimerRef = useRef<number | null>(null);
   const schedulePushRef = useRef<() => void>(() => {});
   const lastLaserSentRef = useRef(0);
@@ -690,7 +694,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const schedulePush = useCallback(() => {
     if (!isHydratedRef.current || applyingRemoteRef.current) return;
     editEpochRef.current += 1;
-    if (pushTimerRef.current) window.clearTimeout(pushTimerRef.current);
+    if (pushTimerRef.current != null) return;
     pushTimerRef.current = window.setTimeout(() => {
       pushTimerRef.current = null;
       const send = () => {
@@ -700,6 +704,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         }
         pushSendingRef.current = true;
         pushQueuedRef.current = false;
+        const controller = new AbortController();
+        const killer = window.setTimeout(() => controller.abort(), 4000);
         const body = JSON.stringify({
           pages: pagesRef.current,
           currentPageIndex: currentPageIndexRef.current,
@@ -709,6 +715,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body,
+          signal: controller.signal,
         })
           .then(async (res) => {
             if (!res.ok) return;
@@ -722,14 +729,58 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           })
           .catch(() => {})
           .finally(() => {
+            window.clearTimeout(killer);
             pushSendingRef.current = false;
             if (pushQueuedRef.current) send();
           });
       };
       send();
-    }, 16);
+    }, 40);
   }, []);
   schedulePushRef.current = schedulePush;
+
+  const handleLiveStroke = useCallback((stroke: { points: number[]; color: string; width: number }) => {
+    liveStrokeRef.current = stroke;
+    if (inkTimerRef.current != null) return;
+    inkTimerRef.current = window.setTimeout(() => {
+      inkTimerRef.current = null;
+      const send = () => {
+        const current = liveStrokeRef.current;
+        if (!current || current.points.length < 4) return;
+        if (inkSendingRef.current) {
+          inkQueuedRef.current = true;
+          return;
+        }
+        inkSendingRef.current = true;
+        inkQueuedRef.current = false;
+        const controller = new AbortController();
+        const killer = window.setTimeout(() => controller.abort(), 2500);
+        void fetch('/api/teacher-board', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            type: 'ink',
+            points: current.points.slice(),
+            stroke: current.color,
+            strokeWidth: current.width,
+            pageIndex: currentPageIndexRef.current,
+            clientId: clientIdRef.current,
+          }),
+        })
+          .catch(() => {})
+          .finally(() => {
+            window.clearTimeout(killer);
+            inkSendingRef.current = false;
+            if (inkQueuedRef.current) {
+              inkQueuedRef.current = false;
+              send();
+            }
+          });
+      };
+      send();
+    }, 30);
+  }, []);
 
   const handleLaserMove = useCallback((pos: { x: number; y: number } | null) => {
     const now = Date.now();
@@ -752,6 +803,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       if (!Array.isArray(board.pages) || board.pages.length === 0) return;
       applyingRemoteRef.current = true;
       revisionRef.current = board.revision;
+      canvasRef.current?.renderRemoteInk(null);
       const nextPages = board.pages;
       const pageIndex = Math.min(Math.max(0, board.currentPageIndex || 0), nextPages.length - 1);
       setPages(nextPages);
@@ -797,51 +849,94 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
 
     void pull();
 
-    const source = new EventSource('/api/teacher-board/stream');
-    source.onmessage = (ev) => {
-      try {
-        const msg = JSON.parse(ev.data) as {
-          revision?: number;
-          clientId?: string;
-          pages?: CanvasElement[][];
-          currentPageIndex?: number;
-          type?: 'laser';
-          point?: { x: number; y: number } | null;
-          pageIndex?: number;
-        };
-        if (msg.type === 'laser') {
-          if (msg.clientId && msg.clientId === clientIdRef.current) return;
-          if (typeof msg.pageIndex === 'number' && msg.pageIndex !== currentPageIndexRef.current) return;
-          const point =
-            msg.point && typeof msg.point.x === 'number' && typeof msg.point.y === 'number'
-              ? { x: msg.point.x, y: msg.point.y }
-              : null;
-          canvasRef.current?.renderRemoteLaser(point);
-          return;
-        }
-        if (typeof msg.revision !== 'number') return;
-        if (msg.clientId && msg.clientId === clientIdRef.current) {
-          revisionRef.current = Math.max(revisionRef.current, msg.revision);
-          return;
-        }
-        if (msg.revision <= revisionRef.current) return;
-        if (Array.isArray(msg.pages) && msg.pages.length > 0) {
-          applyRemoteBoard({
-            pages: msg.pages,
-            currentPageIndex: typeof msg.currentPageIndex === 'number' ? msg.currentPageIndex : 0,
-            revision: msg.revision,
-          });
-          return;
-        }
+    let source: EventSource | null = null;
+    let watchdog = 0;
+
+    const armWatchdog = () => {
+      window.clearTimeout(watchdog);
+      watchdog = window.setTimeout(() => {
+        if (cancelled) return;
+        source?.close();
         void pull();
-      } catch {
-        /* ignore malformed event */
-      }
+        open();
+      }, 12000);
     };
+
+    const open = () => {
+      if (cancelled) return;
+      const next = new EventSource('/api/teacher-board/stream');
+      source = next;
+      armWatchdog();
+      next.onerror = () => {
+        void pull();
+      };
+      next.onmessage = (ev) => {
+        armWatchdog();
+        try {
+          const msg = JSON.parse(ev.data) as {
+            revision?: number;
+            clientId?: string;
+            pages?: CanvasElement[][];
+            currentPageIndex?: number;
+            type?: 'laser' | 'ink' | 'ping';
+            point?: { x: number; y: number } | null;
+            pageIndex?: number;
+            points?: number[];
+            stroke?: string;
+            strokeWidth?: number;
+          };
+          if (msg.type === 'ping') return;
+          if (msg.type === 'ink') {
+            if (msg.clientId && msg.clientId === clientIdRef.current) return;
+            if (typeof msg.pageIndex === 'number' && msg.pageIndex !== currentPageIndexRef.current) {
+              canvasRef.current?.renderRemoteInk(null);
+              return;
+            }
+            const points = Array.isArray(msg.points) ? msg.points.filter((n) => typeof n === 'number') : [];
+            canvasRef.current?.renderRemoteInk(
+              points.length >= 4
+                ? { points, color: msg.stroke || '#111111', width: msg.strokeWidth || 2 }
+                : null,
+            );
+            return;
+          }
+          if (msg.type === 'laser') {
+            if (msg.clientId && msg.clientId === clientIdRef.current) return;
+            if (typeof msg.pageIndex === 'number' && msg.pageIndex !== currentPageIndexRef.current) return;
+            const point =
+              msg.point && typeof msg.point.x === 'number' && typeof msg.point.y === 'number'
+                ? { x: msg.point.x, y: msg.point.y }
+                : null;
+            canvasRef.current?.renderRemoteLaser(point);
+            return;
+          }
+          if (typeof msg.revision !== 'number') return;
+          if (msg.clientId && msg.clientId === clientIdRef.current) {
+            revisionRef.current = Math.max(revisionRef.current, msg.revision);
+            return;
+          }
+          if (msg.revision <= revisionRef.current) return;
+          if (Array.isArray(msg.pages) && msg.pages.length > 0) {
+            applyRemoteBoard({
+              pages: msg.pages,
+              currentPageIndex: typeof msg.currentPageIndex === 'number' ? msg.currentPageIndex : 0,
+              revision: msg.revision,
+            });
+            return;
+          }
+          void pull();
+        } catch {
+          /* ignore malformed event */
+        }
+      };
+    };
+
+    open();
 
     return () => {
       cancelled = true;
-      source.close();
+      window.clearTimeout(watchdog);
+      source?.close();
     };
   }, [applyRemoteBoard]);
 
@@ -1943,6 +2038,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           onStylusButtonAction={applyStylusAction}
           penSmoothIntensity={penSmoothEnabled ? penSmoothIntensity : 0}
           onLaserMove={handleLaserMove}
+          onLiveStroke={handleLiveStroke}
         />
       </div>
 

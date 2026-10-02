@@ -11,6 +11,7 @@ interface Options {
   isDark: boolean;
   fitToContent: () => void;
   renderRemoteLaser: (point: { x: number; y: number } | null) => void;
+  renderRemoteInk: (stroke: { points: number[]; color: string; width: number } | null) => void;
   deleteSelected: () => void;
   cropSelectedImage: () => void;
   selectElement: (id: string) => void;
@@ -24,6 +25,7 @@ export function useCanvasImperativeHandle({
   isDark,
   fitToContent,
   renderRemoteLaser,
+  renderRemoteInk,
   deleteSelected,
   cropSelectedImage,
   selectElement,
@@ -34,6 +36,7 @@ export function useCanvasImperativeHandle({
       toDataURL: () => stageRef.current?.toDataURL() ?? null,
       fitToContent,
       renderRemoteLaser,
+      renderRemoteInk,
       deleteSelected,
       cropSelectedImage,
       selectElement,
@@ -45,6 +48,7 @@ export function useCanvasImperativeHandle({
       isDark,
       fitToContent,
       renderRemoteLaser,
+      renderRemoteInk,
       deleteSelected,
       cropSelectedImage,
       selectElement,

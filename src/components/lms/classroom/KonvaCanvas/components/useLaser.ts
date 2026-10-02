@@ -136,6 +136,49 @@ export function useLaser() {
     }
   }, [renderLaserFrame]);
 
+  const renderRemoteInk = useCallback((stroke: { points: number[]; color: string; width: number } | null) => {
+    const layer = laserLayerRef.current;
+    if (!layer) return;
+    const clearLive = () => {
+      layer.find('.remote-ink').forEach((node) => node.destroy());
+      layer.find('.remote-ink-settled').forEach((node) => node.destroy());
+    };
+    if (!stroke || stroke.points.length < 4) {
+      clearLive();
+      layer.batchDraw();
+      return;
+    }
+    let existing = layer.findOne('.remote-ink') as Konva.Line | undefined;
+    if (existing) {
+      const prev = existing.points();
+      const restarted =
+        stroke.points.length < prev.length || stroke.points[0] !== prev[0] || stroke.points[1] !== prev[1];
+      if (restarted) {
+        existing.name('remote-ink-settled');
+        existing = undefined;
+      }
+    }
+    if (existing) {
+      existing.points(stroke.points);
+      existing.stroke(stroke.color);
+      existing.strokeWidth(stroke.width);
+    } else {
+      layer.add(
+        new Konva.Line({
+          name: 'remote-ink',
+          points: stroke.points,
+          stroke: stroke.color,
+          strokeWidth: stroke.width,
+          lineCap: 'round',
+          lineJoin: 'round',
+          tension: 0.4,
+          listening: false,
+        }),
+      );
+    }
+    layer.batchDraw();
+  }, []);
+
   const renderRemoteLaser = useCallback(
     (point: { x: number; y: number } | null) => {
       if (point) {
@@ -158,5 +201,6 @@ export function useLaser() {
     addLaserPoint,
     triggerLaserFade,
     renderRemoteLaser,
+    renderRemoteInk,
   };
 }

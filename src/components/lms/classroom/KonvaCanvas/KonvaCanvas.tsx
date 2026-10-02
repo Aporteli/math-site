@@ -55,6 +55,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     onStagePosChange,
     disabled = false,
     onLaserMove,
+    onLiveStroke,
     textPlaceholder = 'ტექსტი...',
     onCropImage,
     stylusOnly = false,
@@ -142,8 +143,15 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   });
 
   // ---- Laser ----
-  const { laserLayerRef, isLasering, startLaserDrawing, addLaserPoint, triggerLaserFade, renderRemoteLaser } =
-    useLaser();
+  const {
+    laserLayerRef,
+    isLasering,
+    startLaserDrawing,
+    addLaserPoint,
+    triggerLaserFade,
+    renderRemoteLaser,
+    renderRemoteInk,
+  } = useLaser();
 
   // ---- Eraser ----
   const { eraserCursorPos, setEraserCursorPos, isErasing, eraseStrokeDirtyRef, eraseAtPosition, commitErase } =
@@ -387,6 +395,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     isDark,
     fitToContent,
     renderRemoteLaser,
+    renderRemoteInk,
     deleteSelected,
     cropSelectedImage,
     selectElement,
@@ -507,10 +516,18 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
             if (disabled) return;
             if (middlePan.onPointerMove(e)) return;
             handlePointerMove(e);
+            if (onLiveStroke && activeTool === 'pen' && isDrawing.current && activeShapeRef.current) {
+              const pts = activeShapeRef.current.points() as number[];
+              if (pts.length >= 4) onLiveStroke({ points: pts, color: strokeColor, width: strokeWidth });
+            }
           }}
           onPointerUp={(e) => {
             if (disabled) return;
             if (middlePan.onPointerUp(e)) return;
+            if (onLiveStroke && activeTool === 'pen' && isDrawing.current && activeShapeRef.current) {
+              const pts = (activeShapeRef.current.points() as number[]).slice();
+              if (pts.length >= 4) onLiveStroke({ points: pts, color: strokeColor, width: strokeWidth });
+            }
             handlePointerUp(e);
           }}
           onPointerLeave={() => {

@@ -33,6 +33,7 @@ export interface KonvaCanvasHandle {
   toDataURL: () => string | null;
   fitToContent: () => void;
   renderRemoteLaser: (point: { x: number; y: number } | null) => void;
+  renderRemoteInk: (stroke: { points: number[]; color: string; width: number } | null) => void;
   deleteSelected: () => void;
   /** Legacy entry point: enters crop mode for the currently-selected image. */
   cropSelectedImage: () => void;
@@ -59,6 +60,7 @@ export interface KonvaCanvasProps {
   onStagePosChange?: (pos: StagePosition) => void;
   disabled?: boolean;
   onLaserMove?: (pos: { x: number; y: number } | null) => void;
+  onLiveStroke?: (stroke: { points: number[]; color: string; width: number }) => void;
   textPlaceholder?: string;
   onPasteImage?: (dataUrl: string, pos?: { x: number; y: number }) => void;
   onCropImage?: (el: CanvasElement) => void;

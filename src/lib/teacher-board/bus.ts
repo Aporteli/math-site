@@ -6,9 +6,12 @@ export type TeacherBoardEvent = {
   clientId: string;
   pages?: unknown;
   currentPageIndex?: number;
-  type?: 'laser';
+  type?: 'laser' | 'ink';
   point?: { x: number; y: number } | null;
   pageIndex?: number;
+  points?: number[];
+  stroke?: string;
+  strokeWidth?: number;
 };
 
 type Handler = (event: TeacherBoardEvent) => void;
@@ -76,6 +79,26 @@ export function publishTeacherBoardLaser(input: {
     type: 'laser',
     point: input.point,
     pageIndex: input.pageIndex,
+  });
+}
+
+export function publishTeacherBoardInk(input: {
+  userId: string;
+  clientId: string;
+  pageIndex: number;
+  points: number[];
+  stroke: string;
+  strokeWidth: number;
+}) {
+  dispatch({
+    userId: input.userId,
+    clientId: input.clientId,
+    revision: 0,
+    type: 'ink',
+    pageIndex: input.pageIndex,
+    points: input.points,
+    stroke: input.stroke,
+    strokeWidth: input.strokeWidth,
   });
 }
 

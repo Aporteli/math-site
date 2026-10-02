@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { getSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
-import { publishLiveTeacherBoard, publishTeacherBoardLaser, readLiveTeacherBoard } from '@/lib/teacher-board/bus';
+import {
+  publishLiveTeacherBoard,
+  publishTeacherBoardInk,
+  publishTeacherBoardLaser,
+  readLiveTeacherBoard,
+} from '@/lib/teacher-board/bus';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -56,6 +61,9 @@ export async function POST(req: Request) {
     pages?: unknown;
     currentPageIndex?: unknown;
     clientId?: unknown;
+    points?: unknown;
+    stroke?: unknown;
+    strokeWidth?: unknown;
   };  try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -76,6 +84,23 @@ export async function POST(req: Request) {
         ? { x: (raw as { x: number }).x, y: (raw as { y: number }).y }
         : null;
     publishTeacherBoardLaser({ userId, clientId, point, pageIndex });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.type === 'ink') {
+    const pageIndex =
+      typeof body.pageIndex === 'number' && Number.isFinite(body.pageIndex)
+        ? Math.max(0, Math.floor(body.pageIndex))
+        : 0;
+    const points = Array.isArray(body.points)
+      ? body.points.filter((n): n is number => typeof n === 'number' && Number.isFinite(n)).slice(0, 20000)
+      : [];
+    const stroke = typeof body.stroke === 'string' ? body.stroke.slice(0, 32) : '#111111';
+    const strokeWidth =
+      typeof body.strokeWidth === 'number' && Number.isFinite(body.strokeWidth)
+        ? Math.min(64, Math.max(0.5, body.strokeWidth))
+        : 2;
+    publishTeacherBoardInk({ userId, clientId, pageIndex, points, stroke, strokeWidth });
     return NextResponse.json({ ok: true });
   }
 
