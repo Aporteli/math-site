@@ -46,7 +46,10 @@ function roleRank(role: string): number {
   return 3;
 }
 
-function tone(health: HealthLevel, presence: PresenceLevel): { dot: string; text: string; chip: string; label: string } {
+function tone(
+  health: HealthLevel,
+  presence: PresenceLevel,
+): { dot: string; text: string; chip: string; label: string } {
   if (presence === 'disconnected') {
     return { dot: 'bg-slate-400', text: 'text-slate-700', chip: 'bg-slate-100 text-slate-700', label: 'Disconnected' };
   }
@@ -54,13 +57,23 @@ function tone(health: HealthLevel, presence: PresenceLevel): { dot: string; text
     return { dot: 'bg-rose-500', text: 'text-rose-700', chip: 'bg-rose-50 text-rose-700', label: 'Reconnecting' };
   }
   if (presence === 'reconnecting' || health === 'degraded') {
-    return { dot: 'bg-amber-500', text: 'text-amber-800', chip: 'bg-amber-50 text-amber-800', label: presence === 'reconnecting' ? 'Reconnecting' : 'Degraded' };
+    return {
+      dot: 'bg-amber-500',
+      text: 'text-amber-800',
+      chip: 'bg-amber-50 text-amber-800',
+      label: presence === 'reconnecting' ? 'Reconnecting' : 'Degraded',
+    };
   }
   if (health === 'critical') {
     return { dot: 'bg-rose-500', text: 'text-rose-700', chip: 'bg-rose-50 text-rose-700', label: 'Critical' };
   }
   if (health === 'healthy') {
-    return { dot: 'bg-emerald-500', text: 'text-emerald-700', chip: 'bg-emerald-50 text-emerald-700', label: 'Healthy' };
+    return {
+      dot: 'bg-emerald-500',
+      text: 'text-emerald-700',
+      chip: 'bg-emerald-50 text-emerald-700',
+      label: 'Healthy',
+    };
   }
   return { dot: 'bg-slate-300', text: 'text-slate-600', chip: 'bg-slate-100 text-slate-600', label: 'Unknown' };
 }
@@ -155,7 +168,8 @@ function ParticipantCard({ person }: { person: DiagnosticsParticipantView }) {
       ) : null}
 
       <div className="mt-3 text-[11px] text-muted">
-        Avg RTT {formatMs(person.avgRttMs)} · max {formatMs(person.maxRttMs)} · max send loss {formatPct(person.maxSendLossPct)} · max receive loss {formatPct(person.maxReceiveLossPct)}
+        Avg RTT {formatMs(person.avgRttMs)} · max {formatMs(person.maxRttMs)} · max send loss{' '}
+        {formatPct(person.maxSendLossPct)} · max receive loss {formatPct(person.maxReceiveLossPct)}
       </div>
     </article>
   );
@@ -176,7 +190,9 @@ function EventRow({ event }: { event: DiagnosticsEventView }) {
     <li className="rounded-box border border-hairline px-3 py-2">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <span className="font-mono text-xs text-muted">{formatClock(event.occurredAt)}</span>
-        <span className="text-xs text-muted">{roleLabel(event.role)} · {event.participant}</span>
+        <span className="text-xs text-muted">
+          {roleLabel(event.role)} · {event.participant}
+        </span>
       </div>
       <div className="mt-1 text-sm font-medium text-ink">{eventLabel(event.kind)}</div>
       {message ? <p className="mt-1 text-xs text-body">{message}</p> : null}
@@ -189,7 +205,7 @@ function EventRow({ event }: { event: DiagnosticsEventView }) {
         {ice ? <span>ICE {ice}</span> : null}
         {remote ? <span>Remote {remote}</span> : null}
         {typeof serverSeen === 'boolean' ? (
-          <span>Server lists participant: {serverSeen ? serverState ?? 'yes' : 'no'}</span>
+          <span>Server lists participant: {serverSeen ? (serverState ?? 'yes') : 'no'}</span>
         ) : null}
       </div>
     </li>
@@ -213,8 +229,7 @@ function SessionButton({
       className={[
         'w-full rounded-box border p-3 text-left transition',
         selected ? 'border-navy/40 bg-navy-tint' : 'border-hairline bg-white hover:border-navy/30',
-      ].join(' ')}
-    >
+      ].join(' ')}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-semibold text-ink">Session #{item.publicId}</span>
         <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${headline.text}`}>
@@ -332,8 +347,7 @@ export function LiveKitDiagnostics() {
         <button
           type="button"
           onClick={() => void refresh()}
-          className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50"
-        >
+          className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50">
           {refreshing ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Refresh
         </button>
@@ -356,7 +370,12 @@ export function LiveKitDiagnostics() {
               <div className="mt-3 space-y-2">
                 {list && list.active.length > 0 ? (
                   list.active.map((item) => (
-                    <SessionButton key={item.id} item={item} selected={item.id === selectedId} onSelect={setSelectedId} />
+                    <SessionButton
+                      key={item.id}
+                      item={item}
+                      selected={item.id === selectedId}
+                      onSelect={setSelectedId}
+                    />
                   ))
                 ) : (
                   <div className="rounded-box border border-dashed border-hairline p-4 text-center text-sm text-muted">
@@ -371,13 +390,147 @@ export function LiveKitDiagnostics() {
               <div className="mt-3 space-y-2">
                 {list && list.history.length > 0 ? (
                   list.history.map((item) => (
-                    <SessionButton key={item.id} item={item} selected={item.id === selectedId} onSelect={setSelectedId} />
+                    <SessionButton
+                      key={item.id}
+                      item={item}
+                      selected={item.id === selectedId}
+                      onSelect={setSelectedId}
+                    />
                   ))
                 ) : (
                   <div className="rounded-box border border-dashed border-hairline p-4 text-center text-sm text-muted">
                     No saved sessions yet.
                   </div>
                 )}
+              </div>
+            </section>
+
+            <section className="mt-4 rounded-box border border-hairline bg-white p-4 shadow-sm">
+              <h3 className="text-sm font-semibold text-ink">Diagnostics cheat sheet</h3>
+              <p className="mt-1 text-xs text-muted">LiveKit-ის ძირითადი პარამეტრების მოკლე განმარტება.</p>
+
+              <div className="mt-3 divide-y divide-hairline overflow-hidden rounded-box border border-hairline">
+                {[
+                  {
+                    term: 'RTT',
+                    full: 'Round-Trip Time',
+                    description:
+                      'დრო, რომელიც მონაცემს სჭირდება შენგან LiveKit-ის სერვერამდე მისასვლელად და პასუხის უკან დასაბრუნებლად.',
+                  },
+                  {
+                    term: 'Avg RTT',
+                    full: 'Average Round-Trip Time',
+                    description: 'სესიის განმავლობაში დაფიქსირებული RTT-ის საშუალო მნიშვნელობა.',
+                  },
+                  {
+                    term: 'Max RTT',
+                    full: 'Maximum Round-Trip Time',
+                    description:
+                      'სესიაში დაფიქსირებული ყველაზე მაღალი RTT. დიდი ნახტომები შეიძლება ქსელის არასტაბილურობაზე მიუთითებდეს.',
+                  },
+                  {
+                    term: 'Jitter',
+                    full: 'Network Jitter',
+                    description:
+                      'აჩვენებს, რამდენად მერყეობს მონაცემების პაკეტების მოსვლის დრო. რაც უფრო დაბალი და სტაბილურია, მით უკეთესია.',
+                  },
+                  {
+                    term: 'Send Loss',
+                    full: 'Packet Loss — Sending',
+                    description: 'მონაცემების რამდენი პროცენტი დაიკარგა შენი მოწყობილობიდან სერვერისკენ გაგზავნისას.',
+                  },
+                  {
+                    term: 'Receive Loss',
+                    full: 'Packet Loss — Receiving',
+                    description: 'მონაცემების რამდენი პროცენტი დაიკარგა სერვერიდან შენს მოწყობილობამდე მიღებისას.',
+                  },
+                  {
+                    term: 'Reconnects',
+                    full: 'Reconnections',
+                    description: 'რამდენჯერ გახდა საჭირო კავშირის ხელახლა დამყარება სესიის განმავლობაში.',
+                  },
+                  {
+                    term: 'Disconnects',
+                    full: 'Disconnections',
+                    description: 'რამდენჯერ გაითიშა კავშირი სესიის განმავლობაში.',
+                  },
+                  {
+                    term: 'ICE',
+                    full: 'Interactive Connectivity Establishment',
+                    description:
+                      'WebRTC-ის მექანიზმი, რომელიც მოწყობილობასა და LiveKit-ის სერვერს შორის მოქმედ ქსელურ გზას პოულობს.',
+                  },
+                  {
+                    term: 'DTLS',
+                    full: 'Datagram Transport Layer Security',
+                    description: 'უზრუნველყოფს WebRTC კავშირის უსაფრთხოებას და მონაცემების დაშიფვრას.',
+                  },
+                  {
+                    term: 'ICE Route',
+                    full: 'Interactive Connectivity Establishment Route',
+                    description: 'აჩვენებს, რა ქსელური გზით გადის WebRTC-ის მედია-ტრეფიკი.',
+                  },
+                  {
+                    term: 'Bitrate',
+                    full: 'Audio Bitrate',
+                    description: 'აჩვენებს, რამდენი აუდიო მონაცემი იგზავნება ან მიიღება წამში.',
+                  },
+                  {
+                    term: 'Server State',
+                    full: 'Server Connection State',
+                    description: 'აჩვენებს LiveKit-ის სერვერთან კავშირის მიმდინარე მდგომარეობას.',
+                  },
+                  {
+                    term: 'Server Node',
+                    full: 'LiveKit Server Node',
+                    description: 'კონკრეტული LiveKit სერვერი, რომელიც ამ კავშირს ამუშავებს.',
+                  },
+                  {
+                    term: 'Server Region',
+                    full: 'LiveKit Server Region',
+                    description: 'გეოგრაფიული რეგიონი, რომელშიც LiveKit-ის სერვერია განთავსებული.',
+                  },
+                  {
+                    term: 'Connection Metrics Degraded',
+                    full: 'Connection Metrics Degraded',
+                    description: 'კავშირის ხარისხი დროებით გაუარესდა და რომელიმე მეტრიკამ პრობლემურ ზღვარს გადააჭარბა.',
+                  },
+                  {
+                    term: 'Connection Metrics Recovered',
+                    full: 'Connection Metrics Recovered',
+                    description: 'კავშირის ხარისხი კვლავ გაუმჯობესდა და მეტრიკები პრობლემურ ზღვარს ქვემოთ დაბრუნდა.',
+                  },
+                ].map((item) => (
+                  <details key={item.term} className="group bg-white">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-black/[0.02]">
+                      <div className="min-w-0">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-[12px] font-semibold text-ink">{item.term}</span>
+
+                          <span className="truncate text-[10px] font-medium text-muted">{item.full}</span>
+                        </div>
+                      </div>
+
+                      <svg
+                        className="h-3.5 w-3.5 shrink-0 text-muted transition-transform duration-200 group-open:rotate-180"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        aria-hidden="true">
+                        <path
+                          d="M5 7.5L10 12.5L15 7.5"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </summary>
+
+                    <div className="border-t border-hairline bg-black/[0.015] px-3 py-2.5 text-[11px] leading-relaxed text-muted">
+                      {item.description}
+                    </div>
+                  </details>
+                ))}
               </div>
             </section>
           </div>
@@ -390,13 +543,18 @@ export function LiveKitDiagnostics() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-semibold text-ink">Session #{visibleDetail.publicId}</h3>
-                    <p className="mt-1 text-sm text-body">{formatSessionWhen(visibleDetail.startedAt, visibleDetail.endedAt)}</p>
+                    <p className="mt-1 text-sm text-body">
+                      {formatSessionWhen(visibleDetail.startedAt, visibleDetail.endedAt)}
+                    </p>
                     <p className="mt-1 text-sm text-muted">
                       {visibleDetail.courseTitle ?? 'Classroom'} · {visibleDetail.roomName}
                       {visibleDetail.roomKey !== 'main' ? ` · room ${visibleDetail.roomKey.toUpperCase()}` : ''}
                     </p>
                   </div>
-                  <StatusMark health={visibleDetail.health} presence={visibleDetail.status === 'active' ? 'connected' : 'left'} />
+                  <StatusMark
+                    health={visibleDetail.health}
+                    presence={visibleDetail.status === 'active' ? 'connected' : 'left'}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -425,7 +583,9 @@ export function LiveKitDiagnostics() {
                 </div>
 
                 {visibleDetail.simultaneousNote ? (
-                  <div className="rounded-box bg-amber-50 p-3 text-sm text-amber-900">{visibleDetail.simultaneousNote}</div>
+                  <div className="rounded-box bg-amber-50 p-3 text-sm text-amber-900">
+                    {visibleDetail.simultaneousNote}
+                  </div>
                 ) : null}
 
                 {visibleDetail.signals.length > 0 ? (

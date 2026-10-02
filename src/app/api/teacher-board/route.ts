@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { getSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
-import { publishLiveTeacherBoard, readLiveTeacherBoard } from '@/lib/teacher-board/bus';
+import { publishLiveTeacherBoard, publishTeacherBoardLaser, readLiveTeacherBoard } from '@/lib/teacher-board/bus';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -49,18 +49,41 @@ export async function POST(req: Request) {
   const userId = await teacherId();
   if (!userId) return NextResponse.json({ ok: false }, { status: 401 });
 
-  let body: { pages?: unknown; currentPageIndex?: unknown; clientId?: unknown };
-  try {
+  let body: {
+    type?: unknown;
+    point?: unknown;
+    pageIndex?: unknown;
+    pages?: unknown;
+    currentPageIndex?: unknown;
+    clientId?: unknown;
+  };  try {
     body = (await req.json()) as typeof body;
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
+  const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 64) : '';
+  if (body.type === 'laser') {
+    const pageIndex =
+      typeof body.pageIndex === 'number' && Number.isFinite(body.pageIndex)
+        ? Math.max(0, Math.floor(body.pageIndex))
+        : 0;
+    const raw = body.point;
+    const point =
+      raw &&
+      typeof raw === 'object' &&
+      typeof (raw as { x?: unknown }).x === 'number' &&
+      typeof (raw as { y?: unknown }).y === 'number'
+        ? { x: (raw as { x: number }).x, y: (raw as { y: number }).y }
+        : null;
+    publishTeacherBoardLaser({ userId, clientId, point, pageIndex });
+    return NextResponse.json({ ok: true });
+  }
+
   if (!isPages(body.pages)) return NextResponse.json({ ok: false }, { status: 400 });
 
   const safeIndex = typeof body.currentPageIndex === 'number' && Number.isFinite(body.currentPageIndex)
     ? Math.max(0, Math.floor(body.currentPageIndex))
     : 0;
-  const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 64) : '';
 
   const revision = publishLiveTeacherBoard({
     userId,

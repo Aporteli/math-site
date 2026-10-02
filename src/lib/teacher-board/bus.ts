@@ -6,6 +6,9 @@ export type TeacherBoardEvent = {
   clientId: string;
   pages?: unknown;
   currentPageIndex?: number;
+  type?: 'laser';
+  point?: { x: number; y: number } | null;
+  pageIndex?: number;
 };
 
 type Handler = (event: TeacherBoardEvent) => void;
@@ -57,6 +60,23 @@ export function publishLiveTeacherBoard(input: {
 
 export function readLiveTeacherBoard(userId: string) {
   return getBus().latest.get(userId) ?? null;
+}
+
+
+export function publishTeacherBoardLaser(input: {
+  userId: string;
+  clientId: string;
+  point: { x: number; y: number } | null;
+  pageIndex: number;
+}) {
+  dispatch({
+    userId: input.userId,
+    clientId: input.clientId,
+    revision: 0,
+    type: 'laser',
+    point: input.point,
+    pageIndex: input.pageIndex,
+  });
 }
 
 function dispatch(event: TeacherBoardEvent) {

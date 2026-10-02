@@ -34,7 +34,7 @@ export function AssignmentContentTabsHeader({
 
   return (
     <div className="flex flex-col gap-2  bg-sectionHeader px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-      <div className="grid w-full grid-cols-3 gap-1 bg-sectionHeader p-1 sm:flex sm:w-auto">
+      <div className="grid w-full grid-cols-3 gap-1  p-1 sm:flex sm:w-auto">
         {tabs.map((tab) => {
           const active = activeTab === tab.id;
           const count = counts[tab.id];

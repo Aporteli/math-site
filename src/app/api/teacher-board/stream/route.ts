@@ -33,6 +33,9 @@ export async function GET() {
             clientId: event.clientId,
             pages: event.pages,
             currentPageIndex: event.currentPageIndex,
+            type: event.type,
+            point: event.point,
+            pageIndex: event.pageIndex,
           })}\n\n`,
         );
       });

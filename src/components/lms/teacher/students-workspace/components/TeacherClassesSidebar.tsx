@@ -38,9 +38,7 @@ export function TeacherClassesSidebar({
             <p className="text-[11px] font-medium text-mainText">{studentsCount} მოსწავლე</p>
           </div>
         </div>
-        <span className=" px-2.5 py-1 text-[16px] font-bold text-mainText">
-          {courses.length}
-        </span>
+        <span className=" px-2.5 py-1 text-[16px] font-bold text-mainText">{courses.length}</span>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 p-3">
@@ -68,18 +66,27 @@ export function TeacherClassesSidebar({
                   key={course.id}
                   type="button"
                   onClick={() => handleCourseChange(course.id)}
-                  className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-box  px-3 py-2.5 text-left transition ${
+                  className={`group relative flex w-full cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-box px-3 py-2.5 text-left transition-all duration-300 ${
                     active
-                      ? ' bg-mainButton text-mainText shadow-sm'
-                      : 'border-transparent text-body hover:bg-mainButton/40 hover:text-mainText'
-                  }`}
-                >
-                  <span className="truncate text-[13px] font-bold">{course.title}</span>
+                      ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12),0_6px_18px_rgba(0,0,0,0.08)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_8px_24px_rgba(0,0,0,0.12)]'
+                      : 'text-body hover:bg-mainButtonHover hover:text-mainText'
+                  }`}>
                   <span
-                    className={`shrink-0 rounded-box px-2 py-0.5 text-[13px] font-bold text-mainText ${
-                      active ? 'text-mainText' : ' text-mainText'
+                    className={`pointer-events-none absolute -left-8 top-1/2 h-16 w-16 -translate-y-1/2 rounded-full bg-white/[0.06] blur-xl transition-all duration-500 ${
+                      active
+                        ? 'translate-x-0 opacity-100'
+                        : '-translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'
                     }`}
-                  >
+                  />
+
+                  <span className="relative z-10 truncate text-[13px] font-bold">{course.title}</span>
+
+                  <span
+                    className={`relative z-10 shrink-0 px-2 py-0.5 text-[13px] font-bold transition-all duration-300 ${
+                      active
+                        ? ' text-mainText'
+                        : 'text-mainText/70  group-hover:text-mainText'
+                    }`}>
                     {courseStudents.length}
                   </span>
                 </button>

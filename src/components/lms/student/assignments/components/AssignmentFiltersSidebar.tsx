@@ -26,28 +26,24 @@ export function AssignmentFiltersSidebar({ statusFilter, onFilterChange }: Assig
           const isActive = statusFilter === filter.id;
           return (
             <button
-            key={filter.id}
-            type="button"
-            onClick={() => onFilterChange(filter.id)}
-            className={`group relative flex w-full cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-box px-3 py-2.5 text-left text-[13px] font-bold transition-all duration-300 ${
-              isActive
-                ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_8px_24px_rgba(0,0,0,0.12)]'
-                : 'text-body  hover:text-mainText'
-            }`}
-          >
-            <span
-              className={`pointer-events-none absolute -left-8 top-1/2 h-16 w-16 -translate-y-1/2 rounded-full bg-white/[0.06] blur-xl transition-all duration-500 ${
+              key={filter.id}
+              type="button"
+              onClick={() => onFilterChange(filter.id)}
+              className={`group relative flex w-full cursor-pointer items-center justify-between gap-2 overflow-hidden rounded-box px-3 py-2.5 text-left text-[13px] font-bold transition-all duration-300 ${
                 isActive
-                  ? 'translate-x-0 opacity-100'
-                  : '-translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'
-              }`}
-            />
-          
-            <span className="relative z-10 truncate">
-              {filter.label}
-            </span>
+                  ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12),0_6px_18px_rgba(0,0,0,0.08)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_8px_24px_rgba(0,0,0,0.12)]'
+                  : 'text-body hover:bg-mainButtonHover hover:text-mainText'
+              }`}>
+              <span
+                className={`pointer-events-none absolute -left-8 top-1/2 h-16 w-16 -translate-y-1/2 rounded-full bg-white/[0.06] blur-xl transition-all duration-500 ${
+                  isActive
+                    ? 'translate-x-0 opacity-100'
+                    : '-translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100'
+                }`}
+              />
 
-          </button>
+              <span className="relative z-10 truncate">{filter.label}</span>
+            </button>
           );
         })}
       </div>

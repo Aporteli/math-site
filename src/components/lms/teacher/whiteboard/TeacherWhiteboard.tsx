@@ -111,6 +111,7 @@ const COLORS = [
 ];
 
 const STROKE_SIZES = [1, 2, 4, 8, 14];
+const ERASER_SIZES = [20, 32, 48, 64, 80];
 
 const SHAPE_TOOLS: { id: ToolId; icon: typeof Minus; label: string }[] = [
   { id: 'line', icon: Minus, label: 'ხაზი' },
@@ -483,6 +484,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const canvasRef = useRef<KonvaCanvasHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const penMenuRef = useRef<HTMLDivElement>(null);
+  const eraserMenuRef = useRef<HTMLDivElement>(null);
   const shapesMenuRef = useRef<HTMLDivElement>(null);
   const colorMenuRef = useRef<HTMLDivElement>(null);
   const stylusMenuRef = useRef<HTMLDivElement>(null);
@@ -496,6 +498,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const [activeTool, setActiveTool] = useState<ToolId>('pen');
   const [strokeColor, setStrokeColor] = useState<string>(DEFAULT_COLOR);
   const [strokeWidth, setStrokeWidth] = useState<number>(2);
+  const [eraserWidth, setEraserWidth] = useState<number>(40);
   const [isDark, setIsDark] = useState<boolean>(false);
   const [stylusOnly, setStylusOnly] = useState(false);
   const [penSmoothEnabled, setPenSmoothEnabled] = useState(false);
@@ -556,8 +559,10 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const pushQueuedRef = useRef(false);
   const remoteStoreTimerRef = useRef<number | null>(null);
   const schedulePushRef = useRef<() => void>(() => {});
+  const lastLaserSentRef = useRef(0);
 
   const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
+  const [isEraserMenuOpen, setIsEraserMenuOpen] = useState(false);
   const [isShapesMenuOpen, setIsShapesMenuOpen] = useState(false);
   const [isColorMenuOpen, setIsColorMenuOpen] = useState(false);
   const [isStylusMenuOpen, setIsStylusMenuOpen] = useState(false);
@@ -604,6 +609,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         if (p.tool) setActiveTool(p.tool);
         if (p.color) setStrokeColor(p.color);
         if (typeof p.width === 'number') setStrokeWidth(p.width);
+        if (typeof p.eraserWidth === 'number') setEraserWidth(p.eraserWidth);
         if (typeof p.isDark === 'boolean') setIsDark(p.isDark);
         if (typeof p.stylusOnly === 'boolean') setStylusOnly(p.stylusOnly);
         if (isStylusButtonAction(p.stylusPrimaryAction)) setStylusPrimaryAction(p.stylusPrimaryAction);
@@ -642,6 +648,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           tool: isTemporaryEraserRef.current ? previousToolRef.current : (updates.tool ?? activeTool),
           color: updates.color ?? strokeColor,
           width: updates.width ?? strokeWidth,
+          eraserWidth: updates.eraserWidth ?? eraserWidth,
           isDark: updates.isDark ?? isDark,
           zoomScale: updates.zoomScale ?? zoomScale,
           currentPageIndex: updates.pageIdx ?? currentPageIndex,
@@ -724,6 +731,22 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   }, []);
   schedulePushRef.current = schedulePush;
 
+  const handleLaserMove = useCallback((pos: { x: number; y: number } | null) => {
+    const now = Date.now();
+    if (pos && now - lastLaserSentRef.current <= 35) return;
+    lastLaserSentRef.current = now;
+    void fetch('/api/teacher-board', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'laser',
+        point: pos,
+        pageIndex: currentPageIndexRef.current,
+        clientId: clientIdRef.current,
+      }),
+    }).catch(() => {});
+  }, []);
+
   const applyRemoteBoard = useCallback(
     (board: { pages: CanvasElement[][]; currentPageIndex: number; revision: number }) => {
       if (!Array.isArray(board.pages) || board.pages.length === 0) return;
@@ -782,7 +805,20 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           clientId?: string;
           pages?: CanvasElement[][];
           currentPageIndex?: number;
+          type?: 'laser';
+          point?: { x: number; y: number } | null;
+          pageIndex?: number;
         };
+        if (msg.type === 'laser') {
+          if (msg.clientId && msg.clientId === clientIdRef.current) return;
+          if (typeof msg.pageIndex === 'number' && msg.pageIndex !== currentPageIndexRef.current) return;
+          const point =
+            msg.point && typeof msg.point.x === 'number' && typeof msg.point.y === 'number'
+              ? { x: msg.point.x, y: msg.point.y }
+              : null;
+          canvasRef.current?.renderRemoteLaser(point);
+          return;
+        }
         if (typeof msg.revision !== 'number') return;
         if (msg.clientId && msg.clientId === clientIdRef.current) {
           revisionRef.current = Math.max(revisionRef.current, msg.revision);
@@ -955,6 +991,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       const target = e.target as Node;
+      if (eraserMenuRef.current && !eraserMenuRef.current.contains(target)) setIsEraserMenuOpen(false);
       if (penMenuRef.current && !penMenuRef.current.contains(target)) setIsPenMenuOpen(false);
       if (shapesMenuRef.current && !shapesMenuRef.current.contains(target)) setIsShapesMenuOpen(false);
       if (colorMenuRef.current && !colorMenuRef.current.contains(target)) setIsColorMenuOpen(false);
@@ -1144,6 +1181,10 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const setAndSaveWidth = (width: number) => {
     setStrokeWidth(width);
     savePreferencesImmediately({ width });
+  };
+  const setAndSaveEraserWidth = (width: number) => {
+    setEraserWidth(width);
+    savePreferencesImmediately({ eraserWidth: width });
   };
   const toggleAndSaveTheme = () => {
     const nextDark = !isDark;
@@ -1453,6 +1494,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsPenMenuOpen(false);
                     setIsShapesMenuOpen(false);
                     setIsColorMenuOpen(false);
+                    setIsEraserMenuOpen(false);
                   }}
                   className="flex items-center gap-1 h-full px-2 rounded-box focus:outline-none">
                   <Pencil className="size-4" />
@@ -1513,6 +1555,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                   setIsPenMenuOpen(false);
                   setIsShapesMenuOpen(false);
                   setIsStylusMenuOpen(false);
+                  setIsEraserMenuOpen(false);
                 }}
                 title="ფერის არჩევა"
                 className="flex items-center gap-1.5 h-8 px-2 rounded-box bg-paper hover:bg-paper-deep transition-colors border border-hairline">
@@ -1568,6 +1611,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsShapesMenuOpen(false);
                     setIsColorMenuOpen(false);
                     setIsStylusMenuOpen(false);
+                    setIsEraserMenuOpen(false);
                   }}
                   className={`flex items-center justify-center px-1.5 h-full rounded-box border-l ${
                     penSmoothEnabled ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'
@@ -1600,12 +1644,85 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               )}
             </div>
 
-            <ToolButton
-              title={copy.tools.eraser}
-              active={activeTool === 'eraser'}
-              onClick={() => setAndSaveTool('eraser')}>
-              <Eraser className="size-4" />
-            </ToolButton>
+            <div ref={eraserMenuRef} className="relative flex shrink-0 items-center">
+              <div
+                className={`flex items-center h-8 rounded-box transition-all shadow-xs ${
+                  activeTool === 'eraser'
+                    ? 'bg-navy text-white'
+                    : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'
+                }`}>
+                <button
+                  type="button"
+                  title={copy.tools.eraser}
+                  onClick={() => {
+                    setAndSaveTool('eraser');
+                    setIsEraserMenuOpen(false);
+                    setIsPenMenuOpen(false);
+                    setIsShapesMenuOpen(false);
+                    setIsColorMenuOpen(false);
+                    setIsSmoothMenuOpen(false);
+                    setIsStylusMenuOpen(false);
+                  }}
+                  className="flex items-center gap-1 h-full px-2 rounded-box focus:outline-none">
+                  <Eraser className="size-4" />
+                  <span className="text-[11px] font-mono font-medium opacity-90">{eraserWidth}px</span>
+                </button>
+                <button
+                  type="button"
+                  title="საშლელის ზომა"
+                  onClick={() => {
+                    setAndSaveTool('eraser');
+                    setIsEraserMenuOpen((prev) => !prev);
+                    setIsPenMenuOpen(false);
+                    setIsShapesMenuOpen(false);
+                    setIsColorMenuOpen(false);
+                    setIsSmoothMenuOpen(false);
+                    setIsStylusMenuOpen(false);
+                  }}
+                  className={`flex items-center justify-center px-1.5 h-full rounded-box transition-colors border-l ${
+                    activeTool === 'eraser' ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'
+                  }`}>
+                  <ChevronDown
+                    className={`size-3 transition-transform duration-200 ${isEraserMenuOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+              </div>
+              {isEraserMenuOpen && (
+                <div className="absolute top-full mt-2 left-0 z-[120] w-56 rounded-box bg-white p-3 shadow-2xl border border-hairline">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-hairline">
+                    <span className="text-xs font-semibold text-ink">საშლელის ზომა</span>
+                    <span className="text-xs font-mono font-bold text-navy">{eraserWidth}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="12"
+                    max="96"
+                    step="2"
+                    value={eraserWidth}
+                    onChange={(e) => setAndSaveEraserWidth(parseFloat(e.target.value))}
+                    className="w-full h-1.5 bg-paper-deep rounded-box appearance-none cursor-pointer accent-navy"
+                  />
+                  <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-hairline">
+                    {ERASER_SIZES.map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setAndSaveEraserWidth(size)}
+                        className={`size-7 flex items-center justify-center rounded-box transition-colors ${
+                          eraserWidth === size
+                            ? 'bg-navy-tint text-navy ring-1 ring-navy font-bold'
+                            : 'hover:bg-paper text-muted'
+                        }`}>
+                        <div
+                          className="rounded-box border-2 border-current"
+                          style={{ width: Math.min(16, 4 + size / 8), height: Math.min(16, 4 + size / 8) }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
@@ -1631,6 +1748,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsShapesMenuOpen((prev) => !prev);
                     setIsPenMenuOpen(false);
                     setIsColorMenuOpen(false);
+                    setIsEraserMenuOpen(false);
                   }}
                   className={`flex items-center justify-center px-1.5 h-full rounded-box transition-colors border-l ${isShapeActive ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
                   <ChevronDown
@@ -1707,6 +1825,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                   setIsPenMenuOpen(false);
                   setIsShapesMenuOpen(false);
                   setIsColorMenuOpen(false);
+                  setIsEraserMenuOpen(false);
                 }}
                 title={copy.stylusSettings}
                 aria-label={copy.stylusSettings}
@@ -1807,6 +1926,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           activeTool={activeTool}
           strokeColor={effectiveStroke}
           strokeWidth={strokeWidth}
+          eraserWidth={eraserWidth}
           isDark={isDark}
           scale={zoomScale * fitScale}
           stagePos={stagePos}
@@ -1822,6 +1942,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           stylusOnly={stylusOnly}
           onStylusButtonAction={applyStylusAction}
           penSmoothIntensity={penSmoothEnabled ? penSmoothIntensity : 0}
+          onLaserMove={handleLaserMove}
         />
       </div>
 
