@@ -34,25 +34,25 @@ export function AssignModal({
   onSelectAllStudents, onAssign,
 }: Props) {
   return (
-    <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[110] w-[340px] sm:w-[420px] rounded-box bg-white dark:bg-slate-900 p-4 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
-      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800">
+    <div className="absolute bottom-16 left-1/2 z-[110] w-[340px] -translate-x-1/2 animate-in rounded-box border border-hairline bg-main p-4 shadow-[0_8px_24px_rgba(0,0,0,0.12)] fade-in zoom-in-95 duration-150 sm:w-[420px]">
+      <div className="mb-2.5 flex items-center justify-between border-b border-hairline pb-2.5">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-box bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+          <div className="flex size-7 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
             <Send className="size-3.5" />
           </div>
-          <span className="text-xs font-bold text-slate-900 dark:text-slate-100">დაფის გაგზავნა</span>
+          <span className="text-xs font-bold text-ink">დაფის გაგზავნა</span>
         </div>
-        <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <button type="button" onClick={onClose} className="cursor-pointer text-muted transition-colors hover:text-mainText">
           <X className="size-4" />
         </button>
       </div>
 
       <div className="mb-3">
         <div className="flex items-center justify-between mb-1.5 px-0.5">
-          <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+          <span className="text-[11px] font-bold text-muted">
             აირჩიეთ დაფები ({selectedPagesForAssign.length}):
           </span>
-          <button type="button" onClick={onSelectAllPagesToggle} className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+          <button type="button" onClick={onSelectAllPagesToggle} className="cursor-pointer text-[10px] font-bold text-navy hover:underline">
             {selectedPagesForAssign.length === pages.length ? 'მხოლოდ მიმდინარე' : 'ყველა დაფა'}
           </button>
         </div>
@@ -73,27 +73,27 @@ export function AssignModal({
 
       <div className="space-y-1.5 mb-3.5">
         <div className="flex items-center justify-between px-0.5">
-          <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+          <span className="text-[11px] font-bold text-muted">
             აირჩიეთ მოსწავლეები ({selectedStudentIdentities.length}):
           </span>
           {students.length > 0 && (
-            <button type="button" onClick={onSelectAllStudents} className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+            <button type="button" onClick={onSelectAllStudents} className="cursor-pointer text-[10px] font-bold text-navy hover:underline">
               {selectedStudentIdentities.length === students.length ? 'მონიშვნის მოხსნა' : 'ყველა მოსწავლე'}
             </button>
           )}
         </div>
 
         {assignedStatus ? (
-          <div className="flex items-center justify-center gap-2 py-3 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded-box">
+          <div className="flex items-center justify-center gap-2 rounded-box border border-win/20 bg-win-tint py-3 text-xs font-bold text-win">
             <UserCheck className="size-4" />
             <span>{assignedStatus}</span>
           </div>
         ) : assignError ? (
-          <div className="flex flex-col items-center justify-center gap-1 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 text-center animate-in fade-in">
+          <div className="flex animate-in flex-col items-center justify-center gap-1 py-2 text-center text-xs font-bold text-rose-500 fade-in">
             <span>{assignError}</span>
           </div>
         ) : students.length === 0 ? (
-          <p className="text-center text-xs text-slate-500 py-3">კურსზე მოსწავლეები არ არიან</p>
+          <p className="py-3 text-center text-xs font-medium text-muted">კურსზე მოსწავლეები არ არიან</p>
         ) : (
           <div className="flex flex-col gap-1.5 max-h-40 overflow-y-auto p-1 custom-scrollbar">
             {students.map((student) => {
@@ -103,14 +103,14 @@ export function AssignModal({
                   key={student.identity}
                   type="button"
                   onClick={() => onToggleStudent(student.identity)}
-                  className={`flex items-center justify-between p-2.5 rounded-box text-left text-xs transition-all ${
+                  className={`flex cursor-pointer items-center justify-between rounded-box p-2.5 text-left text-xs font-bold transition-all duration-200 ${
                     isChecked
-                      ? 'border-2 border-indigo-600 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-100 shadow-xs'
-                      : 'border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      ? 'border border-transparent bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                      : 'border border-hairline bg-sectionHeader text-mainText hover:bg-mainButtonHover'
                   }`}>
                   <span className="font-semibold truncate max-w-[240px]">{student.name || student.identity}</span>
                   <div className={`flex size-4 shrink-0 items-center justify-center rounded-box transition-all ${
-                    isChecked ? 'bg-indigo-600 text-white' : 'border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+                    isChecked ? 'bg-[#465D73] text-white' : 'border border-hairline bg-main'
                   }`}>
                     {isChecked && <Check className="size-3 stroke-[3]" />}
                   </div>
@@ -126,7 +126,7 @@ export function AssignModal({
           type="button"
           disabled={assignPending || selectedPagesForAssign.length === 0 || selectedStudentIdentities.length === 0}
           onClick={() => onAssign('task')}
-          className="flex items-center justify-center gap-1.5 py-2.5 rounded-box bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]">
+          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-box bg-[#465D73] py-2.5 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
           {assignPending && assignTargetType === 'task' ? (
             <><Loader2 className="size-3.5 animate-spin" /><span>იგზავნება...</span></>
           ) : (
@@ -138,11 +138,11 @@ export function AssignModal({
           type="button"
           disabled={assignPending || selectedPagesForAssign.length === 0 || selectedStudentIdentities.length === 0}
           onClick={() => onAssign('material')}
-          className="flex items-center justify-center gap-1.5 py-2.5 rounded-box bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]">
+          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-box bg-[#A66A32] py-2.5 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)] transition-all duration-200 hover:bg-[#B8783B] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
           {assignPending && assignTargetType === 'material' ? (
             <><Loader2 className="size-3.5 animate-spin" /><span>იგზავნება...</span></>
           ) : (
-            <><Layers className="size-3.5 text-indigo-400" /><span>მასალებში</span></>
+            <><Layers className="size-3.5" /><span>მასალებში</span></>
           )}
         </button>
       </div>

@@ -144,10 +144,10 @@ export function TopToolbar(props: Props) {
 
   return (
     <div className="absolute top-2 sm:top-3 inset-x-0 z-[100] flex justify-center px-1 sm:px-2 pointer-events-none">
-      <div className="pointer-events-auto w-max max-w-full min-w-0 rounded-box border border-slate-200 bg-white/95 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 overflow-visible">
+      <div className="pointer-events-auto w-max max-w-full min-w-0 overflow-visible rounded-box border border-hairline bg-sectionHeader shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_4px_rgba(0,0,0,0.08)]">
         <ToolbarIndicator
           activeKey={getToolbarKey(activeTool)}
-          color="#4f46e5"
+          color="#465D73"
           thickness={1.5}
           inset={6}
           bottom={4}
@@ -171,7 +171,7 @@ export function TopToolbar(props: Props) {
             />
 
             {isTeacher && (
-              <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1.5 dark:border-slate-800">
+              <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
                 <PenMenu
                   menuRef={penMenuRef}
                   isOpen={isPenMenuOpen}
@@ -219,7 +219,7 @@ export function TopToolbar(props: Props) {
               </div>
             )}
             {isTeacher && (
-              <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1.5 dark:border-slate-800">
+              <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
                 <ShapesMenu
                   menuRef={shapesMenuRef}
                   isOpen={isShapesMenuOpen}

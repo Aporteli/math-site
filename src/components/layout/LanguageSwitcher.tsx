@@ -133,8 +133,8 @@ export function LanguageSwitcher({
                   className={[
                     "flex items-center justify-between gap-3 rounded-box px-3 py-2 text-sm transition-colors",
                     active
-                      ? "bg-navy font-bold text-white"
-                      : "font-medium text-mainText hover:bg-mainButtonHover/20 hover:text-mainText",
+                      ? "bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]"
+                      : "font-medium text-mainText hover:bg-sectionHeader",
                   ].join(" ")}
                 >
                   <span lang={code}>{localeNames[code].label}</span>

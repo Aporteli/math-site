@@ -112,14 +112,14 @@ export function ClassroomVideoPanel({
   if (notice) {
     return (
       <div className="flex h-full w-full flex-1 flex-col items-center justify-center gap-3 p-4 text-center">
-        <p className="text-sm font-semibold text-white/90">{notice}</p>
+        <p className="text-sm font-bold text-ink">{notice}</p>
         <button
           type="button"
           onClick={() => {
             setNotice(null);
             setConnectAttempt((attempt) => attempt + 1);
           }}
-          className="inline-flex items-center gap-2 rounded-box bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/20"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-box bg-[#465D73] px-3 py-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98]"
         >
           <RefreshCw className="size-4" />
           თავიდან შესვლა
@@ -167,12 +167,12 @@ export function ClassroomVideoPanel({
         <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
           <ConnectionStatusBadge />
           {breakout.roomKey !== 'main' && (
-            <span className="rounded-box bg-amber-500/90 px-1.5 py-0.5 text-[10px] font-bold text-slate-950">
+            <span className="rounded-box bg-[#A66A32] px-1.5 py-0.5 text-[10px] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
               {breakout.roomKey === 'a' ? 'ოთახი A' : 'ოთახი B'}
             </span>
           )}
           {breakout.moving && (
-            <span className="rounded-box bg-white/15 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            <span className="rounded-box border border-hairline bg-sectionHeader px-1.5 py-0.5 text-[10px] font-bold text-mainText">
               გადასვლა...
             </span>
           )}

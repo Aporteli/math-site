@@ -24,5 +24,5 @@ export function GraphingToolLoader({
 }
 
 function GraphingSkeleton() {
-  return <div className="h-80 animate-pulse rounded-box border border-hairline bg-white" />;
+  return <div className="h-80 animate-pulse rounded-box border border-hairline bg-main" />;
 }

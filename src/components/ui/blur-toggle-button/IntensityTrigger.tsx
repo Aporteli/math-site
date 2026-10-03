@@ -16,10 +16,10 @@ export function IntensityTrigger({ blurRadius, showOptions, isLoading, onClick }
       type="button"
       onClick={onClick}
       disabled={isLoading}
-      className="ml-1 flex items-center gap-0.5 rounded-box border-l border-white/10 px-1.5 py-1 text-[11px] font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-all">
-      <span className="text-amber-400 font-semibold">{getBlurLabel(blurRadius)}</span>
+      className="ml-1 flex cursor-pointer items-center gap-0.5 rounded-box border-l border-hairline px-1.5 py-1 text-[11px] font-medium text-mainText transition-all hover:bg-sectionHeader">
+      <span className="font-bold text-[#465D73]">{getBlurLabel(blurRadius)}</span>
       <ChevronDown
-        className={`size-3 text-slate-400 transition-transform duration-200 ${showOptions ? 'rotate-180' : ''}`}
+        className={`size-3 text-icons transition-transform duration-200 ${showOptions ? 'rotate-180' : ''}`}
       />
     </button>
   );

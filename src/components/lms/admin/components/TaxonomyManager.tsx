@@ -30,7 +30,7 @@ type TaxonomyCopy = {
 };
 
 const fieldClass =
-  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm font-medium text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
 function labelFor(node: TaxonomyNodeDto, locale: Locale) {
   if (locale === 'en') return node.nameEn;
@@ -138,7 +138,7 @@ export function TaxonomyManager({
         </header>
       )}
 
-      <section className="rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5">
+      <section className="rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm font-medium text-ink">
             {copy.levels[level]}
@@ -201,14 +201,14 @@ export function TaxonomyManager({
           type="button"
           disabled={busy}
           onClick={() => void onAdd()}
-          className="mt-4 inline-flex items-center gap-1.5 rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60">
+          className="mt-4 inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-[#465D73] px-4 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
           <Plus className="size-4" aria-hidden="true" />
           {copy.add}
         </button>
         {notice ? <p className="mt-3 text-sm text-brass-strong">{notice}</p> : null}
       </section>
 
-      <section className="rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5">
+      <section className="rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5">
         {tree.length === 0 ? (
           <p className="text-sm text-muted">{copy.empty}</p>
         ) : (
@@ -270,7 +270,7 @@ function NodeRow({ title, onRemove, removeLabel }: { title: string; onRemove: ()
         type="button"
         aria-label={removeLabel}
         onClick={onRemove}
-        className="inline-flex size-8 items-center justify-center rounded-box text-muted hover:bg-white hover:text-ink">
+        className="inline-flex size-8 cursor-pointer items-center justify-center rounded-box text-muted transition-colors hover:bg-rose-500/15 hover:text-rose-500">
         <Trash2 className="size-4" aria-hidden="true" />
       </button>
     </div>

@@ -12,7 +12,7 @@ import type { ProblemBankCopy } from "@/lib/math/problems";
 type SlashCopy = ProblemBankCopy["chat"]["slashPrompts"];
 
 const fieldClass =
-  "w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15";
+  "w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm font-medium text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none";
 
 export function AdminSlashPromptMenu({
   copy,
@@ -47,7 +47,7 @@ export function AdminSlashPromptMenu({
                   aria-selected={active}
                   className={`flex w-full flex-col items-start gap-0.5 rounded-box px-3 py-2 text-left text-sm transition-colors ${
                     active
-                      ? "bg-navy-tint text-ink"
+                      ? "bg-mainButton text-mainText"
                       : "text-ink hover:bg-paper-deep"
                   }`}
                   onMouseEnter={() => onHover(index)}
@@ -197,7 +197,7 @@ export function AdminSlashPromptManager({
         <button
           type="button"
           onClick={onAdd}
-          className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong"
+          className="inline-flex items-center gap-1.5 rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] px-3 py-2 text-xs font-semibold text-white hover:bg-[#526C85]"
         >
           <Plus className="size-3.5" aria-hidden="true" />
           {copy.add}

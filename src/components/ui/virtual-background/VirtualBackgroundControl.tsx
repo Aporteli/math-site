@@ -30,7 +30,7 @@ export function VirtualBackgroundControl() {
           type="button"
           onClick={() => void applyVirtualBackground('', false)}
           disabled={isLoading}
-          className="rounded-box px-1.5 py-1 text-rose-300 transition-all hover:bg-rose-500/10 hover:text-rose-200"
+          className="cursor-pointer rounded-box border border-rose-500/30 bg-rose-500/15 px-1.5 py-1 text-rose-500 transition-colors hover:bg-rose-500/25"
           title="ფონის გამორთვა"
         >
           <X className="size-3.5" />
@@ -41,11 +41,11 @@ export function VirtualBackgroundControl() {
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={isLoading}
-        className={`flex items-center gap-1.5 rounded-box px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
+        className={`flex cursor-pointer items-center gap-1.5 rounded-box px-2.5 py-1 text-xs transition-all duration-200 ${
           isActive
-            ? 'bg-emerald-500 font-semibold text-slate-950 hover:bg-emerald-400'
-            : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-        } ${isLoading ? 'cursor-wait opacity-60' : ''}`}
+            ? 'bg-[#465D73] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] hover:bg-[#526C85]'
+            : 'border border-hairline bg-paper font-medium text-mainText hover:bg-sectionHeader'
+        } ${isLoading ? 'cursor-wait opacity-45' : ''}`}
         title="აირჩიე ფონის სურათი"
       >
         <ImagePlus className="size-3.5" />

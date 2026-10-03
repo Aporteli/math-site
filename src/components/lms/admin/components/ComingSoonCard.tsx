@@ -7,7 +7,9 @@ interface ComingSoonCardProps {
 
 export function ComingSoonCard({ title, description, soon, hint }: ComingSoonCardProps) {
     return (
-      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+      <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader shadow-sm">
+        <div className="h-1 bg-brass" aria-hidden="true" />
+        <div className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-lg font-semibold tracking-tight text-ink">{title}</h3>
@@ -16,6 +18,7 @@ export function ComingSoonCard({ title, description, soon, hint }: ComingSoonCar
           <span className="rounded-box bg-brass-tint px-2.5 py-1 text-[11px] font-semibold text-brass">{soon}</span>
         </div>
         <p className="mt-4 rounded-box border border-hairline-soft bg-paper px-4 py-3 text-sm text-muted">{hint}</p>
+        </div>
       </div>
     );
   }

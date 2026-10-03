@@ -15,8 +15,8 @@ export function TeacherActions({ selectedPagesCount, onAskAI, onOpenSend }: Prop
         type="button"
         onClick={onAskAI}
         title="დაფის გაგზავნა AI-სთვის"
-        className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-box bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 text-white text-xs font-medium transition-colors shadow-xs shrink-0">
-        <Sparkles className="size-3.5 text-amber-300" />
+        className="inline-flex h-7 shrink-0 cursor-pointer items-center gap-1 rounded-box bg-[#465D73] px-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98] sm:h-8 sm:gap-1.5 sm:px-2.5">
+        <Sparkles className="size-3.5 shrink-0" />
         <span>AI-ს კითხვა {selectedPagesCount > 0 ? `(${selectedPagesCount})` : ''}</span>
       </button>
 
@@ -24,7 +24,7 @@ export function TeacherActions({ selectedPagesCount, onAskAI, onOpenSend }: Prop
         type="button"
         onClick={onOpenSend}
         title="დაფის სურათის გაგზავნა მოსწავლესთან"
-        className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-box bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition-colors shadow-xs shrink-0">
+        className="inline-flex h-7 shrink-0 cursor-pointer items-center gap-1 rounded-box bg-[#A66A32] px-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)] transition-all duration-200 hover:bg-[#B8783B] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_4px_12px_rgba(166,106,50,0.28)] active:scale-[0.98] sm:h-8 sm:gap-1.5 sm:px-2.5">
         <Send className="size-3.5" />
         <span>გაგზავნა {selectedPagesCount > 0 ? `(${selectedPagesCount})` : ''}</span>
       </button>

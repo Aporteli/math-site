@@ -59,21 +59,21 @@ export function StudentListCard({
   return (
     <div
       onClick={() => onSelect(student)}
-      className={`group flex w-full cursor-pointer flex-col overflow-hidden rounded-box border border-hairline bg-surface text-left shadow-sm transition-all duration-200 hover:border-navy/40 hover:shadow-md ${
+      className={`group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-box border border-hairline bg-main text-left shadow-sm transition-all duration-200 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass hover:shadow-md ${
         view === 'grid' ? 'h-full' : ''
       }`}>
       {/* ─── Header: Info & Avatar ─── */}
       <div className="flex items-start gap-3 p-4 pb-3">
         <span
           className={`flex size-11 shrink-0 items-center justify-center rounded-box text-base font-bold shadow-inner transition-colors ${
-            hasLessonToday ? 'animate-pulse bg-yellow-200 text-yellow-800' : 'bg-navy-tint text-navy'
+            hasLessonToday ? 'animate-pulse bg-brass-tint text-brass-strong' : 'bg-brass-tint text-brass-strong'
           }`}>
           {initial}
         </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="truncate text-sm font-bold leading-snug text-ink transition-colors group-hover:text-navy">
+            <h3 className="truncate text-sm font-bold leading-snug text-ink transition-colors group-hover:text-[#465D73]">
               {student.firstName} {student.lastName}
             </h3>
           </div>
@@ -89,7 +89,7 @@ export function StudentListCard({
               e.stopPropagation();
               onEditIndividual?.(student);
             }}
-            className="rounded-box border border-hairline bg-paper px-2.5 py-0.5 text-[10px] font-bold transition hover:border-navy/30 hover:bg-navy-tint">
+            className="rounded-box border border-hairline bg-paper px-2.5 py-0.5 text-[10px] font-bold transition hover:bg-sectionHeader">
             რედაქტირება
           </button>
         ) : student.groupIds.length > 0 ? (
@@ -122,7 +122,7 @@ export function StudentListCard({
             e.stopPropagation();
             onManagePayments?.(student);
           }}
-          className="w-full rounded-box border border-hairline/60 bg-surface p-3 text-left transition hover:border-navy/30 hover:bg-navy-tint/30 active:scale-[0.99]">
+          className="w-full rounded-box border border-hairline/60 bg-surface p-3 text-left transition hover:bg-sectionHeader active:scale-[0.99]">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[10px] font-semibold text-muted">ფასი / მოსალოდნელი</p>
@@ -132,7 +132,7 @@ export function StudentListCard({
                   {student.monthlyPrice > 0 ? `${student.monthlyPrice.toLocaleString('ka-GE')} ₾` : '—'}
                 </span>
 
-                <span className="truncate text-[10px] font-semibold text-navy">
+                <span className="truncate text-[10px] font-semibold text-[#465D73]">
                   {info.unitLabel === 'თვე' ? `${expected} ₾ / თვე` : `${info.units} ${info.unitLabel} · ${expected} ₾`}
                 </span>
               </div>
@@ -165,7 +165,7 @@ export function StudentListCard({
               onEditLessons(student);
             }}
             title="გაკვეთილის დროების რედაქტირება"
-            className="inline-flex items-center gap-1 rounded-box px-2.5 py-1 text-[10px] font-bold transition active:scale-[0.97] hover:border-navy/40 hover:bg-navy-tint">
+            className="inline-flex items-center gap-1 rounded-box px-2.5 py-1 text-[10px] font-bold transition active:scale-[0.97] hover:bg-sectionHeader">
             <span>შეცვლა</span>
             <ChevronRight className="size-3" />
           </button>
@@ -178,7 +178,7 @@ export function StudentListCard({
               e.stopPropagation();
               onEditLessons(student);
             }}
-            className="w-full rounded-box border border-dashed border-hairline bg-paper/60 py-2 text-center text-xs font-semibold text-muted transition hover:border-navy/40 hover:bg-navy-tint hover:text-navy">
+            className="w-full rounded-box border border-dashed border-hairline bg-paper/60 py-2 text-center text-xs font-semibold text-muted transition hover:bg-sectionHeader hover:text-[#465D73]">
             + გაკვეთილის დამატება
           </button>
         ) : (
@@ -190,7 +190,7 @@ export function StudentListCard({
                 <div
                   key={l.id}
                   className={`flex items-center justify-between rounded-box px-2.5 py-1.5 text-xs ${
-                    isToday ? 'bg-navy-tint font-bold text-navy shadow-sm' : 'bg-paper text-body'
+                    isToday ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'bg-paper text-body'
                   }`}>
                   <span>{DAY_SHORT[l.dayOfWeek]}</span>
 

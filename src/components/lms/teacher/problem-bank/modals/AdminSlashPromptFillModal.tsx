@@ -181,7 +181,7 @@ export function AdminSlashPromptFillModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 flex w-full max-w-[600px] flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-xl shadow-navy/10"
+        className="relative z-10 flex w-full max-w-[600px] flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl"
         style={{ height: "min(300px, calc(100vh - 2rem))" }}
       >
         <div className="flex items-start justify-between gap-2 border-b border-hairline-soft px-4 py-3">
@@ -231,7 +231,7 @@ export function AdminSlashPromptFillModal({
             type="button"
             tabIndex={-1}
             onClick={() => onConfirm(text)}
-            className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong"
+            className="inline-flex items-center gap-1.5 rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] px-3 py-2 text-xs font-semibold text-white hover:bg-[#526C85]"
           >
             <Check className="size-3.5" aria-hidden="true" />
             {copy.fillInsert}

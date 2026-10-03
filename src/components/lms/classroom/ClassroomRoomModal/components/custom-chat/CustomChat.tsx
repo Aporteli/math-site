@@ -37,7 +37,7 @@ export function CustomChat({ courseId, isAdmin = true }: CustomChatProps) {
   return (
     <div
       onPaste={handlePaste}
-      className="flex h-full w-full flex-col rounded-box border border-white/10 bg-slate-900 overflow-hidden outline-none focus:border-emerald-500/50"
+      className="flex h-full w-full flex-col overflow-hidden rounded-box border border-hairline bg-main outline-none focus:border-navy"
       tabIndex={0}
     >
       <ChatHeader

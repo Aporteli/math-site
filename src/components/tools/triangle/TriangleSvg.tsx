@@ -54,13 +54,13 @@ export function TriangleSvg({ solution }: Props) {
   const midCA = { x: (Cx + Ax) / 2, y: (Cy + Ay) / 2 };
 
   return (
-    <div className="overflow-hidden rounded-box border border-hairline bg-white p-2 dark:bg-slate-900 dark:border-slate-700">
+    <div className="overflow-hidden rounded-box border border-hairline bg-main p-2 text-ink">
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full max-w-2xl mx-auto">
         {/* Fill */}
         <polygon
           points={`${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}`}
-          fill="rgba(37, 99, 235, 0.08)"
-          stroke="#2563eb"
+          fill="rgba(70, 93, 115, 0.12)"
+          stroke="#465D73"
           strokeWidth="2.5"
           strokeLinejoin="round"
         />
@@ -71,7 +71,7 @@ export function TriangleSvg({ solution }: Props) {
           y={midAB.y + 22}
           fontSize="14"
           fontStyle="italic"
-          fill="#64748b"
+          fill="currentColor"
           textAnchor="middle"
           fontFamily="ui-monospace, monospace">
           c = {fmt(c, 3)}
@@ -81,7 +81,7 @@ export function TriangleSvg({ solution }: Props) {
           y={midBC.y + 4}
           fontSize="14"
           fontStyle="italic"
-          fill="#64748b"
+          fill="currentColor"
           fontFamily="ui-monospace, monospace">
           a = {fmt(a, 3)}
         </text>
@@ -90,16 +90,16 @@ export function TriangleSvg({ solution }: Props) {
           y={midCA.y + 4}
           fontSize="14"
           fontStyle="italic"
-          fill="#64748b"
+          fill="currentColor"
           textAnchor="end"
           fontFamily="ui-monospace, monospace">
           b = {fmt(b, 3)}
         </text>
 
         {/* Vertices */}
-        <circle cx={Ax} cy={Ay} r={5} fill="#2563eb" />
-        <circle cx={Bx} cy={By} r={5} fill="#2563eb" />
-        <circle cx={Cx} cy={Cy} r={5} fill="#2563eb" />
+        <circle cx={Ax} cy={Ay} r={5} fill="#465D73" />
+        <circle cx={Bx} cy={By} r={5} fill="#465D73" />
+        <circle cx={Cx} cy={Cy} r={5} fill="#465D73" />
 
         {/* Vertex labels */}
         <text
@@ -107,7 +107,7 @@ export function TriangleSvg({ solution }: Props) {
           y={Ay + 8}
           fontSize="18"
           fontWeight="700"
-          fill="#1e293b"
+          fill="currentColor"
           fontFamily="ui-monospace, monospace">
           A
         </text>
@@ -116,7 +116,7 @@ export function TriangleSvg({ solution }: Props) {
           y={By + 8}
           fontSize="18"
           fontWeight="700"
-          fill="#1e293b"
+          fill="currentColor"
           fontFamily="ui-monospace, monospace">
           B
         </text>
@@ -125,7 +125,7 @@ export function TriangleSvg({ solution }: Props) {
           y={Cy - 14}
           fontSize="18"
           fontWeight="700"
-          fill="#1e293b"
+          fill="currentColor"
           textAnchor="middle"
           fontFamily="ui-monospace, monospace">
           C

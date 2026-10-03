@@ -11,24 +11,24 @@ interface DeleteGroupModalProps {
 export function DeleteGroupModal({ deletingId, setDeletingId, isSaving, handleDeleteCourse }: DeleteGroupModalProps) {
   return (
     deletingId && (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-sm rounded-box bg-white p-6 shadow-2xl text-center">
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-box bg-rose-50 text-rose-600">
-          <AlertTriangle className="size-6" />
+    <div className="fixed inset-0 z-[60] flex animate-in items-center justify-center bg-black/60 p-4 backdrop-blur-sm fade-in duration-150">
+      <div className="w-full max-w-sm rounded-box border border-hairline bg-paper p-6 text-center shadow-2xl">
+        <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-box border border-rose-500/20 bg-rose-500/10 text-rose-500">
+          <AlertTriangle className="size-5" />
         </div>
-        <h3 className="text-lg font-bold text-ink mb-1">ჯგუფის წაშლა</h3>
-        <p className="text-sm text-muted mb-6">ნამდვილად გსურთ ჯგუფის წაშლა? მოქმედება შეუქცევადია.</p>
+        <h3 className="mb-1 text-base font-bold text-ink">ჯგუფის წაშლა</h3>
+        <p className="mb-6 text-sm text-muted">ნამდვილად გსურთ ჯგუფის წაშლა? მოქმედება შეუქცევადია.</p>
         <div className="flex gap-2">
           <button
             onClick={() => setDeletingId(null)}
             disabled={isSaving}
-            className="flex-1 rounded-box bg-paper px-4 py-2.5 text-sm font-bold text-ink hover:bg-paper-deep transition-colors">
+            className="flex-1 cursor-pointer rounded-box border border-hairline bg-surface px-4 py-2.5 text-sm font-bold text-ink transition-colors hover:bg-paper-deep">
             გაუქმება
           </button>
           <button
             onClick={handleDeleteCourse}
             disabled={isSaving}
-            className="flex-1 inline-flex justify-center items-center gap-2 rounded-box bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-rose-700 disabled:opacity-50">
+            className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-box border border-rose-500/30 bg-rose-500/15 px-4 py-2.5 text-sm font-bold text-rose-500 transition-colors hover:bg-rose-500/25 disabled:opacity-50">
             {isSaving && <Loader2 className="size-4 animate-spin" />}
             წაშლა
           </button>

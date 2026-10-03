@@ -80,28 +80,28 @@ export function MoreMenu({
   // room in a z-[999999] overlay; a body portal at z-60 paints behind it.
   return createPortal(
     <div
-      className="fixed z-[200] flex w-72 flex-col gap-2 rounded-box border border-white/10 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-xl overflow-visible"
+      className="fixed z-[200] flex w-72 flex-col gap-2 overflow-visible rounded-box border border-hairline bg-main p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
       style={{ right: position.right, bottom: position.bottom }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="px-2 py-1 text-[10px] font-semibold text-white/40 uppercase">
+      <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-muted">
         პარამეტრები
       </div>
 
-      <div className="flex items-center justify-between rounded-box bg-white/5 p-2 text-xs text-white/90">
-        <span className="font-medium">ფონის ბლური</span>
+      <div className="flex items-center justify-between rounded-box border border-hairline bg-sectionHeader p-2 text-xs font-bold text-mainText">
+        <span>ფონის ბლური</span>
         <BlurToggleButton />
       </div>
 
-      <div className="flex items-center justify-between rounded-box bg-white/5 p-2 text-xs text-white/90">
-        <span className="font-medium">ვირტუალური ფონი</span>
+      <div className="flex items-center justify-between rounded-box border border-hairline bg-sectionHeader p-2 text-xs font-bold text-mainText">
+        <span>ვირტუალური ფონი</span>
         <VirtualBackgroundControl />
       </div>
 
-      <div className="flex items-center justify-between rounded-box bg-white/5 p-2 text-xs text-white/90 relative">
-        <span className="font-medium">მასკის დახვეწა</span>
+      <div className="relative flex items-center justify-between rounded-box border border-hairline bg-sectionHeader p-2 text-xs font-bold text-mainText">
+        <span>მასკის დახვეწა</span>
         <TemporalBackgroundTunerButton />
       </div>
 

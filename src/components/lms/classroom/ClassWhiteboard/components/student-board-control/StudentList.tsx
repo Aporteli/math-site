@@ -14,15 +14,10 @@ export function StudentList({
   students,
   lockedStudentIds,
   onToggleLock,
-  isDark,
 }: StudentListProps) {
   if (students.length === 0) {
     return (
-      <p
-        className={`px-2 py-4 text-center text-xs ${
-          isDark ? 'text-slate-400' : 'text-slate-500'
-        }`}
-      >
+      <p className="px-2 py-4 text-center text-xs font-medium text-muted">
         ამჟამად კლასში მოსწავლეები არ არიან დაკავშირებული.
       </p>
     );
@@ -36,7 +31,6 @@ export function StudentList({
           student={s}
           locked={lockedStudentIds.has(s.identity)}
           onToggleLock={onToggleLock}
-          isDark={isDark}
         />
       ))}
     </ul>

@@ -50,13 +50,13 @@ const INITIAL_TERMS: Term[] = [
 ];
 
 const fieldClass =
-  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-center font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2 text-center font-mono text-sm text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
 const keyClass =
-  'inline-flex min-h-11 items-center justify-center rounded-box border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-navy-tint focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'inline-flex min-h-11 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main px-3 py-2 text-sm font-bold text-ink shadow-sm transition-colors hover:bg-sectionHeader';
 
 const chipClass =
-  'inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-navy-tint disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex cursor-pointer items-center gap-1.5 rounded-box border border-hairline bg-main px-3 py-2 text-sm font-bold text-ink transition-colors hover:bg-sectionHeader disabled:cursor-not-allowed disabled:opacity-45';
 
 function applyKey(current: string, key: string): string {
   if (key === 'backspace') return current.slice(0, -1);
@@ -139,8 +139,8 @@ function FractionFields({
   const baseId = useId();
 
   function ring(part: ActivePart) {
-    if (errorPart === part) return ' border-navy ring-2 ring-navy/30';
-    if (activePart === part) return ' border-navy/40 ring-2 ring-navy/20';
+    if (errorPart === part) return ' border-rose-500/40';
+    if (activePart === part) return ' border-[#465D73]';
     return '';
   }
 
@@ -211,7 +211,7 @@ function FractionKeyboardPopup({
       id={titleId}
       role="region"
       aria-label={copy.keyboard}
-      className="mt-4 rounded-box border border-hairline bg-white shadow-sm">
+      className="mt-4 rounded-box border border-hairline bg-main shadow-sm">
       <div className="flex items-start justify-between gap-3 border-b border-hairline px-4 py-3">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-ink">{copy.keyboard}</h2>
@@ -221,7 +221,7 @@ function FractionKeyboardPopup({
           type="button"
           onClick={onClose}
           aria-label={copy.keyboardClose}
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-box text-muted transition-colors hover:bg-paper hover:text-navy">
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-box text-muted transition-colors hover:bg-sectionHeader hover:text-mainText">
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>
@@ -582,19 +582,19 @@ export function FractionCalculator({ copy }: Props) {
       <button
         type="button"
         onClick={() => applyExample('add')}
-        className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
+        className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted transition hover:bg-sectionHeader hover:text-ink">
         1/2 + 1/3
       </button>
       <button
         type="button"
         onClick={() => applyExample('mixed')}
-        className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
+        className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted transition hover:bg-sectionHeader hover:text-ink">
         2 1/3 − 1 1/6
       </button>
       <button
         type="button"
         onClick={() => applyExample('whole')}
-        className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
+        className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted transition hover:bg-sectionHeader hover:text-ink">
         5 + 1/2
       </button>
     </div>
@@ -602,7 +602,7 @@ export function FractionCalculator({ copy }: Props) {
 
   return (
 <div className="mx-auto my-6 grid w-full min-w-0 max-w-[2000px] gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">      <section
-        className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5"
+        className="relative overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass sm:p-5"
         onKeyDown={onExpressionKeyDown}>
         <div ref={keyboardRootRef}>
           <div className="mb-3 flex justify-end md:hidden">
@@ -615,8 +615,8 @@ export function FractionCalculator({ copy }: Props) {
               className={
                 'inline-flex items-center gap-1.5 rounded-box border px-3 py-2 text-sm font-semibold transition-colors ' +
                 (showKeyboard
-                  ? 'border-navy/30 bg-navy text-white hover:bg-navy-strong'
-                  : 'border-hairline bg-white text-ink hover:bg-navy-tint')
+                  ? 'border-transparent bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                  : 'border-hairline bg-main text-ink hover:bg-sectionHeader')
               }>
               <Keyboard className="size-4" aria-hidden="true" />
               {copy.keyboard}
@@ -635,7 +635,7 @@ export function FractionCalculator({ copy }: Props) {
                       id={`${keyboardTitleId}-op-${index}`}
                       value={term.op}
                       onChange={(e) => updateOp(index, e.target.value as Op)}
-                      className="h-10 rounded-box border border-hairline bg-white px-2 text-sm font-semibold text-ink">
+                      className="h-10 rounded-box border border-hairline bg-main px-2 text-sm font-semibold text-ink">
                       <option value="+">+</option>
                       <option value="-">−</option>
                       <option value="*">×</option>
@@ -649,7 +649,7 @@ export function FractionCalculator({ copy }: Props) {
               const kinds: TermKind[] = ['whole', 'fraction', 'mixed'];
 
               return (
-                <div key={`frac-${index}`} className="w-full rounded-box border border-hairline bg-white p-3">
+                <div key={`frac-${index}`} className="w-full rounded-box border border-hairline bg-main p-3">
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <div className="flex rounded-box border border-hairline p-0.5">
                       {kinds.map((kind) => (
@@ -659,7 +659,7 @@ export function FractionCalculator({ copy }: Props) {
                           onClick={() => setKind(index, kind)}
                           className={
                             'rounded-box px-2 py-1 text-[11px] font-semibold ' +
-                            (term.kind === kind ? 'bg-navy text-white' : 'bg-transparent text-muted')
+                            (term.kind === kind ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'bg-transparent text-muted')
                           }>
                           {kind === 'whole' ? copy.kindWhole : kind === 'mixed' ? copy.kindMixed : copy.kindFraction}
                         </button>
@@ -670,7 +670,7 @@ export function FractionCalculator({ copy }: Props) {
                         type="button"
                         aria-label={copy.removeFraction}
                         onClick={() => removeFraction(index)}
-                        className="inline-flex size-8 shrink-0 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy">
+                        className="inline-flex size-8 shrink-0 items-center justify-center rounded-box text-muted hover:bg-sectionHeader hover:text-mainText">
                         <X className="size-4" aria-hidden="true" />
                       </button>
                     ) : null}
@@ -732,16 +732,16 @@ export function FractionCalculator({ copy }: Props) {
         </div>
       </section>
 
-      <section className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5">
+      <section className="relative overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass sm:p-5">
         {errorMessage ? (
-          <p className={`mb-3 text-sm font-semibold ${mathError ? 'text-navy' : 'text-muted'}`}>{errorMessage}</p>
+          <p className={`mb-3 text-sm font-semibold ${mathError ? 'text-rose-500' : 'text-muted'}`}>{errorMessage}</p>
         ) : null}
 
         {exprTex ? (
           <div className="space-y-4">
             <div>
               <p className="mb-2 text-xs font-semibold text-muted">{copy.expression}</p>
-              <div className="overflow-x-auto rounded-box border border-hairline bg-white px-3 py-3 text-ink">
+              <div className="overflow-x-auto rounded-box border border-hairline bg-main px-3 py-3 text-ink">
                 <KatexPreview tex={exprTex} displayMode />
               </div>
             </div>
@@ -752,18 +752,18 @@ export function FractionCalculator({ copy }: Props) {
                   <button
                     type="button"
                     onClick={() => void copyValue('latex')}
-                    className="text-xs font-semibold text-navy hover:text-navy-strong">
+                    className="text-xs font-bold text-[#465D73] transition-colors hover:text-[#526C85]">
                     {copied === 'latex' ? copy.copied : copy.copyLatex}
                   </button>
                   <button
                     type="button"
                     onClick={() => void copyValue('text')}
-                    className="text-xs font-semibold text-navy hover:text-navy-strong">
+                    className="text-xs font-bold text-[#465D73] transition-colors hover:text-[#526C85]">
                     {copied === 'text' ? copy.copied : copy.copyText}
                   </button>
                 </div>
               </div>
-              <div className="overflow-x-auto rounded-box border border-hairline bg-white px-3 py-3 text-ink">
+              <div className="overflow-x-auto rounded-box border border-hairline bg-main px-3 py-3 text-ink">
                 <KatexPreview tex={resultTex} displayMode />
               </div>
               {mixedTex ? (
@@ -788,7 +788,7 @@ export function FractionCalculator({ copy }: Props) {
                       <button
                         type="button"
                         onClick={() => applyHistory(item)}
-                        className="w-full overflow-x-auto rounded-box border border-hairline-soft bg-white px-3 py-2 text-left transition-colors hover:border-navy/30 hover:bg-navy-tint">
+                        className="w-full overflow-x-auto rounded-box border border-hairline-soft bg-main px-3 py-2 text-left transition-colors hover:bg-sectionHeader">
                         <KatexPreview tex={item.tex} />
                       </button>{' '}
                     </li>

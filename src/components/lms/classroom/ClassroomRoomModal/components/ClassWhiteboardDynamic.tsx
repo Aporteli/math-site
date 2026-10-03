@@ -8,8 +8,8 @@ export const ClassWhiteboard = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full w-full items-center justify-center bg-white rounded-box">
-        <Loader2 className="size-8 animate-spin text-slate-300" />
+      <div className="flex h-full w-full items-center justify-center rounded-box bg-main">
+        <Loader2 className="size-8 animate-spin text-navy" />
       </div>
     ),
   },

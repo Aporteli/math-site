@@ -328,7 +328,7 @@ export function ProblemCardMenu({
       {isClassModalOpen && typeof document !== 'undefined'
         ? createPortal(
             <div
-              className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs animate-in fade-in duration-200"
+              className="fixed inset-0 z-[100] flex animate-in items-center justify-center bg-black/60 p-4 backdrop-blur-sm fade-in duration-200"
               onClick={() => setIsClassModalOpen(false)}>
               <div
                 className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-box border border-hairline bg-white p-5 shadow-2xl transition-all sm:p-6"
@@ -337,7 +337,7 @@ export function ProblemCardMenu({
                 {/* Header */}
                 <div className="flex items-center justify-between pb-3 border-b border-hairline">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex size-9 items-center justify-center rounded-box bg-navy-tint text-navy">
+                    <div className="flex size-9 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
                       <GraduationCap className="size-5" />
                     </div>
                     <div>
@@ -383,13 +383,13 @@ export function ProblemCardMenu({
                       return (
                         <div
                           key={group.id}
-                          className="overflow-hidden rounded-box border border-hairline bg-white transition hover:border-navy/30">
+                          className="overflow-hidden rounded-box border border-hairline bg-main transition hover:border-navy/30">
                           <div className="flex items-center gap-2 p-3">
                             <button
                               type="button"
                               onClick={() => toggleCourseExpand(group.id)}
                               className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                              <div className="flex size-9 shrink-0 items-center justify-center rounded-box bg-navy text-white text-xs font-bold">
+                              <div className="flex size-9 shrink-0 items-center justify-center rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] text-white text-xs font-bold">
                                 {group.title.charAt(0)}
                               </div>
                               <div className="min-w-0">
@@ -408,7 +408,7 @@ export function ProblemCardMenu({
                                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                   : isClassSending
                                     ? 'bg-paper text-muted border border-hairline'
-                                    : 'bg-navy text-white hover:bg-navy-strong',
+                                    : 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] hover:bg-[#526C85]',
                               ].join(' ')}>
                               {isClassSending ? (
                                 <Loader2 className="size-3 animate-spin" />
@@ -432,7 +432,7 @@ export function ProblemCardMenu({
                           </div>
 
                           {isExpanded && (
-                            <div className="space-y-1 border-t border-hairline bg-slate-50/50 p-2">
+                            <div className="space-y-1 border-t border-hairline bg-sectionHeader p-2">
                               {group.students.length === 0 ? (
                                 <p className="p-2 text-center text-[11px] text-muted">
                                   ამ კლასში მოსწავლეები არ არიან
@@ -445,7 +445,7 @@ export function ProblemCardMenu({
                                   return (
                                     <div
                                       key={student.id}
-                                      className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-white p-2">
+                                      className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-main p-2">
                                       <div className="flex min-w-0 items-center gap-2">
                                         <div className="flex size-7 shrink-0 items-center justify-center rounded-box bg-paper-deep text-[10px] font-bold text-muted">
                                           {student.name.charAt(0)}
@@ -465,7 +465,7 @@ export function ProblemCardMenu({
                                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                             : isStudentSending
                                               ? 'bg-paper text-muted border border-hairline'
-                                              : 'bg-navy text-white hover:bg-navy-strong',
+                                              : 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] hover:bg-[#526C85]',
                                         ].join(' ')}>
                                         {isStudentSending ? (
                                           <Loader2 className="size-3 animate-spin" />

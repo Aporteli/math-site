@@ -43,9 +43,9 @@ import {
 } from '@/lib/math/problems/templates/append-variant';
 
 const fieldClass =
-  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm font-medium text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
-const panelClass = 'rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5';
+const panelClass = 'rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5';
 
 interface FamilyControlCenterProps {
   locale: Locale;
@@ -574,7 +574,7 @@ export function FamilyControlCenter({
             />
             <button
               type="button"
-              className="inline-flex w-full items-center justify-center gap-2 rounded-box bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] px-3 py-2 text-sm font-semibold text-white hover:bg-[#526C85] disabled:opacity-60"
               disabled={creating || !newFamilyName.trim()}
               onClick={() => void addNamedFamily()}>
               <Plus className="size-4" aria-hidden="true" />
@@ -601,8 +601,8 @@ export function FamilyControlCenter({
                       className={[
                         'flex w-full items-center gap-2 rounded-box px-2.5 py-2 text-left transition-colors',
                         active
-                          ? 'bg-white text-navy shadow-sm ring-1 ring-navy/15'
-                          : 'text-body hover:bg-white/80 hover:text-ink',
+                          ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                          : 'text-mainText hover:bg-sectionHeader',
                       ].join(' ')}
                       onClick={() => selectFamily(family)}>
                       <span className="min-w-0 flex-1 truncate text-sm font-semibold">
@@ -864,7 +864,7 @@ export function FamilyControlCenter({
                     <button
                       type="button"
                       disabled={saving || !variantPaste.trim() || variantPasteIssues.length > 0}
-                      className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60"
+                      className="inline-flex items-center gap-1.5 rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] px-3 py-2 text-sm font-semibold text-white hover:bg-[#526C85] disabled:opacity-60"
                       onClick={() => void submitVariantPaste()}>
                       <Plus className="size-3.5" aria-hidden="true" />
                       {center.addVariantSubmit}
@@ -969,7 +969,7 @@ export function FamilyControlCenter({
                 <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline pt-4">
                   <button
                     type="button"
-                    className="inline-flex items-center justify-center gap-2 rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-strong disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#526C85] disabled:opacity-60"
                     disabled={saving || schemaBlocked || !jsonText.trim()}
                     onClick={() => void saveCurrent()}>
                     <Save className="size-4" aria-hidden="true" />

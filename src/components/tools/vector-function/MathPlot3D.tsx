@@ -412,8 +412,8 @@ export function MathPlot3D({ data }: MathPlot3DProps) {
 
   if (!data?.curve) {
     return (
-      <div className="flex h-[650px] w-full flex-col items-center justify-center gap-3 rounded-box border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/80 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
-        <div className="flex h-12 w-12 items-center justify-center rounded-box bg-slate-100/80">
+      <div className="flex h-[650px] w-full flex-col items-center justify-center gap-3 rounded-box border border-hairline bg-main text-center shadow-sm">
+        <div className="flex h-12 w-12 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
           <svg
             width="22"
             height="22"
@@ -423,17 +423,17 @@ export function MathPlot3D({ data }: MathPlot3DProps) {
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-slate-400"
+            className="text-brass-strong"
           >
             <path d="M12 3v18M3 12h18" />
             <circle cx="12" cy="12" r="9" />
           </svg>
         </div>
         <div className="space-y-1">
-          <p className="text-sm font-medium text-slate-600">
+          <p className="text-sm font-medium text-ink">
             3D პარამეტრული წირი
           </p>
-          <p className="max-w-[240px] text-xs leading-relaxed text-slate-400">
+          <p className="max-w-[240px] text-xs leading-relaxed text-muted">
             დააჭირეთ „დახაზე 3D წირი“ რათა ააგოთ და დაათვალიეროთ წირი
           </p>
         </div>
@@ -446,14 +446,14 @@ export function MathPlot3D({ data }: MathPlot3DProps) {
    * ──────────────────────────────────────────────────────────── */
 
   return (
-    <div className="relative h-[650px] w-full overflow-hidden rounded-box border border-slate-200/80 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
+    <div className="relative h-[650px] w-full overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
       {/* Floating curve badge */}
-      <div className="pointer-events-none absolute left-3.5 top-3.5 z-10 flex items-center gap-2 rounded-box border border-slate-200/70 bg-white/90 px-3 py-1.5 text-[11px] font-medium tracking-wide text-slate-600 shadow-sm backdrop-blur-md">
+      <div className="pointer-events-none absolute left-3.5 top-3.5 z-10 flex items-center gap-2 rounded-box border border-hairline bg-main/90 px-3 py-1.5 text-[11px] font-medium tracking-wide text-muted shadow-sm backdrop-blur-md">
         <span
           className="h-2 w-2 rounded-box ring-2 ring-rose-500/20"
           style={{ backgroundColor: COLORS.curve }}
         />
-        <span className="font-semibold text-slate-700">r(t)</span>
+        <span className="font-semibold text-ink">r(t)</span>
       </div>
 
       <Plot

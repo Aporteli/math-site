@@ -14,14 +14,14 @@ export function BlurToggle({ isBlurred, isLoading, onClick }: BlurToggleProps) {
       type="button"
       onClick={onClick}
       disabled={isLoading}
-      className={`group flex items-center gap-1.5 rounded-box px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
+      className={`group flex cursor-pointer items-center gap-1.5 rounded-box px-2.5 py-1 text-xs transition-all duration-200 ${
         isBlurred
-          ? 'bg-amber-500 text-slate-950 font-semibold shadow-md shadow-amber-500/20 hover:bg-amber-400'
-          : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-      } ${isLoading ? 'cursor-wait opacity-60' : ''}`}>
+          ? 'bg-[#A66A32] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)] hover:bg-[#B8783B]'
+          : 'font-medium text-mainText hover:bg-sectionHeader'
+      } ${isLoading ? 'cursor-wait opacity-45' : ''}`}>
       <Sparkles
         className={`size-3.5 transition-transform duration-300 ${
-          isBlurred ? 'scale-110 text-slate-950' : 'text-slate-400 group-hover:rotate-12'
+          isBlurred ? 'scale-110 text-white' : 'text-icons group-hover:text-mainText'
         }`}
       />
       <span>{isLoading ? '...' : isBlurred ? 'On' : 'Off'}</span>

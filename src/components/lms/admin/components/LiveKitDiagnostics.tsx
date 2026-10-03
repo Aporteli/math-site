@@ -58,31 +58,31 @@ function tone(
   presence: PresenceLevel,
 ): { dot: string; text: string; chip: string; label: string } {
   if (presence === 'disconnected') {
-    return { dot: 'bg-slate-400', text: 'text-slate-700', chip: 'bg-slate-100 text-slate-700', label: 'Disconnected' };
+    return { dot: 'bg-muted', text: 'text-muted', chip: 'bg-sectionHeader text-muted', label: 'Disconnected' };
   }
   if (presence === 'reconnecting' && health === 'critical') {
-    return { dot: 'bg-rose-500', text: 'text-rose-700', chip: 'bg-rose-50 text-rose-700', label: 'Reconnecting' };
+    return { dot: 'bg-loss', text: 'text-loss', chip: 'bg-loss-tint text-loss', label: 'Reconnecting' };
   }
   if (presence === 'reconnecting' || health === 'degraded') {
     return {
-      dot: 'bg-amber-500',
-      text: 'text-amber-800',
-      chip: 'bg-amber-50 text-amber-800',
+      dot: 'bg-brass',
+      text: 'text-brass-strong',
+      chip: 'bg-brass-tint text-brass-strong',
       label: presence === 'reconnecting' ? 'Reconnecting' : 'Degraded',
     };
   }
   if (health === 'critical') {
-    return { dot: 'bg-rose-500', text: 'text-rose-700', chip: 'bg-rose-50 text-rose-700', label: 'Critical' };
+    return { dot: 'bg-loss', text: 'text-loss', chip: 'bg-loss-tint text-loss', label: 'Critical' };
   }
   if (health === 'healthy') {
     return {
-      dot: 'bg-emerald-500',
-      text: 'text-emerald-700',
-      chip: 'bg-emerald-50 text-emerald-700',
+      dot: 'bg-win',
+      text: 'text-win',
+      chip: 'bg-win-tint text-win',
       label: 'Healthy',
     };
   }
-  return { dot: 'bg-slate-300', text: 'text-slate-600', chip: 'bg-slate-100 text-slate-600', label: 'Unknown' };
+  return { dot: 'bg-muted', text: 'text-muted', chip: 'bg-sectionHeader text-muted', label: 'Unknown' };
 }
 
 function qualityLabel(quality: string): string {
@@ -105,7 +105,7 @@ function StatusMark({ health, presence }: { health: HealthLevel; presence: Prese
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-box bg-slate-50 px-3 py-2">
+    <div className="rounded-box bg-sectionHeader px-3 py-2">
       <div className="text-[11px] text-muted">{label}</div>
       <div className="mt-0.5 text-sm font-semibold text-ink">{value}</div>
     </div>
@@ -241,7 +241,7 @@ function ParticipantCard({ person }: { person: DiagnosticsParticipantView }) {
   const latest = person.samples.at(-1) ?? null;
   const latestPhone = latest ? phoneClock(latest.t, latest.clockOffsetMs) : null;
   return (
-    <article className="rounded-box border border-hairline p-4">
+    <article className="rounded-box border border-hairline bg-sectionHeader p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <div className="text-sm font-semibold text-ink">
@@ -334,7 +334,7 @@ function EventRow({ event }: { event: DiagnosticsEventView }) {
   const side = eventText(event.detail, 'side');
   const visibility = eventText(event.detail, 'visibility');
   return (
-    <li className="rounded-box border border-hairline px-3 py-2">
+    <li className="rounded-box border border-hairline bg-sectionHeader px-3 py-2">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <span className="font-mono text-xs text-muted">
           {formatClock(event.occurredAt)}
@@ -392,20 +392,25 @@ function SessionButton({
   item,
   selected,
   onSelect,
+  onDelete,
+  deleting,
 }: {
   item: DiagnosticsListItem;
   selected: boolean;
   onSelect: (id: string) => void;
+  onDelete?: (id: string) => void;
+  deleting?: boolean;
 }) {
   const headline = tone(item.health, item.status === 'active' ? 'connected' : 'left');
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(item.id)}
+    <div
       className={[
         'w-full rounded-box border p-3 text-left transition',
-        selected ? 'border-navy/40 bg-navy-tint' : 'border-hairline bg-white hover:border-navy/30',
+        selected
+          ? 'border-hairline bg-mainButton shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+          : 'border-hairline bg-main hover:bg-sectionHeader',
       ].join(' ')}>
+      <button type="button" onClick={() => onSelect(item.id)} className="w-full text-left">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-semibold text-ink">Session #{item.publicId}</span>
         <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${headline.text}`}>
@@ -422,12 +427,22 @@ function SessionButton({
         <span>{item.disconnects} disconnects</span>
       </div>
       {item.notableEvents > 0 ? (
-        <div className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-amber-800">
+        <div className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brass-strong">
           <AlertTriangle className="size-3.5" />
           {item.notableEvents} connection events
         </div>
       ) : null}
-    </button>
+      </button>
+      {onDelete ? (
+        <button
+          type="button"
+          disabled={deleting}
+          onClick={() => onDelete(item.id)}
+          className="mt-2 cursor-pointer text-xs font-bold text-rose-500 hover:underline disabled:opacity-50">
+          {deleting ? 'Deleting…' : 'Delete'}
+        </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -440,6 +455,7 @@ export function LiveKitDiagnostics() {
   const [refreshing, setRefreshing] = useState(false);
   const [focusIdentity, setFocusIdentity] = useState('all');
   const [around, setAround] = useState('');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadList = useCallback(async () => {
     const response = await fetch('/api/livekit/diagnostics', { cache: 'no-store' });
@@ -473,6 +489,28 @@ export function LiveKitDiagnostics() {
       setRefreshing(false);
     }
   }, [loadList]);
+
+  const removeSession = useCallback(
+    async (sessionId: string) => {
+      const item = list?.history.find((row) => row.id === sessionId);
+      const label = item ? `session #${item.publicId}` : 'this session';
+      if (!window.confirm(`Delete ${label}? This cannot be undone.`)) return;
+      setDeletingId(sessionId);
+      try {
+        const response = await fetch(`/api/livekit/diagnostics?sessionId=${encodeURIComponent(sessionId)}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Session could not be deleted');
+        if (selectedId === sessionId) setDetail(null);
+        await refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Session could not be deleted');
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [list, refresh, selectedId],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -562,13 +600,13 @@ export function LiveKitDiagnostics() {
         <button
           type="button"
           onClick={() => void refresh()}
-          className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50">
+          className="inline-flex cursor-pointer items-center gap-2 rounded-box border border-hairline bg-main px-3 py-2 text-sm font-bold text-ink transition-colors hover:bg-sectionHeader">
           {refreshing ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Refresh
         </button>
       </div>
 
-      {error ? <div className="rounded-box bg-red-50 p-4 text-sm text-red-700">{error}</div> : null}
+      {error ? <div className="rounded-box border border-rose-500/30 bg-rose-500/15 p-4 text-sm text-rose-500">{error}</div> : null}
 
       {loading && !list ? (
         <div className="rounded-box border border-dashed border-hairline p-8 text-center text-sm text-muted">
@@ -577,7 +615,7 @@ export function LiveKitDiagnostics() {
       ) : (
         <div className="grid gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
           <div className="space-y-4">
-            <section className="rounded-box border border-hairline bg-white p-4 shadow-sm">
+            <section className="rounded-box border border-hairline bg-main p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-ink">Active sessions</h3>
                 <Activity className="size-4 text-muted" />
@@ -600,7 +638,7 @@ export function LiveKitDiagnostics() {
               </div>
             </section>
 
-            <section className="rounded-box border border-hairline bg-white p-4 shadow-sm">
+            <section className="rounded-box border border-hairline bg-main p-4 shadow-sm">
               <h3 className="text-sm font-semibold text-ink">Previous sessions</h3>
               <div className="mt-3 space-y-2">
                 {list && list.history.length > 0 ? (
@@ -610,6 +648,8 @@ export function LiveKitDiagnostics() {
                       item={item}
                       selected={item.id === selectedId}
                       onSelect={setSelectedId}
+                      onDelete={(id) => void removeSession(id)}
+                      deleting={deletingId === item.id}
                     />
                   ))
                 ) : (
@@ -620,7 +660,7 @@ export function LiveKitDiagnostics() {
               </div>
             </section>
 
-            <section className="mt-4 rounded-box border border-hairline bg-white p-4 shadow-sm">
+            <section className="mt-4 rounded-box border border-hairline bg-main p-4 shadow-sm">
               <h3 className="text-sm font-semibold text-ink">Diagnostics cheat sheet</h3>
               <p className="mt-1 text-xs text-muted">LiveKit-ის ძირითადი პარამეტრების მოკლე განმარტება.</p>
 
@@ -716,8 +756,8 @@ export function LiveKitDiagnostics() {
                     description: 'კავშირის ხარისხი კვლავ გაუმჯობესდა და მეტრიკები პრობლემურ ზღვარს ქვემოთ დაბრუნდა.',
                   },
                 ].map((item) => (
-                  <details key={item.term} className="group bg-white">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-black/[0.02]">
+                  <details key={item.term} className="group bg-main">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-sectionHeader">
                       <div className="min-w-0">
                         <div className="flex items-baseline gap-2">
                           <span className="text-[12px] font-semibold text-ink">{item.term}</span>
@@ -741,7 +781,7 @@ export function LiveKitDiagnostics() {
                       </svg>
                     </summary>
 
-                    <div className="border-t border-hairline bg-black/[0.015] px-3 py-2.5 text-[11px] leading-relaxed text-muted">
+                    <div className="border-t border-hairline bg-sectionHeader px-3 py-2.5 text-[11px] leading-relaxed text-muted">
                       {item.description}
                     </div>
                   </details>
@@ -750,7 +790,7 @@ export function LiveKitDiagnostics() {
             </section>
           </div>
 
-          <section className="min-w-0 rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5">
+          <section className="min-w-0 rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5">
             {!visibleDetail ? (
               <div className="p-6 text-center text-sm text-muted">Select a session to see diagnostics.</div>
             ) : (
@@ -798,7 +838,7 @@ export function LiveKitDiagnostics() {
                 </div>
 
                 {visibleDetail.simultaneousNote ? (
-                  <div className="rounded-box bg-amber-50 p-3 text-sm text-amber-900">
+                  <div className="rounded-box border border-brass/30 bg-brass-tint p-3 text-sm text-brass-strong">
                     {visibleDetail.simultaneousNote}
                   </div>
                 ) : null}
@@ -832,7 +872,7 @@ export function LiveKitDiagnostics() {
                       <select
                         value={focus}
                         onChange={(event) => setFocusIdentity(event.target.value)}
-                        className="mt-1 block rounded-box border border-hairline bg-white px-2 py-1.5 text-sm text-ink">
+                        className="mt-1 block rounded-box border border-hairline bg-searchInput px-2 py-1.5 text-sm text-searchInputText">
                         <option value="all">All participants</option>
                         {people.map((person) => (
                           <option key={person.identity} value={person.identity}>
@@ -848,7 +888,7 @@ export function LiveKitDiagnostics() {
                         step={60}
                         value={around}
                         onChange={(event) => setAround(event.target.value)}
-                        className="mt-1 block rounded-box border border-hairline bg-white px-2 py-1.5 text-sm text-ink"
+                        className="mt-1 block rounded-box border border-hairline bg-searchInput px-2 py-1.5 text-sm text-searchInputText"
                       />
                     </label>
                     {around ? (
@@ -883,7 +923,7 @@ export function LiveKitDiagnostics() {
                   </ol>
                 </div>
 
-                <div className="rounded-box bg-slate-50 p-3 text-xs leading-5 text-muted">
+                <div className="rounded-box bg-sectionHeader p-3 text-xs leading-5 text-muted">
                   {LIMITATIONS.map((item) => (
                     <p key={item}>{item}</p>
                   ))}

@@ -45,7 +45,7 @@ function ToolCard({
   const tone = badgeToneClass[tool.badgeColor];
 
   return (
-    <article className="group flex h-full min-w-0 flex-col rounded-box border border-hairline bg-white shadow-sm transition-all hover:border-navy/30 hover:shadow-md">
+    <article className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-sm transition-all before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass hover:shadow-md">
       <Link href={localePath(locale, tool.href)} className="flex h-full min-w-0 flex-1 flex-col p-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <span className={`inline-flex size-10 shrink-0 items-center justify-center rounded-box ${tone.chip}`}>
@@ -56,9 +56,9 @@ function ToolCard({
             {item.badge}
           </span>
         </div>
-        <h3 className="mt-4 break-words text-lg font-semibold leading-snug text-ink">{item.title}</h3>
+        <h3 className="mt-4 break-words text-lg font-bold leading-snug text-ink">{item.title}</h3>
         <p className="mt-2 min-h-0 flex-1 break-words text-sm leading-relaxed text-body">{item.description}</p>
-        <span className="mt-5 inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-box bg-navy px-3 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors group-hover:bg-navy-strong">
+        <span className="mt-5 inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-box bg-[#465D73] px-3 py-2.5 text-center text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 group-hover:bg-[#526C85] group-hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)]">
           {openLabel}
           <ArrowRight className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </span>
@@ -75,8 +75,8 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       onClick={onClick}
       className={`max-w-full rounded-box border px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:px-4 ${
         active
-          ? 'border-navy bg-navy text-white shadow-sm'
-          : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink'
+          ? 'border-transparent bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+          : 'border-hairline bg-main text-mainText hover:bg-sectionHeader'
       }`}>
       {children}
     </button>
@@ -123,7 +123,7 @@ export function ToolsHub({ locale, copy }: ToolsHubProps) {
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={copy.hero.searchPlaceholder}
                   autoComplete="off"
-                  className="w-full min-w-0 appearance-none rounded-box border border-hairline bg-white py-3 pr-4 pl-12 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                  className="w-full min-w-0 appearance-none rounded-box border border-hairline bg-searchInput py-3 pr-4 pl-12 text-base text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
                 />
               </label>
               <p className="text-sm text-muted" aria-live="polite">
@@ -149,7 +149,7 @@ export function ToolsHub({ locale, copy }: ToolsHubProps) {
 
         <div className="mt-12">
           {visibleSections.length === 0 ? (
-            <p className="rounded-box border border-hairline bg-white px-6 py-16 text-center text-body shadow-sm">
+            <p className="relative overflow-hidden rounded-box border border-hairline bg-main px-6 py-16 text-center text-body shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
               {copy.hero.empty}
             </p>
           ) : (

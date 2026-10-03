@@ -153,14 +153,14 @@ export function CoursesManager() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button
             onClick={() => setIsStudentsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-box border border-navy/20 bg-white px-4 py-2 text-sm font-bold text-navy shadow-xs transition-all hover:bg-navy-tint hover:border-navy/40 active:scale-95">
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-[#A66A32] px-4 py-2 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)] transition-all duration-200 hover:bg-[#B8783B] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_4px_12px_rgba(166,106,50,0.28)] active:scale-[0.98]">
             <UserCheck className="size-4" />
             მოსწავლეების მართვა & მიბმა ({students.length})
           </button>
   
           <button
             onClick={() => openCourseModal()}
-            className="inline-flex items-center gap-1.5 rounded-box bg-navy px-4 py-2 text-sm font-bold text-white transition-all hover:bg-navy-strong active:scale-95">
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-[#465D73] px-4 py-2 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98]">
             <Plus className="size-4" />
             ჯგუფის დამატება
           </button>

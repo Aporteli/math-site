@@ -156,18 +156,18 @@ export function BoardThumbnail({
       onTouchEnd={cancelPress}
       onContextMenu={(e) => e.preventDefault()}
       onClick={handleClick}
-      className={`group relative flex flex-col items-center gap-1.5 p-1.5 rounded-box cursor-pointer transition-all shrink-0 select-none [-webkit-touch-callout:none] ${
+      className={`group relative flex shrink-0 cursor-pointer select-none flex-col items-center gap-1.5 rounded-box p-1.5 transition-all [-webkit-touch-callout:none] ${
         isSelected
-          ? 'bg-indigo-600/20 ring-2 ring-indigo-600 dark:ring-indigo-400 shadow-md'
+          ? 'bg-mainButton shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
           : isActive
-            ? 'bg-indigo-600/10 dark:bg-indigo-500/20 ring-2 ring-indigo-600 dark:ring-indigo-400'
-            : 'hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800'
+            ? 'bg-navy-tint'
+            : 'border border-hairline hover:bg-sectionHeader'
       }`}>
-      <div className="relative w-28 h-18 rounded-box overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 pointer-events-none">
+      <div className="pointer-events-none relative h-18 w-28 overflow-hidden rounded-box border border-hairline bg-main shadow-xs">
         <canvas ref={canvasRef} width={112} height={72} className="w-full h-full object-contain" />
 
         {isSelected && (
-          <div className="absolute top-1 left-1 flex size-5 items-center justify-center rounded-box bg-indigo-600 text-white shadow-xs z-10 animate-in zoom-in-75 duration-150">
+          <div className="absolute top-1 left-1 z-10 flex size-5 animate-in items-center justify-center rounded-box bg-[#465D73] text-white shadow-xs zoom-in-75 duration-150">
             <Check className="size-3 stroke-[3]" />
           </div>
         )}
@@ -180,7 +180,7 @@ export function BoardThumbnail({
               e.stopPropagation();
               onDelete();
             }}
-            className="pointer-events-auto absolute top-1 right-1 flex size-5 items-center justify-center rounded-box bg-rose-600 text-white opacity-100 transition-opacity hover:bg-rose-700 shadow-xs z-10">
+            className="pointer-events-auto absolute top-1 right-1 z-10 flex size-5 cursor-pointer items-center justify-center rounded-box border border-rose-500/30 bg-rose-500/15 text-rose-500 opacity-100 shadow-xs transition-colors hover:bg-rose-500/25">
             <X className="size-3" />
           </button>
         )}
@@ -188,9 +188,7 @@ export function BoardThumbnail({
 
       <span
         className={`text-[11px] font-bold ${
-          isActive || isSelected
-            ? 'text-indigo-600 dark:text-indigo-400 font-extrabold'
-            : 'text-slate-600 dark:text-slate-400'
+          isActive || isSelected ? 'text-navy' : 'text-muted'
         }`}>
         დაფა {pageIndex + 1}
       </span>

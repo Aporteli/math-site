@@ -134,7 +134,7 @@ export function IndividualStudentModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink"
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-sectionHeader hover:text-ink"
           >
             <X className="h-4 w-4" />
           </button>
@@ -148,7 +148,7 @@ export function IndividualStudentModal({
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="სახელი"
-                className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-searchInput px-3 py-2.5 text-base font-bold text-searchInputText outline-none focus:border-navy sm:text-sm"
               />
             </div>
             <div>
@@ -157,7 +157,7 @@ export function IndividualStudentModal({
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="გვარი"
-                className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-searchInput px-3 py-2.5 text-base font-bold text-searchInputText outline-none focus:border-navy sm:text-sm"
               />
             </div>
           </div>
@@ -170,7 +170,7 @@ export function IndividualStudentModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="ტელეფონი"
-              className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+              className="w-full rounded-box border border-hairline bg-searchInput px-3 py-2.5 text-base font-bold text-searchInputText outline-none focus:border-navy sm:text-sm"
             />
           </div>
 
@@ -182,7 +182,7 @@ export function IndividualStudentModal({
               value={parentPhone}
               onChange={(e) => setParentPhone(e.target.value)}
               placeholder="მშობლის ტელეფონი"
-              className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+              className="w-full rounded-box border border-hairline bg-searchInput px-3 py-2.5 text-base font-bold text-searchInputText outline-none focus:border-navy sm:text-sm"
             />
           </div>
 
@@ -194,14 +194,14 @@ export function IndividualStudentModal({
                 value={monthlyPrice}
                 onChange={(e) => setMonthlyPrice(e.target.value)}
                 placeholder="ფასი"
-                className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-searchInput px-3 py-2.5 text-base font-bold text-searchInputText outline-none focus:border-navy sm:text-sm"
               />
             </div>
             <div>
               <select
                 value={priceType}
                 onChange={(e) => setPriceType(e.target.value as PriceType)}
-                className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
+                className="w-full rounded-box border border-hairline bg-searchInput px-3 py-2.5 text-sm font-bold text-searchInputText outline-none focus:border-navy"
               >
                 {PRICE_TYPE_OPTIONS.map((pt) => (
                   <option key={pt} value={pt}>
@@ -218,7 +218,7 @@ export function IndividualStudentModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="ელფოსტა"
-              className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-base text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+              className="w-full rounded-box border border-hairline bg-searchInput px-3 py-2.5 text-base text-searchInputText outline-none focus:border-navy sm:text-sm"
             />
           </div>
 
@@ -228,7 +228,7 @@ export function IndividualStudentModal({
               onChange={(e) => setNote(e.target.value)}
               rows={2}
               placeholder="შენიშვნა"
-              className="w-full resize-none rounded-box border border-hairline bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15"
+              className="w-full resize-none rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm text-searchInputText outline-none focus:border-navy"
             />
           </div>
 
@@ -267,7 +267,7 @@ export function IndividualStudentModal({
               type="button"
               onClick={handleSave}
               disabled={isPending}
-              className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong disabled:opacity-50"
+              className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-[#465D73] px-4 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
             >
               <Save className="h-3.5 w-3.5" />
               {isPending ? 'ინახება...' : isEdit ? 'შენახვა' : 'დამატება'}

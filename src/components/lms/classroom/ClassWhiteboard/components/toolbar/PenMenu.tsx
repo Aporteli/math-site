@@ -25,7 +25,7 @@ export function PenMenu({
 }: Props) {
   return (
     <div ref={menuRef} data-toolbar-key="pen" className="relative flex shrink-0 items-center">
-      <div className="flex h-7 items-center text-slate-700 transition-all sm:h-8 dark:text-slate-200">
+      <div className="flex h-7 items-center text-icons transition-all sm:h-8">
         <button
           type="button"
           title="კალამი"
@@ -34,7 +34,7 @@ export function PenMenu({
             setIsOpen(false);
             closeOtherMenus();
           }}
-          className="flex items-center gap-1 h-full px-2  focus:outline-none">
+          className="flex h-full cursor-pointer items-center gap-1 rounded-box px-2 hover:bg-mainButtonHover hover:text-mainText focus:outline-none">
           <Pencil className="size-3.5 sm:size-4" />
           <span className="font-mono text-[11px] font-medium opacity-90">{strokeWidth}px</span>
         </button>
@@ -46,7 +46,7 @@ export function PenMenu({
             setIsOpen(!isOpen);
             closeOtherMenus();
           }}
-          className="flex h-full items-center justify-center border-l border-slate-200 px-1 transition-colors dark:border-slate-700">
+          className="flex h-full cursor-pointer items-center justify-center border-l border-hairline px-1 transition-colors duration-200 hover:bg-mainButtonHover hover:text-mainText">
           <ChevronDown
             className={`size-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           />
@@ -54,10 +54,10 @@ export function PenMenu({
       </div>
 
       {isOpen && (
-        <div className="absolute top-full mt-2 left-0 z-[120] w-52 sm:w-56 rounded-box bg-white dark:bg-slate-900 p-3 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-800">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">კალმის სისქე</span>
-            <span className="font-mono text-xs font-medium text-indigo-600 dark:text-indigo-400">{strokeWidth}px</span>
+        <div className="absolute top-full left-0 z-[120] mt-2 w-52 animate-in rounded-box border border-hairline bg-main p-3 shadow-[0_8px_24px_rgba(0,0,0,0.12)] fade-in zoom-in-95 duration-150 sm:w-56">
+          <div className="mb-2 flex items-center justify-between border-b border-hairline pb-2">
+            <span className="text-xs font-bold text-mainText">კალმის სისქე</span>
+            <span className="font-mono text-xs font-bold text-navy">{strokeWidth}px</span>
           </div>
 
           <input
@@ -67,19 +67,19 @@ export function PenMenu({
             step="0.5"
             value={strokeWidth}
             onChange={(e) => setStrokeWidth(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-box appearance-none cursor-pointer accent-indigo-600"
+            className="h-1.5 w-full cursor-pointer appearance-none rounded-box bg-paper-deep accent-[#465D73]"
           />
 
-          <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="mt-2.5 flex items-center justify-between border-t border-hairline pt-2">
             {[1, 2, 4, 8, 14].map((size) => (
               <button
                 key={size}
                 type="button"
                 onClick={() => setStrokeWidth(size)}
-                className={`size-6 sm:size-7 flex items-center justify-center rounded-box transition-colors ${
+                className={`flex size-6 cursor-pointer items-center justify-center rounded-box transition-colors sm:size-7 ${
                   strokeWidth === size
-                    ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500'
-                    : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500'
+                    ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]'
+                    : 'text-icons hover:bg-sectionHeader hover:text-mainText'
                 }`}>
                 <div
                   className="rounded-box bg-current"

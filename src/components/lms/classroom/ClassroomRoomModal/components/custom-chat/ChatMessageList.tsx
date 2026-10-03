@@ -12,7 +12,7 @@ export function ChatMessageList({ messages, bottomRef }: ChatMessageListProps) {
   return (
     <div className="flex-1 overflow-y-auto p-3 space-y-3">
       {messages.length === 0 ? (
-        <div className="flex h-full items-center justify-center text-xs text-white/30">
+        <div className="flex h-full items-center justify-center text-xs font-medium text-muted">
           ჩატის ისტორია ცარიელია
         </div>
       ) : (

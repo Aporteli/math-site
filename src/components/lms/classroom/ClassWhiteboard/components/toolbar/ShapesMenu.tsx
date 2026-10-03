@@ -28,7 +28,7 @@ export function ShapesMenu({ menuRef, isOpen, setIsOpen, activeTool, setActiveTo
 
   return (
     <div ref={menuRef} data-toolbar-key="shapes" className="relative flex shrink-0 items-center">
-      <div className="flex h-7 items-center rounded-box text-slate-700 transition-all hover:bg-slate-100 sm:h-8 dark:text-slate-200 dark:hover:bg-slate-800">
+      <div className="flex h-7 items-center rounded-box text-icons transition-all hover:bg-mainButtonHover hover:text-mainText sm:h-8">
         <button
           type="button"
           title="ფიგურა"
@@ -41,13 +41,13 @@ export function ShapesMenu({ menuRef, isOpen, setIsOpen, activeTool, setActiveTo
           type="button"
           title="ფიგურების მენიუ"
           onClick={() => { setIsOpen(!isOpen); closeOtherMenus(); }}
-          className="flex h-full items-center justify-center rounded-box border-l border-slate-200 px-1 transition-colors hover:bg-slate-200 dark:border-slate-700 dark:hover:bg-slate-600">
+          className="flex h-full cursor-pointer items-center justify-center rounded-box border-l border-hairline px-1 transition-colors duration-200 hover:bg-mainButtonHover hover:text-mainText">
           <ChevronDown className={`size-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
       {isOpen && (
-        <div className="absolute top-full mt-2 left-0 z-[120] w-36 rounded-box bg-white dark:bg-slate-900 p-2 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute top-full left-0 z-[120] mt-2 w-36 animate-in rounded-box border border-hairline bg-main p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)] fade-in zoom-in-95 duration-150">
           <div className="grid grid-cols-2 gap-1">
             {SHAPE_TOOLS.map((s) => {
               const SIcon = s.icon;
@@ -57,10 +57,10 @@ export function ShapesMenu({ menuRef, isOpen, setIsOpen, activeTool, setActiveTo
                   key={s.id}
                   type="button"
                   onClick={() => { setActiveTool(s.id); setIsOpen(false); }}
-                  className={`flex items-center justify-center size-9 sm:size-10 rounded-box transition-colors ${
+                  className={`flex size-9 cursor-pointer items-center justify-center rounded-box transition-colors sm:size-10 ${
                     isSelected
-                      ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]'
+                      : 'text-mainText hover:bg-sectionHeader'
                   }`}>
                   <SIcon className="size-3.5" />
                 </button>

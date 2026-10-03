@@ -61,10 +61,10 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`max-w-full rounded-box border px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:px-4 ${
+      className={`max-w-full cursor-pointer rounded-box border px-3.5 py-2 text-sm transition-all duration-200 sm:px-4 ${
         active
-          ? 'border-navy bg-navy text-white shadow-sm'
-          : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink'
+          ? 'border-transparent bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+          : 'border-hairline bg-main font-medium text-mainText hover:bg-sectionHeader'
       }`}>
       {children}
     </button>
@@ -86,7 +86,7 @@ function ArticleCard({
   const coverAlt = copy.coverAlt.replace('{title}', content.title);
 
   return (
-    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-sm transition-all hover:border-navy/30 hover:shadow-md">
+    <article className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-sm transition-all duration-200 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-[1] before:h-1 before:bg-brass hover:-translate-y-0.5 hover:shadow-md">
       <Link href={href} prefetch={false} tabIndex={-1} className="block">
         <BlogCover src={post.coverImage} alt={coverAlt} className="aspect-16/10" />
       </Link>
@@ -102,7 +102,7 @@ function ArticleCard({
           </span>
         </div>
         <h3 className="mt-4 break-words text-lg font-semibold leading-snug text-ink">
-          <Link href={href} prefetch={false} className="transition-colors hover:text-navy">
+          <Link href={href} prefetch={false} className="transition-colors hover:text-[#465D73]">
             {content.title}
           </Link>
         </h3>
@@ -117,7 +117,7 @@ function ArticleCard({
         <Link
           href={href}
           prefetch={false}
-          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-navy">
+          className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-[#465D73] transition-colors hover:text-[#526C85]">
           {copy.readMore}
           <ArrowRight className="size-4 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
         </Link>
@@ -140,9 +140,9 @@ function DownloadCard({
   const FileIcon = file.fileType === 'ZIP' ? FileArchive : FileText;
 
   return (
-    <article className="flex h-full min-w-0 flex-col rounded-box border border-hairline bg-white p-5 shadow-sm transition-all hover:border-navy/30 hover:shadow-md sm:p-6">
+    <article className="relative flex h-full min-w-0 flex-col overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm transition-all duration-200 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass hover:-translate-y-0.5 hover:shadow-md sm:p-6">
       <div className="flex items-start justify-between gap-3">
-        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-navy-tint text-navy">
+        <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
           <FileIcon className="size-5" aria-hidden="true" />
         </span>
         <span className="rounded-box bg-paper-deep px-2.5 py-1 text-xs font-semibold leading-none text-ink">
@@ -154,7 +154,7 @@ function DownloadCard({
       <p className="mt-2 min-h-0 flex-1 break-words text-sm leading-relaxed text-body">{content.description}</p>
       <div className="mt-5 flex items-center justify-between gap-3">
         <span className="text-xs font-medium text-muted">{file.fileSize}</span>
-        <a href={file.downloadUrl} className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy">
+        <a href={file.downloadUrl} className="inline-flex items-center gap-1.5 text-sm font-bold text-[#465D73] transition-colors hover:text-[#526C85]">
           {cta}
           <Download className="size-4 shrink-0" aria-hidden="true" />
         </a>
@@ -205,7 +205,7 @@ export function BlogHub({ locale, author, copy }: BlogHubProps) {
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder={copy.hero.searchPlaceholder}
                   autoComplete="off"
-                  className="w-full min-w-0 appearance-none rounded-box border border-hairline bg-white py-3 pr-4 pl-12 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                  className="w-full min-w-0 appearance-none rounded-box border border-hairline bg-searchInput py-3 pr-4 pl-12 text-base text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
                 />
               </label>
               {showArticles ? (
@@ -230,13 +230,13 @@ export function BlogHub({ locale, author, copy }: BlogHubProps) {
 
         <div className="mt-12 space-y-14 sm:space-y-16">
           {isEmpty && (
-            <p className="rounded-box border border-hairline bg-white px-6 py-16 text-center text-body shadow-sm">
+            <p className="rounded-box border border-hairline bg-main px-6 py-16 text-center text-body shadow-sm">
               {copy.hero.empty}
             </p>
           )}
 
           {featured && (
-            <article className="group overflow-hidden rounded-box border border-hairline bg-white shadow-sm">
+            <article className="group relative overflow-hidden rounded-box border border-hairline bg-main shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-[1] before:h-1 before:bg-brass">
               <div className="grid lg:grid-cols-5">
                 <Link
                   href={localePath(locale, postPath(featured.slug))}
@@ -279,7 +279,7 @@ export function BlogHub({ locale, author, copy }: BlogHubProps) {
                   <Link
                     href={localePath(locale, postPath(featured.slug))}
                     prefetch={false}
-                    className="mt-6 inline-flex w-fit items-center gap-2 rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong">
+                    className="mt-6 inline-flex w-fit cursor-pointer items-center gap-2 rounded-box bg-[#465D73] px-4 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98]">
                     {copy.readMore}
                     <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
                   </Link>

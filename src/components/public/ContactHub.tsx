@@ -37,10 +37,10 @@ type ContactDetails = Dictionary['footer']['contact'];
 type FieldErrors = Partial<Record<keyof ConsultationInput, string>>;
 
 const fieldClass =
-  'w-full min-w-0 appearance-none rounded-box border border-hairline bg-inputs px-3.5 py-3 text-base text-ink transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none';
+  'w-full min-w-0 appearance-none rounded-box border border-hairline bg-searchInput px-3.5 py-3 text-base text-searchInputText transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
 const fieldErrorClass =
-  'w-full min-w-0 appearance-none rounded-box border border-brass bg-white px-3.5 py-3 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none';
+  'w-full min-w-0 appearance-none rounded-box border border-rose-500/40 bg-searchInput px-3.5 py-3 text-base text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-rose-500 focus:outline-none';
 
 interface ContactHubProps {
   copy: ContactCopy;
@@ -78,7 +78,7 @@ function DirectContactCard({ copy, contact }: { copy: ContactCopy; contact: Cont
       <h2 className="text-lg font-semibold text-ink">{copy.channels.title}</h2>
       <ul className="mt-5 space-y-4">
         <ContactRow icon={Phone} label={copy.channels.phone}>
-          <a href={phoneHref(contact.phone)} className="font-medium text-navy transition-colors hover:text-navy-strong">
+          <a href={phoneHref(contact.phone)} className="font-medium text-[#465D73] transition-colors hover:text-[#526C85]">
             {contact.phone}
           </a>
         </ContactRow>
@@ -92,7 +92,7 @@ function DirectContactCard({ copy, contact }: { copy: ContactCopy; contact: Cont
               target="_blank"
               rel="noopener noreferrer"
               aria-label={copy.channels.whatsappAria}
-              className="inline-flex items-center rounded-box border border-hairline bg-mainButton px-3 py-1.5 text-sm font-semibold text-maintext transition-colors hover:border-navy/30">
+              className="inline-flex items-center rounded-box border border-hairline bg-mainButton px-3 py-1.5 text-sm font-bold text-mainText transition-colors hover:bg-mainButtonHover">
               {copy.channels.whatsapp}
             </a>
             <a
@@ -100,7 +100,7 @@ function DirectContactCard({ copy, contact }: { copy: ContactCopy; contact: Cont
               target="_blank"
               rel="noopener noreferrer"
               aria-label={copy.channels.telegramAria}
-              className="inline-flex items-center rounded-box border border-hairline bg-mainButton px-3 py-1.5 text-sm font-semibold text-maintext transition-colors hover:border-navy/30">
+              className="inline-flex items-center rounded-box border border-hairline bg-mainButton px-3 py-1.5 text-sm font-bold text-mainText transition-colors hover:bg-mainButtonHover">
               {copy.channels.telegram}
             </a>
           </div>
@@ -108,7 +108,7 @@ function DirectContactCard({ copy, contact }: { copy: ContactCopy; contact: Cont
         <ContactRow icon={Mail} label={copy.channels.email}>
           <a
             href={`mailto:${contact.email}`}
-            className="break-all font-medium text-navy transition-colors hover:text-navy-strong">
+            className="break-all font-medium text-[#465D73] transition-colors hover:text-[#526C85]">
             {contact.email}
           </a>
         </ContactRow>
@@ -227,13 +227,13 @@ function ConsultationForm({ copy, initialCourse }: { copy: ContactCopy; initialC
 
       {sent ? (
         <div className="mt-8 rounded-box border border-hairline bg-paper-deep px-5 py-8 text-center">
-          <CheckCircle2 className="mx-auto size-10 text-navy" aria-hidden="true" />
+          <CheckCircle2 className="mx-auto size-10 text-win" aria-hidden="true" />
           <p className="mt-4 text-lg font-semibold text-mainText">{copy.form.successTitle}</p>
           <p className="mt-2 text-sm leading-relaxed text-mainText">{copy.form.successText}</p>
           <button
             type="button"
             onClick={resetForm}
-            className="mt-6 inline-flex items-center justify-center rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong">
+            className="mt-6 inline-flex cursor-pointer items-center justify-center rounded-box bg-[#465D73] px-4 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98]">
             {copy.form.successAgain}
           </button>
         </div>
@@ -280,7 +280,7 @@ function ConsultationForm({ copy, initialCourse }: { copy: ContactCopy; initialC
               ))}
             </div>
             {errors.role && (
-              <p className="mt-2 text-sm text-brass-strong" role="alert">
+              <p className="mt-2 text-sm text-rose-500" role="alert">
                 {errors.role}
               </p>
             )}
@@ -319,7 +319,7 @@ function ConsultationForm({ copy, initialCourse }: { copy: ContactCopy; initialC
               })}
             </div>
             {errors.format && (
-              <p className="mt-2 text-sm text-brass-strong" role="alert">
+              <p className="mt-2 text-sm text-rose-500" role="alert">
                 {errors.format}
               </p>
             )}
@@ -340,7 +340,7 @@ function ConsultationForm({ copy, initialCourse }: { copy: ContactCopy; initialC
           <button
             type="submit"
             disabled={sending}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-box bg-navy py-3 text-base font-medium text-white shadow-sm transition-all hover:bg-navy-strong disabled:cursor-wait disabled:opacity-70">
+            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-box bg-[#465D73] py-3 text-base font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98] disabled:cursor-wait disabled:opacity-45 disabled:shadow-none">
             {sending ? copy.form.sending : copy.form.submit}
             <Send className="size-4 shrink-0" aria-hidden="true" />
           </button>
@@ -364,7 +364,7 @@ function Field({ id, label, error, children }: { id: string; label: string; erro
       </label>
       <div className="mt-2">{children}</div>
       {error && (
-        <p id={`${id}-error`} className="mt-2 text-sm text-brass-strong" role="alert">
+        <p id={`${id}-error`} className="mt-2 text-sm text-rose-500" role="alert">
           {error}
         </p>
       )}
@@ -387,8 +387,8 @@ function ChoicePill({
     <label
       className={`inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-box border px-3.5 py-2 text-sm font-medium transition-all ${
         checked
-          ? 'border-navy bg-navy text-white shadow-sm'
-          : 'border-hairline bg-mainButton text-body shadow-sm hover:bg-mainButtonHover hover:text-ink hover:shadow-md'
+          ? 'border-transparent bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+          : 'border-hairline bg-main font-medium text-mainText shadow-sm hover:bg-sectionHeader'
       }`}>
       <input type="radio" name={name} checked={checked} onChange={onChange} className="sr-only" />
       {children}

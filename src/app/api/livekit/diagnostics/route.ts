@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { diagnosticsReportSchema } from '@/lib/livekit/diagnostics/contract';
 import {
+  deleteDiagnosticSession,
   getDiagnosticSession,
   ingestDiagnostics,
   listDiagnosticSessions,
@@ -56,6 +57,26 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('LiveKit diagnostics ingest failed', error instanceof Error ? error.message : 'unknown');
     return NextResponse.json({ error: 'Could not store diagnostics' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  const access = await readAccess();
+  if (!access) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const sessionId = new URL(request.url).searchParams.get('sessionId');
+  if (!sessionId || !/^[a-z0-9]{8,40}$/i.test(sessionId)) {
+    return NextResponse.json({ error: 'Invalid session' }, { status: 400 });
+  }
+
+  try {
+    const result = await deleteDiagnosticSession(access, sessionId);
+    if (result === 'not_found') return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (result === 'active') return NextResponse.json({ error: 'Active sessions cannot be deleted' }, { status: 409 });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error('LiveKit diagnostics delete failed', error instanceof Error ? error.message : 'unknown');
+    return NextResponse.json({ error: 'Could not delete diagnostics' }, { status: 500 });
   }
 }
 

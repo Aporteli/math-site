@@ -790,17 +790,17 @@ export function TeacherJournalWorkspace() {
         role="button"
         tabIndex={0}
         onClick={(e) => openCreateFromElement(e.currentTarget, date)}
-        className={`group relative flex h-full flex-col gap-1 border-b border-r border-hairline p-1.5 text-left transition-colors cursor-pointer hover:bg-paper/50 focus:outline-none overflow-hidden ${
+        className={`group relative flex h-full cursor-pointer flex-col gap-1 overflow-hidden border-b border-r border-hairline p-1.5 text-left transition-colors hover:bg-sectionHeader focus:outline-none ${
           !inMonth ? 'bg-paper/20' : ''
         }`}>
         <div className="flex items-center justify-between shrink-0">
           <span
             className={`flex size-6 items-center justify-center rounded-box text-xs font-bold ${
-              isToday ? 'bg-navy text-white' : inMonth ? 'text-ink' : 'text-muted/40'
+              isToday ? 'bg-[#465D73] text-white' : inMonth ? 'text-ink' : 'text-muted/40'
             }`}>
             {date.getDate()}
           </span>
-          <span className="hidden size-4 shrink-0 items-center justify-center rounded-box bg-navy/10 text-navy group-hover:flex">
+          <span className="hidden size-4 shrink-0 items-center justify-center rounded-box bg-mainButton text-mainText group-hover:flex">
             <Plus className="size-2.5" />
           </span>
         </div>
@@ -868,8 +868,8 @@ export function TeacherJournalWorkspace() {
             key={hour}
             style={{ height: `${HOUR_HEIGHT}px` }}
             onClick={(e) => openCreateFromElement(e.currentTarget, date, hour)}
-            className="border-b border-hairline/60 hover:bg-navy/5 cursor-pointer transition-colors relative group">
-            <div className="hidden group-hover:flex absolute inset-x-1 top-1 h-5 rounded bg-navy/10 items-center justify-center text-[10px] font-bold text-navy">
+            className="relative cursor-pointer border-b border-hairline/60 transition-colors hover:bg-sectionHeader group">
+            <div className="absolute inset-x-1 top-1 hidden h-5 items-center justify-center rounded-box bg-mainButton text-[10px] font-bold text-mainText group-hover:flex">
               + {pad(hour)}:00
             </div>
           </div>
@@ -973,19 +973,20 @@ export function TeacherJournalWorkspace() {
   };
 
   return (
-    <div className="flex h-full w-full min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-sm">
+    <div className="flex h-full w-full min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
+      <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
       {/* Toolbar */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-hairline bg-surface from-paper/60 to-white px-4 py-2.5">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-hairline bg-sectionHeader px-4 py-2.5">
         <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={toggleSidebarDrawer}
             title="მენიუს გახსნა"
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-box border border-hairline bg-white text-ink shadow-sm transition-all hover:border-navy/30 hover:text-navy active:scale-95">
+            className="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-icons shadow-sm transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98]">
             <PanelLeftOpen className="size-4" />
           </button>
 
-          <div className="hidden sm:flex size-9 shrink-0 items-center justify-center rounded-box border border-navy/10 bg-navy-tint text-navy">
+          <div className="hidden size-9 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong sm:flex">
             {loading ? (
               <Loader2 className="size-4 animate-spin text-brass-strong" />
             ) : (
@@ -1002,22 +1003,22 @@ export function TeacherJournalWorkspace() {
           <button
             type="button"
             onClick={goToToday}
-            className="inline-flex h-9 items-center rounded-box border border-hairline bg-white px-3 text-xs font-bold text-ink shadow-sm hover:border-navy/30 hover:shadow-md transition-all active:scale-95">
+            className="inline-flex h-9 cursor-pointer items-center rounded-box border border-hairline bg-main px-3 text-xs font-bold text-ink shadow-sm transition-all duration-200 hover:bg-mainButtonHover active:scale-[0.98]">
             დღეს
           </button>
 
-          <div className="flex h-9 items-center overflow-hidden rounded-box border border-hairline bg-white shadow-sm transition-all hover:border-navy/30 hover:shadow-md">
+          <div className="flex h-9 items-center overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
             <button
               type="button"
               onClick={goToPrev}
-              className="flex h-9 w-8 items-center justify-center text-muted hover:bg-paper hover:text-ink transition-colors">
+              className="flex h-9 w-8 cursor-pointer items-center justify-center text-icons transition-colors hover:bg-mainButtonHover hover:text-mainText">
               <ChevronLeft className="size-4 text-brass-strong" />
             </button>
             <div className="h-4 w-px bg-hairline" />
             <button
               type="button"
               onClick={goToNext}
-              className="flex h-9 w-8 items-center justify-center text-muted hover:bg-paper hover:text-ink transition-colors">
+              className="flex h-9 w-8 cursor-pointer items-center justify-center text-icons transition-colors hover:bg-mainButtonHover hover:text-mainText">
               <ChevronRight className="size-4 text-brass-strong " />
             </button>
           </div>
@@ -1026,7 +1027,7 @@ export function TeacherJournalWorkspace() {
             <button
               type="button"
               onClick={() => setViewMenuOpen(!viewMenuOpen)}
-              className="inline-flex h-9 min-w-[100px] items-center justify-between gap-2 rounded-box border border-hairline bg-white px-3 text-xs font-bold text-ink shadow-sm transition-all hover:border-navy/30 hover:shadow-md focus:outline-none active:scale-95">
+              className="inline-flex h-9 min-w-[100px] cursor-pointer items-center justify-between gap-2 rounded-box border border-hairline bg-main px-3 text-xs font-bold text-ink shadow-sm transition-all duration-200 hover:bg-mainButtonHover focus:outline-none active:scale-[0.98]">
               <span>
                 {view === 'day' && 'დღე'}
                 {view === 'week' && 'კვირა'}
@@ -1034,7 +1035,7 @@ export function TeacherJournalWorkspace() {
                 {view === 'schedule' && 'განრიგი'}
               </span>
               <ChevronDown
-                className={`size-3.5 text-navy-strong transition-transform duration-200 ${
+                className={`size-3.5 text-mainText transition-transform duration-200 ${
                   viewMenuOpen ? 'rotate-180' : ''
                 }`}
               />
@@ -1043,7 +1044,7 @@ export function TeacherJournalWorkspace() {
             {viewMenuOpen && (
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setViewMenuOpen(false)} />
-                <div className="absolute right-0 top-full z-40 mt-1.5 w-36 overflow-hidden rounded-box border border-hairline bg-white p-1 shadow-xl animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute right-0 top-full z-40 mt-1.5 w-36 overflow-hidden rounded-box border border-hairline bg-main p-1 shadow-[0_8px_24px_rgba(0,0,0,0.12)] animate-in fade-in zoom-in-95 duration-100">
                   {(['day', 'week', 'month', 'schedule'] as ViewMode[]).map((v) => (
                     <button
                       key={v}
@@ -1051,8 +1052,10 @@ export function TeacherJournalWorkspace() {
                         setView(v);
                         setViewMenuOpen(false);
                       }}
-                      className={`flex w-full items-center justify-between rounded-box px-2.5 py-1.5 text-xs font-semibold transition-colors ${
-                        view === v ? 'bg-navy/10 text-navy' : 'text-ink hover:bg-paper'
+                      className={`flex w-full cursor-pointer items-center justify-between rounded-box px-2.5 py-1.5 text-xs font-bold transition-all duration-200 ${
+                        view === v
+                          ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                          : 'text-ink hover:bg-sectionHeader'
                       }`}>
                       {v === 'day' && 'დღე'}
                       {v === 'week' && 'კვირა'}
@@ -1069,7 +1072,7 @@ export function TeacherJournalWorkspace() {
           <button
             type="button"
             onClick={handleAddClick}
-            className="inline-flex h-9 items-center gap-1.5 rounded-box bg-navy px-3.5 text-xs font-bold text-white shadow-sm hover:bg-navy-strong transition-colors active:scale-95 ml-1">
+            className="ml-1 inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-box bg-[#465D73] px-3.5 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98]">
             <Plus className="size-3.5" />
             <span className="hidden md:inline text-xs">ღონისძიება</span>
           </button>
@@ -1077,7 +1080,7 @@ export function TeacherJournalWorkspace() {
       </div>
 
       {/* Legend — Google Calendar style */}
-      <div className="shrink-0 border-b border-hairline bg-white px-4 py-2 text-[11px] font-medium text-muted">
+      <div className="shrink-0 border-b border-hairline bg-sectionHeader px-4 py-2 text-[11px] font-medium text-muted">
         {/* Desktop legend */}
         <div className="hidden sm:flex flex-wrap items-center gap-4">
           <span className="flex items-center gap-1.5">
@@ -1103,7 +1106,7 @@ export function TeacherJournalWorkspace() {
             <summary className="flex w-full items-center gap-2 cursor-pointer select-none py-1 text-navy">
               <ChevronDown className="size-3.5 text-navy-strong" />
             </summary>
-            <div className="mt-2 flex flex-col gap-3 bg-white rounded-box p-2 border border-hairline shadow-lg z-10">
+            <div className="z-10 mt-2 flex flex-col gap-3 rounded-box border border-hairline bg-main p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
               <span className="flex items-center gap-1.5">
                 <span className="inline-block size-3 rounded-box bg-navy" />
                 <span className="text-ink">ჟურნალის ღონისძიება</span>
@@ -1163,7 +1166,7 @@ export function TeacherJournalWorkspace() {
                   </span>
                   <span
                     className={`inline-flex size-7 items-center justify-center rounded-box text-xs font-bold mt-0.5 ${
-                      isToday ? 'bg-navy text-white' : 'text-ink'
+                      isToday ? 'bg-[#465D73] text-white' : 'text-ink'
                     }`}>
                     {date.getDate()}
                   </span>
@@ -1195,7 +1198,7 @@ export function TeacherJournalWorkspace() {
             <div className="sticky top-0 z-30 bg-paper/95 backdrop-blur-xs py-2.5 px-4 flex items-center gap-3 border-b border-hairline h-14">
               <span
                 className={`flex size-8 items-center justify-center rounded-box text-sm font-bold ${
-                  isSameDay(currentDate, today) ? 'bg-navy text-white' : 'bg-paper text-ink'
+                  isSameDay(currentDate, today) ? 'bg-[#465D73] text-white' : 'bg-sectionHeader text-ink'
                 }`}>
                 {currentDate.getDate()}
               </span>
@@ -1222,7 +1225,7 @@ export function TeacherJournalWorkspace() {
 
       {/* 4. განრიგის ხედი */}
       {view === 'schedule' && (
-        <div className="flex-1 h-full min-h-0 overflow-y-auto p-6 bg-slate-50/50 thin-scrollbar">
+        <div className="thin-scrollbar h-full min-h-0 flex-1 overflow-y-auto bg-sectionHeader p-6">
           <div className="max-w-3xl mx-auto space-y-6">
             {Object.keys(eventsByDate)
               .sort()
@@ -1235,7 +1238,7 @@ export function TeacherJournalWorkspace() {
                         {WEEKDAY_LABELS[(dateObj.getDay() + 6) % 7]}
                       </span>
                       <span
-                        className={`text-2xl mt-1 font-black ${isSameDay(dateObj, today) ? 'text-navy' : 'text-ink'}`}>
+                        className={`mt-1 text-2xl font-black ${isSameDay(dateObj, today) ? 'text-[#465D73]' : 'text-ink'}`}>
                         {dateObj.getDate()}
                       </span>
                     </div>
@@ -1244,7 +1247,7 @@ export function TeacherJournalWorkspace() {
                         <div
                           key={`${ev.id}-${dateKey}`}
                           onClick={(e) => handleEventClick(e as any, ev)}
-                          className="flex items-center gap-4 bg-white p-3.5 rounded-box border border-hairline shadow-sm hover:border-navy/30 hover:shadow-md cursor-pointer transition-all">
+                          className="flex cursor-pointer items-center gap-4 rounded-box border border-hairline bg-main p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md">
                           <div className={`size-2.5 rounded-box ${COLOR_DOT[ev.color]}`} />
                           <div className="flex-1">
                             <div className="flex items-center gap-1.5">
@@ -1327,7 +1330,7 @@ export function TeacherJournalWorkspace() {
           <div className="fixed inset-0 z-40" onClick={() => setVirtualPopup(null)} />
           <div
             style={{ top: virtualPopup.anchor.top, left: virtualPopup.anchor.left }}
-            className="fixed z-50 w-80 max-w-[calc(100vw-2rem)] max-h-[70vh] overflow-y-auto rounded-box border border-hairline bg-white p-4 shadow-2xl ring-1 ring-black/5 thin-scrollbar animate-in fade-in zoom-in-95">
+            className="fixed z-50 thin-scrollbar max-h-[70vh] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-box border border-hairline bg-paper p-4 shadow-2xl animate-in fade-in zoom-in-95">
             <div
               className={`mb-3 h-1.5 w-full rounded-box ${virtualPopup.event.source === 'group' ? 'bg-sky-500' : 'bg-amber-400'}`}
             />
@@ -1347,7 +1350,7 @@ export function TeacherJournalWorkspace() {
                 type="button"
                 aria-label="დახურვა"
                 onClick={() => setVirtualPopup(null)}
-                className="flex size-7 shrink-0 items-center justify-center rounded-box text-muted transition-colors hover:bg-paper hover:text-ink">
+                className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition-colors hover:bg-sectionHeader hover:text-ink">
                 <X className="size-4" />
               </button>
             </div>
@@ -1386,7 +1389,7 @@ export function TeacherJournalWorkspace() {
           <div className="fixed inset-0 z-40" onClick={closePopover} />
           <div
             style={{ top: popover.anchor.top, left: popover.anchor.left }}
-            className={`fixed z-50 rounded-box border border-hairline bg-white shadow-2xl ring-1 ring-black/5 transition-[top,width] duration-150 animate-in fade-in zoom-in-95 w-80
+            className={`fixed z-50 w-80 rounded-box border border-hairline bg-paper shadow-2xl transition-[top,width] duration-150 animate-in fade-in zoom-in-95
             }`}
             onClick={(e) => e.stopPropagation()}>
             <div className={`h-1.5 w-full rounded-box ${COLOR_DOT[draft.color]}`} />
@@ -1398,12 +1401,12 @@ export function TeacherJournalWorkspace() {
                   value={draft.title}
                   onChange={(e) => updateDraft({ title: e.target.value })}
                   placeholder="ღონისძიების სათაური"
-                  className="flex-1 border-b-2 border-hairline bg-transparent pb-1.5 text-base font-bold text-ink outline-none transition-colors focus:border-navy placeholder:font-medium placeholder:text-muted/60"
+                  className="flex-1 border-b-2 border-hairline bg-transparent pb-1.5 text-base font-bold text-ink outline-none transition-colors placeholder:font-medium placeholder:text-muted/60 focus:border-[#465D73]"
                 />
                 <button
                   type="button"
                   onClick={closePopover}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-ink transition-colors">
+                  className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition-colors hover:bg-sectionHeader hover:text-ink">
                   <X className="size-4" />
                 </button>
               </div>
@@ -1416,14 +1419,14 @@ export function TeacherJournalWorkspace() {
                       type="date"
                       value={draft.date}
                       onChange={(e) => updateDraft({ date: e.target.value })}
-                      className="flex-1 rounded-box border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-bold text-ink outline-none focus:border-navy"
+                      className="flex-1 rounded-box border border-hairline bg-searchInput px-2.5 py-1.5 text-xs font-bold text-searchInputText outline-none focus:border-[#465D73]"
                     />
                     <label className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-muted">
                       <input
                         type="checkbox"
                         checked={draft.allDay}
                         onChange={(e) => updateDraft({ allDay: e.target.checked })}
-                        className="size-3.5 rounded border-hairline accent-navy"
+                        className="size-3.5 rounded border-hairline accent-[#465D73]"
                       />
                       მთელი დღე
                     </label>
@@ -1434,14 +1437,14 @@ export function TeacherJournalWorkspace() {
                         type="time"
                         value={draft.startTime}
                         onChange={(e) => updateDraft({ startTime: e.target.value })}
-                        className="flex-1 rounded-box border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-bold text-ink outline-none focus:border-navy"
+                        className="flex-1 rounded-box border border-hairline bg-searchInput px-2.5 py-1.5 text-xs font-bold text-searchInputText outline-none focus:border-[#465D73]"
                       />
                       <span className="text-xs text-muted">—</span>
                       <input
                         type="time"
                         value={draft.endTime}
                         onChange={(e) => updateDraft({ endTime: e.target.value })}
-                        className="flex-1 rounded-box border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-bold text-ink outline-none focus:border-navy"
+                        className="flex-1 rounded-box border border-hairline bg-searchInput px-2.5 py-1.5 text-xs font-bold text-searchInputText outline-none focus:border-[#465D73]"
                       />
                     </div>
                   )}
@@ -1450,7 +1453,7 @@ export function TeacherJournalWorkspace() {
                     <select
                       value={draft.repeat}
                       onChange={(e) => updateDraft({ repeat: e.target.value as RepeatOption })}
-                      className="flex-1 rounded-box border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-bold text-ink outline-none focus:border-navy">
+                      className="flex-1 rounded-box border border-hairline bg-searchInput px-2.5 py-1.5 text-xs font-bold text-searchInputText outline-none focus:border-[#465D73]">
                       {(Object.keys(REPEAT_LABELS) as RepeatOption[]).map((key) => (
                         <option key={key} value={key}>
                           {REPEAT_LABELS[key]}
@@ -1468,7 +1471,7 @@ export function TeacherJournalWorkspace() {
                     type="button"
                     onClick={() => updateDraft({ color: c })}
                     className={`size-5 rounded-box ${COLOR_DOT[c]} transition-transform hover:scale-110 ${
-                      draft.color === c ? 'ring-2 ring-offset-2 ring-navy' : ''
+                      draft.color === c ? 'ring-2 ring-offset-2 ring-[#465D73]' : ''
                     }`}
                   />
                 ))}
@@ -1486,8 +1489,8 @@ export function TeacherJournalWorkspace() {
                               key={p.id}
                               className={`inline-flex items-center gap-1 rounded-box px-2.5 py-1 text-[11px] font-bold border ${
                                 p.type === 'group'
-                                  ? 'bg-navy/10 border-navy/20 text-navy'
-                                  : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                  ? 'border-navy/20 bg-navy-tint text-navy'
+                                  : 'border-win/20 bg-win-tint text-win'
                               }`}>
                               {p.type === 'group' ? <Users className="size-3" /> : <UserIcon className="size-3" />}
                               <span className="truncate max-w-[140px]">{p.name}</span>
@@ -1508,7 +1511,7 @@ export function TeacherJournalWorkspace() {
                       <button
                         type="button"
                         onClick={() => setParticipantsOpen((v) => !v)}
-                        className="w-full flex items-center justify-between rounded-box border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-medium text-ink hover:border-navy/30 transition-colors">
+                        className="flex w-full cursor-pointer items-center justify-between rounded-box border border-hairline bg-searchInput px-2.5 py-1.5 text-xs font-medium text-searchInputText transition-colors hover:border-[#465D73]">
                         <span className="flex items-center gap-1.5 text-muted">
                           <Search className="size-3" />
                           მოსწავლის დამატება...
@@ -1519,13 +1522,13 @@ export function TeacherJournalWorkspace() {
                       </button>
 
                       {participantsOpen && (
-                        <div className="rounded-box border border-hairline bg-white shadow-sm overflow-hidden">
+                        <div className="overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
                           <div className="p-1.5 border-b border-hairline/60">
                             <input
                               value={participantSearch}
                               onChange={(e) => setParticipantSearch(e.target.value)}
                               placeholder="ძებნა..."
-                              className="w-full rounded-box border border-hairline bg-paper/40 px-2 py-1 text-[11px] font-medium text-ink outline-none focus:border-navy"
+                              className="w-full rounded-box border border-hairline bg-searchInput px-2 py-1 text-[11px] font-medium text-searchInputText outline-none focus:border-[#465D73]"
                             />
                           </div>
 
@@ -1546,7 +1549,7 @@ export function TeacherJournalWorkspace() {
                                   <div key={g.label} className="border-b border-hairline/60 last:border-b-0">
                                     <div
                                       className={`px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider ${
-                                        g.type === 'group' ? 'bg-navy/5 text-navy' : 'bg-emerald-50 text-emerald-700'
+                                        g.type === 'group' ? 'bg-sectionHeader text-navy' : 'bg-win-tint text-win'
                                       }`}>
                                       {g.type === 'group' ? (
                                         <Users className="size-3 inline mr-1" />
@@ -1563,7 +1566,9 @@ export function TeacherJournalWorkspace() {
                                           type="button"
                                           onClick={() => toggleParticipant(s)}
                                           className={`flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-xs transition-colors ${
-                                            selected ? 'bg-navy/5 text-navy font-bold' : 'text-ink hover:bg-paper'
+                                            selected
+                                              ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]'
+                                              : 'text-ink hover:bg-sectionHeader'
                                           }`}>
                                           <span className="truncate">{s.name}</span>
                                           {selected && <Check className="size-3.5 text-brass-strong shrink-0" />}
@@ -1586,7 +1591,7 @@ export function TeacherJournalWorkspace() {
                       value={draft.location}
                       onChange={(e) => updateDraft({ location: e.target.value })}
                       placeholder="მდებარეობა"
-                      className="flex-1 rounded-box border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-medium text-ink outline-none focus:border-navy placeholder:text-muted/60"
+                      className="flex-1 rounded-box border border-hairline bg-searchInput px-2.5 py-1.5 text-xs font-medium text-searchInputText outline-none placeholder:text-muted/60 focus:border-[#465D73]"
                     />
                   </div>
 
@@ -1604,12 +1609,12 @@ export function TeacherJournalWorkspace() {
                             }
                           }}
                           placeholder="დაამატეთ სტუმარი (თავისუფალი ტექსტი)..."
-                          className="flex-1 rounded-box border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-medium text-ink outline-none focus:border-navy placeholder:text-muted/60"
+                          className="flex-1 rounded-box border border-hairline bg-searchInput px-2.5 py-1.5 text-xs font-medium text-searchInputText outline-none placeholder:text-muted/60 focus:border-[#465D73]"
                         />
                         <button
                           type="button"
                           onClick={addGuest}
-                          className="flex size-7 shrink-0 items-center justify-center rounded-box border border-hairline bg-white text-muted hover:bg-paper hover:text-ink transition-colors">
+                          className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-icons transition-colors hover:bg-mainButtonHover hover:text-mainText">
                           <Plus className="size-3.5" />
                         </button>
                       </div>
@@ -1640,7 +1645,7 @@ export function TeacherJournalWorkspace() {
                       onChange={(e) => updateDraft({ description: e.target.value })}
                       placeholder="აღწერა"
                       rows={3}
-                      className="flex-1 resize-none rounded-box border border-hairline bg-paper/50 px-2.5 py-2 text-xs font-medium text-ink outline-none focus:border-navy placeholder:text-muted/60"
+                      className="flex-1 resize-none rounded-box border border-hairline bg-searchInput px-2.5 py-2 text-xs font-medium text-searchInputText outline-none placeholder:text-muted/60 focus:border-[#465D73]"
                     />
                   </div>
 
@@ -1649,7 +1654,7 @@ export function TeacherJournalWorkspace() {
                     <select
                       value={draft.reminder}
                       onChange={(e) => updateDraft({ reminder: e.target.value as ReminderOption })}
-                      className="flex-1 rounded-box border border-hairline bg-paper/50 px-2.5 py-1.5 text-xs font-bold text-ink outline-none focus:border-navy">
+                      className="flex-1 rounded-box border border-hairline bg-searchInput px-2.5 py-1.5 text-xs font-bold text-searchInputText outline-none focus:border-[#465D73]">
                       {(Object.keys(REMINDER_LABELS) as ReminderOption[]).map((key) => (
                         <option key={key} value={key}>
                           {REMINDER_LABELS[key]}
@@ -1665,7 +1670,7 @@ export function TeacherJournalWorkspace() {
                   <button
                     type="button"
                     onClick={handleDelete}
-                    className="flex items-center gap-1.5 rounded-box px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-colors">
+                    className="flex cursor-pointer items-center gap-1.5 rounded-box border border-rose-500/30 bg-rose-500/15 px-2.5 py-1.5 text-xs font-bold text-rose-500 transition-colors hover:bg-rose-500/25">
                     <Trash2 className="size-3.5" />
                     წაშლა
                   </button>
@@ -1673,7 +1678,7 @@ export function TeacherJournalWorkspace() {
                   <button
                     type="button"
                     onClick={toggleExpandMore}
-                    className="text-xs font-bold text-navy hover:underline">
+                    className="cursor-pointer text-xs font-bold text-navy hover:underline">
                     მეტი პარამეტრი
                   </button>
                 ) : (
@@ -1684,7 +1689,7 @@ export function TeacherJournalWorkspace() {
                   type="button"
                   disabled={!draft.title.trim() || isSaving}
                   onClick={handleSave}
-                  className="inline-flex items-center gap-1.5 rounded-box bg-navy px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-navy-strong disabled:opacity-40 transition-all active:scale-95">
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-[#465D73] px-4 py-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
                   {isSaving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5 " />}
                   შენახვა
                 </button>

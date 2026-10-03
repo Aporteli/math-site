@@ -37,12 +37,12 @@ export function SelectPanButtons({
   }, [isSelectMenuOpen, setIsSelectMenuOpen]);
 
   return (
-    <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1.5 dark:border-slate-800">
+    <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
       {isTeacher && (
         <div ref={menuRef} className="relative flex shrink-0 items-center">
           <div
             data-toolbar-key="select"
-            className="flex items-center h-7 sm:h-8 rounded-box text-slate-600 transition-colors dark:text-slate-300">
+            className="flex h-7 items-center rounded-box text-icons transition-colors sm:h-8">
             <button
               type="button"
               title={
@@ -57,7 +57,7 @@ export function SelectPanButtons({
                 setIsSelectMenuOpen(false);
                 closeAllMenus();
               }}
-              className="flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-box hover:bg-slate-100 dark:hover:bg-slate-800">
+              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] sm:size-8">
               {selectMode === 'freeform' ? (
                 <Lasso className="size-3.5 sm:size-4" />
               ) : selectMode === 'draw' ? (
@@ -73,12 +73,12 @@ export function SelectPanButtons({
                 setIsSelectMenuOpen(!isSelectMenuOpen);
                 closeAllMenus();
               }}
-              className="flex h-full items-center  border-r border-slate-200 px-0.5 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
+              className="flex h-full cursor-pointer items-center border-r border-hairline px-0.5 transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText">
               <ChevronDown className={`size-3 transition-transform duration-200 ${isSelectMenuOpen ? 'rotate-180' : ''}`} />
             </button>
           </div>
           {isSelectMenuOpen && (
-            <div className="absolute top-full left-0 z-[120] mt-2 w-44 rounded-box border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+            <div className="absolute top-full left-0 z-[120] mt-2 w-44 rounded-box border border-hairline bg-main p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
               <button
                 type="button"
                 onClick={() => {
@@ -86,8 +86,8 @@ export function SelectPanButtons({
                   setActiveTool('select');
                   setIsSelectMenuOpen(false);
                 }}
-                className={`flex w-full items-center gap-2 rounded-box px-2.5 py-1.5 text-xs font-medium ${
-                  selectMode === 'rect' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
+                className={`flex w-full cursor-pointer items-center gap-2 rounded-box px-2.5 py-1.5 text-xs font-bold ${
+                  selectMode === 'rect' ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]' : 'text-mainText hover:bg-sectionHeader'
                 }`}>
                 <MousePointer className="size-3.5" />
                 მართკუთხედი
@@ -99,8 +99,8 @@ export function SelectPanButtons({
                   setActiveTool('select');
                   setIsSelectMenuOpen(false);
                 }}
-                className={`flex w-full items-center gap-2 rounded-box px-2.5 py-1.5 text-xs font-medium ${
-                  selectMode === 'freeform' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
+                className={`flex w-full cursor-pointer items-center gap-2 rounded-box px-2.5 py-1.5 text-xs font-bold ${
+                  selectMode === 'freeform' ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]' : 'text-mainText hover:bg-sectionHeader'
                 }`}>
                 <Lasso className="size-3.5" />
                 თავისუფალი
@@ -112,8 +112,8 @@ export function SelectPanButtons({
                   setActiveTool('select');
                   setIsSelectMenuOpen(false);
                 }}
-                className={`flex w-full items-center gap-2 rounded-box px-2.5 py-1.5 text-xs font-medium ${
-                  selectMode === 'draw' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800'
+                className={`flex w-full cursor-pointer items-center gap-2 rounded-box px-2.5 py-1.5 text-xs font-bold ${
+                  selectMode === 'draw' ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]' : 'text-mainText hover:bg-sectionHeader'
                 }`}>
                 <Pencil className="size-3.5" />
                 დახატვა
@@ -131,7 +131,7 @@ export function SelectPanButtons({
           setActiveTool('hand');
           closeAllMenus();
         }}
-        className="flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-box text-slate-600 transition-colors hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-800">
+        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 sm:size-8">
         <Hand className="size-3.5 sm:size-4" />
       </button>
     </div>

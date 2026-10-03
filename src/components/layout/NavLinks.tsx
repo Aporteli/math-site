@@ -65,8 +65,8 @@ export function NavLinks({
                 className={[
                   "flex items-center gap-1 rounded-box px-3 py-2.5 text-base transition-colors",
                   active
-                    ? "bg-mainButton font-bold text-mainText shadow-sm"
-                    : "font-bold text-body hover:bg-paper hover:text-ink",
+                    ? "bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]"
+                    : "font-bold text-mainText hover:bg-sectionHeader",
                 ].join(" ")}
               >
                 {labels[link.id]}
@@ -99,8 +99,8 @@ export function NavLinks({
                           className={[
                             "block rounded-box px-3 py-2 text-sm transition-colors duration-200",
                             pathname === itemHref
-                              ? "bg-mainButton font-bold text-mainText"
-                              : "font-medium text-mainText hover:bg-paper hover:text-ink",
+                              ? "bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]"
+                              : "font-medium text-mainText hover:bg-sectionHeader",
                           ].join(" ")}
                         >
                           {itemLabel}
@@ -183,7 +183,7 @@ function DesktopNavItem({
         aria-haspopup={menuItems ? "true" : undefined}
         className={[
           "relative flex items-center gap-1 whitespace-nowrap px-3 py-1.5 text-sm transition-colors",
-          "after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-navy after:transition-[width] after:duration-300 after:ease-out",
+          "after:absolute after:bottom-0 after:left-0 after:h-px after:bg-mainText after:transition-[width] after:duration-300 after:ease-out",
           active
             ? "font-bold text-mainText after:w-full"
             : "font-bold text-mainText hover:bg-main hover:text-mainText after:w-0",
@@ -218,8 +218,8 @@ function DesktopNavItem({
                     className={[
                       "block rounded-box px-3 py-2 text-sm transition-colors duration-200",
                       pathname === itemHref
-                        ? "bg-mainButton font-bold text-mainText"
-                        : "font-medium text-mainText hover:bg-paper hover:text-ink",
+                        ? "bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]"
+                        : "font-medium text-mainText hover:bg-sectionHeader",
                     ].join(" ")}
                   >
                     {itemLabel}

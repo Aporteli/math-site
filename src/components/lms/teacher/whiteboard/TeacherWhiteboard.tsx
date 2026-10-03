@@ -68,7 +68,7 @@ const ClassroomAiModal = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="fixed inset-0 z-[160] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs">
+      <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <Loader2 className="size-8 animate-spin text-white" />
       </div>
     ),
@@ -344,7 +344,7 @@ function BoardThumbnail({ elements, isActive, pageIndex, isDark, onClick, onDele
   return (
     <div
       onClick={onClick}
-      className={`group relative flex flex-col items-center gap-1.5 p-1.5 rounded-box cursor-pointer transition-all shrink-0 ${isActive ? 'bg-navy-tint ring-2 ring-navy shadow-xs' : 'hover:bg-paper border border-hairline'}`}>
+      className={`group relative flex shrink-0 cursor-pointer flex-col items-center gap-1.5 rounded-box p-1.5 transition-all ${isActive ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'border border-hairline hover:bg-sectionHeader'}`}>
       <div className="relative w-28 h-18 rounded-box overflow-hidden shadow-2xs border border-hairline bg-white">
         <canvas ref={canvasRef} width={112} height={72} className="w-full h-full object-contain" />
         {canDelete && (
@@ -355,7 +355,7 @@ function BoardThumbnail({ elements, isActive, pageIndex, isDark, onClick, onDele
               e.stopPropagation();
               onDelete();
             }}
-            className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-box bg-rose-600 text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-rose-700 shadow-xs z-10">
+            className="absolute top-1 right-1 z-10 flex size-5 cursor-pointer items-center justify-center rounded-box border border-rose-500/30 bg-rose-500/15 text-rose-500 opacity-100 shadow-xs transition-opacity hover:bg-rose-500/25 sm:opacity-0 sm:group-hover:opacity-100">
             <X className="size-3" />
           </button>
         )}
@@ -447,11 +447,11 @@ function AssignBoardThumbnail({ elements, isSelected, pageIndex, isDark, onToggl
   return (
     <div
       onClick={onToggle}
-      className={`group relative flex flex-col items-center gap-1 p-1 rounded-box cursor-pointer transition-all shrink-0 select-none ${isSelected ? 'bg-navy-tint ring-2 ring-navy' : 'hover:bg-paper border border-hairline'}`}>
+      className={`group relative flex shrink-0 cursor-pointer select-none flex-col items-center gap-1 rounded-box p-1 transition-all ${isSelected ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'border border-hairline hover:bg-sectionHeader'}`}>
       <div className="relative w-24 h-15 rounded-box overflow-hidden shadow-2xs border border-hairline bg-white">
         <canvas ref={canvasRef} width={96} height={60} className="w-full h-full object-contain" />
         <div
-          className={`absolute top-1 right-1 flex size-4 items-center justify-center rounded-box border transition-all ${isSelected ? 'bg-navy border-navy text-white' : 'bg-white/80 border-slate-300 text-transparent group-hover:border-slate-400'}`}>
+          className={`absolute top-1 right-1 flex size-4 items-center justify-center rounded-box border transition-all ${isSelected ? 'border-[#465D73] bg-[#465D73] text-white' : 'border-hairline bg-main/80 text-transparent group-hover:border-navy/40'}`}>
           <Check className="size-2.5 stroke-[3]" />
         </div>
       </div>
@@ -472,7 +472,7 @@ function ToolButton({ title, onClick, active, disabled, children }: any) {
       disabled={disabled}
       className={[
         'inline-flex size-8 shrink-0 items-center justify-center rounded-box transition-colors',
-        active ? 'bg-navy text-white shadow-sm' : 'text-body hover:bg-paper hover:text-navy',
+        active ? 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)]' : 'text-mainText hover:bg-mainButtonHover',
         disabled ? 'pointer-events-none opacity-40' : '',
       ].join(' ')}>
       {children}
@@ -1577,7 +1577,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   return (
     <div
       ref={boardRootRef}
-      className={`relative flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden border border-hairline bg-white shadow-sm ${isBoardFullscreen ? 'rounded-box' : 'rounded-box'}`}>
+      className={`relative flex h-full w-full min-h-0 min-w-0 flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-sm`}>
+      <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
       <input
         ref={fileInputRef}
         type="file"
@@ -1596,14 +1597,14 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         }}
       />
 
-      <div className="relative z-30 shrink-0 min-w-0 border-b border-hairline bg-surface">
+      <div className="relative z-30 min-w-0 shrink-0 border-b border-hairline bg-sectionHeader">
         <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2">
           <button
             type="button"
             onClick={toggleSidebarDrawer}
             title={copy.openMenu}
             aria-label={copy.openMenu}
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-box border border-hairline bg-white text-ink shadow-sm transition-all hover:border-navy/30 hover:text-navy">
+            className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-icons shadow-sm transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText">
             <PanelLeftOpen className="size-4" />
           </button>
           <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
@@ -1617,7 +1618,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
             <div ref={selectMenuRef} className="relative flex shrink-0 items-center">
               <div
-                className={`flex items-center h-8 rounded-box transition-all shadow-xs ${activeTool === 'select' ? 'bg-navy text-white' : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'}`}>
+                className={`flex items-center h-8 rounded-box transition-all shadow-xs ${activeTool === 'select' ? 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)]' : 'border border-hairline bg-main text-mainText hover:bg-mainButtonHover'}`}>
                 <button
                   type="button"
                   title={
@@ -1650,14 +1651,14 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsColorMenuOpen(false);
                     setIsEraserMenuOpen(false);
                   }}
-                  className={`flex items-center justify-center px-1 h-full rounded-box transition-colors border-l ${activeTool === 'select' ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
+                  className={`flex items-center justify-center px-1 h-full rounded-box transition-colors border-l ${activeTool === 'select' ? 'border-white/20 hover:bg-[#526C85]' : 'border-hairline hover:bg-paper'}`}>
                   <ChevronDown
                     className={`size-3 transition-transform duration-200 ${isSelectMenuOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
               </div>
               {isSelectMenuOpen && (
-                <div className="absolute top-full mt-2 left-0 z-[120] w-44 rounded-box bg-white p-1 shadow-2xl border border-hairline">
+                <div className="absolute top-full mt-2 left-0 z-[120] w-44 rounded-box border border-hairline bg-main shadow-[0_8px_24px_rgba(0,0,0,0.12)] p-1">
                   <button
                     type="button"
                     onClick={() => {
@@ -1665,7 +1666,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                       setAndSaveTool('select');
                       setIsSelectMenuOpen(false);
                     }}
-                    className={`flex w-full items-center gap-2 rounded-box px-2 py-1.5 text-xs ${selectMode === 'rect' ? 'bg-navy-tint text-navy' : 'text-ink hover:bg-paper'}`}>
+                    className={`flex w-full items-center gap-2 rounded-box px-2 py-1.5 text-xs ${selectMode === 'rect' ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-mainText hover:bg-sectionHeader'}`}>
                     <MousePointer className="size-3.5" />
                     მართკუთხედი
                   </button>
@@ -1676,7 +1677,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                       setAndSaveTool('select');
                       setIsSelectMenuOpen(false);
                     }}
-                    className={`flex w-full items-center gap-2 rounded-box px-2 py-1.5 text-xs ${selectMode === 'freeform' ? 'bg-navy-tint text-navy' : 'text-ink hover:bg-paper'}`}>
+                    className={`flex w-full items-center gap-2 rounded-box px-2 py-1.5 text-xs ${selectMode === 'freeform' ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-mainText hover:bg-sectionHeader'}`}>
                     <Lasso className="size-3.5" />
                     თავისუფალი
                   </button>
@@ -1687,7 +1688,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                       setAndSaveTool('select');
                       setIsSelectMenuOpen(false);
                     }}
-                    className={`flex w-full items-center gap-2 rounded-box px-2 py-1.5 text-xs ${selectMode === 'draw' ? 'bg-navy-tint text-navy' : 'text-ink hover:bg-paper'}`}>
+                    className={`flex w-full items-center gap-2 rounded-box px-2 py-1.5 text-xs ${selectMode === 'draw' ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-mainText hover:bg-sectionHeader'}`}>
                     <Pencil className="size-3.5" />
                     დახატვა
                   </button>
@@ -1702,7 +1703,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
             <div ref={penMenuRef} className="relative flex shrink-0 items-center">
               <div
-                className={`flex items-center h-8 rounded-box transition-all shadow-xs ${activeTool === 'pen' ? 'bg-navy text-white' : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'}`}>
+                className={`flex items-center h-8 rounded-box transition-all shadow-xs ${activeTool === 'pen' ? 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)]' : 'border border-hairline bg-main text-mainText hover:bg-mainButtonHover'}`}>
                 <button
                   type="button"
                   title="კალამი"
@@ -1725,14 +1726,14 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsShapesMenuOpen(false);
                     setIsColorMenuOpen(false);
                   }}
-                  className={`flex items-center justify-center px-1.5 h-full rounded-box transition-colors border-l ${activeTool === 'pen' ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
+                  className={`flex items-center justify-center px-1.5 h-full rounded-box transition-colors border-l ${activeTool === 'pen' ? 'border-white/20 hover:bg-[#526C85]' : 'border-hairline hover:bg-paper'}`}>
                   <ChevronDown
                     className={`size-3 transition-transform duration-200 ${isPenMenuOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
               </div>
               {isPenMenuOpen && (
-                <div className="absolute top-full mt-2 left-0 z-[120] w-56 rounded-box bg-white p-3 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-full mt-2 left-0 z-[120] w-56 rounded-box border border-hairline bg-main shadow-[0_8px_24px_rgba(0,0,0,0.12)] p-3 animate-in fade-in zoom-in-95 duration-150">
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-hairline">
                     <span className="text-xs font-semibold text-ink">კალმის სისქე</span>
                     <span className="text-xs font-mono font-bold text-navy">{strokeWidth}px</span>
@@ -1744,7 +1745,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     step="0.5"
                     value={strokeWidth}
                     onChange={(e) => setAndSaveWidth(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-paper-deep rounded-box appearance-none cursor-pointer accent-navy"
+                    className="w-full h-1.5 bg-paper-deep rounded-box appearance-none cursor-pointer accent-[#465D73]"
                   />
                   <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-hairline">
                     {STROKE_SIZES.map((size) => (
@@ -1752,7 +1753,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                         key={size}
                         type="button"
                         onClick={() => setAndSaveWidth(size)}
-                        className={`size-7 flex items-center justify-center rounded-box transition-colors ${strokeWidth === size ? 'bg-navy-tint text-navy ring-1 ring-navy font-bold' : 'hover:bg-paper text-muted'}`}>
+                        className={`flex size-7 items-center justify-center rounded-box transition-colors ${strokeWidth === size ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-muted hover:bg-sectionHeader'}`}>
                         <div
                           className="rounded-box bg-current"
                           style={{ width: Math.min(14, size + 2), height: Math.min(14, size + 2) }}
@@ -1785,7 +1786,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                 />
               </button>
               {isColorMenuOpen && (
-                <div className="absolute top-full mt-2 left-0 z-[120] w-max rounded-box bg-white p-2.5 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-full mt-2 left-0 z-[120] w-max rounded-box border border-hairline bg-main shadow-[0_8px_24px_rgba(0,0,0,0.12)] p-2.5 animate-in fade-in zoom-in-95 duration-150">
                   <div className="flex items-center gap-2">
                     {COLORS.map((c) => (
                       <button
@@ -1793,7 +1794,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                         type="button"
                         title={c.label}
                         onClick={() => setAndSaveColor(c.hex)}
-                        className={`size-7 rounded-box border transition-transform ${strokeColor === c.hex ? 'scale-115 ring-2 ring-navy ring-offset-1' : 'hover:scale-110 border-black/10'}`}
+                        className={`size-7 rounded-box border transition-transform ${strokeColor === c.hex ? 'scale-115 ring-2 ring-[#465D73] ring-offset-1' : 'border-black/10 hover:scale-110'}`}
                         style={{ backgroundColor: c.hex }}
                       />
                     ))}
@@ -1805,8 +1806,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               <div
                 className={`flex items-center h-8 rounded-box transition-all shadow-xs ${
                   penSmoothEnabled
-                    ? 'bg-navy text-white'
-                    : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'
+                    ? 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)]'
+                    : 'border border-hairline bg-main text-mainText hover:bg-mainButtonHover'
                 }`}>
                 <button
                   type="button"
@@ -1831,13 +1832,13 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsEraserMenuOpen(false);
                   }}
                   className={`flex items-center justify-center px-1.5 h-full rounded-box border-l ${
-                    penSmoothEnabled ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'
+                    penSmoothEnabled ? 'border-white/20 hover:bg-[#526C85]' : 'border-hairline hover:bg-paper'
                   }`}>
                   <ChevronDown className={`size-3 transition-transform ${isSmoothMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
               </div>
               {isSmoothMenuOpen && (
-                <div className="absolute top-full mt-2 left-0 z-[120] w-56 rounded-box bg-white p-3 shadow-2xl border border-hairline">
+                <div className="absolute top-full mt-2 left-0 z-[120] w-56 rounded-box border border-hairline bg-main shadow-[0_8px_24px_rgba(0,0,0,0.12)] p-3">
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-hairline">
                     <span className="text-xs font-semibold text-ink">გასწორების ინტენსივობა</span>
                     <span className="text-xs font-mono font-bold text-navy">
@@ -1855,7 +1856,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                       setPenSmoothIntensity(next);
                       savePreferencesImmediately({ penSmoothIntensity: next });
                     }}
-                    className="w-full h-1.5 bg-paper-deep rounded-box appearance-none cursor-pointer accent-navy"
+                    className="w-full h-1.5 bg-paper-deep rounded-box appearance-none cursor-pointer accent-[#465D73]"
                   />
                 </div>
               )}
@@ -1865,8 +1866,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               <div
                 className={`flex items-center h-8 rounded-box transition-all shadow-xs ${
                   activeTool === 'eraser'
-                    ? 'bg-navy text-white'
-                    : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'
+                    ? 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)]'
+                    : 'border border-hairline bg-main text-mainText hover:bg-mainButtonHover'
                 }`}>
                 <button
                   type="button"
@@ -1897,7 +1898,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsStylusMenuOpen(false);
                   }}
                   className={`flex items-center justify-center px-1.5 h-full rounded-box transition-colors border-l ${
-                    activeTool === 'eraser' ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'
+                    activeTool === 'eraser' ? 'border-white/20 hover:bg-[#526C85]' : 'border-hairline hover:bg-paper'
                   }`}>
                   <ChevronDown
                     className={`size-3 transition-transform duration-200 ${isEraserMenuOpen ? 'rotate-180' : ''}`}
@@ -1905,7 +1906,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                 </button>
               </div>
               {isEraserMenuOpen && (
-                <div className="absolute top-full mt-2 left-0 z-[120] w-56 rounded-box bg-white p-3 shadow-2xl border border-hairline">
+                <div className="absolute top-full mt-2 left-0 z-[120] w-56 rounded-box border border-hairline bg-main shadow-[0_8px_24px_rgba(0,0,0,0.12)] p-3">
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-hairline">
                     <span className="text-xs font-semibold text-ink">საშლელის ზომა</span>
                     <span className="text-xs font-mono font-bold text-navy">{eraserWidth}px</span>
@@ -1917,7 +1918,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     step="2"
                     value={eraserWidth}
                     onChange={(e) => setAndSaveEraserWidth(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-paper-deep rounded-box appearance-none cursor-pointer accent-navy"
+                    className="w-full h-1.5 bg-paper-deep rounded-box appearance-none cursor-pointer accent-[#465D73]"
                   />
                   <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-hairline">
                     {ERASER_SIZES.map((size) => (
@@ -1927,7 +1928,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                         onClick={() => setAndSaveEraserWidth(size)}
                         className={`size-7 flex items-center justify-center rounded-box transition-colors ${
                           eraserWidth === size
-                            ? 'bg-navy-tint text-navy ring-1 ring-navy font-bold'
+                            ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
                             : 'hover:bg-paper text-muted'
                         }`}>
                         <div
@@ -1945,7 +1946,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
             <div ref={shapesMenuRef} className="relative flex shrink-0 items-center">
               <div
-                className={`flex items-center h-8 rounded-box transition-all shadow-xs ${isShapeActive ? 'bg-navy text-white' : 'bg-paper hover:bg-paper-deep text-ink border border-hairline'}`}>
+                className={`flex items-center h-8 rounded-box transition-all shadow-xs ${isShapeActive ? 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)]' : 'border border-hairline bg-main text-mainText hover:bg-mainButtonHover'}`}>
                 <button
                   type="button"
                   title="ფიგურა"
@@ -1967,14 +1968,14 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                     setIsColorMenuOpen(false);
                     setIsEraserMenuOpen(false);
                   }}
-                  className={`flex items-center justify-center px-1.5 h-full rounded-box transition-colors border-l ${isShapeActive ? 'border-white/20 hover:bg-navy-strong' : 'border-hairline hover:bg-paper'}`}>
+                  className={`flex items-center justify-center px-1.5 h-full rounded-box transition-colors border-l ${isShapeActive ? 'border-white/20 hover:bg-[#526C85]' : 'border-hairline hover:bg-paper'}`}>
                   <ChevronDown
                     className={`size-3 transition-transform duration-200 ${isShapesMenuOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
               </div>
               {isShapesMenuOpen && (
-                <div className="absolute top-full mt-2 left-0 z-[120] w-48 rounded-box bg-white p-2.5 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-full mt-2 left-0 z-[120] w-48 rounded-box border border-hairline bg-main shadow-[0_8px_24px_rgba(0,0,0,0.12)] p-2.5 animate-in fade-in zoom-in-95 duration-150">
                   <div className="grid grid-cols-2 gap-1.5">
                     {SHAPE_TOOLS.map((s) => {
                       const SIcon = s.icon;
@@ -1988,7 +1989,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                             setAndSaveTool(s.id);
                             setIsShapesMenuOpen(false);
                           }}
-                          className={`flex items-center gap-1.5 px-2 py-1.5 rounded-box text-xs transition-colors ${isSelected ? 'bg-navy text-white font-bold' : 'text-body hover:bg-paper hover:text-navy'}`}>
+                          className={`flex items-center gap-1.5 rounded-box px-2 py-1.5 text-xs transition-colors ${isSelected ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-mainText hover:bg-sectionHeader'}`}>
                           <SIcon className="size-3.5 shrink-0" />
                           <span className="truncate text-[11px]">{s.label}</span>
                         </button>
@@ -2053,7 +2054,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                 <Settings2 className="size-4" />
               </button>
               {isStylusMenuOpen && (
-                <div className="absolute top-full mt-2 right-0 z-[120] w-64 rounded-box bg-white p-3 shadow-2xl border border-hairline animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-full mt-2 right-0 z-[120] w-64 rounded-box border border-hairline bg-main shadow-[0_8px_24px_rgba(0,0,0,0.12)] p-3 animate-in fade-in zoom-in-95 duration-150">
                   <p className="text-xs font-semibold text-ink mb-3">{copy.stylusButtons}</p>
                   <label
                     htmlFor="teacher-stylus-primary-action"
@@ -2068,7 +2069,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                       setStylusPrimaryAction(next);
                       savePreferencesImmediately({ stylusPrimaryAction: next });
                     }}
-                    className="mb-3 w-full h-8 rounded-box border border-hairline bg-white px-2 text-xs text-ink outline-none focus:ring-2 focus:ring-navy/30">
+                    className="mb-3 h-8 w-full rounded-box border border-hairline bg-searchInput px-2 text-xs text-searchInputText outline-none focus:border-navy">
                     {STYLUS_BUTTON_ACTIONS.map((action) => (
                       <option key={action} value={action}>
                         {copy.stylusActions[action]}
@@ -2088,7 +2089,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                       setStylusSecondaryAction(next);
                       savePreferencesImmediately({ stylusSecondaryAction: next });
                     }}
-                    className="w-full h-8 rounded-box border border-hairline bg-white px-2 text-xs text-ink outline-none focus:ring-2 focus:ring-navy/30">
+                    className="h-8 w-full rounded-box border border-hairline bg-searchInput px-2 text-xs text-searchInputText outline-none focus:border-navy">
                     {STYLUS_BUTTON_ACTIONS.map((action) => (
                       <option key={action} value={action}>
                         {copy.stylusActions[action]}
@@ -2112,7 +2113,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               title={copy.clear}
               aria-label={copy.clear}
               onClick={() => setIsClearConfirmOpen(true)}
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-box text-body transition-colors hover:bg-rose-50 hover:text-rose-500">
+              className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box text-body transition-colors hover:bg-rose-500/15 hover:text-rose-500">
               <Trash2 className="size-4" />
             </button>
           </div>
@@ -2169,7 +2170,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         {isPagesTrayOpen && (
           <div
             ref={pagesTrayRef}
-            className="absolute bottom-14 inset-x-2 sm:inset-x-auto w-auto max-w-[calc(100%-1rem)] sm:max-w-2xl bg-white/95 backdrop-blur-md p-3 rounded-box border border-hairline shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 z-30">
+            className="absolute bottom-14 z-30 w-auto max-w-[calc(100%-1rem)] animate-in rounded-box border border-hairline bg-main/95 p-3 shadow-2xl backdrop-blur-md fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 inset-x-2 sm:inset-x-auto sm:max-w-2xl">
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-hairline px-1">
               <div className="flex items-center gap-2">
                 <Layers className="size-4 text-navy" />
@@ -2195,7 +2196,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               <button
                 type="button"
                 onClick={handleAddNewPage}
-                className="flex flex-col items-center justify-center gap-1 w-24 h-24 rounded-box border-2 border-dashed border-hairline hover:border-navy hover:bg-navy-tint text-muted hover:text-navy transition-all shrink-0 cursor-pointer">
+                className="flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-box border-2 border-dashed border-hairline text-muted transition-all hover:border-navy hover:bg-sectionHeader hover:text-navy">
                 <Plus className="size-5" />
                 <span className="text-[11px] font-bold">ახალი დაფა</span>
               </button>
@@ -2203,7 +2204,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           </div>
         )}
 
-        <div className="w-max max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x thin-scrollbar rounded-box border border-hairline bg-white shadow-sm">
+        <div className="w-max max-w-full min-w-0 overflow-x-auto overscroll-x-contain touch-pan-x thin-scrollbar rounded-box border border-hairline bg-sectionHeader shadow-sm">
           <div className="flex w-max items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5">
             <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
               <ToolButton title={copy.zoomOut} onClick={zoomOut}>
@@ -2241,7 +2242,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                 data-tray-trigger
                 onClick={() => setIsPagesTrayOpen((prev) => !prev)}
                 title="ყველა დაფის ნახვა"
-                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 py-1 rounded-box text-xs font-bold transition-all ${isPagesTrayOpen ? 'bg-navy text-white shadow-xs' : 'hover:bg-paper text-ink'}`}>
+                className={`flex items-center gap-1 rounded-box px-2.5 py-1 text-xs font-bold transition-all sm:gap-1.5 ${isPagesTrayOpen ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-ink hover:bg-sectionHeader'}`}>
                 <Layers className="size-3.5" />
                 <span>
                   {currentPageIndex + 1} / {pages.length}
@@ -2267,7 +2268,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                 type="button"
                 onClick={() => setIsAiModalOpen(true)}
                 title="AI ასისტენტი"
-                className="inline-flex items-center gap-1.5 h-7 sm:h-8 rounded-box bg-gradient-to-r from-indigo-500 to-purple-600 px-2.5 text-xs font-bold text-white shadow-xs hover:from-indigo-600 hover:to-purple-700 transition-all active:scale-95 shrink-0">
+                className="inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-box bg-[#465D73] px-2.5 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] sm:h-8">
                 <Sparkles className="size-3.5 animate-pulse" />
                 <span>AI</span>
               </button>
@@ -2275,7 +2276,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                 type="button"
                 onClick={handleOpenAssignModal}
                 title="დაფის სურათის გაგზავნა მოსწავლეებთან"
-                className="flex items-center gap-1.5 h-7 sm:h-8 px-3 rounded-box bg-navy hover:bg-navy-strong text-white text-xs font-bold transition-all shadow-xs active:scale-95 shrink-0">
+                className="flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-box bg-[#A66A32] px-3 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)] transition-all duration-200 hover:bg-[#B8783B] active:scale-[0.98] sm:h-8">
                 <Send className="size-3.5" />
                 <span>გაგზავნა</span>
               </button>
@@ -2285,11 +2286,11 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       </div>
 
       {isAssignModalOpen && (
-        <div className="absolute inset-0 z-[150] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="flex max-h-[88vh] w-full max-w-xl flex-col overflow-hidden rounded-box bg-white shadow-2xl border border-hairline animate-in zoom-in-95 duration-150">
+        <div className="absolute inset-0 z-[150] flex animate-in items-center justify-center bg-black/60 p-4 backdrop-blur-sm fade-in duration-150">
+          <div className="flex max-h-[88vh] w-full max-w-xl animate-in flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-hairline bg-paper/30 px-6 py-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex size-9 items-center justify-center rounded-box bg-navy-tint text-navy">
+                <div className="flex size-9 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
                   <Send className="size-4" />
                 </div>
                 <div>
@@ -2303,7 +2304,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                   setIsAssignModalOpen(false);
                   setAssignError(null);
                 }}
-                className="flex size-7 items-center justify-center rounded-box border border-hairline bg-white text-muted hover:bg-paper hover:text-ink transition-colors">
+                className="flex size-7 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-muted transition-colors hover:bg-sectionHeader hover:text-ink">
                 <X className="size-4" />
               </button>
             </div>
@@ -2386,7 +2387,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                           className="rounded-box border border-hairline bg-paper/30 overflow-hidden transition-all">
                           <div
                             onClick={() => toggleCourseExpand(group.id)}
-                            className="flex items-center justify-between p-3 bg-white hover:bg-paper cursor-pointer transition-colors">
+                            className="flex cursor-pointer items-center justify-between bg-main p-3 transition-colors hover:bg-sectionHeader">
                             <div className="flex items-center gap-2 min-w-0 pr-2">
                               <GraduationCap className="size-4 text-navy shrink-0" />
                               <span className="text-xs font-bold text-ink truncate">{group.title}</span>
@@ -2401,7 +2402,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                                   e.stopPropagation();
                                   toggleCourseSelectAll(group);
                                 }}
-                                className={`text-[11px] font-bold px-2 py-1 rounded-box border transition-all ${allGroupSelected ? 'bg-navy text-white border-navy' : someGroupSelected ? 'bg-navy-tint text-navy border-navy/30' : 'bg-paper text-muted border-hairline hover:text-ink'}`}>
+                                className={`rounded-box border px-2 py-1 text-[11px] font-bold transition-all ${allGroupSelected ? 'border-hairline bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : someGroupSelected ? 'border-navy/30 bg-navy-tint text-navy' : 'border-hairline bg-paper text-muted hover:text-ink'}`}>
                                 {allGroupSelected ? 'მონიშნულია' : 'ჯგუფის მონიშვნა'}
                               </button>
                               <ChevronDown
@@ -2410,7 +2411,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                             </div>
                           </div>
                           {isExpanded && (
-                            <div className="p-2 border-t border-hairline bg-slate-50/50 space-y-1">
+                            <div className="space-y-1 border-t border-hairline bg-sectionHeader p-2">
                               {group.students.length === 0 ? (
                                 <p className="text-[11px] text-muted p-2 text-center">ამ კურსში მოსწავლეები არ არიან</p>
                               ) : (
@@ -2420,16 +2421,16 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                                     <div
                                       key={student.id}
                                       onClick={() => toggleStudentSelection(student.id)}
-                                      className={`flex items-center justify-between p-2 rounded-box text-xs cursor-pointer transition-all ${isSelected ? 'bg-navy text-white shadow-2xs font-bold' : 'bg-white hover:bg-paper text-ink border border-hairline'}`}>
+                                      className={`flex cursor-pointer items-center justify-between rounded-box p-2 text-xs transition-all ${isSelected ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]' : 'border border-hairline bg-main text-ink hover:bg-sectionHeader'}`}>
                                       <div className="flex items-center gap-2 min-w-0 pr-2">
                                         <div
-                                          className={`flex size-5 items-center justify-center rounded-box text-[9px] font-bold shrink-0 ${isSelected ? 'bg-white text-navy' : 'bg-paper-deep text-muted'}`}>
+                                          className={`flex size-5 shrink-0 items-center justify-center rounded-box text-[9px] font-bold ${isSelected ? 'bg-[#465D73] text-white' : 'bg-paper-deep text-muted'}`}>
                                           {student.name.charAt(0)}
                                         </div>
                                         <span className="truncate">{student.name}</span>
                                       </div>
                                       <div
-                                        className={`flex size-4 shrink-0 items-center justify-center rounded-box border transition-all ${isSelected ? 'bg-white border-white text-navy' : 'border-slate-300 bg-paper text-transparent'}`}>
+                                        className={`flex size-4 shrink-0 items-center justify-center rounded-box border transition-all ${isSelected ? 'border-[#465D73] bg-[#465D73] text-white' : 'border-hairline bg-paper text-transparent'}`}>
                                         {isSelected && <Check className="size-2.5 stroke-[3]" />}
                                       </div>
                                     </div>
@@ -2461,7 +2462,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                 type="button"
                 disabled={assignPending || selectedPagesForAssign.length === 0 || selectedStudentIds.length === 0}
                 onClick={() => handleAssignSelectedBoards('task')}
-                className="flex items-center justify-center gap-1.5 py-2.5 rounded-box bg-navy hover:bg-navy-strong text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-all active:scale-95 cursor-pointer">
+                className="flex cursor-pointer items-center justify-center gap-1.5 rounded-box bg-[#465D73] py-2.5 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
                 {assignPending && assignTargetType === 'task' ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin" />
@@ -2478,7 +2479,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                 type="button"
                 disabled={assignPending || selectedPagesForAssign.length === 0 || selectedStudentIds.length === 0}
                 onClick={() => handleAssignSelectedBoards('material')}
-                className="flex items-center justify-center gap-1.5 py-2.5 rounded-box bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs disabled:opacity-50 transition-all active:scale-95 cursor-pointer">
+                className="flex cursor-pointer items-center justify-center gap-1.5 rounded-box bg-[#A66A32] py-2.5 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)] transition-all duration-200 hover:bg-[#B8783B] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
                 {assignPending && assignTargetType === 'material' ? (
                   <>
                     <Loader2 className="size-3.5 animate-spin" />
@@ -2499,9 +2500,9 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       {isAiModalOpen && <ClassroomAiModal isOpen={isAiModalOpen} onClose={() => setIsAiModalOpen(false)} />}
 
       {isClearConfirmOpen && (
-        <div className="absolute inset-0 z-[160] flex items-center justify-center bg-ink/40 backdrop-blur-xs">
-          <div className="w-80 rounded-box border border-hairline bg-white p-5 text-center shadow-2xl">
-            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-box bg-rose-50 text-rose-500">
+        <div className="absolute inset-0 z-[160] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-80 rounded-box border border-hairline bg-paper p-5 text-center shadow-2xl">
+            <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-box border border-rose-500/20 bg-rose-500/10 text-rose-500">
               <Trash2 className="size-6" />
             </div>
             <h3 className="mb-1 text-sm font-bold text-ink">{copy.clearTitle}</h3>
@@ -2510,7 +2511,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
               <button
                 type="button"
                 onClick={() => setIsClearConfirmOpen(false)}
-                className="flex-1 rounded-box border border-hairline py-2 text-xs font-semibold text-body transition-colors hover:bg-paper">
+                className="flex-1 cursor-pointer rounded-box border border-hairline bg-surface py-2 text-xs font-bold text-ink transition-colors hover:bg-paper-deep">
                 {copy.cancel}
               </button>
               <button
@@ -2519,7 +2520,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                   clearBoard();
                   setIsClearConfirmOpen(false);
                 }}
-                className="flex-1 rounded-box bg-rose-500 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-600">
+                className="flex-1 cursor-pointer rounded-box border border-rose-500/30 bg-rose-500/15 py-2 text-xs font-bold text-rose-500 transition-colors hover:bg-rose-500/25">
                 {copy.confirmClear}
               </button>
             </div>

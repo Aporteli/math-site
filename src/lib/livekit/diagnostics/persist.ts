@@ -750,6 +750,24 @@ export async function listDiagnosticSessions(access: DiagnosticsAccess): Promise
   };
 }
 
+export async function deleteDiagnosticSession(
+  access: DiagnosticsAccess,
+  sessionId: string,
+): Promise<'deleted' | 'not_found' | 'active'> {
+  const session = await prisma.liveKitDiagnosticSession.findUnique({
+    where: { id: sessionId },
+    select: { id: true, courseId: true, status: true },
+  });
+  if (!session) return 'not_found';
+  if (access.role !== 'ADMIN') {
+    const allowed = await teacherCourseIds(access.userId);
+    if (!allowed.includes(session.courseId)) return 'not_found';
+  }
+  if (session.status !== 'ended') return 'active';
+  await prisma.liveKitDiagnosticSession.delete({ where: { id: sessionId } });
+  return 'deleted';
+}
+
 export async function getDiagnosticSession(
   access: DiagnosticsAccess,
   sessionId: string,

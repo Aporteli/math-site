@@ -17,9 +17,9 @@ import type { TaxonomyNodeDto } from '@/lib/math/problems/taxonomy-shared';
 import type { Locale } from '@/i18n/config';
 
 export const fieldClass =
-  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm font-medium text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
-export const panelClass = 'rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5';
+export const panelClass = 'rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5';
 
 export function sourceBadgeLabel(copy: ProblemBankCopy, problem: BankProblem) {
   if (problem.templateId === 'ai-verified') return copy.sources.verified;

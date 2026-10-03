@@ -67,11 +67,9 @@ export function TextEditorOverlay({
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}>
       <div
-        className={`flex items-center gap-1.5 ${
-          isDark ? 'bg-slate-900/95 border-slate-800' : 'bg-white/95 border-slate-200'
-        } p-1 rounded-box shadow-md border text-xs w-max select-none`}
+        className="flex w-max select-none items-center gap-1.5 rounded-box border border-hairline bg-paper p-1 text-xs shadow-md"
         onMouseDown={(e) => e.preventDefault()}>
-        <span className="text-[11px] font-bold text-slate-500 px-1">ზომა:</span>
+        <span className="px-1 text-[11px] font-bold text-muted">ზომა:</span>
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
@@ -79,15 +77,11 @@ export function TextEditorOverlay({
             const s = Math.max(12, currentFontSize - 4);
             onFontSizeChange(s);
           }}
-          className={`size-6 flex items-center justify-center rounded-box ${
-            isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-          } font-bold transition-colors`}>
+          className="flex size-6 cursor-pointer items-center justify-center rounded-box bg-main font-bold text-mainText transition-colors hover:bg-mainButtonHover">
           -
         </button>
         <span
-          className={`font-mono font-bold px-1 min-w-[32px] text-center ${
-            isDark ? 'text-indigo-400' : 'text-indigo-600'
-          }`}>
+          className="min-w-[32px] px-1 text-center font-mono font-bold text-[#465D73]">
           {currentFontSize}px
         </span>
         <button
@@ -97,9 +91,7 @@ export function TextEditorOverlay({
             const s = Math.min(72, currentFontSize + 4);
             onFontSizeChange(s);
           }}
-          className={`size-6 flex items-center justify-center rounded-box ${
-            isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-200' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-          } font-bold transition-colors`}>
+          className="flex size-6 cursor-pointer items-center justify-center rounded-box bg-main font-bold text-mainText transition-colors hover:bg-mainButtonHover">
           +
         </button>
         {[18, 24, 32, 40, 48].map((s) => (
@@ -110,12 +102,10 @@ export function TextEditorOverlay({
             onClick={() => {
               onFontSizeChange(s);
             }}
-            className={`px-1.5 py-0.5 rounded-box text-[11px] font-bold transition-colors ${
+            className={`rounded-box px-1.5 py-0.5 text-[11px] font-bold transition-colors ${
               currentFontSize === s
-                ? 'bg-indigo-600 text-white'
-                : isDark
-                  ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)]'
+                : 'bg-main text-mainText hover:bg-mainButtonHover'
             }`}>
             {s}
           </button>
@@ -141,9 +131,7 @@ export function TextEditorOverlay({
           userSelect: 'text',
           touchAction: 'auto',
         }}
-        className={`border-2 border-indigo-500 shadow-2xl outline-none p-2.5 resize rounded-box ${
-          isDark ? 'bg-slate-900/95' : 'bg-white/95'
-        }`}
+        className="resize rounded-box border-2 border-[#465D73] bg-paper p-2.5 shadow-2xl outline-none"
       />
     </div>
   );

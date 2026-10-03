@@ -60,12 +60,12 @@ export function MediaControl({
 
   if (locked) {
     return (
-      <div className="relative flex items-center rounded-box border border-white/10 bg-white/5 p-0.5">
+      <div className="relative flex items-center rounded-box border border-hairline bg-main p-0.5">
         <button
           type="button"
           disabled
           title={lockedTitle}
-          className="flex h-8 cursor-not-allowed items-center justify-center rounded-box bg-red-500/20 px-2 text-red-400 opacity-70"
+          className="flex h-8 cursor-not-allowed items-center justify-center rounded-box bg-rose-500/15 px-2 text-rose-500 opacity-70"
         >
           <MicOff className="size-4" />
         </button>
@@ -76,7 +76,7 @@ export function MediaControl({
   return (
     <div
       ref={anchorRef}
-      className="relative flex items-center rounded-box border border-white/10 bg-white/5 p-0.5"
+      className="relative flex items-center rounded-box border border-hairline bg-main p-0.5"
     >
       <button
         type="button"
@@ -86,10 +86,10 @@ export function MediaControl({
             : localParticipant.setCameraEnabled(muted)
         }
         title={`${nounGen} ${muted ? 'ჩართვა' : 'გათიშვა'}`}
-        className={`flex h-8 items-center justify-center rounded-box px-2 transition-all ${
+        className={`flex h-8 cursor-pointer items-center justify-center rounded-box px-2 transition-all duration-200 ${
           muted
-            ? 'bg-red-500/20 text-red-400'
-            : 'text-white/80 hover:bg-white/10 hover:text-white'
+            ? 'bg-rose-500/15 text-rose-500'
+            : 'text-mainText hover:bg-mainButtonHover'
         }`}
       >
         <Icon className="size-4" />
@@ -98,7 +98,7 @@ export function MediaControl({
         type="button"
         onClick={() => setActiveMenu(activeMenu === menuId ? null : menuId)}
         title={`${nounGen} არჩევა`}
-        className="flex h-8 items-center justify-center rounded-box px-1 text-white/50 hover:bg-white/10 hover:text-white"
+        className="flex h-8 cursor-pointer items-center justify-center rounded-box px-1 text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText"
       >
         <ChevronUp className="size-3" />
       </button>
@@ -176,13 +176,13 @@ function DeviceMenu({
 
   return createPortal(
     <div
-      className="fixed z-[200] w-52 rounded-box border border-white/10 bg-slate-900/95 p-2 shadow-2xl backdrop-blur-xl"
+      className="fixed z-[200] w-52 rounded-box border border-hairline bg-main p-2 shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
       style={{ left: position.left, bottom: position.bottom }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <div className="px-2 py-1 text-[10px] font-semibold text-white/40 uppercase">
+      <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-muted">
         {label}
       </div>
       {devices.map((d) => (
@@ -190,10 +190,10 @@ function DeviceMenu({
           key={d.deviceId}
           type="button"
           onClick={() => onSelect(d.deviceId)}
-          className={`w-full truncate rounded-box px-2.5 py-1.5 text-left text-xs transition ${
+          className={`w-full cursor-pointer truncate rounded-box px-2.5 py-1.5 text-left text-xs font-bold transition-all duration-200 ${
             activeDeviceId === d.deviceId
-              ? 'bg-emerald-500/20 text-emerald-400 font-medium'
-              : 'text-white/80 hover:bg-white/10'
+              ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+              : 'text-mainText hover:bg-sectionHeader'
           }`}
         >
           {d.label || `${fallbackPrefix} ${d.deviceId.slice(0, 5)}`}

@@ -24,7 +24,7 @@ export function AiChatModal({
   slashPromptsUserId = '',
 }: Props) {
   return (
-    <div className="fixed inset-0 z-[1000001] flex items-end justify-end bg-slate-950/50 p-3 sm:items-center sm:justify-center sm:p-6 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-[1000001] flex animate-in items-end justify-end bg-black/60 p-3 backdrop-blur-sm fade-in duration-150 sm:items-center sm:justify-center sm:p-6">
       <button
         type="button"
         aria-label="დახურვა"

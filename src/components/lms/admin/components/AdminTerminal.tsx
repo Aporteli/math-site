@@ -173,9 +173,11 @@ export function AdminTerminal({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+    <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader shadow-sm">
+      <div className="h-1 bg-brass" aria-hidden="true" />
+      <div className="p-5">
       <div className="flex items-start gap-3">
-        <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-box bg-navy-tint text-navy">
+        <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
           <Terminal className="size-4" aria-hidden="true" />
         </span>
         <div>
@@ -202,14 +204,14 @@ export function AdminTerminal({ locale }: { locale: Locale }) {
             autoCapitalize="off"
             autoCorrect="off"
             placeholder="docker ps"
-            className="w-full rounded-box border border-hairline bg-paper px-3 py-2 font-mono text-sm text-ink outline-none transition focus:border-navy/40"
+            className="w-full rounded-box border border-hairline bg-searchInput px-3 py-2 font-mono text-sm text-searchInputText outline-none transition focus:border-navy"
           />
         </label>
         <div className="flex gap-2">
           <button
             type="submit"
             disabled={running || command.trim().length === 0}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-box bg-navy px-4 py-2 text-sm font-semibold text-white transition hover:bg-navy-strong disabled:opacity-50 sm:flex-none"
+            className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-box bg-[#465D73] px-4 py-2 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none sm:flex-none"
           >
             {running ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
             Run
@@ -218,7 +220,7 @@ export function AdminTerminal({ locale }: { locale: Locale }) {
             type="button"
             onClick={clearOutput}
             disabled={running || (runs.length === 0 && error === null)}
-            className="inline-flex flex-1 items-center justify-center rounded-box border border-hairline px-4 py-2 text-sm font-semibold text-ink transition hover:bg-paper disabled:opacity-50 sm:flex-none"
+            className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-box border border-hairline bg-surface px-4 py-2 text-sm font-bold text-ink transition-colors hover:bg-paper-deep disabled:opacity-50 sm:flex-none"
           >
             Clear
           </button>
@@ -230,7 +232,7 @@ export function AdminTerminal({ locale }: { locale: Locale }) {
           <button
             key={shortcut.label}
             type="button"
-            className="rounded-box border border-hairline px-3 py-1.5 text-xs font-medium text-body transition hover:bg-paper hover:text-navy"
+            className="cursor-pointer rounded-box border border-hairline bg-main px-3 py-1.5 text-xs font-bold text-body transition-colors hover:bg-mainButtonHover hover:text-mainText"
             onClick={() => insertCommand(shortcut.command)}
           >
             {shortcut.label}
@@ -246,7 +248,7 @@ export function AdminTerminal({ locale }: { locale: Locale }) {
               <button
                 key={`${entry}-${history.length - index}`}
                 type="button"
-                className="max-w-full truncate rounded-box border border-hairline px-3 py-1.5 font-mono text-[11px] text-body transition hover:bg-paper hover:text-navy"
+                className="max-w-full cursor-pointer truncate rounded-box border border-hairline bg-main px-3 py-1.5 font-mono text-[11px] text-body transition-colors hover:bg-mainButtonHover hover:text-mainText"
                 onClick={() => insertCommand(entry)}
               >
                 {entry}
@@ -257,7 +259,7 @@ export function AdminTerminal({ locale }: { locale: Locale }) {
       ) : null}
 
       {error ? (
-        <div className="mt-4 flex items-center gap-2 rounded-box border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mt-4 flex items-center gap-2 rounded-box border border-rose-500/30 bg-rose-500/15 px-4 py-3 text-sm text-rose-500">
           <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
@@ -267,6 +269,7 @@ export function AdminTerminal({ locale }: { locale: Locale }) {
         <pre className="max-h-[420px] overflow-auto p-4 font-mono text-[11px] leading-5 text-slate-200">
           {runs.length === 0 ? 'Output will appear here.' : runs.map((run) => formatRun(run)).join('\n\n')}
         </pre>
+      </div>
       </div>
     </div>
   );

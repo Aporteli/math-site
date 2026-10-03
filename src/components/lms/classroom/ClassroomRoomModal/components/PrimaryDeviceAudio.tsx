@@ -23,7 +23,7 @@ export function PrimaryRoomAudio({ preferSilence }: { preferSilence: boolean }) 
       <RoomAudioRenderer />
       <StartAudio
         label="ხმის ჩასართავად დააჭირე"
-        className="fixed bottom-4 left-1/2 z-[100000] -translate-x-1/2 rounded-box bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 shadow-lg"
+        className="fixed bottom-4 left-1/2 z-[100000] -translate-x-1/2 cursor-pointer rounded-box bg-[#A66A32] px-4 py-2 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)]"
       />
     </>,
     document.body,

@@ -30,12 +30,12 @@ export default async function SignupPage({ params }: SignupPageProps) {
   const copy = auth.signup;
 
   return (
-    <section className="relative w-full max-w-md overflow-hidden rounded-box border border-hairline bg-white shadow-sm">
+    <section className="relative w-full max-w-md overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
       <div
         className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--color-hairline-soft)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-hairline-soft)_1px,transparent_1px)] bg-[size:1.5rem_1.5rem] opacity-70"
         aria-hidden="true"
       />
-      <div className="absolute inset-x-0 top-0 h-1 bg-brass-soft" aria-hidden="true" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-brass" aria-hidden="true" />
       <div className="relative p-6 sm:p-8">
         <p className="text-sm font-semibold tracking-wide text-brass">{copy.eyebrow}</p>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-ink">{copy.title}</h1>
@@ -45,7 +45,7 @@ export default async function SignupPage({ params }: SignupPageProps) {
           </Suspense>
         </div>
         <div className="mt-6 text-center">
-          <Link href={localePath(locale, LOGIN_PATH)} className="text-sm font-medium text-navy hover:text-navy-strong">
+          <Link href={localePath(locale, LOGIN_PATH)} className="text-sm font-bold text-[#465D73] transition-colors hover:text-[#526C85]">
             {copy.loginLink}
           </Link>
         </div>

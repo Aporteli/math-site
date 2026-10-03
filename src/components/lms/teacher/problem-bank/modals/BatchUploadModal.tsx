@@ -165,9 +165,9 @@ export function BatchUploadModal({
   const progressPct = Math.min(100, Math.round((matchedCount / totalCount) * 100));
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[60] flex animate-in items-center justify-center bg-black/60 p-4 backdrop-blur-sm fade-in duration-200">
       <div
-        className="flex h-[90vh] max-h-[820px] w-full max-w-5xl flex-col overflow-hidden rounded-box bg-white shadow-2xl ring-1 ring-black/5"
+        className="flex h-[90vh] max-h-[820px] w-full max-w-5xl flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl"
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -278,7 +278,7 @@ export function BatchUploadModal({
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-box bg-paper-deep">
                   <div
-                    className="h-full rounded-box bg-navy transition-all duration-300"
+                    className="h-full rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-300"
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
@@ -305,7 +305,7 @@ export function BatchUploadModal({
                     >
                       <div className="min-w-0 flex-1">
                         <div className="mb-2.5 flex items-center gap-2">
-                          <span className="flex size-5 shrink-0 items-center justify-center rounded-box bg-navy text-[10px] font-bold text-white">
+                          <span className="flex size-5 shrink-0 items-center justify-center rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] text-[10px] font-bold text-white">
                             {idx + 1}
                           </span>
                           <span className="min-w-0 flex-1 truncate text-sm font-bold text-ink">
@@ -390,7 +390,7 @@ export function BatchUploadModal({
                                     onMouseLeave={() => handleDropdownHover(problem.id, null)}
                                     className={`w-full text-left px-3 py-3 text-xs transition-colors ${
                                       isSelected
-                                        ? "bg-navy font-bold text-white"
+                                        ? "bg-mainButton font-bold text-mainText"
                                         : "font-medium text-ink hover:bg-navy-tint hover:text-navy"
                                     }`}
                                   >
@@ -458,7 +458,7 @@ export function BatchUploadModal({
             type="button"
             disabled={matchedCount === 0 || loading}
             onClick={handleConfirm}
-            className="inline-flex shrink-0 items-center gap-2 rounded-box bg-navy px-6 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-navy-strong disabled:opacity-40 active:scale-95"
+            className="inline-flex shrink-0 items-center gap-2 rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] px-6 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-[#526C85] disabled:opacity-40 active:scale-95"
           >
             <CheckCircle2 className="size-4" />
             <span>მიბმა ({matchedCount})</span>

@@ -29,7 +29,7 @@ import {
 import type { Locale } from '@/i18n/config';
 
 const fieldClass =
-  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm font-medium text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
 const JSON_UPLOAD_MAX_BYTES = 25 * 1024 * 1024;
 const IMAGE_MIME = /^image\/(jpeg|png|webp)$/;
@@ -471,7 +471,7 @@ export function ImportFamilyModal({
     <div className="fixed inset-0 z-[100] overflow-hidden">
       <button
         type="button"
-        className="absolute inset-0 bg-navy-strong/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         aria-label={family.close}
         onClick={onClose}
       />
@@ -480,7 +480,7 @@ export function ImportFamilyModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-lg shadow-navy/10">
+          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl">
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
             <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
               {family.title}
@@ -551,7 +551,7 @@ export function ImportFamilyModal({
                       void onImageFile(file);
                     }}>
                     <div className="mb-3 flex justify-center">
-                      <span className="flex size-12 items-center justify-center rounded-box bg-navy-tint text-navy">
+                      <span className="flex size-12 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
                         <Image className="size-6" aria-hidden="true" />
                       </span>
                     </div>
@@ -581,7 +581,7 @@ export function ImportFamilyModal({
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      className="rounded-box bg-navy px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-navy-strong disabled:opacity-60"
+                      className="rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#526C85] disabled:opacity-60"
                       disabled={Boolean(preview?.diagnosis) || !preview?.problem}
                       onClick={buildProblems}>
                       {family.build}

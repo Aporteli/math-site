@@ -73,8 +73,8 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
   }));
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-[2000px] ">
-      <div className="absolute top-0 right-0 -z-10 h-[400px] w-[600px] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-navy-tint/40 via-transparent to-transparent opacity-50 blur-3xl pointer-events-none" />
+    <div className="mx-auto w-full min-w-0 max-w-[2000px]">
+      <div className="pointer-events-none absolute top-0 right-0 -z-10 h-[400px] w-[600px] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brass/30 via-transparent to-transparent opacity-50 blur-3xl" />
 
       <PageHero
         icon={Sparkles}
@@ -82,9 +82,9 @@ export default async function StudentFlashcardsPage({ params }: PageProps) {
         title="ფორმულები"
         description="აქ ინახება მასწავლებლის მიერ გამოგზავნილი ფორმულები."
         aside={
-          <div className="rounded-box border border-hairline bg-white/80 px-6 py-4 shadow-sm backdrop-blur-md transition-colors hover:border-navy/30 min-w-[160px]">
+          <div className="relative min-w-[160px] overflow-hidden rounded-box border border-hairline bg-main px-6 py-4 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
             <p className="text-[11px] font-bold uppercase tracking-wider text-muted">სულ ფორმულა</p>
-            <p className="mt-1.5 text-3xl font-black text-navy">{assignments.length}</p>
+            <p className="mt-1.5 text-3xl font-black text-[#465D73]">{assignments.length}</p>
           </div>
         }
       />

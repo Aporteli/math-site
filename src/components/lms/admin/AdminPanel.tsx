@@ -133,14 +133,15 @@ export function AdminPanel({
       />
 
       <div className="grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)] mt-4">
-        <aside className="h-fit rounded-box border border-hairline bg-white p-2 shadow-sm lg:sticky lg:top-4">
-          <p className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+        <aside className="h-fit overflow-hidden rounded-box border border-hairline bg-main shadow-sm lg:sticky lg:top-4">
+          <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
+          <p className="px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-muted">
             {copy.sectionsNav}
           </p>
 
           <nav
             aria-label={copy.sectionsNav}
-            className="space-y-0.5"
+            className="space-y-0.5 px-2 pb-2"
           >
             {sections.map((id) => {
               const Icon = SECTION_ICONS[id];
@@ -153,10 +154,10 @@ export function AdminPanel({
                   type="button"
                   aria-current={selected ? 'true' : undefined}
                   className={[
-                    'flex w-full items-center gap-2 rounded-box px-3 py-2 text-left text-sm transition-colors',
+                    'flex w-full cursor-pointer items-center gap-2 rounded-box px-3 py-2.5 text-left text-[13px] font-bold transition-all duration-300',
                     selected
-                      ? 'bg-navy-tint font-semibold text-navy'
-                      : 'text-body hover:bg-paper hover:text-navy',
+                      ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12),0_6px_18px_rgba(0,0,0,0.08)]'
+                      : 'text-mainText hover:bg-sectionHeader',
                   ].join(' ')}
                   onClick={() => setSection(id)}
                 >
@@ -177,8 +178,8 @@ export function AdminPanel({
         <div className="min-w-0 space-y-4">
           {section === 'overview' ? (
             <div className="space-y-4">
-              <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold tracking-tight text-ink">
+              <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader p-5 shadow-sm">
+                <h2 className="text-lg font-bold tracking-tight text-ink">
                   {active.title}
                 </h2>
 
@@ -200,17 +201,17 @@ export function AdminPanel({
                     <li key={id}>
                       <button
                         type="button"
-                        className="flex h-full w-full flex-col gap-2 rounded-box border border-hairline bg-white p-4 text-left shadow-sm transition-colors hover:border-navy/30 hover:shadow-md"
+                        className="flex h-full w-full cursor-pointer flex-col gap-2 rounded-box border border-hairline bg-main p-4 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md"
                         onClick={() => setSection(id)}
                       >
-                        <span className="inline-flex size-9 items-center justify-center rounded-box bg-navy-tint text-navy">
+                        <span className="inline-flex size-9 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
                           <Icon
                             className="size-4"
                             aria-hidden="true"
                           />
                         </span>
 
-                        <span className="text-sm font-semibold text-ink">
+                        <span className="text-sm font-bold text-ink">
                           {item.title}
                         </span>
 
@@ -227,8 +228,8 @@ export function AdminPanel({
 
           {section === 'taxonomy' ? (
             <div className="space-y-4">
-              <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold tracking-tight text-ink">
+              <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader p-5 shadow-sm">
+                <h2 className="text-lg font-bold tracking-tight text-ink">
                   {active.title}
                 </h2>
 
@@ -237,7 +238,7 @@ export function AdminPanel({
                 </p>
               </div>
 
-              <div className="rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5">
+              <div className="overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5">
                 <TaxonomyManager
                   locale={locale}
                   copy={taxonomyCopy}
@@ -250,8 +251,8 @@ export function AdminPanel({
 
           {section === 'courses' ? (
             <div className="space-y-4">
-              <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold tracking-tight text-ink">
+              <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader p-5 shadow-sm">
+                <h2 className="text-lg font-bold tracking-tight text-ink">
                   {active.title}
                 </h2>
 
@@ -260,7 +261,7 @@ export function AdminPanel({
                 </p>
               </div>
 
-              <div className="rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5">
+              <div className="overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5">
                 <CoursesManager />
               </div>
             </div>
@@ -268,8 +269,8 @@ export function AdminPanel({
 
           {section === 'server' ? (
             <div className="space-y-4">
-              <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold tracking-tight text-ink">
+              <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader p-5 shadow-sm">
+                <h2 className="text-lg font-bold tracking-tight text-ink">
                   {active.title}
                 </h2>
 
@@ -284,8 +285,8 @@ export function AdminPanel({
 
           {section === 'diagnostics' ? (
             <div className="space-y-4">
-              <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold tracking-tight text-ink">
+              <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader p-5 shadow-sm">
+                <h2 className="text-lg font-bold tracking-tight text-ink">
                   {active.title}
                 </h2>
 
@@ -300,8 +301,8 @@ export function AdminPanel({
 
           {section === 'terminal' && canUseTerminal ? (
             <div className="space-y-4">
-              <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-semibold tracking-tight text-ink">
+              <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader p-5 shadow-sm">
+                <h2 className="text-lg font-bold tracking-tight text-ink">
                   {active.title}
                 </h2>
 

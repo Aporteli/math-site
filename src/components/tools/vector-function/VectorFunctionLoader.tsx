@@ -25,9 +25,9 @@ export function VectorFunctionLoader(props: VectorFunctionLoaderProps) {
 
 function VectorSkeleton() {
   return (
-    <div className="bg-paper-deep/60">
+    <div className="bg-sectionHeader">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="h-80 animate-pulse rounded-box border border-hairline bg-white" />
+        <div className="h-80 animate-pulse rounded-box border border-hairline bg-main" />
       </div>
     </div>
   );

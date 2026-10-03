@@ -24,11 +24,11 @@ interface AttachStudentsModalProps {
 export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsModalOpen, setIsStudentsModalOpen, editingStudent, setEditingStudent, studentSearch, setStudentSearch, filteredStudents, courses, selectedCourseIds, setSelectedCourseIds, isSaving, handleSaveStudentEnrollments }: AttachStudentsModalProps) {
   return (
     isStudentsModalOpen && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-box bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-hairline px-6 py-5">
+    <div className="fixed inset-0 z-50 flex animate-in items-center justify-center bg-black/60 p-4 backdrop-blur-sm fade-in duration-200">
+      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl">
+        <div className="flex items-center justify-between border-b border-hairline bg-sectionHeader px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-box bg-navy-tint text-navy">
+            <div className="flex size-10 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
               <UserCheck className="size-5" />
             </div>
             <div>
@@ -41,7 +41,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
               setIsStudentsModalOpen(false);
               setEditingStudent(null);
             }}
-            className="text-muted hover:text-ink transition-colors">
+            className="cursor-pointer text-muted transition-colors hover:text-ink">
             <X className="size-5" />
           </button>
         </div>
@@ -55,7 +55,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
               value={studentSearch}
               onChange={(e) => setStudentSearch(e.target.value)}
               placeholder="მოძებნეთ მოსწავლე სახელით ან მეილით..."
-              className="w-full rounded-box border border-hairline bg-paper py-2.5 pl-10 pr-4 text-sm text-ink outline-none focus:border-navy focus:bg-white"
+              className="w-full rounded-box border border-hairline bg-searchInput py-2.5 pl-10 pr-4 text-sm font-medium text-searchInputText outline-none focus:border-navy focus:bg-searchInput"
             />
           </div>
 
@@ -72,8 +72,8 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                     key={st.id}
                     className={`rounded-box border p-4 transition-all ${
                       isEditingThis
-                        ? 'border-navy bg-navy-tint/20 ring-1 ring-navy/20'
-                        : 'border-hairline bg-white hover:border-navy/30'
+                        ? 'border-navy bg-navy-tint/30'
+                        : 'border-hairline bg-main hover:bg-sectionHeader'
                     }`}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
@@ -84,7 +84,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                       {!isEditingThis && (
                         <button
                           onClick={() => startEditStudentEnrollments(st)}
-                          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-paper px-3 py-1.5 text-xs font-bold text-navy hover:bg-paper-deep transition-colors">
+                          className="inline-flex cursor-pointer items-center gap-1.5 rounded-box border border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-navy transition-colors hover:bg-paper-deep">
                           <PenLine className="size-3.5" />
                           ჯგუფების შეცვლა
                         </button>
@@ -106,8 +106,8 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                                   key={course.id}
                                   className={`flex items-center gap-2.5 p-2.5 rounded-box border cursor-pointer text-xs font-bold transition-colors ${
                                     checked
-                                      ? 'bg-navy text-white border-navy'
-                                      : 'bg-white text-ink border-hairline hover:bg-paper'
+                                      ? 'border-hairline bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                                      : 'border-hairline bg-main text-ink hover:bg-sectionHeader'
                                   }`}>
                                   <input
                                     type="checkbox"
@@ -121,7 +121,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                                   />
                                   <div
                                     className={`size-4 rounded-box border flex items-center justify-center ${
-                                      checked ? 'border-white bg-white text-navy' : 'border-hairline bg-white'
+                                      checked ? 'border-navy bg-[#465D73] text-white' : 'border-hairline bg-main'
                                     }`}>
                                     {checked && <Check className="size-3" />}
                                   </div>
@@ -135,13 +135,13 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                             <button
                               onClick={() => setEditingStudent(null)}
                               disabled={isSaving}
-                              className="rounded-box px-3 py-1.5 text-xs font-bold text-muted hover:bg-paper">
+                              className="cursor-pointer rounded-box border border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-ink hover:bg-paper-deep">
                               გაუქმება
                             </button>
                             <button
                               onClick={handleSaveStudentEnrollments}
                               disabled={isSaving}
-                              className="inline-flex items-center gap-1.5 rounded-box bg-navy px-4 py-1.5 text-xs font-bold text-white hover:bg-navy-strong transition-colors">
+                              className="inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-[#465D73] px-4 py-1.5 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:opacity-45">
                               {isSaving && <Loader2 className="size-3 animate-spin" />}
                               შენახვა
                             </button>
@@ -151,7 +151,7 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="text-xs text-muted font-medium mr-1">ჯგუფები:</span>
                           {st.enrollments.length === 0 ? (
-                            <span className="text-xs text-rose-500 font-bold bg-rose-50 px-2 py-0.5 rounded-box">
+                            <span className="rounded-box border border-rose-500/30 bg-rose-500/15 px-2 py-0.5 text-xs font-bold text-rose-500">
                               არცერთ ჯგუფზე არ არის
                             </span>
                           ) : (
@@ -173,13 +173,13 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
           </div>
         </div>
 
-        <div className="border-t border-hairline bg-paper/30 px-6 py-4 flex justify-end">
+        <div className="flex justify-end border-t border-hairline bg-sectionHeader px-6 py-4">
           <button
             onClick={() => {
               setIsStudentsModalOpen(false);
               setEditingStudent(null);
             }}
-            className="rounded-box bg-white border border-hairline px-5 py-2 text-xs font-bold text-ink hover:bg-paper transition-colors">
+            className="cursor-pointer rounded-box border border-hairline bg-surface px-5 py-2 text-xs font-bold text-ink transition-colors hover:bg-paper-deep">
             დახურვა
           </button>
         </div>

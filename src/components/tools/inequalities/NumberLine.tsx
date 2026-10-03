@@ -31,7 +31,7 @@ export function NumberLine({ criticalPoints, intervals }: Props) {
   const cpSet = criticalPoints;
 
   return (
-    <div className="w-full overflow-x-auto rounded-box border border-hairline bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
+    <div className="w-full overflow-x-auto rounded-box border border-hairline bg-main p-3 text-ink">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"
@@ -64,7 +64,7 @@ export function NumberLine({ criticalPoints, intervals }: Props) {
           if (iv.isPoint) {
             const x = iv.startNum !== null ? toX(iv.startNum) : 0;
             return (
-              <circle key={i} cx={x} cy={BASE_Y} r={6} fill="#2563eb" />
+              <circle key={i} cx={x} cy={BASE_Y} r={6} fill="#465D73" />
             );
           }
           const x1 = iv.startNum === null ? PAD - 20 : toX(iv.startNum);
@@ -76,7 +76,7 @@ export function NumberLine({ criticalPoints, intervals }: Props) {
               x2={x2}
               y1={BASE_Y}
               y2={BASE_Y}
-              stroke="#2563eb"
+              stroke="#465D73"
               strokeWidth={7}
               strokeLinecap="round"
             />
@@ -97,8 +97,8 @@ export function NumberLine({ criticalPoints, intervals }: Props) {
                 cx={x}
                 cy={BASE_Y}
                 r={6}
-                fill={included ? '#2563eb' : '#ffffff'}
-                stroke="#2563eb"
+                fill={included ? '#465D73' : 'var(--color-main)'}
+                stroke="#465D73"
                 strokeWidth={2.5}
               />
               <text

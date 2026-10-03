@@ -30,13 +30,13 @@ interface Props {
 }
 
 const fieldClass =
-  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';
+  'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2.5 font-mono text-sm text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
 const chipClass =
-  'inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-navy-tint disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
+  'inline-flex cursor-pointer items-center gap-1.5 rounded-box border border-hairline bg-main px-3 py-2 text-sm font-bold text-ink transition-colors hover:bg-sectionHeader disabled:cursor-not-allowed disabled:opacity-45';
 
 const panelClass =
-  'rounded-box border border-hairline bg-white p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800';
+  'relative overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass sm:p-5';
 
 const SIDE_FIELDS = ['a', 'b', 'c'] as const;
 const ANGLE_FIELDS = ['A', 'B', 'C'] as const;
@@ -173,7 +173,7 @@ export function TriangleCalculator({
           key={ex.label}
           type="button"
           onClick={() => applyExample(ex)}
-          className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
+          className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted transition hover:bg-sectionHeader hover:text-ink">
           {ex.label}
         </button>
       ))}
@@ -241,7 +241,7 @@ export function TriangleCalculator({
               </div>
             </div>
 
-            <p className="rounded-box bg-navy-tint/50 px-3 py-2 text-[11px] leading-relaxed text-navy dark:bg-sky-950/30 dark:text-sky-300">
+            <p className="rounded-box bg-brass-tint px-3 py-2 text-[11px] leading-relaxed text-brass-strong">
               {copy.hint}
             </p>
 
@@ -249,7 +249,7 @@ export function TriangleCalculator({
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex items-center gap-2 rounded-box bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-50">
+                className="inline-flex items-center gap-2 cursor-pointer rounded-box bg-[#465D73] font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none px-5 py-2.5 text-sm">
                 <Calculator className="size-4" aria-hidden="true" />
                 {loading ? copy.solving : copy.solveButton}
               </button>
@@ -260,12 +260,12 @@ export function TriangleCalculator({
             </div>
           </form>
 
-          <div className="mt-4 border-t border-hairline pt-3 dark:border-slate-800">
+          <div className="mt-4 border-t border-hairline pt-3">
             {exampleButtons}
           </div>
 
           {error && (
-            <div className="mt-3 flex items-start gap-2 rounded-box border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+            <div className="mt-3 flex items-start gap-2 rounded-box border border-rose-500/30 bg-rose-500/15 px-3 py-2 text-xs text-rose-500">
               <span className="mt-0.5 shrink-0">⚠</span>
               <span>{error}</span>
             </div>
@@ -276,13 +276,13 @@ export function TriangleCalculator({
         <section className={panelClass}>
           {loading && (
             <div className="flex min-h-[200px] items-center justify-center">
-              <span className="inline-block h-8 w-8 animate-spin rounded-box border-4 border-navy border-t-transparent" />
+              <span className="inline-block h-8 w-8 animate-spin rounded-box border-4 border-[#465D73] border-t-transparent" />
             </div>
           )}
 
           {!result && !loading && (
             <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 text-center">
-              <span className="inline-flex size-12 items-center justify-center rounded-box bg-navy-tint text-navy dark:bg-sky-950/40 dark:text-sky-400">
+              <span className="inline-flex size-12 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
                 <Sparkles className="size-5" />
               </span>
               <p className="max-w-sm text-sm text-muted">
@@ -294,7 +294,7 @@ export function TriangleCalculator({
           {result && !loading && (
             <div className="space-y-5">
               {result.ambiguous && (
-                <div className="flex items-start gap-2 rounded-box border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
+                <div className="flex items-start gap-2 rounded-box border border-brass/30 bg-brass-tint px-3 py-2 text-xs text-brass-strong">
                   <Info
                     className="mt-0.5 size-3.5 shrink-0"
                     aria-hidden="true"
@@ -314,7 +314,7 @@ export function TriangleCalculator({
               ))}
 
               {history.length > 0 && (
-                <div className="border-t border-hairline pt-3 dark:border-slate-800">
+                <div className="border-t border-hairline pt-3">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="flex items-center gap-1.5 text-xs font-semibold text-muted">
                       <History className="size-3.5" aria-hidden="true" />
@@ -333,7 +333,7 @@ export function TriangleCalculator({
                         <button
                           type="button"
                           onClick={() => applyHistory(h)}
-                          className="w-full overflow-x-auto rounded-box border border-hairline-soft bg-white px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:border-navy/30 hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800">
+                          className="w-full overflow-x-auto rounded-box border border-hairline-soft bg-main px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:bg-sectionHeader">
                           {Object.entries(h)
                             .filter(([, v]) => v.trim() !== '')
                             .map(([k, v]) => `${k}=${v}`)
@@ -392,7 +392,7 @@ function SolutionCard({
   return (
     <div className="space-y-4">
       {total > 1 && (
-        <p className="text-xs font-bold text-navy dark:text-sky-400">
+        <p className="text-xs font-bold text-[#465D73]">
           {copy.solutionLabel} {index + 1}
         </p>
       )}
@@ -401,7 +401,7 @@ function SolutionCard({
 
       {/* Sides & Angles */}
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-box border border-hairline bg-paper/40 p-3 dark:bg-slate-800/40 dark:border-slate-700">
+        <div className="rounded-box border border-hairline bg-sectionHeader p-3">
           <p className="mb-2 text-[11px] font-semibold text-muted">
             {copy.sidesResult}
           </p>
@@ -409,14 +409,14 @@ function SolutionCard({
             {sides.map(([name, val]) => (
               <li key={name} className="flex justify-between">
                 <span className="text-muted">{name} =</span>
-                <span className="text-ink dark:text-slate-200">
+                <span className="text-ink">
                   {fmt(val)}
                 </span>
               </li>
             ))}
           </ul>
         </div>
-        <div className="rounded-box border border-hairline bg-paper/40 p-3 dark:bg-slate-800/40 dark:border-slate-700">
+        <div className="rounded-box border border-hairline bg-sectionHeader p-3">
           <p className="mb-2 text-[11px] font-semibold text-muted">
             {copy.anglesResult}
           </p>
@@ -424,7 +424,7 @@ function SolutionCard({
             {angles.map(([name, val]) => (
               <li key={name} className="flex justify-between">
                 <span className="text-muted">{name} =</span>
-                <span className="text-ink dark:text-slate-200">
+                <span className="text-ink">
                   {fmt(val)}°
                 </span>
               </li>
@@ -434,7 +434,7 @@ function SolutionCard({
       </div>
 
       {/* Derived */}
-      <div className="rounded-box border border-hairline bg-paper/40 p-3 dark:bg-slate-800/40 dark:border-slate-700">
+      <div className="rounded-box border border-hairline bg-sectionHeader p-3">
         <p className="mb-2 text-[11px] font-semibold text-muted">
           {copy.derivedTitle}
         </p>
@@ -450,7 +450,7 @@ function SolutionCard({
           <Row label={copy.shapeLabel} value={shape} />
         </div>
 
-        <div className="mt-3 space-y-2 border-t border-hairline pt-3 dark:border-slate-700">
+        <div className="mt-3 space-y-2 border-t border-hairline pt-3">
           <Row
             label={copy.heightsLabel}
             tex={`h_a = ${fmt(solution.heights.a)},\\quad h_b = ${fmt(
@@ -474,7 +474,7 @@ function SolutionCard({
 
       {/* Step-by-step solution */}
       {solution.steps && solution.steps.length > 0 && (
-        <div className="mt-5 border-t border-hairline pt-4 dark:border-slate-700">
+        <div className="mt-5 border-t border-hairline pt-4">
           <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-muted">
             <ListOrdered className="size-3.5" aria-hidden="true" />
             {copy.stepsTitle}
@@ -483,15 +483,15 @@ function SolutionCard({
             {solution.steps.map((st, i) => (
               <div
                 key={i}
-                className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
-                <h3 className="text-xs font-bold text-navy dark:text-sky-400">
+                className="rounded-box border border-hairline bg-sectionHeader p-3.5">
+                <h3 className="text-xs font-bold text-[#465D73]">
                   {st.title}
                 </h3>
-                <p className="mt-1 text-xs leading-relaxed text-ink/80 dark:text-slate-300">
+                <p className="mt-1 text-xs leading-relaxed text-body">
                   {st.explanation}
                 </p>
                 {st.latex && (
-                  <div className="mt-2 overflow-x-auto rounded-box border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                  <div className="mt-2 overflow-x-auto rounded-box border border-hairline bg-main px-3 py-2">
                     <KatexPreview tex={st.latex} />
                   </div>
                 )}
@@ -516,7 +516,7 @@ function Row({
   return (
     <div className="flex justify-between gap-3">
       <span className="shrink-0 text-muted">{label}</span>
-      <span className="break-all text-right font-mono text-ink dark:text-slate-200">
+      <span className="break-all text-right font-mono text-ink">
         {tex ? <KatexPreview tex={tex} /> : value}
       </span>
     </div>

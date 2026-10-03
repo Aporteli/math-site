@@ -448,14 +448,14 @@ export function StudentList({
             <button
               type="button"
               onClick={() => router.push(localePath(locale, '/teacher/student-list'))}
-              className="cursor-pointer rounded-box border border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-ink transition hover:bg-navy-tint">
+              className="cursor-pointer rounded-box border border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-ink transition-all duration-200 hover:bg-paper-deep active:scale-[0.98]">
               უკან
             </button>
             <p className="truncate text-sm font-bold text-ink">
               {student ? `${student.firstName} ${student.lastName}` : 'მოსწავლე ვერ მოიძებნა'}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-1 rounded-box border border-hairline bg-paper p-1">
+          <div className="grid grid-cols-2 gap-1 bg-main p-1">
             {(
               [
                 ['pricing', 'ფასი'],
@@ -466,10 +466,15 @@ export function StudentList({
                 key={key}
                 type="button"
                 onClick={() => setStudentSection(key)}
-                className={`cursor-pointer rounded-box px-2 py-2 text-xs font-bold transition ${
-                  studentSection === key ? 'bg-navy text-white' : 'text-body hover:bg-surface hover:text-ink'
+                className={`group relative inline-flex cursor-pointer items-center justify-center overflow-hidden rounded-box px-3 py-2 text-xs font-bold transition-all duration-200 ${
+                  studentSection === key ? 'text-mainText' : 'text-mainText/50 hover:text-mainText'
                 }`}>
-                {label}
+                <span className="relative z-10">{label}</span>
+                <span
+                  className={`absolute bottom-0 left-1/2 h-px -translate-x-1/2 transition-all duration-300 ease-out ${
+                    studentSection === key ? 'w-[calc(100%-16px)] bg-mainText' : 'w-0 bg-mainText/50 group-hover:w-1/2'
+                  }`}
+                />
               </button>
             ))}
           </div>
@@ -509,30 +514,37 @@ export function StudentList({
   }
 
   const viewButtonClass = (active: boolean) =>
-    `inline-flex min-h-9 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-box px-1.5 py-2 text-xs font-bold transition sm:min-h-10 sm:px-3 ${
-      active ? 'bg-navy text-white shadow-sm' : 'text-body hover:bg-surface hover:text-ink'
+    `group relative inline-flex min-h-9 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-box px-1.5 py-2 text-xs font-bold transition-all duration-200 sm:min-h-10 sm:px-3 ${
+      active ? 'text-mainText' : 'text-mainText/50 hover:text-mainText'
     }`;
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
-      <div className="flex min-w-0 flex-col gap-3 rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
+      <div className="flex min-w-0 flex-col gap-3 overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
+        <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
+        <div className="flex min-w-0 flex-col gap-3 p-3 sm:p-5">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="hidden sm:flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
               <Users className="size-5" />
             </span>
           </div>
 
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="grid w-full grid-cols-3 gap-1 rounded-box border border-hairline bg-paper p-1 sm:w-auto sm:min-w-[16rem]">
+            <div className="grid w-full grid-cols-3 gap-1 bg-main p-1 sm:flex sm:w-auto sm:min-w-[16rem]">
               <button
                 type="button"
                 onClick={() => setView('table')}
                 title="ცხრილის ხედი"
                 aria-pressed={view === 'table'}
                 className={viewButtonClass(view === 'table')}>
-                <TableIcon className="size-4 shrink-0" />
-                <span className="truncate text-[11px] sm:text-xs">ცხრილი</span>
+                <TableIcon className="relative z-10 size-4 shrink-0" />
+                <span className="relative z-10 truncate text-[11px] sm:text-xs">ცხრილი</span>
+                <span
+                  className={`absolute bottom-0 left-1/2 h-px -translate-x-1/2 transition-all duration-300 ease-out ${
+                    view === 'table' ? 'w-[calc(100%-12px)] bg-mainText' : 'w-0 bg-mainText/50 group-hover:w-1/2'
+                  }`}
+                />
               </button>
 
               <button
@@ -541,8 +553,13 @@ export function StudentList({
                 title="დავალიანებები"
                 aria-pressed={view === 'debt'}
                 className={viewButtonClass(view === 'debt')}>
-                <AlertCircle className="size-4 shrink-0" />
-                <span className="truncate text-[11px] sm:text-xs">ვალები</span>
+                <AlertCircle className="relative z-10 size-4 shrink-0" />
+                <span className="relative z-10 truncate text-[11px] sm:text-xs">ვალები</span>
+                <span
+                  className={`absolute bottom-0 left-1/2 h-px -translate-x-1/2 transition-all duration-300 ease-out ${
+                    view === 'debt' ? 'w-[calc(100%-12px)] bg-mainText' : 'w-0 bg-mainText/50 group-hover:w-1/2'
+                  }`}
+                />
               </button>
 
               <button
@@ -551,8 +568,13 @@ export function StudentList({
                 title="ანგარიში"
                 aria-pressed={view === 'reports'}
                 className={viewButtonClass(view === 'reports')}>
-                <BarChart3 className="size-4 shrink-0" />
-                <span className="truncate text-[11px] sm:text-xs">ანგარიში</span>
+                <BarChart3 className="relative z-10 size-4 shrink-0" />
+                <span className="relative z-10 truncate text-[11px] sm:text-xs">ანგარიში</span>
+                <span
+                  className={`absolute bottom-0 left-1/2 h-px -translate-x-1/2 transition-all duration-300 ease-out ${
+                    view === 'reports' ? 'w-[calc(100%-12px)] bg-mainText' : 'w-0 bg-mainText/50 group-hover:w-1/2'
+                  }`}
+                />
               </button>
             </div>
 
@@ -563,7 +585,7 @@ export function StudentList({
                 setIndividualModalOpen(true);
               }}
               title="ინდივიდუალური მოსწავლის დამატება"
-              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-brass-strong px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-brass">
+              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-[#A66A32] px-3 py-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)] transition-all duration-200 hover:bg-[#B8783B] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_4px_12px_rgba(166,106,50,0.28)] active:scale-[0.98]">
               <UserPlus className="size-4 shrink-0" />
               <span className="truncate">სახლში</span>
             </button>
@@ -576,7 +598,7 @@ export function StudentList({
                 setHomeGroupOpen(true);
               }}
               title="სახლში მოსული მოსწავლეების ჯგუფი"
-              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-box border border-brass-strong/40 bg-brass-tint px-3 py-2 text-xs font-bold text-brass-strong shadow-sm transition hover:bg-brass-strong hover:text-white">
+              className="inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-[#465D73] px-3 py-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98]">
               <Users className="size-4 shrink-0" />
               <span className="truncate">ჯგუფი</span>
             </button>
@@ -592,26 +614,26 @@ export function StudentList({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="სახელი, ტელეფონი ან ელფოსტა"
-                className="w-full rounded-box border border-hairline bg-paper py-2.5 pl-10 pr-3 text-base font-medium text-ink outline-none transition placeholder:text-muted/30 focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-searchInput py-2.5 pl-10 pr-3 text-xs font-medium text-searchInputText outline-none transition placeholder:text-searchInputText focus:border-navy focus:bg-searchInput sm:text-sm"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-main px-3 py-2.5 shadow-sm">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">მოსწავლეები</p>
                 <p className="mt-1 truncate text-lg font-bold tabular-nums text-ink sm:text-xl">{students.length}</p>
               </div>
-              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-main px-3 py-2.5 shadow-sm">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">გაკვეთილები</p>
-                <p className="mt-1 truncate text-lg font-bold tabular-nums text-navy sm:text-xl">{stats.todayCount}</p>
+                <p className="mt-1 truncate text-lg font-bold tabular-nums text-[#465D73] sm:text-xl">{stats.todayCount}</p>
               </div>
-              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-main px-3 py-2.5 shadow-sm">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">ჯამში</p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-ink sm:text-xl">
                   {formatPrice(stats.totalPrice)}
                 </p>
               </div>
-              <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
+              <div className="min-w-0 rounded-box border border-hairline bg-main px-3 py-2.5 shadow-sm">
                 <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">გადასახდელი</p>
                 <p className="mt-1 truncate text-base font-bold tabular-nums text-loss sm:text-xl">
                   {formatPrice(stats.debt)}
@@ -623,7 +645,7 @@ export function StudentList({
               <button
                 type="button"
                 onClick={() => setGroupMenuOpen((open) => !open)}
-                className="inline-flex h-8 max-w-full cursor-pointer items-center justify-between gap-1.5 rounded-box border border-hairline bg-paper px-2.5 text-[11px] font-bold text-ink transition hover:border-navy/40"
+                className="inline-flex h-8 max-w-full cursor-pointer items-center justify-between gap-1.5 rounded-box border border-hairline bg-searchInput px-2.5 text-[11px] font-bold text-searchInputText transition-all duration-200 hover:border-navy"
               >
                 <span className="flex min-w-0 items-center gap-1">
                   <span className="truncate">
@@ -647,7 +669,7 @@ export function StudentList({
                     className="fixed inset-0 z-10 cursor-default"
                     onClick={() => setGroupMenuOpen(false)}
                   />
-                  <div className="absolute left-0 top-full z-20 mt-1 max-h-52 w-max min-w-full max-w-[16rem] overflow-y-auto rounded-box border border-hairline bg-surface p-0.5 shadow-lg">
+                  <div className="absolute left-0 top-full z-20 mt-1 max-h-52 w-max min-w-full max-w-[16rem] overflow-y-auto rounded-box border border-hairline bg-main p-1 shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
                     <button
                       type="button"
                       onClick={() => {
@@ -655,10 +677,10 @@ export function StudentList({
                         setShowTodayOnly(false);
                         setGroupMenuOpen(false);
                       }}
-                      className={`flex w-full cursor-pointer items-center rounded-box px-2 py-1.5 text-left text-[11px] font-bold transition ${
+                      className={`flex w-full cursor-pointer items-center rounded-box px-2 py-1.5 text-left text-[11px] font-bold transition-all duration-200 ${
                         activeGroupId === 'all' && !showTodayOnly
-                          ? 'bg-navy text-white'
-                          : 'text-body hover:bg-navy-tint'
+                          ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                          : 'text-mainText hover:bg-sectionHeader'
                       }`}
                     >
                       ყველა
@@ -669,8 +691,10 @@ export function StudentList({
                         setShowTodayOnly(true);
                         setGroupMenuOpen(false);
                       }}
-                      className={`flex w-full cursor-pointer items-center rounded-box px-2 py-1.5 text-left text-[11px] font-bold transition ${
-                        showTodayOnly ? 'bg-navy text-white' : 'text-body hover:bg-navy-tint'
+                      className={`flex w-full cursor-pointer items-center rounded-box px-2 py-1.5 text-left text-[11px] font-bold transition-all duration-200 ${
+                        showTodayOnly
+                          ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                          : 'text-mainText hover:bg-sectionHeader'
                       }`}
                     >
                       დღეს
@@ -687,14 +711,12 @@ export function StudentList({
                             setShowTodayOnly(false);
                             setGroupMenuOpen(false);
                           }}
-                          className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-box px-2 py-1.5 text-left text-[11px] font-bold transition ${
-                            g.home
-                              ? active
-                                ? 'bg-brass-strong text-white'
-                                : 'text-brass-strong hover:bg-brass-tint'
-                              : active
-                                ? 'bg-navy text-white'
-                                : 'text-body hover:bg-navy-tint'
+                          className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-box px-2 py-1.5 text-left text-[11px] font-bold transition-all duration-200 ${
+                            active
+                              ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                              : g.home
+                                ? 'text-brass-strong hover:bg-brass-tint'
+                                : 'text-mainText hover:bg-sectionHeader'
                           }`}
                         >
                           <span className="flex min-w-0 items-center gap-1.5">
@@ -703,7 +725,7 @@ export function StudentList({
                           </span>
                           <span
                             className={`rounded-box px-1.5 py-0.5 text-[9px] font-bold ${
-                              active ? 'bg-white/20 text-white' : 'bg-paper-deep text-muted'
+                              active ? 'text-mainText' : 'text-muted'
                             }`}
                           >
                             {count}
@@ -717,6 +739,7 @@ export function StudentList({
             </div>
           </>
         ) : null}
+        </div>
       </div>
 
       {view === 'debt' ? (
@@ -741,7 +764,7 @@ export function StudentList({
         <div className="custom-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto">
           {filtered.length === 0 ? (
             <div className="flex h-full min-h-64 flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-surface px-6 py-16 text-center">
-              <span className="mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
+              <span className="mb-3 inline-flex size-12 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
                 <Users className="size-5" />
               </span>
               <p className="text-sm font-bold text-ink">მოსწავლე ვერ მოიძებნა</p>
@@ -823,7 +846,7 @@ export function StudentList({
                   value={homeGroupName}
                   onChange={(e) => setHomeGroupName(e.target.value)}
                   placeholder="მაგ. სამშაბათის ჯგუფი"
-                  className="w-full rounded-box border border-hairline bg-paper px-3 py-2.5 text-sm font-bold text-ink outline-none focus:border-brass-strong/60 focus:ring-2 focus:ring-brass/20"
+                  className="w-full rounded-box border border-hairline bg-searchInput px-3 py-2.5 text-sm font-bold text-searchInputText outline-none focus:border-navy"
                 />
               </label>
               <div>
@@ -839,10 +862,10 @@ export function StudentList({
                       return (
                         <label
                           key={student.id}
-                          className={`flex cursor-pointer items-center gap-2 rounded-box border px-3 py-2 text-xs font-bold ${
+                          className={`flex cursor-pointer items-center gap-2 rounded-box border px-3 py-2 text-xs font-bold transition-all duration-200 ${
                             checked
-                              ? 'border-brass/40 bg-brass-tint text-brass-strong'
-                              : 'border-hairline bg-paper text-ink'
+                              ? 'border-transparent bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]'
+                              : 'border-hairline bg-sectionHeader text-mainText hover:bg-mainButtonHover'
                           }`}>
                           <input
                             type="checkbox"
@@ -852,7 +875,7 @@ export function StudentList({
                                 checked ? current.filter((id) => id !== student.id) : [...current, student.id],
                               );
                             }}
-                            className="size-3.5 accent-brass-strong"
+                            className="size-3.5 accent-[#465D73]"
                           />
                           <span className="truncate">
                             {student.firstName} {student.lastName}
@@ -870,14 +893,14 @@ export function StudentList({
                 type="button"
                 disabled={homeGroupSaving}
                 onClick={() => setHomeGroupOpen(false)}
-                className="cursor-pointer rounded-box px-3 py-2 text-xs font-bold text-muted hover:bg-paper">
+                className="cursor-pointer rounded-box border border-hairline bg-surface px-3 py-2 text-xs font-bold text-ink transition-colors hover:bg-paper-deep disabled:opacity-50">
                 გაუქმება
               </button>
               <button
                 type="button"
                 disabled={homeGroupSaving}
                 onClick={handleCreateHomeGroup}
-                className="cursor-pointer rounded-box bg-brass-strong px-3 py-2 text-xs font-bold text-white hover:bg-brass disabled:opacity-50">
+                className="cursor-pointer rounded-box bg-[#A66A32] px-3 py-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)] transition-all duration-200 hover:bg-[#B8783B] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
                 შექმნა
               </button>
             </div>

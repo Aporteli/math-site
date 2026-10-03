@@ -35,7 +35,7 @@ export function WorkspaceDock({
         href={href}
         onClick={handleDockClick}
         aria-label={hint}
-        className="inline-flex min-w-0 items-center gap-2 rounded-box bg-navy px-3 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong"
+        className="inline-flex min-w-0 cursor-pointer items-center gap-2 rounded-box bg-[#465D73] px-3 py-2 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98]"
       >
         <LayoutDashboard className="size-4 shrink-0" aria-hidden="true" />
         <span className="truncate">{label}</span>
@@ -50,7 +50,7 @@ export function WorkspaceDock({
         onClick={handleDockClick}
         className="pointer-events-auto flex max-w-xs items-center gap-3 overflow-hidden rounded-box border border-hairline bg-main p-3 shadow-md transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-lg"
       >
-          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-box bg-navy text-white shadow-sm">
+          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
           <LayoutDashboard className="size-5" aria-hidden="true" />
         </span>
         <span className="min-w-0">
@@ -59,7 +59,7 @@ export function WorkspaceDock({
           </span>
           <span className="mt-0.5 flex items-center gap-1 text-sm font-bold text-ink">
             {label}
-            <ArrowUpRight className="size-3.5 shrink-0 text-navy" aria-hidden="true" />
+            <ArrowUpRight className="size-3.5 shrink-0 text-brass-strong" aria-hidden="true" />
           </span>
           <span className="mt-0.5 block text-xs text-muted">{hint}</span>
         </span>

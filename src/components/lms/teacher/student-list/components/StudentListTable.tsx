@@ -70,7 +70,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
             <tbody>
               {sections.map((section) => (
                 <Fragment key={section.key}>
-                  <tr className={`${section.kind === 'home' || section.kind === 'individual' ? 'bg-brass-tint/80' : 'bg-navy-tint/80'}  border-t border-hairline font-bold uppercase tracking-wider text-muted`} onMouseEnter={() => setHoveringSection(section.key)} onMouseLeave={() => setHoveringSection(null)}>
+                  <tr className={`${section.kind === 'home' || section.kind === 'individual' ? 'bg-brass-tint/80' : 'bg-sectionHeader'}  border-t border-hairline font-bold uppercase tracking-wider text-muted`} onMouseEnter={() => setHoveringSection(section.key)} onMouseLeave={() => setHoveringSection(null)}>
                     <td colSpan={2} className="pr-4 pl-2 py-2">
                       <div className="flex items-center gap-1">
                         <span className="text-[14px] font-bold tracking-wide text-ink">{section.title}</span>
@@ -81,7 +81,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
                               event.stopPropagation();
                               void onDisbandHomeGroup(section.groupId!);
                             }}
-                            className={` ml-auto cursor-pointer rounded-box px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted transition hover:bg-navy-tint hover:text-ink hover:opacity-100 ${hoveringSection === section.key ? 'opacity-15' : 'opacity-0 pointer-events-none'}`}
+                            className={` ml-auto cursor-pointer rounded-box px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted transition hover:bg-sectionHeader hover:text-ink hover:opacity-100 ${hoveringSection === section.key ? 'opacity-15' : 'opacity-0 pointer-events-none'}`}
                           >
                             დაშლა
                           </button>
@@ -98,7 +98,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
                         {/* Main row */}
                         <tr
                           onClick={() => onSelect(student)}
-                          className="cursor-pointer  transition hover:bg-navy-tint/40">
+                          className="cursor-pointer  transition hover:bg-sectionHeader">
                           {/* Student */}
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
@@ -136,7 +136,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
                                     event.currentTarget.blur();
                                   }
                                 }}
-                                className="ml-auto block w-full max-w-[9rem] rounded-box border border-hairline bg-surface px-2 py-1 text-xs font-medium tabular-nums text-ink outline-none focus:border-navy"
+                                className="ml-auto block w-full max-w-[9rem] rounded-box border border-hairline bg-searchInput px-2 py-1 text-xs font-medium tabular-nums text-searchInputText outline-none focus:border-navy"
                               />
                             ) : (
                               <button
@@ -146,7 +146,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
                                   setPaymentDateDraft(student.paymentDate ?? '');
                                   setEditingPaymentDateId(student.id);
                                 }}
-                                className="ml-auto cursor-pointer rounded-box px-1.5 py-0.5 text-xs font-bold tabular-nums text-ink transition hover:bg-navy-tint">
+                                className="ml-auto cursor-pointer rounded-box px-1.5 py-0.5 text-xs font-bold tabular-nums text-ink transition hover:bg-sectionHeader">
                                 {student.paymentDate || '—'}
                               </button>
                             )}
@@ -164,7 +164,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
 
       <div className="flex max-h-[24rem] w-full shrink-0 flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-sm lg:h-full lg:max-h-none lg:w-[30rem]">
         <div className="flex shrink-0 items-center gap-3 border-b border-hairline px-3 py-2.5">
-          <span className="flex size-8 items-center justify-center rounded-box bg-navy text-sm font-bold text-white">
+          <span className="flex size-8 items-center justify-center rounded-box bg-[#465D73] text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
             {todayDate.getDate()}
           </span>
           <div className="min-w-0">
@@ -187,7 +187,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
                     {session.startTime}
                   </div>
                   <div className="min-w-0 flex-1 space-y-1.5 border-l border-hairline pl-3">
-                    <p className="rounded-box bg-navy-tint/60 px-1.5 py-0.5 text-[10px] font-bold text-navy">
+                    <p className="rounded-box bg-brass-tint px-1.5 py-0.5 text-[10px] font-bold text-brass-strong">
                       {session.kind === 'group'
                         ? `${getGroupName(session.groupId, groups)} · ${session.lessons.length} მოსწავლე`
                         : 'სახლში'}

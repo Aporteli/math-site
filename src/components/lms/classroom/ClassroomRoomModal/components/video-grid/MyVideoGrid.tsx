@@ -95,7 +95,7 @@ export function MyVideoGrid({ expanded = false }: { expanded?: boolean }) {
 
   if (tracks.length === 0) {
     return (
-      <div className="flex h-full w-full items-center justify-center p-4 text-xs text-white/40">
+      <div className="flex h-full w-full items-center justify-center p-4 text-xs font-medium text-muted">
         მონაწილეები არ არიან
       </div>
     );

@@ -10,11 +10,11 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ isUploading, canClear, onClear }: ChatHeaderProps) {
   return (
-    <div className="flex items-center justify-between border-b border-white/10 p-3 text-sm font-semibold text-white/80">
+    <div className="flex items-center justify-between border-b border-hairline bg-sectionHeader p-3 text-sm font-bold text-mainText">
       <span>ოთახის ჩატი</span>
       <div className="flex items-center gap-2">
         {isUploading && (
-          <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-normal animate-pulse">
+          <span className="flex animate-pulse items-center gap-1.5 text-xs font-medium text-navy">
             <Loader2 className="size-3 animate-spin" /> სურათი იტვირთება...
           </span>
         )}
@@ -23,7 +23,7 @@ export function ChatHeader({ isUploading, canClear, onClear }: ChatHeaderProps) 
             type="button"
             onClick={onClear}
             title="ისტორიის გასუფთავება"
-            className="text-white/40 hover:text-red-400 transition p-1 rounded-box hover:bg-white/5"
+            className="cursor-pointer rounded-box p-1 text-muted transition-colors duration-200 hover:bg-loss-tint hover:text-loss"
           >
             <Trash2 className="size-4" />
           </button>

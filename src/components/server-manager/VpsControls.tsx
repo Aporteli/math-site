@@ -77,10 +77,9 @@ function NoticeBanner({ notice }: { notice: Notice | null }) {
       className={[
         'flex items-center gap-2 rounded-box border px-4 py-3 text-sm',
         notice.tone === 'error'
-          ? 'border-red-200 bg-red-50 text-red-700'
-          : 'border-emerald-200 bg-emerald-50 text-emerald-700',
-      ].join(' ')}
-    >
+          ? 'border-rose-500/30 bg-rose-500/15 text-rose-500'
+          : 'border-win/30 bg-win-tint text-win',
+      ].join(' ')}>
       <CircleAlert className="h-4 w-4 shrink-0" />
       <span>{notice.text}</span>
     </div>
@@ -176,7 +175,12 @@ export function FileControls({ locale }: { locale: Locale }) {
 
   async function saveFile() {
     if (!filePath) return;
-    if (important && !window.confirm(`Save ${filePath}? A backup is created before the write, and the configuration is checked before it is kept.`)) {
+    if (
+      important &&
+      !window.confirm(
+        `Save ${filePath}? A backup is created before the write, and the configuration is checked before it is kept.`,
+      )
+    ) {
       return;
     }
     setSaving(true);
@@ -281,20 +285,17 @@ export function FileControls({ locale }: { locale: Locale }) {
   }
 
   return (
-    <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+    <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-ink">Files</h2>
-          <p className="mt-1 text-sm text-body">
-            Only approved directories can be opened. Secret files stay hidden.
-          </p>
+          <p className="mt-1 text-sm text-body">Only approved directories can be opened. Secret files stay hidden.</p>
         </div>
         <button
           type="button"
           onClick={() => void loadPath(filePath ?? path)}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:opacity-50"
-        >
+          className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-sectionHeader disabled:opacity-50">
           <RefreshCw className={['h-4 w-4', loading ? 'animate-spin' : ''].join(' ')} />
           Refresh
         </button>
@@ -307,12 +308,11 @@ export function FileControls({ locale }: { locale: Locale }) {
             type="button"
             onClick={() => void loadPath(root)}
             className={[
-              'rounded-box px-3 py-2 text-xs font-medium transition',
+              'cursor-pointer rounded-box px-3 py-2 text-xs transition',
               path === root || filePath?.startsWith(`${root}/`)
-                ? 'bg-navy text-white'
-                : 'border border-hairline text-body hover:bg-slate-50',
-            ].join(' ')}
-          >
+                ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                : 'border border-hairline font-medium text-mainText hover:bg-sectionHeader',
+            ].join(' ')}>
             {ROOT_LABELS[root]}
           </button>
         ))}
@@ -331,9 +331,8 @@ export function FileControls({ locale }: { locale: Locale }) {
           }) ? (
             <button
               type="button"
-              className="block w-full truncate rounded-box px-2 py-1.5 text-left text-xs text-body hover:bg-slate-50"
-              onClick={() => void loadPath(path.slice(0, path.lastIndexOf('/')))}
-            >
+              className="block w-full truncate rounded-box px-2 py-1.5 text-left text-xs text-body hover:bg-sectionHeader"
+              onClick={() => void loadPath(path.slice(0, path.lastIndexOf('/')))}>
               ..
             </button>
           ) : null}
@@ -341,14 +340,15 @@ export function FileControls({ locale }: { locale: Locale }) {
             <button
               key={entry.name}
               type="button"
-              className="flex w-full items-center justify-between gap-2 rounded-box px-2 py-1.5 text-left text-xs hover:bg-slate-50"
-              onClick={() => void loadPath(`${path}/${entry.name}`)}
-            >
+              className="flex w-full items-center justify-between gap-2 rounded-box px-2 py-1.5 text-left text-xs hover:bg-sectionHeader"
+              onClick={() => void loadPath(`${path}/${entry.name}`)}>
               <span className="truncate text-ink">{entry.kind === 'dir' ? `${entry.name}/` : entry.name}</span>
               <span className="shrink-0 text-muted">{entry.size === null ? '' : formatBytes(entry.size)}</span>
             </button>
           ))}
-          {entries.length === 0 && !loading ? <p className="px-2 py-3 text-xs text-muted">This directory is empty.</p> : null}
+          {entries.length === 0 && !loading ? (
+            <p className="px-2 py-3 text-xs text-muted">This directory is empty.</p>
+          ) : null}
         </div>
 
         <div>
@@ -366,23 +366,21 @@ export function FileControls({ locale }: { locale: Locale }) {
                   type="button"
                   disabled={!writable || saving || draft === original}
                   onClick={() => void saveFile()}
-                  className="rounded-box bg-navy px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                >
+                  className="cursor-pointer rounded-box bg-[#465D73] px-3 py-2 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
                   {saving ? 'Saving...' : important ? 'Save config' : 'Save'}
                 </button>
                 <input
                   value={renameTo}
                   onChange={(event) => setRenameTo(event.target.value)}
                   disabled={!writable || saving}
-                  className="w-40 rounded-box border border-hairline px-3 py-2 text-sm text-ink outline-none"
+                  className="w-40 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm text-searchInputText outline-none focus:border-navy"
                   aria-label="New file name"
                 />
                 <button
                   type="button"
                   disabled={!writable || saving || renameTo.trim().length === 0}
                   onClick={() => void renameFile()}
-                  className="rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
-                >
+                  className="rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50">
                   Rename
                 </button>
               </div>
@@ -392,15 +390,14 @@ export function FileControls({ locale }: { locale: Locale }) {
                     value={deleteConfirm}
                     onChange={(event) => setDeleteConfirm(event.target.value)}
                     placeholder="Type DELETE"
-                    className="w-36 rounded-box border border-hairline px-3 py-2 text-sm text-ink outline-none"
+                    className="w-36 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm text-searchInputText outline-none focus:border-navy"
                     aria-label="Delete confirmation"
                   />
                   <button
                     type="button"
                     disabled={saving || deleteConfirm !== CONFIRM.DELETE}
                     onClick={() => void deleteFile()}
-                    className="rounded-box border border-red-200 px-3 py-2 text-sm font-medium text-red-700 disabled:opacity-50"
-                  >
+                    className="cursor-pointer rounded-box border border-rose-500/30 bg-rose-500/15 px-3 py-2 text-sm font-bold text-rose-500 transition-colors hover:bg-rose-500/25 disabled:cursor-not-allowed disabled:opacity-45">
                     Delete
                   </button>
                 </div>
@@ -417,15 +414,14 @@ export function FileControls({ locale }: { locale: Locale }) {
                     value={newName}
                     onChange={(event) => setNewName(event.target.value)}
                     placeholder="notes.txt"
-                    className="w-40 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink outline-none"
+                    className="w-40 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm text-searchInputText outline-none focus:border-navy"
                     aria-label="New file name"
                   />
                   <button
                     type="button"
                     disabled={saving || newName.trim().length === 0}
                     onClick={() => void createFile()}
-                    className="rounded-box border border-hairline bg-white px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
-                  >
+                    className="cursor-pointer rounded-box border border-hairline bg-main px-3 py-2 text-sm font-bold text-ink transition-colors hover:bg-sectionHeader disabled:cursor-not-allowed disabled:opacity-45">
                     Create file
                   </button>
                 </div>
@@ -446,7 +442,9 @@ const HOST_LABELS: Record<HostServiceName, string> = {
 export function HostControls({ locale }: { locale: Locale }) {
   const [services, setServices] = useState<HostService[]>([]);
   const [processes, setProcesses] = useState<ProcessRow[]>([]);
-  const [interfaces, setInterfaces] = useState<Array<{ name: string; bytes_sent: number; bytes_received: number; addresses: string[] }>>([]);
+  const [interfaces, setInterfaces] = useState<
+    Array<{ name: string; bytes_sent: number; bytes_received: number; addresses: string[] }>
+  >([]);
   const [logs, setLogs] = useState('');
   const [logSource, setLogSource] = useState<HostLogSource>('syslog');
   const [loading, setLoading] = useState(true);
@@ -457,14 +455,22 @@ export function HostControls({ locale }: { locale: Locale }) {
   const loadHost = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/server/host?locale=${encodeURIComponent(locale)}`, { cache: 'no-store' });
+      const response = await fetch(`/api/admin/server/host?locale=${encodeURIComponent(locale)}`, {
+        cache: 'no-store',
+      });
       const data = await readJson(response);
       if (!response.ok || !isRecord(data)) throw new Error(errorText(data, 'Failed to load host information'));
       setServices(
         Array.isArray(data.services)
           ? data.services.flatMap((item) => {
               if (!isRecord(item) || typeof item.service !== 'string') return [];
-              return [{ service: item.service, active: typeof item.active === 'string' ? item.active : 'unknown', running: item.running === true }];
+              return [
+                {
+                  service: item.service,
+                  active: typeof item.active === 'string' ? item.active : 'unknown',
+                  running: item.running === true,
+                },
+              ];
             })
           : [],
       );
@@ -472,14 +478,16 @@ export function HostControls({ locale }: { locale: Locale }) {
         Array.isArray(data.processes)
           ? data.processes.flatMap((item) => {
               if (!isRecord(item) || typeof item.pid !== 'number' || typeof item.name !== 'string') return [];
-              return [{
-                pid: item.pid,
-                name: item.name,
-                user: typeof item.user === 'string' ? item.user : '',
-                status: typeof item.status === 'string' ? item.status : '',
-                memory: typeof item.memory === 'number' ? item.memory : 0,
-                command: typeof item.command === 'string' ? item.command : '',
-              }];
+              return [
+                {
+                  pid: item.pid,
+                  name: item.name,
+                  user: typeof item.user === 'string' ? item.user : '',
+                  status: typeof item.status === 'string' ? item.status : '',
+                  memory: typeof item.memory === 'number' ? item.memory : 0,
+                  command: typeof item.command === 'string' ? item.command : '',
+                },
+              ];
             })
           : [],
       );
@@ -487,12 +495,16 @@ export function HostControls({ locale }: { locale: Locale }) {
         Array.isArray(data.interfaces)
           ? data.interfaces.flatMap((item) => {
               if (!isRecord(item) || typeof item.name !== 'string') return [];
-              return [{
-                name: item.name,
-                bytes_sent: typeof item.bytes_sent === 'number' ? item.bytes_sent : 0,
-                bytes_received: typeof item.bytes_received === 'number' ? item.bytes_received : 0,
-                addresses: Array.isArray(item.addresses) ? item.addresses.filter((address) => typeof address === 'string') : [],
-              }];
+              return [
+                {
+                  name: item.name,
+                  bytes_sent: typeof item.bytes_sent === 'number' ? item.bytes_sent : 0,
+                  bytes_received: typeof item.bytes_received === 'number' ? item.bytes_received : 0,
+                  addresses: Array.isArray(item.addresses)
+                    ? item.addresses.filter((address) => typeof address === 'string')
+                    : [],
+                },
+              ];
             })
           : [],
       );
@@ -551,7 +563,8 @@ export function HostControls({ locale }: { locale: Locale }) {
 
   async function reboot() {
     if (rebootText !== CONFIRM.REBOOT) return;
-    if (!window.confirm('Reboot the VPS now? LiveKit and this admin agent will go offline until it comes back.')) return;
+    if (!window.confirm('Reboot the VPS now? LiveKit and this admin agent will go offline until it comes back.'))
+      return;
     setActing('reboot');
     setNotice(null);
     try {
@@ -574,7 +587,7 @@ export function HostControls({ locale }: { locale: Locale }) {
   return (
     <div className="space-y-4">
       <NoticeBanner notice={notice} />
-      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+      <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-ink">Host services</h2>
@@ -584,8 +597,7 @@ export function HostControls({ locale }: { locale: Locale }) {
             type="button"
             onClick={() => void loadHost()}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
-          >
+            className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50">
             <RefreshCw className={['h-4 w-4', loading ? 'animate-spin' : ''].join(' ')} />
             Refresh
           </button>
@@ -600,7 +612,11 @@ export function HostControls({ locale }: { locale: Locale }) {
                     <div className="font-medium text-ink">{HOST_LABELS[service]}</div>
                     <div className="mt-1 font-mono text-[11px] text-muted">{service}</div>
                   </div>
-                  <span className={['rounded-box px-2 py-1 text-[11px] font-medium', status?.running ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-body'].join(' ')}>
+                  <span
+                    className={[
+                      'rounded-box px-2 py-1 text-[11px] font-medium',
+                      status?.running ? 'bg-win-tint text-win' : 'bg-sectionHeader text-muted',
+                    ].join(' ')}>
                     {status?.active ?? (loading ? '...' : 'unknown')}
                   </span>
                 </div>
@@ -611,8 +627,7 @@ export function HostControls({ locale }: { locale: Locale }) {
                       type="button"
                       disabled={acting !== null || !isHostActionAllowed(service, action)}
                       onClick={() => void runService(service, action)}
-                      className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-xs font-medium capitalize text-ink disabled:opacity-50"
-                    >
+                      className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-xs font-medium capitalize text-ink disabled:opacity-50">
                       {acting === `${service}:${action}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                       {action}
                     </button>
@@ -624,22 +639,24 @@ export function HostControls({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+      <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
         <h2 className="text-base font-semibold text-ink">Network</h2>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {interfaces.map((item) => (
-            <div key={item.name} className="rounded-box bg-slate-50 px-3 py-2">
+            <div key={item.name} className="rounded-box bg-sectionHeader px-3 py-2">
               <div className="text-sm font-medium text-ink">{item.name}</div>
               <div className="mt-1 text-xs text-body">
                 {formatBytes(item.bytes_received)} in / {formatBytes(item.bytes_sent)} out
               </div>
-              <div className="mt-1 truncate font-mono text-[11px] text-muted">{item.addresses.join(', ') || 'No address'}</div>
+              <div className="mt-1 truncate font-mono text-[11px] text-muted">
+                {item.addresses.join(', ') || 'No address'}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+      <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
         <h2 className="text-base font-semibold text-ink">Processes</h2>
         <div className="mt-4 overflow-auto">
           <table className="w-full min-w-[640px] text-left text-xs">
@@ -667,7 +684,7 @@ export function HostControls({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+      <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-base font-semibold text-ink">VPS logs</h2>
           <div className="flex gap-2">
@@ -676,8 +693,12 @@ export function HostControls({ locale }: { locale: Locale }) {
                 key={source}
                 type="button"
                 onClick={() => setLogSource(source)}
-                className={['rounded-box px-3 py-2 text-xs font-medium', logSource === source ? 'bg-navy text-white' : 'border border-hairline text-body'].join(' ')}
-              >
+                className={[
+                  'cursor-pointer rounded-box px-3 py-2 text-xs',
+                  logSource === source
+                    ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                    : 'border border-hairline font-medium text-mainText hover:bg-sectionHeader',
+                ].join(' ')}>
                 {source}
               </button>
             ))}
@@ -688,23 +709,24 @@ export function HostControls({ locale }: { locale: Locale }) {
         </pre>
       </div>
 
-      <div className="rounded-box border border-red-200 bg-white p-5 shadow-sm">
+      <div className="rounded-box border border-rose-500/30 bg-main p-5 shadow-sm">
         <h2 className="text-base font-semibold text-ink">Reboot VPS</h2>
-        <p className="mt-1 text-sm text-body">This stops every service until the machine starts again. Type REBOOT to enable the button.</p>
+        <p className="mt-1 text-sm text-body">
+          This stops every service until the machine starts again. Type REBOOT to enable the button.
+        </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <input
             value={rebootText}
             onChange={(event) => setRebootText(event.target.value)}
             placeholder="REBOOT"
-            className="w-36 rounded-box border border-hairline px-3 py-2 text-sm text-ink outline-none"
+            className="w-36 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm text-searchInputText outline-none focus:border-navy"
             aria-label="Reboot confirmation"
           />
           <button
             type="button"
             disabled={acting !== null || rebootText !== CONFIRM.REBOOT}
             onClick={() => void reboot()}
-            className="rounded-box border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50"
-          >
+            className="cursor-pointer rounded-box border border-rose-500/30 bg-rose-500/15 px-3 py-2 text-sm font-bold text-rose-500 transition-colors hover:bg-rose-500/25 disabled:cursor-not-allowed disabled:opacity-45">
             {acting === 'reboot' ? 'Rebooting...' : 'Reboot'}
           </button>
         </div>
@@ -721,7 +743,9 @@ export function AuditControls({ locale }: { locale: Locale }) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/server/audit?locale=${encodeURIComponent(locale)}`, { cache: 'no-store' });
+      const response = await fetch(`/api/admin/server/audit?locale=${encodeURIComponent(locale)}`, {
+        cache: 'no-store',
+      });
       const data = await readJson(response);
       if (!response.ok || !isRecord(data) || !Array.isArray(data.events)) {
         throw new Error(errorText(data, 'Audit log is unavailable'));
@@ -729,15 +753,17 @@ export function AuditControls({ locale }: { locale: Locale }) {
       setEvents(
         data.events.flatMap((item) => {
           if (!isRecord(item) || typeof item.id !== 'string' || typeof item.action !== 'string') return [];
-          return [{
-            id: item.id,
-            ts: typeof item.ts === 'string' ? item.ts : '',
-            actor: typeof item.actor === 'string' ? item.actor : '',
-            action: item.action,
-            target: typeof item.target === 'string' ? item.target : '',
-            ok: item.ok === true,
-            detail: typeof item.detail === 'string' ? item.detail : '',
-          }];
+          return [
+            {
+              id: item.id,
+              ts: typeof item.ts === 'string' ? item.ts : '',
+              actor: typeof item.actor === 'string' ? item.actor : '',
+              action: item.action,
+              target: typeof item.target === 'string' ? item.target : '',
+              ok: item.ok === true,
+              detail: typeof item.detail === 'string' ? item.detail : '',
+            },
+          ];
         }),
       );
       setError(null);
@@ -753,7 +779,7 @@ export function AuditControls({ locale }: { locale: Locale }) {
   }, [load]);
 
   return (
-    <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+    <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-ink">Audit log</h2>
@@ -763,20 +789,19 @@ export function AuditControls({ locale }: { locale: Locale }) {
           type="button"
           onClick={() => void load()}
           disabled={loading}
-          className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50"
-        >
+          className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink disabled:opacity-50">
           <RefreshCw className={['h-4 w-4', loading ? 'animate-spin' : ''].join(' ')} />
           Refresh
         </button>
       </div>
-      {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
+      {error ? <p className="mt-4 text-sm text-rose-500">{error}</p> : null}
       <div className="mt-4 space-y-2">
         {events.length === 0 && !loading ? <p className="text-sm text-muted">No administrative actions yet.</p> : null}
         {events.map((event) => (
           <div key={event.id} className="rounded-box border border-hairline px-3 py-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-sm font-medium text-ink">{event.action}</span>
-              <span className={['text-[11px] font-medium', event.ok ? 'text-emerald-700' : 'text-red-700'].join(' ')}>
+              <span className={['text-[11px] font-bold', event.ok ? 'text-win' : 'text-rose-500'].join(' ')}>
                 {event.ok ? 'ok' : 'failed'}
               </span>
             </div>

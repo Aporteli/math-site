@@ -353,29 +353,27 @@ export function SiteSearch({
                                     onClick={() => setOpen(false)}
                                     className={`flex items-start gap-3 rounded-box px-3 py-2.5 transition ${
                                       active
-                                        ? "bg-navy text-white"
-                                        : "text-ink hover:bg-paper"
+                                        ? "bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]"
+                                        : "text-ink hover:bg-sectionHeader"
                                     }`}
                                   >
                                     <Icon
-                                      className={`mt-0.5 size-4 shrink-0 ${
-                                        active ? "text-white" : "text-muted"
-                                      }`}
+                                      className="mt-0.5 size-4 shrink-0 text-mainText"
                                       aria-hidden="true"
                                     />
                                     <span className="min-w-0 flex-1">
-                                      <span className={`block truncate text-sm font-bold ${active ? "text-white" : ""}`}>
+                                      <span className="block truncate text-sm font-bold text-mainText">
                                         {hit.title}
                                       </span>
                                       {hit.subtitle ? (
-                                        <span className={`mt-0.5 block truncate text-xs ${active ? "text-white/80" : "text-muted"}`}>
+                                        <span className="mt-0.5 block truncate text-xs text-muted">
                                           {hit.subtitle}
                                         </span>
                                       ) : null}
                                     </span>
                                     <ArrowRight
                                       className={`mt-0.5 size-4 shrink-0 ${
-                                        active ? "text-white" : "text-transparent"
+                                        active ? "text-mainText" : "text-transparent"
                                       }`}
                                       aria-hidden="true"
                                     />

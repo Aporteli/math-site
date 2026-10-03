@@ -15,7 +15,7 @@ export function EmptyGroupsState({ courses, openCourseModal, setDeletingId }: Em
   ) : (
     <div className="rounded-box border border-hairline overflow-hidden">
       <table className="w-full text-left text-sm">
-        <thead className="bg-paper/50 text-xs uppercase tracking-wider text-muted border-b border-hairline">
+        <thead className="border-b border-hairline bg-sectionHeader text-xs font-bold uppercase tracking-wider text-muted">
           <tr>
             <th className="px-4 py-3 font-bold">ჯგუფის სახელი</th>
             <th className="px-4 py-3 font-bold">მოსაწვევი კოდი</th>
@@ -24,13 +24,13 @@ export function EmptyGroupsState({ courses, openCourseModal, setDeletingId }: Em
             <th className="px-4 py-3 font-bold text-right">მოქმედება</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-hairline bg-white">
+        <tbody className="divide-y divide-hairline bg-main">
           {courses.map((course) => (
-            <tr key={course.id} className="hover:bg-slate-50/50 transition-colors">
+            <tr key={course.id} className="transition-colors hover:bg-sectionHeader">
               <td className="px-4 py-3 font-bold text-ink">{course.title}</td>
               <td className="px-4 py-3 font-mono text-xs">
                 {course.inviteCode ? (
-                  <span className="inline-flex items-center gap-1 rounded-box bg-navy-tint px-2 py-0.5 font-bold text-navy border border-navy/10">
+                  <span className="inline-flex items-center gap-1 rounded-box border border-navy/10 bg-navy-tint px-2 py-0.5 font-bold text-navy">
                     <KeyRound className="size-3" />
                     {course.inviteCode}
                   </span>
@@ -46,12 +46,12 @@ export function EmptyGroupsState({ courses, openCourseModal, setDeletingId }: Em
                 <div className="flex items-center justify-end gap-2">
                   <button
                     onClick={() => openCourseModal(course)}
-                    className="flex size-8 items-center justify-center rounded-box border border-hairline bg-white text-muted hover:text-navy hover:border-navy/30 transition-colors">
+                    className="flex size-8 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText">
                     <PenLine className="size-4" />
                   </button>
                   <button
                     onClick={() => setDeletingId(course.id)}
-                    className="flex size-8 items-center justify-center rounded-box border border-hairline bg-white text-muted hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-colors">
+                    className="flex size-8 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-muted transition-all duration-200 hover:border-rose-500/30 hover:bg-rose-500/15 hover:text-rose-500">
                     <Trash2 className="size-4" />
                   </button>
                 </div>

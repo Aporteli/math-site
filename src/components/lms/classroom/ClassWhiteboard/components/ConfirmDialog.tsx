@@ -25,30 +25,32 @@ export function ConfirmDialog({
   onConfirm,
 }: Props) {
   return (
-    <div className="absolute inset-0 z-[150] flex items-center justify-center bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="w-80 rounded-box bg-white dark:bg-slate-900 p-5 shadow-2xl border border-slate-200 dark:border-slate-800 text-center animate-in zoom-in-95 duration-150">
+    <div className="absolute inset-0 z-[150] flex animate-in items-center justify-center bg-black/60 p-4 backdrop-blur-sm fade-in duration-150">
+      <div className="w-80 animate-in rounded-box border border-hairline bg-paper p-6 text-center shadow-2xl zoom-in-95 duration-150">
         <div
-          className={`mx-auto flex size-12 items-center justify-center rounded-box mb-3 ${
+          className={`mx-auto mb-3 flex size-11 items-center justify-center rounded-box ${
             tone === 'danger'
-              ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-500'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+              ? 'border border-rose-500/20 bg-rose-500/10 text-rose-500'
+              : 'border border-hairline bg-sectionHeader text-icons'
           }`}>
-          {icon ?? <AlertTriangle className="size-6" />}
+          {icon ?? <AlertTriangle className="size-5" />}
         </div>
-        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">{title}</h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">{description}</p>
+        <h3 className="mb-1 text-base font-bold text-ink">{title}</h3>
+        <p className="mb-5 text-xs leading-relaxed text-muted">{description}</p>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 rounded-box border border-slate-200 dark:border-slate-700 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            className="flex-1 cursor-pointer rounded-box border border-hairline bg-surface px-4 py-2.5 text-sm font-bold text-ink transition-colors hover:bg-paper-deep">
             {cancelLabel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className={`flex-1 rounded-box py-2 text-xs font-semibold text-white shadow-xs transition-colors ${
-              tone === 'danger' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-slate-700 hover:bg-slate-800'
+            className={`flex-1 cursor-pointer rounded-box px-4 py-2.5 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+              tone === 'danger'
+                ? 'border border-rose-500/30 bg-rose-500/15 text-rose-500 hover:bg-rose-500/25'
+                : 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] hover:bg-[#526C85]'
             }`}>
             {confirmLabel}
           </button>

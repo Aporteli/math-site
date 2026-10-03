@@ -173,7 +173,7 @@ export function InlineCropOverlay({
         width: HANDLE_SIZE,
         height: HANDLE_SIZE,
         background: 'white',
-        border: '2px solid #4f46e5',
+        border: '2px solid #465D73',
         borderRadius: 3,
         cursor,
         touchAction: 'none',
@@ -185,7 +185,7 @@ export function InlineCropOverlay({
   return (
     <div
       data-crop-root
-      className="pointer-events-auto absolute inset-0 z-40 bg-slate-950/85"
+      className="pointer-events-auto absolute inset-0 z-40 bg-black/60"
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
@@ -234,11 +234,11 @@ export function InlineCropOverlay({
       </div>
 
       {/* Action bar */}
-      <div className="pointer-events-auto absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-box border border-white/10 bg-slate-900/95 p-1.5 shadow-2xl backdrop-blur-md">
+      <div className="pointer-events-auto absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-box border border-hairline bg-paper p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
         <button
           type="button"
           onClick={onCancel}
-          className="flex h-8 items-center gap-1.5 rounded-box px-3 text-xs font-semibold text-white/80 transition hover:bg-white/10"
+          className="flex h-8 cursor-pointer items-center gap-1.5 rounded-box border border-hairline bg-surface px-3 text-xs font-bold text-ink transition-colors hover:bg-paper-deep"
         >
           <X className="size-3.5" />
           გაუქმება
@@ -246,7 +246,7 @@ export function InlineCropOverlay({
         <button
           type="button"
           onClick={handleConfirm}
-          className="flex h-8 items-center gap-1.5 rounded-box bg-indigo-600 px-3 text-xs font-bold text-white transition hover:bg-indigo-700"
+          className="flex h-8 cursor-pointer items-center gap-1.5 rounded-box bg-[#465D73] px-3 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98]"
         >
           <Check className="size-3.5" />
           დადასტურება

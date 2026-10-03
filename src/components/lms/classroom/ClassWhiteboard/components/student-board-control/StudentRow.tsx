@@ -7,28 +7,20 @@ interface StudentRowProps {
   student: Student;
   locked: boolean;
   onToggleLock: (identity: string) => void;
-  isDark: boolean;
 }
 
-export function StudentRow({ student, locked, onToggleLock, isDark }: StudentRowProps) {
+export function StudentRow({ student, locked, onToggleLock }: StudentRowProps) {
   return (
     <li
-      className={`flex items-center justify-between gap-2 rounded-box px-2 py-1.5 ${
-        isDark ? 'hover:bg-white/5' : 'hover:bg-slate-50'
-      }`}
+      className="flex items-center justify-between gap-2 rounded-box px-2 py-1.5 hover:bg-sectionHeader"
     >
-      <span
-        className={`truncate text-sm font-medium ${
-          isDark ? 'text-slate-200' : 'text-slate-700'
-        }`}
-      >
+      <span className="truncate text-sm font-bold text-mainText">
         {student.name}
       </span>
 
       <LockButton
         locked={locked}
         onClick={() => onToggleLock(student.identity)}
-        isDark={isDark}
       />
     </li>
   );

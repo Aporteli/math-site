@@ -64,10 +64,10 @@ export function TemporalBackgroundTunerButton() {
         e.stopPropagation();
         setPanelOpen(!open);
       }}
-      className={`flex items-center gap-1.5 rounded-box px-2.5 py-1 text-xs font-medium transition-all ${
+      className={`flex cursor-pointer items-center gap-1.5 rounded-box px-2.5 py-1 text-xs font-bold transition-all duration-200 ${
         open
-          ? 'bg-emerald-500 font-semibold text-slate-950 hover:bg-emerald-400'
-          : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
+          ? 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+          : 'border border-hairline bg-main text-mainText hover:bg-mainButtonHover'
       }`}
       title="მასკის დახვეწა"
     >
@@ -185,10 +185,10 @@ export function TemporalBackgroundTunerPanel() {
     <div
       id="temporal-bg-tuner-panel"
       {...stop}
-      className="fixed bottom-24 left-4 z-[9999] w-80 rounded-box border border-white/10 bg-slate-900/95 p-4 shadow-2xl backdrop-blur-xl"
+      className="fixed bottom-24 left-4 z-[9999] w-80 rounded-box border border-hairline bg-main p-4 shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
     >
       <div className="mb-3 flex items-center justify-between">
-        <div className="text-xs font-semibold text-white/80">
+        <div className="text-xs font-bold text-mainText">
           ფონის მასკის დახვეწა
         </div>
         <div className="flex items-center gap-1">
@@ -198,7 +198,7 @@ export function TemporalBackgroundTunerPanel() {
               e.stopPropagation();
               reset();
             }}
-            className="rounded p-1 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+            className="cursor-pointer rounded-box p-1 text-muted transition-colors hover:bg-sectionHeader hover:text-mainText"
             title="ნაგულისხმევზე დაბრუნება"
           >
             <RotateCcw className="size-3.5" />
@@ -209,7 +209,7 @@ export function TemporalBackgroundTunerPanel() {
               e.stopPropagation();
               setPanelOpen(false);
             }}
-            className="rounded p-1 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+            className="cursor-pointer rounded-box p-1 text-muted transition-colors hover:bg-sectionHeader hover:text-mainText"
             title="დახურვა"
           >
             <X className="size-3.5" />
@@ -280,7 +280,7 @@ export function TemporalBackgroundTunerPanel() {
           e.stopPropagation();
           void copy();
         }}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-box bg-white/5 px-2 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+        className="mt-3 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-box border border-hairline bg-sectionHeader px-2 py-1.5 text-xs font-bold text-mainText transition-colors hover:bg-mainButtonHover"
       >
         {copied ? (
           <>
@@ -293,7 +293,7 @@ export function TemporalBackgroundTunerPanel() {
         )}
       </button>
 
-      <div className="mt-2 text-[10px] leading-tight text-white/40">
+      <div className="mt-2 text-[10px] font-medium leading-tight text-muted">
         ცვლილებები მყისიერად მოქმედებს. შენახვა ავტომატურია.
       </div>
     </div>,
@@ -305,7 +305,7 @@ export function TemporalBackgroundTunerPanel() {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-1 mb-2 text-[10px] font-semibold tracking-wider text-white/30 uppercase">
+    <div className="mt-1 mb-2 text-[10px] font-bold uppercase tracking-wide text-muted">
       {children}
     </div>
   );
@@ -338,10 +338,10 @@ function Slider({
   return (
     <div className="mb-3">
       <div className="mb-1 flex items-baseline justify-between">
-        <span className="text-[11px] font-medium text-white/80">{label}</span>
+        <span className="text-[11px] font-bold text-mainText">{label}</span>
         <span
           className={`font-mono text-[11px] ${
-            isDefault ? 'text-white/40' : 'text-emerald-300'
+            isDefault ? 'text-muted' : 'text-navy'
           }`}
         >
           {display}
@@ -361,9 +361,9 @@ function Slider({
         onMouseUp={stop}
         onTouchStart={stop}
         onTouchEnd={stop}
-        className="h-1.5 w-full cursor-pointer appearance-none rounded-box bg-white/10 accent-emerald-400"
+        className="h-1.5 w-full cursor-pointer appearance-none rounded-box bg-paper-deep accent-[#465D73]"
       />
-      <div className="mt-0.5 text-[10px] leading-tight text-white/40">
+      <div className="mt-0.5 text-[10px] font-medium leading-tight text-muted">
         {hint}
       </div>
     </div>

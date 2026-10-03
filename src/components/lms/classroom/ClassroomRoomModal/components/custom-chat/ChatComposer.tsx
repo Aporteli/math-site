@@ -31,16 +31,16 @@ export function ChatComposer({
         className="hidden"
       />
 
-      <form onSubmit={onSubmit} className="flex gap-2 border-t border-white/10 p-2">
+      <form onSubmit={onSubmit} className="flex gap-2 border-t border-hairline bg-sectionHeader p-2">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
           title="სურათის მიმაგრება"
-          className="flex size-8 items-center justify-center rounded-box bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition disabled:opacity-50"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText disabled:cursor-not-allowed disabled:opacity-45"
         >
           {isUploading ? (
-            <Loader2 className="size-4 animate-spin text-emerald-400" />
+            <Loader2 className="size-4 animate-spin text-navy" />
           ) : (
             <ImagePlus className="size-4" />
           )}
@@ -51,13 +51,13 @@ export function ChatComposer({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="ჩაწერეთ ტექსტი ან ჩააკოპირეთ სურათი (Ctrl+V)..."
-          className="flex-1 rounded-box border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white placeholder:text-white/40 focus:border-emerald-500 focus:outline-none transition"
+          className="flex-1 rounded-box border border-hairline bg-searchInput px-3 py-1.5 text-xs font-medium text-searchInputText outline-none transition placeholder:text-muted focus:border-navy"
         />
 
         <button
           type="submit"
           disabled={isSending || !draft.trim()}
-          className="flex size-8 items-center justify-center rounded-box bg-emerald-500 text-white hover:bg-emerald-600 transition disabled:opacity-50"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-box bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none"
         >
           <Send className="size-3.5" />
         </button>

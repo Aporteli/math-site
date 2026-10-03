@@ -67,7 +67,7 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
         onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
+            <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
               <Phone className="h-4 w-4" />
             </span>
             <div className="min-w-0">
@@ -82,7 +82,7 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink">
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-sectionHeader hover:text-ink">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -101,7 +101,7 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+995 555 12 34 56"
-                className="w-full rounded-box border border-hairline bg-paper py-3 pl-9 pr-10 text-base font-bold text-ink outline-none transition placeholder:font-medium placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:py-2.5 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-searchInput py-3 pl-9 pr-10 text-base font-bold text-searchInputText outline-none transition placeholder:font-medium placeholder:text-muted focus:border-navy sm:py-2.5 sm:text-sm"
               />
               {phone ? (
                 <button
@@ -132,7 +132,7 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
                 value={parentPhone}
                 onChange={(e) => setParentPhone(e.target.value)}
                 placeholder="+995 599 98 76 54"
-                className="w-full rounded-box border border-hairline bg-paper py-3 pl-9 pr-10 text-base font-bold text-ink outline-none transition placeholder:font-medium placeholder:text-muted focus:border-navy/50 focus:bg-surface focus:ring-2 focus:ring-navy/15 sm:py-2.5 sm:text-sm"
+                className="w-full rounded-box border border-hairline bg-searchInput py-3 pl-9 pr-10 text-base font-bold text-searchInputText outline-none transition placeholder:font-medium placeholder:text-muted focus:border-navy sm:py-2.5 sm:text-sm"
               />
               {parentPhone ? (
                 <button
@@ -167,7 +167,7 @@ export function PhoneEditorModal({ student, open, onClose, onSave }: Props) {
             type="button"
             onClick={handleSave}
             disabled={isPending}
-            className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong disabled:opacity-50">
+            className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-1.5 rounded-box bg-[#465D73] px-4 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
             <Save className="h-3.5 w-3.5" />
             {isPending ? 'ინახება...' : 'შენახვა'}
           </button>

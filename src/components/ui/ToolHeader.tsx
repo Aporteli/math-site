@@ -15,31 +15,27 @@ export const ToolHeader: React.FC<ToolHeaderProps> = ({
   icon,
 }) => {
   return (
-    <div 
-      className="relative w-full bg-white dark:bg-neutral-900 rounded-box p-6 shadow-sm border border-gray-200/80 dark:border-neutral-800 border-t-4 border-t-amber-500 overflow-hidden mb-6"
-      style={{
-        backgroundImage: `
-          linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px)
-        `,
-        backgroundSize: '16px 16px',
-      }}
-    >
+    <div className="relative mb-6 w-full overflow-hidden rounded-box border border-hairline bg-main p-6 shadow-sm">
+      <div
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--color-hero)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-hero)_1px,transparent_1px)] bg-[size:1rem_1rem] opacity-35"
+        aria-hidden="true"
+      />
+      <div className="absolute inset-x-0 top-0 h-1 bg-brass" aria-hidden="true" />
       <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="p-2 bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-amber-600 dark:text-amber-400 rounded-box shadow-xs">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="rounded-box bg-brass-tint p-2 text-brass-strong">
             {icon}
           </div>
-          <span className="text-xs font-bold text-amber-600 dark:text-amber-400 tracking-wide uppercase">
+          <span className="text-xs font-bold tracking-wide text-brass uppercase">
             {category}
           </span>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight">
+        <h1 className="text-2xl font-bold leading-tight tracking-tight text-ink sm:text-3xl">
           {title}
         </h1>
 
-        <p className="text-sm text-gray-600 dark:text-neutral-400 mt-1.5 max-w-2xl leading-relaxed">
+        <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-body">
           {description}
         </p>
       </div>

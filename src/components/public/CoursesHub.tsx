@@ -29,10 +29,10 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`max-w-full rounded-box border px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:px-4 ${
+      className={`max-w-full cursor-pointer rounded-box border px-3.5 py-2 text-sm transition-all duration-200 sm:px-4 ${
         active
-          ? 'border-navy bg-navy text-white shadow-sm'
-          : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink'
+          ? 'border-transparent bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+          : 'border-hairline bg-main font-medium text-mainText hover:bg-sectionHeader'
       }`}>
       {children}
     </button>
@@ -55,8 +55,8 @@ function CourseCard({
   const Icon = course.icon;
 
   return (
-    <article className="flex h-full min-w-0 flex-col rounded-box border border-hairline bg-white p-5 shadow-sm transition-all hover:border-navy/30 hover:shadow-md sm:p-6">
-      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-navy-tint text-navy">
+    <article className="relative flex h-full min-w-0 flex-col overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm transition-all duration-200 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass hover:-translate-y-0.5 hover:shadow-md sm:p-6">
+      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <h3 className="mt-4 break-words text-lg font-semibold leading-snug text-ink">{item.title}</h3>
@@ -79,14 +79,14 @@ function CourseCard({
       <ul className="mt-4 flex-1 space-y-2.5">
         {item.features.map((feature) => (
           <li key={feature} className="flex gap-2 text-sm leading-relaxed text-body">
-            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-navy" aria-hidden="true" />
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-win" aria-hidden="true" />
             <span className="min-w-0 break-words">{feature}</span>
           </li>
         ))}
       </ul>
       <Link
         href={localePath(locale, course.href)}
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-box bg-navy px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong">
+        className="mt-6 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-box bg-[#465D73] px-4 py-2.5 text-center text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98]">
         {cta}
         <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
       </Link>
@@ -106,9 +106,9 @@ function ProcessStep({
   text: string;
 }) {
   return (
-    <li className="relative min-w-0 rounded-box border border-hairline bg-white p-5">
+    <li className="relative min-w-0 overflow-hidden rounded-box border border-hairline bg-main p-5 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
       <span className="text-xs font-semibold tracking-wide text-brass">{String(index).padStart(2, '0')}</span>
-      <span className="mt-3 flex size-10 items-center justify-center rounded-box bg-navy-tint text-navy">
+      <span className="mt-3 flex size-10 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <h3 className="mt-4 text-base font-semibold text-ink">{title}</h3>
@@ -134,8 +134,8 @@ export function CoursesHub({ locale, copy }: CoursesHubProps) {
               {COURSE_HIGHLIGHTS.map(({ id, icon: Icon }) => (
                 <li
                   key={id}
-                  className="inline-flex max-w-full items-center gap-2 rounded-box border border-hairline bg-white px-3.5 py-2.5 text-sm font-medium text-ink">
-                  <Icon className="size-4 shrink-0 text-navy" aria-hidden="true" />
+                  className="inline-flex max-w-full items-center gap-2 rounded-box border border-hairline bg-main px-3.5 py-2.5 text-sm font-medium text-ink">
+                  <Icon className="size-4 shrink-0 text-brass-strong" aria-hidden="true" />
                   <span className="min-w-0 break-words">{copy.highlights[id]}</span>
                 </li>
               ))}
@@ -156,7 +156,7 @@ export function CoursesHub({ locale, copy }: CoursesHubProps) {
 
         <section className="mt-10" aria-label={copy.hero.eyebrow}>
           {visibleCourses.length === 0 ? (
-            <p className="rounded-box border border-hairline bg-white px-6 py-16 text-center text-body shadow-sm">
+            <p className="rounded-box border border-hairline bg-main px-6 py-16 text-center text-body shadow-sm">
               {copy.empty}
             </p>
           ) : (
@@ -196,7 +196,7 @@ export function CoursesHub({ locale, copy }: CoursesHubProps) {
           <ul className="mt-8 space-y-3">
             {COURSE_FAQS.map((id) => (
               <li key={id}>
-                <details className="group rounded-box border border-hairline bg-white px-5 py-4 shadow-sm open:border-navy/20">
+                <details className="group rounded-box border border-hairline bg-main px-5 py-4 shadow-sm open:border-brass/40">
                   <summary className="flex cursor-pointer list-none items-start justify-between gap-3 text-base font-semibold text-ink [&::-webkit-details-marker]:hidden">
                     <span className="min-w-0 break-words">{copy.faq.items[id].question}</span>
                     <ChevronDown
@@ -211,14 +211,14 @@ export function CoursesHub({ locale, copy }: CoursesHubProps) {
           </ul>
         </section>
 
-        <section className="mt-16 rounded-box bg-navy px-6 py-10 text-center text-white sm:mt-20 sm:px-10 sm:py-12">
-          <h2 className="text-2xl font-bold tracking-tight text-balance sm:text-3xl">{copy.banner.title}</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-pretty text-paper/80">
+        <section className="relative mt-16 overflow-hidden rounded-box border border-hairline bg-main px-6 py-10 text-center shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass sm:mt-20 sm:px-10 sm:py-12">
+          <h2 className="text-2xl font-bold tracking-tight text-balance text-ink sm:text-3xl">{copy.banner.title}</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-pretty text-body">
             {copy.banner.subtitle}
           </p>
           <Link
             href={localePath(locale, '/contact')}
-            className="mt-8 inline-flex items-center justify-center gap-2 rounded-box bg-white px-6 py-3 text-sm font-semibold text-navy shadow-sm transition-colors hover:bg-paper">
+            className="mt-8 inline-flex cursor-pointer items-center justify-center gap-2 rounded-box bg-[#465D73] px-6 py-3 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98]">
             {copy.banner.cta}
             <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
           </Link>

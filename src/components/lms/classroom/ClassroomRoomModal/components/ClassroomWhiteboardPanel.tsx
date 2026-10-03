@@ -31,7 +31,7 @@ export function ClassroomWhiteboardPanel({
 }: ClassroomWhiteboardPanelProps) {
   return (
     <div
-      className={`relative flex flex-1 h-full min-h-0 min-w-0 overflow-hidden rounded-box bg-white ${
+      className={`relative flex h-full min-h-0 min-w-0 flex-1 overflow-hidden rounded-box bg-main ${
         hidden ? 'hidden' : ''
       }`}>
       {' '}

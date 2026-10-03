@@ -139,8 +139,8 @@ function FilterPill({ active, onClick, children }: { active: boolean; onClick: (
       onClick={onClick}
       className={`max-w-full rounded-box border px-3.5 py-2 text-sm font-medium transition-colors duration-200 sm:px-4 ${
         active
-          ? 'border-navy bg-navy text-white shadow-sm'
-          : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink'
+          ? 'border-transparent bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+          : 'border-hairline bg-main text-mainText hover:bg-sectionHeader'
       }`}>
       {children}
     </button>
@@ -229,7 +229,7 @@ export function CalculatorHub({
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={copy.hero.searchPlaceholder}
                 autoComplete="off"
-                className="w-full min-w-0 appearance-none rounded-box   border border-hairline bg-white py-3 pr-4 pl-12 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+                className="w-full min-w-0 appearance-none rounded-box border border-hairline bg-searchInput py-3 pr-4 pl-12 text-base text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
               />
             </label>
             <p className="text-sm text-muted" aria-live="polite">
@@ -270,8 +270,8 @@ export function CalculatorHub({
                         className={
                           'inline-flex max-w-full items-center gap-1.5 rounded-box border px-3 py-1.5 text-sm font-semibold transition-colors ' +
                           (active
-                            ? 'border-navy bg-navy text-white shadow-sm'
-                            : 'border-hairline bg-white text-body hover:border-navy/30 hover:text-ink')
+                            ? 'border-transparent bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                            : 'border-hairline bg-main text-mainText hover:bg-sectionHeader')
                         }>
                         <Icon className="size-3.5 shrink-0" aria-hidden="true" />
                         <span className="truncate">{item.title}</span>
@@ -424,7 +424,7 @@ export function CalculatorHub({
           />
         )}
         {!activeImplemented && activeItem ? (
-          <section className="rounded-box border border-hairline bg-white p-6 shadow-sm sm:p-8">
+          <section className="relative overflow-hidden rounded-box border border-hairline bg-main p-6 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass sm:p-8">
             <h2 className="text-xl font-semibold tracking-tight text-ink">{activeItem.title}</h2>
             <p className="mt-2 max-w-3xl text-base leading-relaxed text-body">{activeItem.description}</p>
             <h3 className="mt-6 text-lg font-semibold text-ink">{copy.tool.comingSoon}</h3>
@@ -437,5 +437,5 @@ export function CalculatorHub({
 }
 
 function Loading() {
-  return <div className="h-80 animate-pulse rounded-box border border-hairline bg-white dark:bg-slate-900" />;
+  return <div className="h-80 animate-pulse rounded-box border border-hairline bg-main" />;
 }

@@ -622,7 +622,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
           type="button"
           title="წაშლა"
           aria-label="წაშლა"
-          className="pointer-events-auto absolute z-30 flex size-7 -translate-x-1/2 -translate-y-full items-center justify-center rounded-full border border-white/10 bg-slate-900/95 text-red-400 shadow-lg"
+          className="pointer-events-auto absolute z-30 flex size-7 -translate-x-1/2 -translate-y-full cursor-pointer items-center justify-center rounded-box border border-rose-500/30 bg-rose-500/15 text-rose-500 shadow-sm"
           style={{ left: deletePos.x, top: deletePos.y }}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {

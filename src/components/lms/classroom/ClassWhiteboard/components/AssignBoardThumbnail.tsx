@@ -115,28 +115,26 @@ export function AssignBoardThumbnail({
   return (
     <div
       onClick={onToggle}
-      className={`group relative flex flex-col items-center gap-1 p-1 rounded-box cursor-pointer transition-all shrink-0 select-none ${
+      className={`group relative flex shrink-0 cursor-pointer select-none flex-col items-center gap-1 rounded-box p-1 transition-all ${
         isSelected
-          ? 'bg-indigo-600/10 dark:bg-indigo-500/20 ring-2 ring-indigo-600 dark:ring-indigo-400'
-          : 'hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800'
+          ? 'bg-mainButton shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+          : 'border border-hairline hover:bg-sectionHeader'
       }`}>
-      <div className="relative w-24 h-15 rounded-box overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950">
+      <div className="relative h-15 w-24 overflow-hidden rounded-box border border-hairline bg-main shadow-xs">
         <canvas ref={canvasRef} width={96} height={60} className="w-full h-full object-contain" />
 
         <div
           className={`absolute top-1 right-1 flex size-4 items-center justify-center rounded-box border transition-all ${
             isSelected
-              ? 'bg-indigo-600 border-indigo-600 text-white'
-              : 'bg-white/80 border-slate-300 text-transparent group-hover:border-slate-400'
+              ? 'border-transparent bg-[#465D73] text-white'
+              : 'border-hairline bg-main text-transparent group-hover:border-navy'
           }`}>
           <Check className="size-2.5 stroke-[3]" />
         </div>
       </div>
 
       <span
-        className={`text-[10px] font-bold ${
-          isSelected ? 'text-indigo-600 dark:text-indigo-400 font-extrabold' : 'text-slate-600 dark:text-slate-400'
-        }`}>
+        className={`text-[10px] font-bold ${isSelected ? 'text-navy' : 'text-muted'}`}>
         გვერდი {pageIndex + 1}
       </span>
     </div>

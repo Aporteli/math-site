@@ -3,7 +3,7 @@
 import type { LucideIcon } from 'lucide-react';
 
 const IDLE =
-  'border-white/10 bg-white/5 text-white/80 hover:bg-white/15 hover:text-white';
+  'cursor-pointer border-hairline bg-main text-mainText hover:bg-mainButtonHover';
 
 interface ControlButtonProps {
   icon: LucideIcon;
@@ -21,7 +21,7 @@ export function ControlButton({
   title,
   onClick,
   active = false,
-  activeClass = 'border-blue-500 bg-blue-600 text-white',
+  activeClass = 'border-transparent bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)]',
   keepIdleOnActive = false,
 }: ControlButtonProps) {
   const state = active

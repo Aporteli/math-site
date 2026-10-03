@@ -42,9 +42,9 @@ export function ProblemPickerModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm">
       <div className="flex h-[85vh] w-full max-w-4xl flex-col rounded-box border border-hairline bg-paper shadow-2xl overflow-hidden">
         {/* ჰედერი */}
-        <div className="flex items-center justify-between border-b border-hairline bg-white px-6 py-4">
+        <div className="flex items-center justify-between border-b border-hairline bg-sectionHeader px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-9 items-center justify-center rounded-box bg-navy-tint text-navy">
+            <div className="flex size-9 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
               <FolderOpen className="size-5" />
             </div>
             <div>
@@ -77,8 +77,8 @@ export function ProblemPickerModal({
               onClick={() => setSelectedSet("ALL")}
               className={`rounded-box px-3 py-1.5 text-xs font-semibold transition-all ${
                 selectedSet === "ALL"
-                  ? "bg-navy text-white shadow-sm"
-                  : "bg-paper text-muted hover:bg-paper-deep hover:text-ink"
+                  ? "bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]"
+                  : "bg-sectionHeader text-muted hover:bg-mainButtonHover hover:text-mainText"
               }`}
             >
               ყველა ({problems.length})
@@ -89,8 +89,8 @@ export function ProblemPickerModal({
                 onClick={() => setSelectedSet(name)}
                 className={`rounded-box px-3 py-1.5 text-xs font-semibold transition-all ${
                   selectedSet === name
-                    ? "bg-navy text-white shadow-sm"
-                    : "bg-paper text-muted hover:bg-paper-deep hover:text-ink"
+                    ? "bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]"
+                    : "bg-sectionHeader text-muted hover:bg-mainButtonHover hover:text-mainText"
                 }`}
               >
                 {name}
@@ -115,7 +115,7 @@ export function ProblemPickerModal({
                     onSelect(problem);
                     onClose();
                   }}
-                  className="group relative flex flex-col justify-between rounded-box border border-hairline bg-white p-5 shadow-sm transition-all hover:border-navy/60 hover:shadow-md cursor-pointer"
+                  className="group relative flex cursor-pointer flex-col justify-between rounded-box border border-hairline bg-main p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md"
                 >
                   <div>
                     {/* ტეგები */}

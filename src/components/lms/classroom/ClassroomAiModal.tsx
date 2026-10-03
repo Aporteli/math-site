@@ -129,7 +129,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
   return (
     <div
       onPaste={handlePaste}
-      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 backdrop-blur-xs">
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm">
       {/* 👈 გარეთ დაკლიკების ფონური ღილაკი */}
       <button
         type="button"
@@ -138,14 +138,14 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
         className="absolute inset-0 h-full w-full cursor-default bg-transparent"
       />
 
-      <div className="relative z-10 flex h-[88vh] w-full max-w-3xl flex-col rounded-box border border-white/10 bg-slate-900 text-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-        {/* Header */}
-        <div className="pt-3 h-14 shrink-0 border-b border-white/10 px-4 bg-slate-950/60">
-          <div className="flex items-center justify-between gap-3">
+      <div className="relative z-10 flex h-[88vh] w-full max-w-3xl animate-in flex-col overflow-hidden rounded-box border border-hairline bg-paper text-ink shadow-2xl fade-in zoom-in-95 duration-150">
+        <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
+        <div className="flex h-14 shrink-0 items-center border-b border-hairline bg-sectionHeader px-4">
+          <div className="flex w-full items-center justify-between gap-3">
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value as AiModelId)}
-              className="rounded-box bg-slate-800 border border-white/10 px-2.5 py-1 text-xs font-medium text-slate-200 outline-none focus:border-indigo-500">
+              className="rounded-box border border-hairline bg-searchInput px-2.5 py-1.5 text-xs font-bold text-searchInputText outline-none focus:border-navy">
               {AI_MODELS.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.id} ({m.provider})
@@ -156,14 +156,14 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 items-center justify-center rounded-box bg-white/5 text-slate-400 hover:bg-rose-500/20 hover:text-rose-400 transition-colors">
+              className="flex size-8 cursor-pointer items-center justify-center rounded-box text-muted transition-colors hover:bg-rose-500/15 hover:text-rose-500">
               <X className="size-4" />
             </button>
           </div>
         </div>
 
         {/* 3 სწრაფი პრომპტის ღილაკი */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-white/5 bg-slate-950/30 p-2.5">
+        <div className="flex flex-wrap items-center gap-2 border-b border-hairline bg-sectionHeader p-2.5">
           {QUICK_PROMPTS.map((qp, idx) => {
             const Icon = qp.icon;
             return (
@@ -175,8 +175,8 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
                   setPrompt(qp.prompt);
                   void executeAiRequest(qp.prompt);
                 }}
-                className="flex items-center gap-1.5 rounded-box border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-500/40 disabled:opacity-50 transition-all">
-                <Icon className="size-3.5 text-indigo-400" />
+                className="flex cursor-pointer items-center gap-1.5 rounded-box border border-hairline bg-main px-2.5 py-1 text-xs font-bold text-ink transition-colors hover:bg-mainButtonHover disabled:cursor-not-allowed disabled:opacity-45">
+                <Icon className="size-3.5 text-brass-strong" />
                 <span>{qp.label}</span>
               </button>
             );
@@ -186,44 +186,44 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
         {/* პასუხის არეალი */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {error && (
-            <div className="rounded-box border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-400">{error}</div>
+            <div className="rounded-box border border-rose-500/30 bg-rose-500/15 p-3 text-xs text-rose-500">{error}</div>
           )}
 
           {response ? (
-            <div className="rounded-box border border-white/5 bg-slate-800/60 p-4 text-sm leading-relaxed text-slate-200 select-text">
+            <div className="select-text rounded-box border border-hairline bg-main p-4 text-sm leading-relaxed text-ink">
               <KatexPreview
                 tex={toKatexFriendlyTex(response.replaceAll('**', ''))}
-                className="block break-words whitespace-pre-wrap text-slate-200 [&_.katex-display]:my-3 [&_.katex]:text-[1rem] [&_.katex]:text-white"
+                className="block whitespace-pre-wrap break-words text-ink [&_.katex]:text-[1rem] [&_.katex]:text-ink [&_.katex-display]:my-3"
               />
             </div>
           ) : !loading ? (
-            <div className="flex h-full flex-col items-center justify-center text-center text-slate-500">
-              <Sparkles className="size-8 text-slate-600 mb-2 stroke-1" />
+            <div className="flex h-full flex-col items-center justify-center text-center text-muted">
+              <Sparkles className="mb-2 size-8 stroke-1 text-brass-strong" />
               <p className="text-xs">დასვით კითხვა, ჩასვით (Ctrl+V) სურათი ან აირჩიეთ სწრაფი მოქმედება</p>
             </div>
           ) : null}
 
           {loading && (
-            <div className="flex flex-col items-center justify-center py-8 gap-2 text-indigo-400">
+            <div className="flex flex-col items-center justify-center gap-2 py-8 text-navy">
               <Loader2 className="size-6 animate-spin" />
-              <span className="text-xs text-slate-400">AI ამუშავებს პასუხს...</span>
+              <span className="text-xs text-muted">AI ამუშავებს პასუხს...</span>
             </div>
           )}
         </div>
 
         {/* Input და სურათის მიმაგრება */}
-        <div className="shrink-0 border-t border-white/10 bg-slate-950/80 p-3 space-y-2">
+        <div className="shrink-0 space-y-2 border-t border-hairline bg-sectionHeader p-3">
           {image && (
-            <div className="relative inline-flex items-center gap-2 rounded-box border border-white/10 bg-slate-800 p-1.5 pr-3">
+            <div className="relative inline-flex items-center gap-2 rounded-box border border-hairline bg-main p-1.5 pr-3">
               <img
                 src={image.preview}
                 alt="Upload preview"
-                className="h-10 w-10 rounded object-cover border border-white/5"
+                className="h-10 w-10 rounded-box border border-hairline object-cover"
               />
-              <span className="text-xs text-slate-300 max-w-[200px] truncate">
+              <span className="max-w-[200px] truncate text-xs text-ink">
                 {image.file.name || 'დაკოპირებული სურათი'}
               </span>
-              <button type="button" onClick={handleRemoveImage} className="ml-auto text-slate-400 hover:text-rose-400">
+              <button type="button" onClick={handleRemoveImage} className="ml-auto cursor-pointer text-muted hover:text-rose-500">
                 <Trash2 className="size-3.5" />
               </button>
             </div>
@@ -236,7 +236,7 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               title="სურათის მიმაგრება"
-              className="flex size-9 shrink-0 items-center justify-center rounded-box bg-slate-800 border border-white/10 text-slate-300 hover:bg-slate-700 transition-colors">
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-icons transition-colors hover:bg-mainButtonHover hover:text-mainText">
               <ImageIcon className="size-4" />
             </button>
 
@@ -251,14 +251,14 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
                 }
               }}
               placeholder="დაწერეთ კითხვა ან ჩასვით სურათი (Ctrl+V)..."
-              className="flex-1 rounded-box bg-slate-800 border border-white/10 px-3.5 py-2 text-xs text-white placeholder:text-slate-500 outline-none focus:border-indigo-500"
+              className="flex-1 rounded-box border border-hairline bg-searchInput px-3.5 py-2 text-xs font-medium text-searchInputText outline-none placeholder:text-muted focus:border-navy"
             />
 
             <button
               type="button"
               disabled={loading || (!prompt.trim() && !image)}
               onClick={() => executeAiRequest(prompt)}
-              className="flex size-9 shrink-0 items-center justify-center rounded-box bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40 transition-colors">
+              className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-box bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
               {loading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
             </button>
           </div>

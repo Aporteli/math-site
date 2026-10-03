@@ -77,7 +77,7 @@ export function WorkspaceHub({ locale, copy, tools }: WorkspaceHubProps) {
               onChange={(event) => setQuery(event.target.value)}
               placeholder={copy.index.searchPlaceholder}
               autoComplete="off"
-              className="w-full min-w-0 appearance-none rounded-box border border-hairline bg-white py-3 pr-4 pl-12 text-base text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:ring-2 focus:ring-navy/15 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
+              className="w-full min-w-0 appearance-none rounded-box border border-hairline bg-searchInput py-3 pr-4 pl-12 text-base text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
             />
           </label>
         }
@@ -106,16 +106,16 @@ export function WorkspaceHub({ locale, copy, tools }: WorkspaceHubProps) {
                   return (
                     <li
                       key={module.id}
-                      className="group rounded-box border border-hairline bg-surface p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md sm:p-6">
+                      className="group relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm transition duration-200 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass hover:-translate-y-0.5 hover:shadow-md sm:p-6">
                       <Link
                         href={localePath(locale, module.href)}
-                        className="flex items-center gap-4 rounded-box text-ink outline-none focus-visible:ring-3 focus-visible:ring-navy/20">
-                        <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-box bg-navy-tint text-navy transition-colors group-hover:bg-navy group-hover:text-white">
+                        className="flex items-center gap-4 rounded-box text-ink outline-none">
+                        <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
                           <Icon className="size-5.5" aria-hidden="true" />
                         </span>
                         <h3 className="min-w-0 flex-1 text-base font-bold leading-snug sm:text-lg">{item.title}</h3>
                         <ArrowUpRight
-                          className="size-4.5 shrink-0 text-muted transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-navy"
+                          className="size-4.5 shrink-0 text-muted transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brass-strong"
                           aria-hidden="true"
                         />
                       </Link>
@@ -124,8 +124,8 @@ export function WorkspaceHub({ locale, copy, tools }: WorkspaceHubProps) {
                           <li key={link.id}>
                             <Link
                               href={localePath(locale, link.href)}
-                              className="flex items-start gap-3 rounded-box px-2 py-2 text-sm leading-relaxed text-body transition-colors hover:bg-paper-deep hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/20">
-                              <span className="mt-2 size-1.5 shrink-0 rounded-box bg-navy/55" aria-hidden="true" />
+                              className="flex items-start gap-3 rounded-box px-2 py-2 text-sm leading-relaxed text-body transition-colors hover:bg-sectionHeader hover:text-ink">
+                              <span className="mt-2 size-1.5 shrink-0 rounded-box bg-brass" aria-hidden="true" />
                               <span className="min-w-0 flex-1 break-words">
                                 {item.links[link.id as keyof typeof item.links]}
                               </span>
@@ -153,13 +153,13 @@ export function WorkspaceHub({ locale, copy, tools }: WorkspaceHubProps) {
                   <li key={row.id}>
                     <Link
                       href={localePath(locale, row.href)}
-                      className="group flex h-full items-center gap-3 rounded-box border border-hairline bg-surface p-4 shadow-sm transition hover:border-navy/30 hover:bg-surface-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-navy/20">
+                      className="group flex h-full items-center gap-3 rounded-box border border-hairline bg-main p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold leading-snug text-ink">{copy.lookup.rows[row.id]}</span>
                         <span className="mt-1 block text-xs font-medium text-muted">{copy.lookup.kinds[row.kind]}</span>
                       </span>
                       <ArrowUpRight
-                        className="size-4 shrink-0 text-muted transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-navy"
+                        className="size-4 shrink-0 text-muted transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brass-strong"
                         aria-hidden="true"
                       />
                       <span className="sr-only">{copy.lookup.launch}</span>
@@ -170,13 +170,13 @@ export function WorkspaceHub({ locale, copy, tools }: WorkspaceHubProps) {
                   <li key={tool.id}>
                     <Link
                       href={localePath(locale, tool.href)}
-                      className="group flex h-full items-center gap-3 rounded-box border border-hairline bg-surface p-4 shadow-sm transition hover:border-navy/30 hover:bg-surface-hover hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-navy/20">
+                      className="group flex h-full items-center gap-3 rounded-box border border-hairline bg-main p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold leading-snug text-ink">{tools[tool.id].title}</span>
                         <span className="mt-1 block text-xs font-medium text-muted">{tools[tool.id].badge}</span>
                       </span>
                       <ArrowUpRight
-                        className="size-4 shrink-0 text-muted transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-navy"
+                        className="size-4 shrink-0 text-muted transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brass-strong"
                         aria-hidden="true"
                       />
                       <span className="sr-only">{copy.lookup.launch}</span>

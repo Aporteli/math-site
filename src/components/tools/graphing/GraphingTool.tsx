@@ -54,15 +54,15 @@ interface GraphingToolProps {
 }
 
 const fieldClass =
-  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2 font-mono text-sm text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
 const domainFieldClass =
-  'w-full min-w-0 rounded-box border border-hairline bg-white px-2 py-1 font-mono text-xs text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-2 py-1 font-mono text-xs text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
-const panelClass = 'rounded-box border border-hairline/40 bg-surface/30 p-4 shadow-sm sm:p-5';
+const panelClass = 'relative overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass sm:p-5';
 
 const iconBtnClass =
-  'inline-flex items-center rounded-box bg-black/40 border border-hairline/40 px-3.5 py-1.5 text-xs font-semibold text-sky-400 hover:bg-black/60 hover:border-hairline transition-colors';
+  'inline-flex cursor-pointer items-center rounded-box border border-rose-500/30 bg-rose-500/15 px-3.5 py-1.5 text-xs font-bold text-rose-500 transition-colors hover:bg-rose-500/150/25 disabled:cursor-not-allowed disabled:opacity-45';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -206,7 +206,7 @@ export function GraphingTool({ copy }: GraphingToolProps) {
                 key={id}
                 type="button"
                 onClick={() => applyPreset(id)}
-                className="inline-flex items-center rounded-box border border-brass/25 bg-brass-tint/40 px-3 py-1 text-xs font-semibold text-ink hover:border-brass/50 hover:bg-brass-tint/70 hover:text-navy transition-colors cursor-pointer shadow-2xs">
+                className="inline-flex items-center rounded-box border border-brass/25 bg-brass-tint/40 px-3 py-1 text-xs font-semibold text-ink hover:border-brass/50 hover:bg-brass-tint/70 hover:text-mainText transition-colors cursor-pointer shadow-2xs">
                 {label}
               </button>
             ))}
@@ -219,7 +219,7 @@ export function GraphingTool({ copy }: GraphingToolProps) {
             <button
               type="button"
               onClick={addFunction}
-              className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
+              className="inline-flex items-center gap-1.5 cursor-pointer rounded-box bg-[#465D73] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 active:scale-[0.98] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#526C85]">
               <Plus className="size-3.5" aria-hidden="true" />
               {copy.addFunction}
             </button>
@@ -317,7 +317,7 @@ export function GraphingTool({ copy }: GraphingToolProps) {
               type="checkbox"
               checked={showTangent}
               onChange={(event) => setShowTangent(event.target.checked)}
-              className="size-4 rounded border-hairline accent-navy"
+              className="size-4 rounded border-hairline accent-[#465D73]"
             />
             {copy.showTangent}
           </label>
@@ -326,7 +326,7 @@ export function GraphingTool({ copy }: GraphingToolProps) {
               type="checkbox"
               checked={showDerivative}
               onChange={(event) => setShowDerivative(event.target.checked)}
-              className="size-4 rounded border-hairline accent-navy"
+              className="size-4 rounded border-hairline accent-[#465D73]"
             />
             {copy.showDerivative}
           </label>
@@ -335,7 +335,7 @@ export function GraphingTool({ copy }: GraphingToolProps) {
               type="checkbox"
               checked={showMarkers}
               onChange={(event) => setShowMarkers(event.target.checked)}
-              className="size-4 rounded border-hairline accent-navy"
+              className="size-4 rounded border-hairline accent-[#465D73]"
             />
             {copy.showMarkers}
           </label>
@@ -377,7 +377,7 @@ function FunctionRow({
     (!Number.isFinite(minN) || !Number.isFinite(maxN) || minN >= maxN);
 
   return (
-    <div className="rounded-box border border-hairline bg-paper/60 p-3">
+    <div className="rounded-box border border-hairline bg-sectionHeader p-3">
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold text-muted">f{index + 1}(x)</span>
         <label className="relative size-6 shrink-0 overflow-hidden rounded-box border border-hairline">
@@ -401,7 +401,7 @@ function FunctionRow({
               className="size-3.5 rounded-box ring-offset-1 ring-offset-paper"
               style={{
                 backgroundColor: color,
-                outline: row.color === color ? '2px solid var(--color-navy)' : undefined,
+                outline: row.color === color ? '2px solid #465D73' : undefined,
               }}
             />
           ))}
@@ -413,7 +413,7 @@ function FunctionRow({
             checked={row.visible}
             title={copy.toggleVisible}
             onChange={(event) => onChange(row.id, { visible: event.target.checked })}
-            className="size-4 rounded border-hairline accent-navy"
+            className="size-4 rounded border-hairline accent-[#465D73]"
           />
         </label>
         <div className="flex items-center gap-1">
@@ -494,7 +494,7 @@ function FunctionRow({
                         params: { ...row.params, [name]: Number(event.target.value) },
                       })
                     }
-                    className="mt-1 w-full accent-navy"
+                    className="mt-1 w-full accent-[#465D73]"
                   />
                 </label>
               </li>
@@ -557,7 +557,7 @@ function IntegralPanel({
           type="checkbox"
           checked={shade}
           onChange={(event) => onShade(event.target.checked)}
-          className="size-4 rounded border-hairline accent-navy"
+          className="size-4 rounded border-hairline accent-[#465D73]"
         />
         {copy.integralEnable}
       </label>
@@ -580,7 +580,7 @@ function IntegralPanel({
               name="integral-mode"
               checked={mode === 'single'}
               onChange={() => onMode('single')}
-              className="accent-navy"
+              className="accent-[#465D73]"
             />
             {copy.integralSingle}
           </label>
@@ -591,7 +591,7 @@ function IntegralPanel({
               checked={mode === 'between'}
               onChange={() => onMode('between')}
               disabled={functions.length < 2}
-              className="accent-navy"
+              className="accent-[#465D73]"
             />
             {copy.integralBetween}
           </label>
@@ -722,14 +722,14 @@ function ValuesTable({
         <button
           type="button"
           onClick={() => void copyTable()}
-          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-1.5 text-xs font-semibold text-ink hover:border-navy/30">
+          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-main px-3 py-1.5 text-xs font-semibold text-ink hover:bg-sectionHeader">
           <Copy className="size-3.5" aria-hidden="true" />
           {copied ? copy.tableCopied : copy.tableCopy}
         </button>
         <button
           type="button"
           onClick={exportCsv}
-          className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-1.5 text-xs font-semibold text-white hover:bg-navy-strong">
+          className="inline-flex items-center gap-1.5 cursor-pointer rounded-box bg-[#465D73] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 active:scale-[0.98] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#526C85]">
           <Download className="size-3.5" aria-hidden="true" />
           {copy.tableExport}
         </button>
@@ -1034,7 +1034,7 @@ function GraphCanvas({
           type="button"
           title={copy.resetView}
           onClick={resetView}
-          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
+          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-main px-3 py-2 text-xs font-semibold text-ink hover:bg-sectionHeader hover:text-mainText">
           <RotateCcw className="size-3.5" aria-hidden="true" />
           {copy.resetView}
         </button>
@@ -1042,7 +1042,7 @@ function GraphCanvas({
           type="button"
           title={copy.zoomIn}
           onClick={() => zoomBy(0.8)}
-          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
+          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-main px-3 py-2 text-xs font-semibold text-ink hover:bg-sectionHeader hover:text-mainText">
           <Plus className="size-3.5" aria-hidden="true" />
           {copy.zoomIn}
         </button>
@@ -1050,7 +1050,7 @@ function GraphCanvas({
           type="button"
           title={copy.zoomOut}
           onClick={() => zoomBy(1.25)}
-          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-xs font-semibold text-ink hover:border-navy/30 hover:text-navy">
+          className="inline-flex items-center gap-1.5 rounded-box border border-hairline bg-main px-3 py-2 text-xs font-semibold text-ink hover:bg-sectionHeader hover:text-mainText">
           <Minus className="size-3.5" aria-hidden="true" />
           {copy.zoomOut}
         </button>
@@ -1058,7 +1058,7 @@ function GraphCanvas({
           type="button"
           title={copy.exportPng}
           onClick={exportPng}
-          className="inline-flex items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-semibold text-white hover:bg-navy-strong">
+          className="inline-flex items-center gap-1.5 cursor-pointer rounded-box bg-[#465D73] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 active:scale-[0.98] px-3 py-2 text-xs font-semibold text-white hover:bg-[#526C85]">
           <Download className="size-3.5" aria-hidden="true" />
           {copy.exportPng}
         </button>
@@ -1066,7 +1066,7 @@ function GraphCanvas({
 
       <div
         ref={hostRef}
-        className="relative mt-4 min-h-[22rem] overflow-hidden rounded-box border border-hairline bg-white [&_svg]:block [&_svg]:max-w-full"
+        className="relative mt-4 min-h-[22rem] overflow-hidden rounded-box border border-hairline bg-main [&_svg]:block [&_svg]:max-w-full"
       />
       {plotError ? <p className="mt-2 text-sm text-brass-strong">{copy.plotError}</p> : null}
 
@@ -1076,7 +1076,7 @@ function GraphCanvas({
           {cursor ? `(${formatGraphNumber(cursor.x)}, ${formatGraphNumber(cursor.y)})` : copy.cursorEmpty}
         </p>
         {activeMarker && markerLabel ? (
-          <p className="rounded-box bg-navy-tint px-3 py-2 text-navy">
+          <p className="rounded-box bg-brass-tint px-3 py-2 text-brass-strong">
             <span className="font-semibold">{markerLabel}</span>
             {': '}({formatGraphNumber(activeMarker.x)}, {formatGraphNumber(activeMarker.y)})
           </p>
@@ -1139,7 +1139,7 @@ function GraphCanvas({
         </fieldset>
         <button
           type="submit"
-          className="rounded-box bg-navy px-3 py-2 text-sm font-semibold text-white hover:bg-navy-strong sm:col-span-2">
+          className="cursor-pointer rounded-box bg-[#465D73] font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 active:scale-[0.98] px-3 py-2 text-sm font-semibold text-white hover:bg-[#526C85] sm:col-span-2">
           {copy.applyDomain}
         </button>
       </form>

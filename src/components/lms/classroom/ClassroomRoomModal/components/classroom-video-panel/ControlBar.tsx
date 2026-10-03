@@ -47,7 +47,7 @@ export function ControlBar({
     <>
       <div
         ref={navRef}
-        className="shrink-0 flex items-center justify-between px-3 py-2 bg-slate-950/90 border-t border-white/10 relative backdrop-blur-md"
+        className="relative flex shrink-0 items-center justify-between border-t border-hairline bg-sectionHeader px-3 py-2"
       >
         {/* Left: media controls */}
         <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export function ControlBar({
             icon={MonitorUp}
             title="ეკრანის გაზიარება"
             active={sharing}
-            activeClass="border-blue-500 bg-blue-600 text-white"
+            activeClass="border-transparent bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)]"
             onClick={() => localParticipant.setScreenShareEnabled(!sharing)}
           />
         </div>
@@ -86,7 +86,7 @@ export function ControlBar({
             icon={MessageSquare}
             title="ჩატი"
             active={isChatOpen}
-            activeClass="border-emerald-500 bg-emerald-500 text-white"
+            activeClass="border-transparent bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)]"
             onClick={onToggleChat}
           />
 
@@ -95,7 +95,7 @@ export function ControlBar({
               icon={Columns2}
               title="ოთახები"
               active={breakout.dashboardOpen}
-              activeClass="border-amber-500 bg-amber-500 text-slate-950"
+              activeClass="border-transparent bg-[#A66A32] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)]"
               onClick={breakout.toggleDashboard}
             />
           )}
@@ -105,7 +105,7 @@ export function ControlBar({
               icon={MoreVertical}
               title="პარამეტრები"
               active={activeMenu === 'more'}
-              activeClass="bg-white/20 text-white"
+              activeClass="bg-mainButton text-mainText"
               keepIdleOnActive
               onClick={() =>
                 setActiveMenu(activeMenu === 'more' ? null : 'more')

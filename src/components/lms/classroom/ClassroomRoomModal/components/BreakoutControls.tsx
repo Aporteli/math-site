@@ -57,13 +57,13 @@ export function BreakoutControls({
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         title="აუდიო იზოლაცია (Breakout mode)"
-        className={`flex h-9 items-center justify-center gap-1.5 rounded-box border px-2.5 transition-all ${
+        className={`flex h-9 cursor-pointer items-center justify-center gap-1.5 rounded-box border px-2.5 text-xs font-bold transition-all duration-200 ${
           isOpen || hasIsolated
-            ? 'border-amber-500/60 bg-amber-500/20 text-amber-300'
-            : 'border-white/10 bg-white/5 text-white/80 hover:bg-white/15 hover:text-white'
+            ? 'border-transparent bg-[#A66A32] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]'
+            : 'border-hairline bg-main text-mainText hover:bg-mainButtonHover'
         }`}>
         {hasIsolated ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
-        <span className="hidden text-xs font-semibold sm:inline">Breakout</span>
+        <span className="hidden sm:inline">Breakout</span>
       </button>
 
       {isOpen && (
@@ -74,20 +74,20 @@ export function BreakoutControls({
             className="fixed inset-0 z-40 cursor-default bg-transparent"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute bottom-full right-0 z-50 mb-2 w-60 overflow-hidden rounded-box border border-white/10 bg-slate-900 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
-              <span className="text-xs font-bold text-white">მოსწავლეების იზოლაცია</span>
+          <div className="absolute bottom-full right-0 z-50 mb-2 w-60 overflow-hidden rounded-box border border-hairline bg-main shadow-[0_8px_24px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center justify-between border-b border-hairline px-3 py-2">
+              <span className="text-xs font-bold text-mainText">მოსწავლეების იზოლაცია</span>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="text-white/50 transition-colors hover:text-white"
+                className="cursor-pointer text-muted transition-colors hover:text-mainText"
                 aria-label="დახურვა">
                 <span className="text-sm leading-none">×</span>
               </button>
             </div>
 
             {participants.length === 0 ? (
-              <p className="px-3 py-4 text-center text-xs text-white/50">ოთახში სხვა მონაწილეები არ არიან</p>
+              <p className="px-3 py-4 text-center text-xs font-medium text-muted">ოთახში სხვა მონაწილეები არ არიან</p>
             ) : (
               <ul className="max-h-56 overflow-y-auto p-1.5">
                 {participants.map((participant) => {
@@ -101,10 +101,10 @@ export function BreakoutControls({
                         type="button"
                         onClick={() => toggleIsolation(identity)}
                         disabled={pendingIdentity !== null}
-                        className={`flex w-full items-center justify-between gap-2 rounded-box px-2.5 py-2 text-left transition-colors ${
+                        className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-box px-2.5 py-2 text-left font-bold transition-colors ${
                           isIsolated
-                            ? 'bg-amber-500/20 text-amber-300'
-                            : 'text-white/80 hover:bg-white/10 hover:text-white'
+                            ? 'bg-brass-tint text-brass-strong'
+                            : 'text-mainText hover:bg-sectionHeader'
                         } ${isPending ? 'opacity-60' : ''}`}>
                         <span className="truncate text-xs font-medium">{participant.name || identity}</span>
                         {isPending ? (
@@ -112,7 +112,7 @@ export function BreakoutControls({
                         ) : (
                           <span
                             className={`shrink-0 rounded-box px-1.5 py-0.5 text-[10px] font-bold ${
-                              isIsolated ? 'bg-amber-400 text-slate-950' : 'bg-white/10 text-white/60'
+                              isIsolated ? 'bg-[#A66A32] text-white' : 'bg-sectionHeader text-muted'
                             }`}>
                             {isIsolated ? 'გამოშვება' : 'იზოლაცია'}
                           </span>
@@ -124,7 +124,7 @@ export function BreakoutControls({
               </ul>
             )}
 
-            {error && <p className="border-t border-rose-500/30 px-3 py-2 text-xs text-rose-400">{error}</p>}
+            {error && <p className="border-t border-rose-500/30 px-3 py-2 text-xs font-bold text-rose-500">{error}</p>}
           </div>
         </>
       )}

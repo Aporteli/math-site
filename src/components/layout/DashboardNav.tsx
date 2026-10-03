@@ -83,9 +83,11 @@ function NavList<Id extends string>({
                 title={rail ? title : undefined}
                 aria-label={rail ? title : undefined}
                 className={[
-                  'flex items-center rounded-box text-sm font-medium transition-colors',
+                  'flex items-center rounded-box text-sm font-bold transition-all duration-200',
                   tabs ? 'gap-3 px-3 py-2' : rail ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5',
-                  active ? 'bg-navy-tint text-navy' : 'text-body hover:bg-paper hover:text-navy',
+                  active
+                    ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                    : 'text-mainText hover:bg-sectionHeader',
                 ].join(' ')}
                 aria-current={active ? 'page' : undefined}>
                 <Icon className="size-4 shrink-0" aria-hidden="true" />

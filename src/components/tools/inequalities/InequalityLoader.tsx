@@ -21,6 +21,6 @@ export function InequalityLoader(props: InequalityLoaderProps) {
 
 function Skeleton() {
   return (
-    <div className="h-80 animate-pulse rounded-box border border-hairline bg-white dark:bg-slate-900" />
+    <div className="h-80 animate-pulse rounded-box border border-hairline bg-main" />
   );
 }

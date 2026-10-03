@@ -11,17 +11,17 @@ interface Props {
 
 export function UndoRedoButtons({ canUndo, canRedo, onUndo, onRedo }: Props) {
   return (
-    <div className="flex shrink-0 items-center gap-0.5 border-r border-slate-200 pr-1 dark:border-slate-800">
+    <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1">
       <button
         type="button"
         data-toolbar-key="undo"
         title="უკან დაბრუნება (Ctrl+Z)"
         disabled={!canUndo}
         onClick={onUndo}
-        className={`flex size-7 sm:size-8 items-center justify-center rounded-box transition-all ${
+        className={`flex size-7 items-center justify-center rounded-box transition-all duration-200 sm:size-8 ${
           canUndo
-            ? 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 active:scale-95'
-            : 'text-slate-300 dark:text-slate-700 cursor-not-allowed'
+            ? 'cursor-pointer text-icons hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98]'
+            : 'cursor-not-allowed text-muted/40'
         }`}>
         <Undo2 className="size-3.5 sm:size-4" />
       </button>
@@ -32,10 +32,10 @@ export function UndoRedoButtons({ canUndo, canRedo, onUndo, onRedo }: Props) {
         title="წინ გადასვლა (Ctrl+Y)"
         disabled={!canRedo}
         onClick={onRedo}
-        className={`flex size-7 sm:size-8 items-center justify-center rounded-box transition-all ${
+        className={`flex size-7 items-center justify-center rounded-box transition-all duration-200 sm:size-8 ${
           canRedo
-            ? 'text-slate-700 dark:text-slate-200 active:scale-95'
-            : 'text-slate-300 dark:text-slate-700 cursor-not-allowed'
+            ? 'cursor-pointer text-icons hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98]'
+            : 'cursor-not-allowed text-muted/40'
         }`}>
         <Redo2 className="size-3.5 sm:size-4" />
       </button>

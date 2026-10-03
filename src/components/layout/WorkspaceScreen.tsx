@@ -37,11 +37,11 @@ export function WorkspaceScreen<Id extends string>({
               <li key={link.id}>
                 <Link
                   href={localePath(locale, link.href)}
-                  className="flex h-full gap-3 rounded-box border border-hairline bg-white p-5 shadow-sm transition-all hover:border-navy/30 hover:shadow-md">
-                  <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-navy-tint text-navy">
+                  className="flex h-full cursor-pointer gap-3 rounded-box border border-hairline bg-main p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-md">
+                  <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
                     <Icon className="size-5" aria-hidden="true" />
                   </span>
-                  <span className="min-w-0 text-sm font-semibold text-ink">{labels[link.id]}</span>
+                  <span className="min-w-0 text-sm font-bold text-ink">{labels[link.id]}</span>
                 </Link>
               </li>
             );

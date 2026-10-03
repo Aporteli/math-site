@@ -38,7 +38,7 @@ interface SelectMenuProps<T extends string> {
 }
 
 const triggerBase =
-  "flex w-full min-w-0 items-center justify-between gap-2 rounded-box border bg-white px-3 py-2 text-left text-sm text-ink shadow-sm transition-colors hover:border-navy/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/15 disabled:cursor-not-allowed disabled:opacity-60";
+  "flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-box border bg-searchInput px-3 py-2 text-left text-sm text-searchInputText shadow-sm transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45";
 
 function isOption<T extends string>(
   item: SelectItem<T>,
@@ -197,10 +197,10 @@ export function SelectMenu<T extends string>({
         className={[
           triggerBase,
           invalid
-            ? "border-brass focus-visible:border-navy/40"
+            ? "border-rose-500/40"
             : open
-              ? "border-navy/40"
-              : "border-hairline focus-visible:border-navy/40",
+              ? "border-[#465D73]"
+              : "border-hairline",
           triggerClassName,
         ].join(" ")}
       >
@@ -217,7 +217,7 @@ export function SelectMenu<T extends string>({
         </span>
         <ChevronDown
           className={`size-4 shrink-0 text-muted transition-transform ${
-            open ? "rotate-180 text-navy" : ""
+            open ? "rotate-180 text-[#465D73]" : ""
           }`}
           aria-hidden="true"
         />
@@ -228,7 +228,7 @@ export function SelectMenu<T extends string>({
           id={listId}
           role="listbox"
           aria-labelledby={triggerId}
-          className="thin-scrollbar absolute z-50 mt-1.5 max-h-72 w-full min-w-full origin-top overflow-y-auto animate-dropdown rounded-box border border-hairline bg-white p-1.5 shadow-lg shadow-navy/5"
+          className="thin-scrollbar absolute z-50 mt-1.5 max-h-72 w-full min-w-full origin-top overflow-y-auto animate-dropdown rounded-box border border-hairline bg-main p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
         >
           {options.map((item, index) => {
             if (!isOption(item)) {
@@ -261,10 +261,10 @@ export function SelectMenu<T extends string>({
                 className={[
                   "flex cursor-pointer items-center justify-between gap-3 rounded-box px-3 py-2 text-sm transition-colors",
                   isSelected
-                    ? "bg-navy-tint font-semibold text-navy"
+                    ? "bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]"
                     : isActive
-                      ? "bg-paper text-navy"
-                      : "text-body hover:bg-paper hover:text-navy",
+                      ? "bg-sectionHeader text-mainText"
+                      : "text-mainText hover:bg-sectionHeader",
                 ].join(" ")}
               >
                 <span className="flex min-w-0 items-center gap-2">
@@ -277,7 +277,7 @@ export function SelectMenu<T extends string>({
                   <span className="min-w-0 break-words">{item.label}</span>
                 </span>
                 {isSelected ? (
-                  <Check className="size-4 shrink-0 text-brass" aria-hidden="true" />
+                  <Check className="size-4 shrink-0 text-mainText" aria-hidden="true" />
                 ) : null}
               </li>
             );

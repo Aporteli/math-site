@@ -67,7 +67,9 @@ export function DebtTracker({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 sm:gap-4">
       {/* ═══ Header ═══ */}
-      <div className="rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
+      <div className="overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
+        <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
+        <div className="p-3 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {/* Month navigation */}
           <div className="flex w-full items-center gap-1 rounded-box border border-hairline bg-paper p-1 sm:w-auto">
@@ -95,7 +97,7 @@ export function DebtTracker({
 
         {/* ═══ Stats cards ═══ */}
         <div className="mt-3 grid grid-cols-2 gap-2 min-[480px]:grid-cols-4">
-          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-main px-3 py-2.5 shadow-sm">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
               გადასახდელი
             </p>
@@ -103,7 +105,7 @@ export function DebtTracker({
               {formatPrice(stats.totalExpected)}
             </p>
           </div>
-          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-main px-3 py-2.5 shadow-sm">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
                გადახდილი
             </p>
@@ -111,7 +113,7 @@ export function DebtTracker({
               {formatPrice(stats.totalPaid)}
             </p>
           </div>
-          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-main px-3 py-2.5 shadow-sm">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
                დავალიანება
             </p>
@@ -119,7 +121,7 @@ export function DebtTracker({
               {formatPrice(stats.totalDebt)}
             </p>
           </div>
-          <div className="min-w-0 rounded-box border border-hairline bg-paper px-3 py-2.5">
+          <div className="min-w-0 rounded-box border border-hairline bg-main px-3 py-2.5 shadow-sm">
             <p className="flex items-center gap-1 text-[10px] font-bold tracking-wide text-muted">
               მოვალეები
             </p>
@@ -130,7 +132,7 @@ export function DebtTracker({
         </div>
 
         {/* ═══ Filter tabs ═══ */}
-        <div className="mt-3 grid grid-cols-3 gap-1 rounded-box border border-hairline bg-paper p-1 sm:w-auto sm:min-w-80">
+        <div className="mt-3 grid grid-cols-3 gap-1 bg-main p-1 sm:w-auto sm:min-w-80">
           {[
             { key: 'debtors' as const, label: 'მოვალეები', count: stats.debtorsCount },
             { key: 'all' as const, label: 'ყველა', count: rows.length },
@@ -140,24 +142,26 @@ export function DebtTracker({
               key={f.key}
               type="button"
               onClick={() => setFilter(f.key)}
-              className={`inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-box px-1.5 py-2 text-xs font-bold transition sm:px-3 ${
-                filter === f.key
-                  ? 'bg-navy text-white shadow-sm'
-                  : 'text-body hover:bg-surface hover:text-ink'
+              className={`group relative inline-flex min-h-10 min-w-0 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-box px-1.5 py-2 text-xs font-bold transition-all duration-200 sm:px-3 ${
+                filter === f.key ? 'text-mainText' : 'text-mainText/50 hover:text-mainText'
               }`}
             >
-              <span className="truncate text-[11px] sm:text-xs">{f.label}</span>
+              <span className="relative z-10 truncate text-[11px] sm:text-xs">{f.label}</span>
               <span
-                className={`rounded-box px-1.5 py-0.5 text-[9px] font-bold ${
-                  filter === f.key
-                    ? 'bg-white/20 text-white'
-                    : 'bg-paper-deep text-muted'
+                className={`relative z-10 text-[10px] transition-opacity duration-300 ${
+                  filter === f.key ? 'opacity-70' : 'opacity-40 group-hover:opacity-70'
                 }`}
               >
                 {f.count}
               </span>
+              <span
+                className={`absolute bottom-0 left-1/2 h-px -translate-x-1/2 transition-all duration-300 ease-out ${
+                  filter === f.key ? 'w-[calc(100%-12px)] bg-mainText' : 'w-0 bg-mainText/50 group-hover:w-1/2'
+                }`}
+              />
             </button>
           ))}
+        </div>
         </div>
       </div>
 
@@ -190,7 +194,7 @@ export function DebtTracker({
               return (
                 <div
                   key={student.id}
-                  className="flex items-center gap-3 rounded-box border border-hairline bg-surface p-3 shadow-sm transition hover:border-navy/30 hover:shadow-md sm:p-4"
+                  className="flex items-center gap-3 rounded-box border border-hairline bg-main p-3 shadow-sm transition hover:shadow-md sm:p-4"
                 >
 
                   {/* Main info */}

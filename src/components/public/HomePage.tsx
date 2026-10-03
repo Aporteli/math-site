@@ -26,7 +26,7 @@ const toolsById = new Map(TOOL_SECTIONS.flatMap((section) => section.tools.map((
 const toolCount = TOOL_SECTIONS.reduce((sum, section) => sum + section.tools.length, 0);
 
 const primaryButton =
-  'inline-flex h-12 w-full items-center justify-center gap-2 rounded-box bg-mainButton px-6 text-sm font-semibold text-mainText transition-colors hover:bg-mainButtonHover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mainButton focus-visible:ring-offset-2 focus-visible:ring-offset-mainBackground sm:w-auto';
+  'inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-box bg-[#465D73] px-6 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98] focus-visible:outline-none sm:w-auto';
 
 const secondaryButton =
   'inline-flex h-12 w-full items-center justify-center gap-2 rounded-box border border-hairline bg-mainButton/50 px-6 text-sm font-semibold text-mainText transition-colors hover:border-mainButton/20 hover:bg-mainButtonHover hover:text-mainText focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mainButton focus-visible:ring-offset-2 focus-visible:ring-offset-mainBackground sm:w-auto';
@@ -45,7 +45,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
           <p className="text-sm font-medium text-brass">{copy.heroKicker}</p>
           <h1 className="mt-3 text-[2.45rem] font-semibold leading-[1.12] tracking-[-0.03em] text-balance text-ink sm:text-6xl sm:leading-[1.08]">
             {copy.heroTitleA}
-            <span className="mt-1 block text-navy">{copy.heroTitleB}</span>
+            <span className="mt-1 block text-[#465D73]">{copy.heroTitleB}</span>
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-pretty text-body sm:text-lg sm:leading-8">
             {copy.heroBody}
@@ -95,7 +95,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
                 <li key={step.title} className="bg-main px-6 py-7 sm:px-7 sm:py-8">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-sm text-brass">0{index + 1}</span>
-                    <Icon className="size-5 text-navy" aria-hidden="true" />
+                    <Icon className="size-5 text-brass-strong" aria-hidden="true" />
                   </div>
                   <h3 className="mt-8 text-xl font-semibold tracking-tight text-mainText">{step.title}</h3>
                   <p className="mt-3 text-sm leading-6 text-pretty text-mainText">{step.body}</p>
@@ -136,8 +136,8 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
                 <li key={tool.id}>
                   <Link
                     href={localePath(locale, tool.href)}
-                    className="group flex h-full min-h-36 flex-col justify-between rounded-box border border-hairline bg-main p-5 transition-colors hover:border-navy/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy">
-                    <span className="flex size-11 items-center justify-center rounded-box bg-navy-tint text-navy transition-colors group-hover:bg-navy/15">
+                    className="group relative flex h-full min-h-36 flex-col justify-between overflow-hidden rounded-box border border-hairline bg-main p-5 transition-all duration-200 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none">
+                    <span className="flex size-11 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
                       <Icon className="size-5" aria-hidden="true" />
                     </span>
                     <span className="mt-6 flex items-end justify-between gap-3">
@@ -145,7 +145,7 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
                         {dict.toolsPage.items[tool.id].title}
                       </span>
                       <ArrowUpRight
-                        className="size-4 shrink-0 text-muted transition-colors group-hover:text-navy"
+                        className="size-4 shrink-0 text-muted transition-colors group-hover:text-brass-strong"
                         aria-hidden="true"
                       />
                     </span>
@@ -160,16 +160,16 @@ export default function HomeLandPage({ locale, dict }: HomePageProps) {
       <section className="border-t border-hairline">
         <div className="mx-auto w-full min-w-0 max-w-[1800px] py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
           {' '}
-          <div className="overflow-hidden rounded-box bg-[#0c2340] text-white">
+          <div className="overflow-hidden rounded-box border border-hairline bg-main text-ink shadow-sm">
             <div className="h-1 bg-brass" aria-hidden="true" />
             <div className="flex flex-col gap-8 px-6 py-10 sm:px-10 sm:py-12 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-xl">
-                <h2 className="text-3xl font-semibold tracking-[-0.03em] text-balance sm:text-4xl">{copy.ctaTitle}</h2>
-                <p className="mt-4 text-base leading-7 text-pretty text-white/75">{copy.ctaBody}</p>
+                <h2 className="text-3xl font-semibold tracking-[-0.03em] text-balance text-ink sm:text-4xl">{copy.ctaTitle}</h2>
+                <p className="mt-4 text-base leading-7 text-pretty text-body">{copy.ctaBody}</p>
               </div>
               <Link
                 href={localePath(locale, '/signup')}
-                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-box  bg-[#0a8f32] px-6 text-sm font-semibold text-black transition-colors hover:bg-[#16c049] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mainButton focus-visible:ring-offset-2 focus-visible:ring-offset-mainBackground">
+                className={`${primaryButton} shrink-0`}>
                 {copy.createAccount}
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
@@ -201,7 +201,7 @@ function GraphStage({ locale, copy }: { locale: Locale; copy: LandingCopy }) {
 
       <div className="flex flex-wrap gap-x-6 gap-y-2 border-t border-hairline px-5 py-3.5 text-sm text-body sm:px-7">
         <span className="inline-flex items-center gap-2">
-          <span className="size-2 rounded-box bg-navy" aria-hidden="true" />
+          <span className="size-2 rounded-box bg-[#465D73]" aria-hidden="true" />
           {copy.rootsLabel}
         </span>
         <span className="inline-flex items-center gap-2">
@@ -233,14 +233,14 @@ function TeacherPanel({ copy }: { copy: LandingCopy }) {
           <li
             key={student.name}
             className="grid grid-cols-[2.25rem_minmax(0,1fr)_2.5rem] items-center gap-3 border-b border-hairline/80 py-3.5 last:border-b-0">
-            <span className="flex size-9 items-center justify-center rounded-box bg-navy-tint text-xs font-semibold text-navy">
+            <span className="flex size-9 items-center justify-center rounded-box bg-brass-tint text-xs font-semibold text-brass-strong">
               {student.name.charAt(0)}
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-ink">{student.name}</p>
               <div className="mt-2 h-1.5 overflow-hidden rounded-box bg-paper-deep">
                 <div
-                  className={`h-full rounded-box ${student.progress === 100 ? 'bg-win' : 'bg-navy'}`}
+                  className={`h-full rounded-box ${student.progress === 100 ? 'bg-win' : 'bg-[#465D73]'}`}
                   style={{ width: `${student.progress}%` }}
                 />
               </div>
@@ -263,9 +263,9 @@ function StudentPanel({ copy }: { copy: LandingCopy }) {
       <div className="mt-auto pt-8">
         <p className="text-xs text-mainText">{copy.current}</p>
         <p className="mt-1 text-base font-semibold text-mainText">{copy.assignment}</p>
-        <p className="mt-5 font-mono text-5xl font-semibold tracking-tight text-navy">40%</p>
+        <p className="mt-5 font-mono text-5xl font-semibold tracking-tight text-[#465D73]">40%</p>
         <div className="mt-3 h-1.5 overflow-hidden rounded-box bg-surface/80">
-          <div className="h-full w-[40%] rounded-box bg-navy" />
+          <div className="h-full w-[40%] rounded-box bg-[#465D73]" />
         </div>
         <div className="mt-6 border-t border-brass/25 pt-4">
           <p className="text-xs text-mainText">{copy.next}</p>
@@ -278,7 +278,8 @@ function StudentPanel({ copy }: { copy: LandingCopy }) {
 
 function LivePanel({ copy }: { copy: LandingCopy }) {
   return (
-    <article className="overflow-hidden rounded-box bg-[#0c2340] text-white ring-1 ring-white/10 lg:col-span-5">
+    <article className="overflow-hidden rounded-box border border-hairline bg-main text-ink lg:col-span-5">
+      <div className="h-1 bg-brass" aria-hidden="true" />
       <div className="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
           <div className="flex items-center gap-2 text-sm font-medium text-brass">
@@ -291,25 +292,25 @@ function LivePanel({ copy }: { copy: LandingCopy }) {
           <h3 className="mt-4 max-w-md text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
             {copy.liveTitle}
           </h3>
-          <p className="mt-4 max-w-md text-sm leading-6 text-pretty text-white/70 sm:text-base sm:leading-7">
+          <p className="mt-4 max-w-md text-sm leading-6 text-pretty text-body sm:text-base sm:leading-7">
             {copy.liveBody}
           </p>
           <div className="mt-8 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-2 rounded-box bg-white/10 px-3 py-1.5 text-xs font-medium">
+            <span className="inline-flex items-center gap-2 rounded-box bg-sectionHeader px-3 py-1.5 text-xs font-medium">
               <Video className="size-3.5" aria-hidden="true" />
               {copy.teacherPresence}
             </span>
-            <span className="inline-flex items-center gap-2 rounded-box bg-white/10 px-3 py-1.5 text-xs font-medium">
+            <span className="inline-flex items-center gap-2 rounded-box bg-sectionHeader px-3 py-1.5 text-xs font-medium">
               {copy.studentPresence}
             </span>
           </div>
         </div>
 
-        <div className="border-t border-white/10 p-6 sm:p-8 lg:border-t-0 lg:border-l lg:p-10">
-          <p className="text-xs text-white/50">{copy.liveNow}</p>
+        <div className="border-t border-hairline p-6 sm:p-8 lg:border-t-0 lg:border-l lg:p-10">
+          <p className="text-xs text-muted">{copy.liveNow}</p>
           <p className="mt-1 text-sm font-semibold">{copy.nextLesson}</p>
           <BoardSketch />
-          <p className="text-xs text-white/50">{copy.liveMeta}</p>
+          <p className="text-xs text-muted">{copy.liveMeta}</p>
         </div>
       </div>
     </article>
@@ -318,31 +319,31 @@ function LivePanel({ copy }: { copy: LandingCopy }) {
 
 function BoardSketch() {
   return (
-    <svg viewBox="0 0 360 200" className="my-4 block h-44 w-full sm:h-52" aria-hidden="true">
+    <svg viewBox="0 0 360 200" className="my-4 block h-44 w-full text-ink sm:h-52" aria-hidden="true">
       <rect
         x="0.5"
         y="0.5"
         width="359"
         height="199"
         rx="16"
-        fill="white"
+        fill="currentColor"
         fillOpacity="0.04"
-        stroke="white"
-        strokeOpacity="0.12"
+        stroke="currentColor"
+        strokeOpacity="0.16"
       />
-      <path d="M70 158 L180 36 L292 158 Z" fill="none" stroke="white" strokeOpacity="0.85" strokeWidth="1.75" />
-      <path d="M180 36 L180 158" fill="none" stroke="#e2a462" strokeWidth="1.25" strokeDasharray="4 4" />
-      <path d="M180 158 L210 158 L210 128" fill="none" stroke="white" strokeOpacity="0.45" strokeWidth="1.25" />
-      <circle cx="180" cy="36" r="3.5" fill="#e2a462" />
-      <circle cx="70" cy="158" r="3" fill="white" />
-      <circle cx="292" cy="158" r="3" fill="white" />
-      <text x="58" y="176" fill="white" fillOpacity="0.55" fontSize="12">
+      <path d="M70 158 L180 36 L292 158 Z" fill="none" stroke="currentColor" strokeOpacity="0.85" strokeWidth="1.75" />
+      <path d="M180 36 L180 158" fill="none" stroke="#A66A32" strokeWidth="1.25" strokeDasharray="4 4" />
+      <path d="M180 158 L210 158 L210 128" fill="none" stroke="currentColor" strokeOpacity="0.45" strokeWidth="1.25" />
+      <circle cx="180" cy="36" r="3.5" fill="#A66A32" />
+      <circle cx="70" cy="158" r="3" fill="currentColor" />
+      <circle cx="292" cy="158" r="3" fill="currentColor" />
+      <text x="58" y="176" fill="currentColor" fillOpacity="0.55" fontSize="12">
         B
       </text>
-      <text x="174" y="26" fill="#e2a462" fontSize="12">
+      <text x="174" y="26" fill="#A66A32" fontSize="12">
         A
       </text>
-      <text x="298" y="176" fill="white" fillOpacity="0.55" fontSize="12">
+      <text x="298" y="176" fill="currentColor" fillOpacity="0.55" fontSize="12">
         C
       </text>
     </svg>
@@ -380,17 +381,17 @@ function QuadraticPlot() {
         <line x1={72} y1={220} x2={568} y2={220} />
         <line x1={133.3} y1={24} x2={133.3} y2={286} />
       </g>
-      <path d={NEGATIVE_REGION} className="fill-navy/15" />
+      <path d={NEGATIVE_REGION} className="fill-[#465D73]/15" />
       <path
         d={CURVE}
         fill="none"
-        className="stroke-navy"
+        className="stroke-[#465D73]"
         strokeWidth="2.75"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx={226.7} cy={220} r={5} className="fill-surface stroke-navy" strokeWidth="2" />
-      <circle cx={413.3} cy={220} r={5} className="fill-surface stroke-navy" strokeWidth="2" />
+      <circle cx={226.7} cy={220} r={5} className="fill-surface stroke-[#465D73]" strokeWidth="2" />
+      <circle cx={413.3} cy={220} r={5} className="fill-surface stroke-[#465D73]" strokeWidth="2" />
       <circle cx={320} cy={253.3} r={5} className="fill-brass" />
       {ticks.map((tick) => (
         <text key={tick.label} x={tick.x} y={312} textAnchor="middle" className="fill-muted text-[13px]">

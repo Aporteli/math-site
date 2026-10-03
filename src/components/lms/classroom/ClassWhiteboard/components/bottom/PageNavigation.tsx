@@ -28,12 +28,12 @@ export function PageNavigation({
   disabled = false,
 }: Props) {
   return (
-    <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 border-r border-slate-200 pr-1.5 dark:border-slate-800">
+    <div className="flex shrink-0 items-center gap-1 border-r border-hairline pr-1.5 sm:gap-1.5">
       <button
         type="button"
         onClick={onPrev}
         disabled={disabled || currentPageIndex === 0}
-        className="flex size-7 sm:size-8 items-center justify-center rounded-box bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors">
+        className="flex size-7 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-mainText transition-all duration-200 hover:bg-mainButtonHover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 sm:size-8">
         <ChevronLeft className="size-4" />
       </button>
 
@@ -43,17 +43,17 @@ export function PageNavigation({
         onClick={onToggleTray}
         disabled={disabled}
         title="ყველა დაფის ნახვა"
-        className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-box text-xs font-bold transition-all disabled:opacity-40 disabled:pointer-events-none ${
+        className={`flex cursor-pointer items-center gap-1 rounded-box px-2 py-1 text-xs font-bold transition-all duration-200 disabled:pointer-events-none disabled:opacity-40 sm:gap-1.5 sm:px-2.5 ${
           isPagesTrayOpen
-            ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500'
-            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200'
+            ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+            : 'text-mainText hover:bg-mainButtonHover'
         }`}>
-        <Layers className="size-3.5 text-indigo-600 dark:text-indigo-400" />
+        <Layers className="size-3.5 text-navy" />
         <span>
           {currentPageIndex + 1} / {pagesLength}
         </span>
         {selectedPagesCount > 0 && (
-          <span className="ml-1 rounded-box bg-indigo-600 px-1.5 py-0.2 text-[10px] font-bold text-white">
+          <span className="ml-1 rounded-box bg-[#465D73] px-1.5 py-0.5 text-[10px] font-bold text-white">
             {selectedPagesCount}
           </span>
         )}
@@ -63,7 +63,7 @@ export function PageNavigation({
         type="button"
         onClick={onNext}
         disabled={disabled || currentPageIndex === pagesLength - 1}
-        className="flex size-7 sm:size-8 items-center justify-center rounded-box bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 transition-colors">
+        className="flex size-7 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-mainText transition-all duration-200 hover:bg-mainButtonHover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 sm:size-8">
         <ChevronRight className="size-4" />
       </button>
 
@@ -71,7 +71,7 @@ export function PageNavigation({
         <button
           type="button"
           onClick={onAddNewPage}
-          className="flex items-center gap-1 sm:gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-box bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-medium transition-colors">
+          className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-box bg-[#465D73] px-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] sm:h-8 sm:gap-1.5 sm:px-2.5">
           <Plus className="size-3.5" />
           <span>ახალი</span>
         </button>

@@ -78,7 +78,7 @@ export default function StudentAssignments({ locale }: StudentAssignmentsProps) 
         <AssignmentFiltersSidebar statusFilter={statusFilter} onFilterChange={setStatusFilter} />
 
         {/* სვეტი 2: მოსწავლის სამუშაო სივრცე */}
-        <section className="flex min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-surface shadow-sm">
+        <section className="relative flex min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
           {/* ზედა ზოლი 1: სათაური და კალენდარი */}
           <AssignmentDatePickerHeader
             selectedDateKey={selectedDateKey}

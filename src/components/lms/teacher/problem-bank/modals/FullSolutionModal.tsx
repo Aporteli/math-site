@@ -135,7 +135,7 @@ ${styles}
     <div className="fixed inset-0 z-[100] overflow-hidden print:static print:z-auto">
       <button
         type="button"
-        className="absolute inset-0 bg-navy-strong/40 backdrop-blur-sm print:hidden"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm print:hidden"
         aria-label={ui.close}
         onClick={onClose}
       />
@@ -144,7 +144,7 @@ ${styles}
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="pointer-events-auto flex max-h-full w-full max-w-3xl min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-lg shadow-navy/10 print:max-h-none print:max-w-none print:rounded-box print:border-0 print:shadow-none">
+          className="pointer-events-auto flex max-h-full min-h-0 w-full max-w-3xl flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl print:max-h-none print:max-w-none print:rounded-box print:border-0 print:shadow-none">
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5 print:hidden">
             <div>
               <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">

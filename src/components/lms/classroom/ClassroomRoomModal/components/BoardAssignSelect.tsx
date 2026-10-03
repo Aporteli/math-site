@@ -23,7 +23,7 @@ export function BoardAssignSelect({
           const next = event.currentTarget.value;
           assignStudentPage(studentId, next === '' ? null : Number(next));
         }}
-        className="min-w-0 flex-1 rounded-box border border-white/10 bg-slate-950 px-1.5 py-1 text-[11px] font-semibold text-white"
+        className="min-w-0 flex-1 rounded-box border border-hairline bg-searchInput px-1.5 py-1 text-[11px] font-bold text-searchInputText"
       >
         <option value="">დაფა</option>
         {Array.from({ length: Math.max(1, pageCount) }, (_, index) => (

@@ -29,13 +29,13 @@ interface Props {
 }
 
 const fieldClass =
-  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2.5 font-mono text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800';
+  'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2.5 font-mono text-sm text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
 const keyClass =
-  'inline-flex min-h-11 items-center justify-center rounded-box border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-navy-tint focus:outline-none focus:ring-2 focus:ring-navy/15 dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
+  'inline-flex min-h-11 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main px-3 py-2 text-sm font-bold text-ink shadow-sm transition-colors hover:bg-sectionHeader';
 
 const chipClass =
-  'inline-flex items-center gap-1.5 rounded-box border border-hairline bg-white px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-navy-tint disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800';
+  'inline-flex cursor-pointer items-center gap-1.5 rounded-box border border-hairline bg-main px-3 py-2 text-sm font-bold text-ink transition-colors hover:bg-sectionHeader disabled:cursor-not-allowed disabled:opacity-45';
 
 const TYPE_BADGE: Record<IneqResult['type'], { label: string; className: string }> = {
   linear: {
@@ -239,7 +239,7 @@ export function InequalityCalculator({ copy }: Props) {
           key={ex.label}
           type="button"
           onClick={() => applyExample(ex)}
-          className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted hover:border-navy/30 hover:text-ink dark:border-slate-700 transition">
+          className="rounded-box border border-hairline px-2 py-1 text-[11px] text-muted transition hover:bg-sectionHeader hover:text-ink">
           {ex.label}
         </button>
       ))}
@@ -252,7 +252,7 @@ export function InequalityCalculator({ copy }: Props) {
     <main className="mx-auto my-6 grid w-full min-w-0 max-w-[2000px] gap-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
         {/* ══════════ LEFT: Input ══════════ */}
         <section
-        className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800"
+        className="relative overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass sm:p-5"
           onKeyDown={onInputKeyDown}>
           <div ref={keyboardRootRef}>
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -266,8 +266,8 @@ export function InequalityCalculator({ copy }: Props) {
                 className={
                   'inline-flex items-center gap-1.5 rounded-box border px-3 py-2 text-xs font-semibold transition-colors ' +
                   (showKeyboard
-                    ? 'border-navy/30 bg-navy text-white hover:bg-navy-strong'
-                    : 'border-hairline bg-white text-ink hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800')
+                    ? 'border-transparent bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                    : 'border-hairline bg-main text-ink hover:bg-sectionHeader  ')
                 }>
                 <Keyboard className="size-3.5" aria-hidden="true" />
                 {copy.keyboard}
@@ -286,8 +286,8 @@ export function InequalityCalculator({ copy }: Props) {
                     className={
                       'rounded-box border px-3 py-1.5 text-xs font-semibold font-mono transition-colors ' +
                       (variable === v
-                        ? 'border-navy bg-navy text-white'
-                        : 'border-hairline bg-white text-muted hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-700 dark:hover:bg-slate-800')
+                        ? 'border-transparent bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                        : 'border-hairline bg-main text-muted hover:bg-sectionHeader  ')
                     }>
                     {v}
                   </button>
@@ -313,7 +313,7 @@ export function InequalityCalculator({ copy }: Props) {
                   className={fieldClass}
                 />
                 {inequality.trim() && (
-                  <div className="mt-2 overflow-x-auto rounded-box border border-hairline bg-white px-3 py-2 dark:bg-slate-900 dark:border-slate-700">
+                  <div className="mt-2 overflow-x-auto rounded-box border border-hairline bg-main px-3 py-2">
                     <KatexPreview tex={inequality} />
                   </div>
                 )}
@@ -323,7 +323,7 @@ export function InequalityCalculator({ copy }: Props) {
                 <button
                   type="submit"
                   disabled={loading || !inequality.trim()}
-                  className="inline-flex items-center gap-2 rounded-box bg-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-navy-strong disabled:opacity-50">
+                  className="inline-flex items-center gap-2 cursor-pointer rounded-box bg-[#465D73] px-5 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
                   <Calculator className="size-4" aria-hidden="true" />
                   {loading ? copy.solving : copy.solveButton}
                 </button>
@@ -346,11 +346,11 @@ export function InequalityCalculator({ copy }: Props) {
             )}
 
             {/* Examples */}
-            <div className="mt-4 border-t border-hairline pt-3 dark:border-slate-800">{exampleButtons}</div>
+            <div className="mt-4 border-t border-hairline pt-3">{exampleButtons}</div>
 
             {/* Error */}
             {error && (
-              <div className="mt-3 flex items-start gap-2 rounded-box border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+              <div className="mt-3 flex items-start gap-2 rounded-box border border-rose-500/30 bg-rose-500/15 px-3 py-2 text-xs text-rose-500">
                 <span className="mt-0.5 shrink-0">⚠</span>
                 <span>{error}</span>
               </div>
@@ -359,16 +359,16 @@ export function InequalityCalculator({ copy }: Props) {
         </section>
 
         {/* ══════════ RIGHT: Results ══════════ */}
-        <section className="rounded-box border border-hairline bg-paper p-4 shadow-sm sm:p-5 dark:bg-slate-900/60 dark:border-slate-800">
+        <section className="relative overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass sm:p-5">
           {loading && (
             <div className="flex min-h-[200px] items-center justify-center">
-              <span className="inline-block h-8 w-8 animate-spin rounded-box border-4 border-navy border-t-transparent" />
+              <span className="inline-block h-8 w-8 animate-spin rounded-box border-4 border-[#465D73] border-t-transparent" />
             </div>
           )}
 
           {!result && !loading && (
             <div className="flex min-h-[200px] flex-col items-center justify-center gap-3 text-center">
-              <span className="inline-flex size-12 items-center justify-center rounded-box bg-navy-tint text-navy dark:bg-sky-950/40 dark:text-sky-400">
+              <span className="inline-flex size-12 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
                 <Sparkles className="size-5" />
               </span>
               <p className="max-w-sm text-sm text-muted">{copy.emptyResult}</p>
@@ -389,12 +389,12 @@ export function InequalityCalculator({ copy }: Props) {
                 </div>
 
                 {result.intervals.length === 0 ? (
-                  <div className="rounded-box border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+                  <div className="rounded-box border border-rose-500/30 bg-rose-500/15 px-4 py-3 text-sm font-semibold text-rose-500">
                     {copy.noSolution}
                   </div>
                 ) : (
                   <>
-                    <div className="mb-2 flex items-center justify-between gap-2 rounded-box border border-hairline bg-white px-3 py-2.5 dark:bg-slate-900 dark:border-slate-700">
+                    <div className="mb-2 flex items-center justify-between gap-2 rounded-box border border-hairline bg-main px-3 py-2.5">
                       <div className="min-w-0 overflow-x-auto">
                         <KatexPreview tex={result.solutionLatex} displayMode={false} />
                       </div>
@@ -410,7 +410,7 @@ export function InequalityCalculator({ copy }: Props) {
                         )}
                       </button>
                     </div>
-                    <p className="rounded-box bg-paper/50 px-3 py-2 font-mono text-xs text-muted dark:bg-slate-800/40">
+                    <p className="rounded-box bg-sectionHeader px-3 py-2 font-mono text-xs text-muted">
                       {result.intervalNotation}
                     </p>
                   </>
@@ -433,7 +433,7 @@ export function InequalityCalculator({ copy }: Props) {
                     {result.criticalPoints.map((cp, i) => (
                       <span
                         key={i}
-                        className="rounded-box border border-hairline bg-white px-3 py-1.5 text-sm dark:bg-slate-900 dark:border-slate-700">
+                        className="rounded-box border border-hairline bg-main px-3 py-1.5 text-sm">
                         <KatexPreview tex={`${variable} = ${cp}`} />
                       </span>
                     ))}
@@ -452,11 +452,11 @@ export function InequalityCalculator({ copy }: Props) {
                     {result.steps.map((st, i) => (
                       <div
                         key={i}
-                        className="rounded-box border border-hairline bg-paper/30 p-3.5 dark:border-slate-800 dark:bg-slate-800/40">
-                        <h3 className="text-xs font-bold text-navy dark:text-sky-400">{st.title}</h3>
-                        <p className="mt-1 text-xs leading-relaxed text-ink/80 dark:text-slate-300">{st.explanation}</p>
+                        className="rounded-box border border-hairline bg-sectionHeader p-3.5">
+                        <h3 className="text-xs font-bold text-[#465D73]">{st.title}</h3>
+                        <p className="mt-1 text-xs leading-relaxed text-body">{st.explanation}</p>
                         {st.latex && (
-                          <div className="mt-2 overflow-x-auto rounded-box border border-hairline bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                          <div className="mt-2 overflow-x-auto rounded-box border border-hairline bg-main px-3 py-2">
                             <KatexPreview tex={st.latex} />
                           </div>
                         )}
@@ -468,7 +468,7 @@ export function InequalityCalculator({ copy }: Props) {
 
               {/* History */}
               {history.length > 0 && (
-                <div className="border-t border-hairline pt-3 dark:border-slate-800">
+                <div className="border-t border-hairline pt-3">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="flex items-center gap-1.5 text-xs font-semibold text-muted">
                       <History className="size-3.5" aria-hidden="true" />
@@ -487,7 +487,7 @@ export function InequalityCalculator({ copy }: Props) {
                         <button
                           type="button"
                           onClick={() => applyHistory(h)}
-                          className="w-full overflow-x-auto rounded-box border border-hairline-soft bg-white px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:border-navy/30 hover:bg-navy-tint dark:bg-slate-900 dark:border-slate-800 dark:hover:bg-slate-800">
+                          className="w-full overflow-x-auto rounded-box border border-hairline-soft bg-main px-2 py-1.5 text-left font-mono text-[11px] text-body transition-colors hover:bg-sectionHeader">
                           {h.inequality}
                         </button>
                       </li>
@@ -527,8 +527,8 @@ function InequalityKeyboard({
       id={titleId}
       role="region"
       aria-label={copy.keyboard}
-      className="mt-4 rounded-box border border-hairline bg-white shadow-sm dark:bg-slate-900 dark:border-slate-700">
-      <div className="flex items-start justify-between gap-3 border-b border-hairline px-4 py-3 dark:border-slate-700">
+      className="mt-4 rounded-box border border-hairline bg-main shadow-sm">
+      <div className="flex items-start justify-between gap-3 border-b border-hairline px-4 py-3">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-ink">{copy.keyboard}</h2>
         </div>
@@ -536,13 +536,13 @@ function InequalityKeyboard({
           type="button"
           onClick={onClose}
           aria-label="close"
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-box text-muted transition-colors hover:bg-paper hover:text-navy dark:hover:bg-slate-800">
+          className="inline-flex size-9 shrink-0 items-center justify-center rounded-box text-muted transition-colors hover:bg-sectionHeader hover:text-mainText">
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>
 
       <div className="space-y-3 px-4 py-4">
-        <div className="overflow-x-auto rounded-box border border-hairline bg-paper px-3 py-2 text-center font-mono text-lg text-ink dark:bg-slate-950 dark:border-slate-700">
+        <div className="overflow-x-auto rounded-box border border-hairline bg-paper px-3 py-2 text-center font-mono text-lg text-ink">
           {value || '\u00a0'}
         </div>
 

@@ -88,7 +88,7 @@ export function EditableAmount({
           }}
           onBlur={handleBlur}
           inputMode="decimal"
-          className="w-24 max-w-full rounded-box border border-navy/40 bg-surface px-2 py-1.5 text-base font-bold text-ink outline-none focus:ring-2 focus:ring-navy/20 sm:py-1 sm:text-xs"
+          className="w-24 max-w-full rounded-box border border-hairline bg-searchInput px-2 py-1.5 text-base font-bold text-searchInputText outline-none focus:border-navy sm:py-1 sm:text-xs"
         />
         <span className="text-xs font-bold text-muted">{suffix}</span>
       </span>
@@ -108,7 +108,7 @@ export function EditableAmount({
         if (!editing) setEditing(true);
       }}
       title="დააწკაპუნეთ რედაქტირებისთვის"
-      className={`group inline-flex max-w-full cursor-pointer items-center gap-1 rounded-box px-1.5 py-1 text-xs font-bold text-ink transition hover:bg-navy-tint ${className}`}
+      className={`group inline-flex max-w-full cursor-pointer items-center gap-1 rounded-box px-1.5 py-1 text-xs font-bold text-ink transition hover:bg-sectionHeader ${className}`}
     >
       <span className="truncate">{value > 0 ? `${value.toLocaleString('ka-GE')} ${suffix}` : placeholder}</span>
     </button>

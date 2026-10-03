@@ -45,9 +45,9 @@ const METHOD_ICON = {
 } as const;
 
 const METHOD_COLOR = {
-  cash: 'text-emerald-600 bg-paper border-navy-tint',
-  card: 'text-sky-600 bg-paper border-navy-tint',
-  transfer: 'text-violet-600 bg-paper border-navy-tint',
+  cash: 'text-emerald-600 bg-paper border-hairline',
+  card: 'text-sky-600 bg-paper border-hairline',
+  transfer: 'text-violet-600 bg-paper border-hairline',
 } as const;
 
 /* ═══════════════════════════════════════════════════════════
@@ -221,10 +221,12 @@ export function ReportsView({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 sm:gap-4">
       {/* ═══ Header ═══ */}
-      <div className="rounded-box border border-hairline bg-surface p-3 shadow-sm sm:rounded-box sm:p-5">
+      <div className="overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
+        <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
+        <div className="p-3 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {/* <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-navy-tint text-navy">
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
               <BarChart3 className="size-5" />
             </span>
             <div className="min-w-0">
@@ -235,30 +237,36 @@ export function ReportsView({
           </div> */}
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="grid grid-cols-2 gap-1 rounded-box border border-hairline bg-paper p-1">
+            <div className="grid grid-cols-2 gap-1 bg-main p-1">
               <button
                 type="button"
                 onClick={() => setMode('monthly')}
-                className={`inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-box px-3 text-xs font-bold transition ${
-                  mode === 'monthly'
-                    ? 'bg-navy text-white shadow-sm'
-                    : 'text-body hover:bg-surface hover:text-ink'
+                className={`group relative inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-box px-3 text-xs font-bold transition-all duration-200 ${
+                  mode === 'monthly' ? 'text-mainText' : 'text-mainText/50 hover:text-mainText'
                 }`}
               >
-                <CalendarIcon className="size-3.5" />
-                თვიური
+                <CalendarIcon className="relative z-10 size-3.5" />
+                <span className="relative z-10">თვიური</span>
+                <span
+                  className={`absolute bottom-0 left-1/2 h-px -translate-x-1/2 transition-all duration-300 ease-out ${
+                    mode === 'monthly' ? 'w-[calc(100%-12px)] bg-mainText' : 'w-0 bg-mainText/50 group-hover:w-1/2'
+                  }`}
+                />
               </button>
               <button
                 type="button"
                 onClick={() => setMode('yearly')}
-                className={`inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 rounded-box px-3 text-xs font-bold transition ${
-                  mode === 'yearly'
-                    ? 'bg-navy text-white shadow-sm'
-                    : 'text-body hover:bg-surface hover:text-ink'
+                className={`group relative inline-flex min-h-9 cursor-pointer items-center justify-center gap-1.5 overflow-hidden rounded-box px-3 text-xs font-bold transition-all duration-200 ${
+                  mode === 'yearly' ? 'text-mainText' : 'text-mainText/50 hover:text-mainText'
                 }`}
               >
-                <TrendingUp className="size-3.5" />
-                წლიური
+                <TrendingUp className="relative z-10 size-3.5" />
+                <span className="relative z-10">წლიური</span>
+                <span
+                  className={`absolute bottom-0 left-1/2 h-px -translate-x-1/2 transition-all duration-300 ease-out ${
+                    mode === 'yearly' ? 'w-[calc(100%-12px)] bg-mainText' : 'w-0 bg-mainText/50 group-hover:w-1/2'
+                  }`}
+                />
               </button>
             </div>
 
@@ -350,6 +358,7 @@ export function ReportsView({
               )}
             </p>
           </div>
+        </div>
         </div>
       </div>
 
@@ -470,7 +479,7 @@ function MonthlyReport({
                     className="group relative flex min-w-[16px] flex-1 flex-col items-center"
                   >
                     {amt > 0 && (
-                      <span className="absolute -top-6 z-20 whitespace-nowrap rounded bg-navy px-1.5 py-0.5 text-[9px] font-bold text-white opacity-0 transition group-hover:opacity-100">
+                      <span className="absolute -top-6 z-20 whitespace-nowrap rounded-box bg-[#465D73] px-1.5 py-0.5 text-[9px] font-bold text-white opacity-0 transition group-hover:opacity-100">
                         {formatPrice(amt)}
                       </span>
                     )}
@@ -479,7 +488,7 @@ function MonthlyReport({
                         amt > 0
                           ? isWeekend
                             ? 'bg-brass hover:bg-brass-strong'
-                            : 'bg-win hover:bg-emerald-600'
+                            : 'bg-win'
                           : 'bg-paper-deep'
                       }`}
                       style={{ height: `${heightPx}px` }}
@@ -753,7 +762,7 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
                     className="group relative flex min-w-[28px] flex-1 flex-col items-center"
                   >
                     {m.total > 0 && (
-                      <span className="absolute -top-6 z-20 whitespace-nowrap rounded bg-navy px-1.5 py-0.5 text-[9px] font-bold text-white opacity-0 transition group-hover:opacity-100">
+                      <span className="absolute -top-6 z-20 whitespace-nowrap rounded-box bg-[#465D73] px-1.5 py-0.5 text-[9px] font-bold text-white opacity-0 transition group-hover:opacity-100">
                         {formatPrice(m.total)}
                       </span>
                     )}
@@ -763,7 +772,7 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
                           ? 'bg-paper-deep'
                           : isCurrent
                             ? 'bg-brass hover:bg-brass-strong'
-                            : 'bg-win hover:bg-emerald-600'
+                            : 'bg-win'
                       }`}
                       style={{ height: `${heightPx}px` }}
                     />

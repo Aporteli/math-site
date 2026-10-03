@@ -18,8 +18,8 @@ export function ThemeClearButtons({ isTeacher, isStudent, isDark, onToggleDark, 
         data-toolbar-key="theme"
         onClick={onToggleDark}
         title="თემის შეცვლა"
-        className="flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-box hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
-        {isDark ? <Sun className="size-3.5 sm:size-4 text-amber-400" /> : <Moon className="size-3.5 sm:size-4" />}
+        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] sm:size-8">
+        {isDark ? <Sun className="size-3.5 text-brass sm:size-4" /> : <Moon className="size-3.5 sm:size-4" />}
       </button>
       {isTeacher && (
         <button
@@ -27,7 +27,7 @@ export function ThemeClearButtons({ isTeacher, isStudent, isDark, onToggleDark, 
           data-toolbar-key="clear"
           onClick={onClear}
           title="დაფის გასუფთავება"
-          className="flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-box hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-500 transition-colors">
+          className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-rose-500 transition-all duration-200 hover:bg-rose-500/15 active:scale-[0.98] sm:size-8">
           <Trash2 className="size-3.5 sm:size-4" />
         </button>
       )}

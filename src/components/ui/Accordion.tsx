@@ -41,8 +41,10 @@ export const Accordion: React.FC<AccordionProps> = ({
         return (
           <div key={idx} className="border-b border-hairline">
             <button
-              className={`flex w-full items-center justify-between p-4 text-left font-bold text-ink transition hover:bg-navy-tint focus:outline-none ${
-                open ? "bg-navy-tint" : "bg-paper"
+              className={`flex w-full cursor-pointer items-center justify-between p-4 text-left font-bold text-mainText transition-all duration-200 hover:bg-sectionHeader focus:outline-none ${
+                open
+                  ? "bg-mainButton shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]"
+                  : "bg-main"
               }`}
               aria-expanded={open}
               aria-controls={`accordion-panel-${idx}`}

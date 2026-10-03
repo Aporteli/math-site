@@ -41,11 +41,11 @@ export function StudentsList({
   return (
     <>
     {isTeacher && (
-    <div className="rounded-box bg-white/5 p-2 text-xs text-white/90 mt-1">
-      <span className="font-semibold">სტუდენტები:</span>
+    <div className="mt-1 rounded-box border border-hairline bg-sectionHeader p-2 text-xs font-bold text-mainText">
+      <span>სტუდენტები:</span>
       <ul className="mt-1 space-y-1 max-h-40 overflow-y-auto">
         {participants.length === 0 ? (
-          <li className="text-white/40">სტუდენტები ვერ მოიძებნა</li>
+          <li className="font-medium text-muted">სტუდენტები ვერ მოიძებნა</li>
         ) : (
           participants.map((participant) => {
             const isIsolated = isolatedIdentities.includes(participant.identity);
@@ -53,16 +53,16 @@ export function StudentsList({
             return (
               <li
                 key={participant.identity}
-                className="flex items-center justify-between pl-2 cursor-pointer hover:text-emerald-400 transition py-0.5"
+                className="flex cursor-pointer items-center justify-between py-0.5 pl-2 text-mainText transition-colors duration-200 hover:text-navy"
                 title={participant.name || participant.identity}
                 onClick={(e) => handleStudentClick(e, participant)}
               >
-                <span className="before:content-['•_'] before:text-white/40 truncate">
+                <span className="truncate before:text-muted before:content-['•_']">
                   {participant.name ? participant.name : participant.identity}
                 </span>
 
                 {isIsolated && (
-                  <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1 rounded ml-1 shrink-0">
+                  <span className="ml-1 shrink-0 rounded-box border border-rose-500/30 bg-rose-500/15 px-1 text-[9px] font-bold text-rose-500">
                     იზოლირებული
                   </span>
                 )}

@@ -120,8 +120,8 @@ export function ClassroomRoomModal({
           />
 
           <main
-            className={`relative flex flex-1 min-h-0 w-full overflow-hidden bg-slate-900 ${
-              isBoardFullscreen ? '' : 'rounded-box border border-white/10'
+            className={`relative flex min-h-0 w-full flex-1 overflow-hidden bg-main ${
+              isBoardFullscreen ? '' : 'rounded-box border border-hairline'
             }`}>
             <div
               className={`flex h-full w-full min-h-0 min-w-0 flex-col lg:flex-row ${

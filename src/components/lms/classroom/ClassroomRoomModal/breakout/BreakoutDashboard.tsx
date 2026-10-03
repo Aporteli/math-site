@@ -40,7 +40,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
   return (
     <div ref={containerRef} className="pointer-events-none absolute inset-0 z-40 overflow-hidden">
       <div
-        className="pointer-events-auto absolute flex min-w-0 flex-col overflow-hidden rounded-box border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl"
+        className="pointer-events-auto absolute flex min-w-0 flex-col overflow-hidden rounded-box border border-hairline bg-sectionHeader shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
         style={
           maximized
             ? {
@@ -58,13 +58,13 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
         {/* Header */}
         <div
           onPointerDown={maximized ? undefined : startDrag}
-          className={`flex min-w-0 shrink-0 items-center justify-between gap-2 border-b border-white/10 px-3 py-2 ${
+          className={`flex min-w-0 shrink-0 items-center justify-between gap-2 border-b border-hairline bg-sectionHeader px-3 py-2 ${
             maximized ? '' : 'cursor-grab select-none active:cursor-grabbing'
           }`}>
           <div className="min-w-0 flex-1 overflow-hidden">
-            <p className="truncate text-sm font-bold text-white">ოთახები</p>
+            <p className="truncate text-sm font-bold text-mainText">ოთახები</p>
 
-            <p className="truncate text-[11px] text-white/50">
+            <p className="truncate text-[11px] font-medium text-muted">
               {breakout.breakout.active ? 'ჯგუფები გაყოფილია' : 'ყველა მთავარ ოთახშია'}
             </p>
           </div>
@@ -74,7 +74,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
               type="button"
               onClick={reset}
               title="საწყის პოზიციაზე დაბრუნება"
-              className="flex size-7 shrink-0 items-center justify-center rounded-box text-white/60 hover:bg-white/10 hover:text-white"
+              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText"
               aria-label="Reset">
               <RotateCcw className="size-3.5" />
             </button>
@@ -83,7 +83,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
               type="button"
               onClick={() => setMaximized((v) => !v)}
               title={maximized ? 'აღდგენა' : 'გაფართოება'}
-              className="flex size-7 shrink-0 items-center justify-center rounded-box text-white/60 hover:bg-white/10 hover:text-white"
+              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText"
               aria-label="Maximize">
               <Maximize2 className="size-3.5" />
             </button>
@@ -91,7 +91,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
             <button
               type="button"
               onClick={() => breakout.setDashboardOpen(false)}
-              className="flex size-7 shrink-0 items-center justify-center rounded-box text-white/60 hover:bg-white/10 hover:text-white"
+              className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText"
               aria-label="დახურვა">
               <X className="size-4" />
             </button>
@@ -104,7 +104,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
             <button
               type="button"
               onClick={breakout.resumeMonitorAudio}
-              className="mb-3 w-full rounded-box bg-amber-500/20 px-3 py-2 text-left text-xs font-semibold leading-5 text-amber-200">
+              className="mb-3 w-full cursor-pointer rounded-box border border-brass/20 bg-brass-tint px-3 py-2 text-left text-xs font-bold leading-5 text-brass-strong">
               მოსმენა დაბლოკილია ბრაუზერმა. დააჭირეთ ხმის ჩასართავად.
             </button>
           )}
@@ -116,7 +116,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
           )}
 
           {breakout.actionError && (
-            <p className="mt-3 break-words text-xs leading-5 text-rose-300">{breakout.actionError}</p>
+            <p className="mt-3 break-words text-xs font-bold leading-5 text-rose-500">{breakout.actionError}</p>
           )}
         </div>
 
@@ -138,7 +138,7 @@ export function BreakoutDashboard({ students }: BreakoutDashboardProps) {
             <div onPointerDown={startResize('sw')} className="absolute bottom-0 left-0 size-3 cursor-nesw-resize" />
 
             <div onPointerDown={startResize('se')} className="absolute bottom-0 right-0 size-3 cursor-nwse-resize">
-              <span className="pointer-events-none absolute bottom-1 right-1 size-1.5 rounded-box bg-white/30" />
+              <span className="pointer-events-none absolute bottom-1 right-1 size-1.5 rounded-box bg-muted/40" />
             </div>
           </>
         )}
@@ -177,12 +177,12 @@ function AssignRooms({ students }: { students: StudentOption[] }) {
     <div className="flex min-w-0 flex-col gap-3">
 
       {students.length === 0 ? (
-        <p className="text-xs leading-5 text-white/40">ჩარიცხული მოსწავლეები ვერ მოიძებნა</p>
+        <p className="text-xs font-medium leading-5 text-muted">ჩარიცხული მოსწავლეები ვერ მოიძებნა</p>
       ) : (
         <ul className="flex min-w-0 flex-col gap-1">
           {students.map((student) => (
-            <li key={student.identity} className="flex min-w-0 items-center gap-2 rounded-box bg-white/5 px-2 py-1.5">
-              <span className="min-w-0 flex-1 truncate text-xs font-medium text-white">
+            <li key={student.identity} className="flex min-w-0 items-center gap-2 rounded-box border border-hairline bg-main px-2 py-1.5">
+              <span className="min-w-0 flex-1 truncate text-xs font-bold text-mainText">
                 {student.name || student.identity}
               </span>
 
@@ -208,7 +208,7 @@ function AssignRooms({ students }: { students: StudentOption[] }) {
         type="button"
         disabled={busy || (groupA.length === 0 && groupB.length === 0)}
         onClick={() => void split(groupA, groupB)}
-        className="inline-flex min-w-0 items-center justify-center gap-2 rounded-box bg-amber-500 px-3 py-2 text-xs font-bold text-slate-950 disabled:opacity-40">
+        className="inline-flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-box bg-[#A66A32] px-3 py-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)] transition-all duration-200 hover:bg-[#B8783B] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
         <Split className="size-4 shrink-0" />
         <span className="truncate">გაყოფა</span>
       </button>
@@ -225,8 +225,10 @@ function RoomPick({ label, selected, onClick }: { label: string; selected: boole
     <button
       type="button"
       onClick={onClick}
-      className={`flex size-7 shrink-0 items-center justify-center rounded-box text-[11px] font-bold ${
-        selected ? 'bg-amber-400 text-slate-950' : 'bg-white/10 text-white/70 hover:bg-white/20'
+      className={`flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-[11px] font-bold transition-all duration-200 ${
+        selected
+          ? 'bg-[#A66A32] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]'
+          : 'border border-hairline bg-main text-mainText hover:bg-mainButtonHover'
       }`}>
       {label}
     </button>
@@ -274,7 +276,7 @@ function ActiveRooms({ students, compact }: { students: StudentOption[]; compact
         type="button"
         disabled={busy}
         onClick={() => void merge()}
-        className="inline-flex min-w-0 items-center justify-center gap-2 rounded-box bg-white px-3 py-2 text-xs font-bold text-slate-950 disabled:opacity-40">
+        className="inline-flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-box bg-[#465D73] px-3 py-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
         <Merge className="size-4 shrink-0" />
         <span className="truncate">გაერთიანება</span>
       </button>
@@ -328,15 +330,15 @@ function RoomColumn({
   }, [ids, names]);
 
   return (
-    <section className="min-w-0 overflow-hidden rounded-box border border-white/10 bg-white/5 p-2">
+    <section className="min-w-0 overflow-hidden rounded-box border border-hairline bg-main p-2">
       <div className="mb-2 flex min-w-0 flex-col gap-2">
         {/* სათაური: badge + მოსწავლეების სახელები */}
         <div className="flex min-w-0 items-center gap-1.5" title={fullTitle}>
-          <span className="flex h-4 shrink-0 items-center rounded bg-white/10 px-1.5 text-[9px] font-bold text-white/70">
+          <span className="flex h-4 shrink-0 items-center rounded-box bg-sectionHeader px-1.5 text-[9px] font-bold text-muted">
             {badge}
           </span>
 
-          <h3 className="min-w-0 flex-1 truncate text-xs font-bold text-white">{displayTitle}</h3>
+          <h3 className="min-w-0 flex-1 truncate text-xs font-bold text-ink">{displayTitle}</h3>
         </div>
 
         <div className="flex min-w-0 flex-wrap items-center gap-1">
@@ -361,11 +363,11 @@ function RoomColumn({
       </div>
 
       {isJoined && (
-        <p className="mb-2 break-words text-[10px] font-semibold leading-4 text-emerald-300">ლაპარაკობთ ამ ოთახში</p>
+        <p className="mb-2 break-words text-[10px] font-bold leading-4 text-win">ლაპარაკობთ ამ ოთახში</p>
       )}
 
       {ids.length === 0 ? (
-        <p className="text-[11px] leading-4 text-white/40">ცარიელია</p>
+        <p className="text-[11px] font-medium leading-4 text-muted">ცარიელია</p>
       ) : (
         <ul className="flex min-w-0 flex-col gap-1.5">
           {ids.map((userId) => (
@@ -402,17 +404,17 @@ function StudentListenRow({
   const volume = Math.round(studentVolume(userId) * 100);
 
   return (
-    <li className="min-w-0 overflow-hidden rounded-box bg-slate-950/60 px-2 py-1.5">
+    <li className="min-w-0 overflow-hidden rounded-box border border-hairline bg-sectionHeader px-2 py-1.5">
       <div className="flex min-w-0 items-center gap-1.5">
         {speaking && (
-          <span className="hidden shrink-0 text-[9px] font-bold text-emerald-300 min-[360px]:inline">საუბრობს</span>
+          <span className="hidden shrink-0 text-[9px] font-bold text-win min-[360px]:inline">საუბრობს</span>
         )}
       </div>
 
       <BoardAssignSelect studentId={userId} className="mt-1.5" />
 
       <div className="mt-1 flex min-w-0 items-center gap-2">
-        <Volume2 className="size-3 shrink-0 text-white/30" />
+        <Volume2 className="size-3 shrink-0 text-icons" />
 
         <input
           type="range"
@@ -422,10 +424,10 @@ function StudentListenRow({
           value={volume}
           aria-label={`${name} ხმა`}
           onChange={(event) => setStudentVolume(userId, event.currentTarget.valueAsNumber / 100)}
-          className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-box bg-white/15 accent-amber-400"
+          className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-box bg-paper-deep accent-[#465D73]"
         />
 
-        <span className="w-7 shrink-0 text-right text-[9px] tabular-nums text-white/30">{volume}%</span>
+        <span className="w-7 shrink-0 text-right text-[9px] font-bold tabular-nums text-muted">{volume}%</span>
       </div>
     </li>
   );
@@ -457,7 +459,7 @@ function IconButton({
       onClick={onClick}
       className={`inline-flex min-w-0 shrink-0 items-center justify-center gap-1 rounded-box text-[10px] font-bold ${
         compact ? 'size-7 p-0' : 'px-2 py-1'
-      } ${pressed ? 'bg-emerald-500 text-slate-950' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}>
+      } ${pressed ? 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]' : 'border border-hairline bg-sectionHeader text-mainText hover:bg-mainButtonHover'}`}>
       <Icon className="size-3 shrink-0" />
 
       {!compact && <span className="truncate">{label}</span>}

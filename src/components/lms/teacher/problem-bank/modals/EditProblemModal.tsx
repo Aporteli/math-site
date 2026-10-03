@@ -21,7 +21,7 @@ import { childrenOf, taxonomyLabel, type TaxonomyNodeDto } from '@/lib/math/prob
 import { toKatexFriendlyTex } from '@/lib/math/problems/tex';
 
 const fieldClass =
-  'w-full min-w-0 rounded-box border border-hairline bg-white px-3 py-2 text-sm text-ink shadow-sm transition-colors placeholder:text-muted focus:border-navy/40 focus:outline-none focus:ring-2 focus:ring-navy/15';
+  'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm font-medium text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
 const EDIT_SOURCES = ['custom', 'verified', 'unchecked', 'ai', 'generated', 'bank'] as const;
 
@@ -342,7 +342,7 @@ export function EditProblemModal({
     <div className="fixed inset-0 z-[100] overflow-hidden">
       <button
         type="button"
-        className="absolute inset-0 bg-navy-strong/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         aria-label={ui.close}
         onClick={onClose}
       />
@@ -351,7 +351,7 @@ export function EditProblemModal({
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-white shadow-lg shadow-navy/10">
+          className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl">
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
             <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
               {ui.title}
@@ -493,14 +493,14 @@ export function EditProblemModal({
             {notice ? <p className="w-full text-sm text-brass-strong sm:me-auto sm:w-auto">{notice}</p> : null}
             <button
               type="button"
-              className="inline-flex w-full items-center justify-center rounded-box border border-hairline bg-white px-4 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy sm:w-auto"
+              className="inline-flex w-full cursor-pointer items-center justify-center rounded-box border border-hairline bg-surface px-4 py-2.5 text-sm font-bold text-ink transition-colors hover:bg-paper-deep sm:w-auto"
               onClick={onClose}>
               {ui.cancel}
             </button>
             <button
               type="button"
               disabled={busy || !prompt.trim() || !solution.trim()}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-box bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-strong disabled:opacity-60 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#526C85] disabled:opacity-60 sm:w-auto"
               onClick={() => void onSubmit()}>
               <PenLine className="size-4" aria-hidden="true" />
               {busy ? ui.saving : ui.save}

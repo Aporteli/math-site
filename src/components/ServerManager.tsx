@@ -153,9 +153,9 @@ function MetricCard({
   detail: string;
 }) {
   return (
-    <div className="rounded-box border border-hairline bg-white p-4 shadow-sm">
+    <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
       <div className="flex items-center justify-between">
-        <div className="flex h-9 w-9 items-center justify-center rounded-box bg-navy-tint text-navy">
+        <div className="flex h-9 w-9 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
           <Icon className="h-4 w-4" />
         </div>
 
@@ -389,7 +389,7 @@ export function ServerManager({
 
   if (loading) {
     return (
-      <div className="flex min-h-60 items-center justify-center rounded-box border border-hairline bg-white shadow-sm">
+      <div className="flex min-h-60 items-center justify-center rounded-box border border-hairline bg-main shadow-sm">
         <div className="flex items-center gap-2 text-sm text-muted">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading server...
@@ -405,8 +405,8 @@ export function ServerManager({
           className={[
             'flex items-center gap-2 rounded-box border px-4 py-3 text-sm',
             error
-              ? 'border-red-200 bg-red-50 text-red-700'
-              : 'border-emerald-200 bg-emerald-50 text-emerald-700',
+              ? 'border-rose-500/30 bg-rose-500/15 text-rose-500'
+              : 'border-win/30 bg-win-tint text-win',
           ].join(' ')}
         >
           {error ? (
@@ -469,7 +469,7 @@ export function ServerManager({
         />
       </div>
 
-      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+      <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold text-ink">
@@ -484,7 +484,7 @@ export function ServerManager({
             type="button"
             onClick={() => void loadData()}
             disabled={refreshing}
-            className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-sectionHeader disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw
               className={[
@@ -509,7 +509,7 @@ export function ServerManager({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-box bg-navy-tint text-navy">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
                       <Icon className="h-5 w-5" />
                     </div>
 
@@ -527,8 +527,8 @@ export function ServerManager({
                     className={[
                       'rounded-box px-2 py-1 text-[11px] font-medium',
                       serviceStatus?.running
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-red-50 text-red-700',
+                        ? 'bg-win-tint text-win'
+                        : 'bg-rose-500/15 text-rose-500',
                     ].join(' ')}
                   >
                     {serviceStatus?.running
@@ -537,7 +537,7 @@ export function ServerManager({
                   </span>
                 </div>
 
-                <div className="mt-4 rounded-box bg-slate-50 px-3 py-2">
+                <div className="mt-4 rounded-box bg-sectionHeader px-3 py-2">
                   <div className="truncate font-mono text-[11px] text-muted">
                     {serviceStatus?.container ??
                       service.id}
@@ -554,7 +554,7 @@ export function ServerManager({
                       type="button"
                       onClick={() => void containerControl(service.id, 'start')}
                       disabled={restarting !== null || containerAction !== null}
-                      className="rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-sectionHeader disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {containerAction === `${service.id}:start` ? 'Starting...' : 'Start'}
                     </button>
@@ -562,7 +562,7 @@ export function ServerManager({
                       type="button"
                       onClick={() => void containerControl(service.id, 'stop')}
                       disabled={restarting !== null || containerAction !== null}
-                      className="rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-sectionHeader disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {containerAction === `${service.id}:stop` ? 'Stopping...' : 'Stop'}
                     </button>
@@ -575,7 +575,7 @@ export function ServerManager({
                     void restartService(service.id)
                   }
                   disabled={restarting !== null || containerAction !== null}
-                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-box border border-hairline px-3 py-2 text-sm font-medium text-ink transition hover:bg-sectionHeader disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isRestarting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -592,7 +592,7 @@ export function ServerManager({
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+        <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-ink">
@@ -608,18 +608,18 @@ export function ServerManager({
           </div>
 
           {!rooms?.configured ? (
-            <div className="mt-5 rounded-box bg-amber-50 p-4 text-sm text-amber-700">
+            <div className="mt-5 rounded-box bg-brass-tint p-4 text-sm text-brass-strong">
               LiveKit API credentials are not configured on the
               server agent.
             </div>
           ) : rooms?.error ? (
-            <div className="mt-5 rounded-box bg-red-50 p-4 text-sm text-red-700">
+            <div className="mt-5 rounded-box border border-rose-500/30 bg-rose-500/15 p-4 text-sm text-rose-500">
               {rooms.error}
             </div>
           ) : (
             <>
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-box bg-slate-50 p-4">
+                <div className="rounded-box bg-sectionHeader p-4">
                   <div className="text-xs text-muted">
                     Rooms
                   </div>
@@ -629,7 +629,7 @@ export function ServerManager({
                   </div>
                 </div>
 
-                <div className="rounded-box bg-slate-50 p-4">
+                <div className="rounded-box bg-sectionHeader p-4">
                   <div className="text-xs text-muted">
                     Participants
                   </div>
@@ -677,7 +677,7 @@ export function ServerManager({
           )}
         </div>
 
-        <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+        <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-ink">
@@ -701,9 +701,9 @@ export function ServerManager({
                 </span>
               </div>
 
-              <div className="mt-2 h-2 overflow-hidden rounded-box bg-slate-100">
+              <div className="mt-2 h-2 overflow-hidden rounded-box bg-paper-deep">
                 <div
-                  className="h-full rounded-box bg-navy"
+                  className="h-full rounded-box bg-[#465D73]"
                   style={{
                     width: `${Math.min(
                       metrics?.cpu.percent ?? 0,
@@ -722,9 +722,9 @@ export function ServerManager({
                 </span>
               </div>
 
-              <div className="mt-2 h-2 overflow-hidden rounded-box bg-slate-100">
+              <div className="mt-2 h-2 overflow-hidden rounded-box bg-paper-deep">
                 <div
-                  className="h-full rounded-box bg-navy"
+                  className="h-full rounded-box bg-[#465D73]"
                   style={{
                     width: `${Math.min(
                       metrics?.memory.percent ?? 0,
@@ -737,11 +737,11 @@ export function ServerManager({
 
             {metrics?.network ? (
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="rounded-box bg-slate-50 p-3">
+                <div className="rounded-box bg-sectionHeader p-3">
                   <div className="text-muted">Sent</div>
                   <div className="mt-1 font-medium text-ink">{formatBytes(metrics.network.bytes_sent)}</div>
                 </div>
-                <div className="rounded-box bg-slate-50 p-3">
+                <div className="rounded-box bg-sectionHeader p-3">
                   <div className="text-muted">Received</div>
                   <div className="mt-1 font-medium text-ink">{formatBytes(metrics.network.bytes_received)}</div>
                 </div>
@@ -756,9 +756,9 @@ export function ServerManager({
                 </span>
               </div>
 
-              <div className="mt-2 h-2 overflow-hidden rounded-box bg-slate-100">
+              <div className="mt-2 h-2 overflow-hidden rounded-box bg-paper-deep">
                 <div
-                  className="h-full rounded-box bg-navy"
+                  className="h-full rounded-box bg-[#465D73]"
                   style={{
                     width: `${Math.min(
                       metrics?.disk.percent ?? 0,
@@ -772,7 +772,7 @@ export function ServerManager({
         </div>
       </div>
 
-      <div className="rounded-box border border-hairline bg-white p-5 shadow-sm">
+      <div className="relative overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="flex items-center gap-2 text-base font-semibold text-ink">
@@ -794,10 +794,10 @@ export function ServerManager({
                   setSelectedLogService(service.id)
                 }
                 className={[
-                  'rounded-box px-3 py-2 text-xs font-medium transition',
+                  'cursor-pointer rounded-box px-3 py-2 text-xs transition',
                   selectedLogService === service.id
-                    ? 'bg-navy text-white'
-                    : 'border border-hairline text-body hover:bg-slate-50',
+                    ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                    : 'border border-hairline font-medium text-mainText hover:bg-sectionHeader',
                 ].join(' ')}
               >
                 {service.name}
@@ -810,7 +810,7 @@ export function ServerManager({
                 void loadLogs(selectedLogService)
               }
               disabled={logsLoading}
-              className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-xs font-medium text-ink transition hover:bg-slate-50 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-box border border-hairline px-3 py-2 text-xs font-medium text-ink transition hover:bg-sectionHeader disabled:opacity-50"
             >
               <RefreshCw
                 className={[

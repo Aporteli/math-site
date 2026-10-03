@@ -9,7 +9,7 @@ export function GoogleSignInButton({ handleGoogleSignIn }: GoogleSignInButtonPro
     <button
       type="button"
       onClick={handleGoogleSignIn}
-      className="flex w-full items-center justify-center gap-3 rounded-box border border-hairline bg-surface px-4 py-3 text-sm font-semibold text-ink shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-navy/15">
+      className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-box border border-hairline bg-surface px-4 py-3 text-sm font-bold text-ink shadow-sm transition-colors hover:bg-mainButtonHover focus:outline-none">
       <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
         <path
           fill="#4285F4"

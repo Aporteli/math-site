@@ -209,7 +209,7 @@ export function PaymentHistoryModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink">
+                className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-sectionHeader hover:text-ink">
                 <X className="h-4 w-4" />
               </button>
             )}
@@ -258,7 +258,7 @@ export function PaymentHistoryModal({
                 type="button"
                 onClick={handleSaveComment}
                 disabled={!noteDirty}
-                className="absolute right-3 top-3 inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-navy px-3 py-2 text-xs font-bold text-white transition hover:bg-navy-strong disabled:cursor-default disabled:opacity-70">
+                className="absolute right-3 top-3 inline-flex cursor-pointer items-center gap-1.5 rounded-box bg-[#465D73] px-3 py-2 text-xs font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:cursor-default disabled:opacity-45 disabled:shadow-none">
                 <Save className="h-3.5 w-3.5" />
                 {noteDirty ? 'შენახვა' : 'შენახულია'}
               </button>
@@ -269,7 +269,7 @@ export function PaymentHistoryModal({
               type="button"
               onClick={handlePay}
               disabled={isPending}
-              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-box bg-navy px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-strong disabled:opacity-50">
+              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center rounded-box bg-[#465D73] px-4 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
               {isPending ? 'ინახება...' : `გადახდა · ${formatPrice(monthOwed)}`}
             </button>
           ) : null}
@@ -297,7 +297,7 @@ export function PaymentHistoryModal({
               <button
                 type="button"
                 onClick={() => setPriceModalOpen(false)}
-                className="flex size-8 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-paper hover:text-ink">
+                className="flex size-8 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-sectionHeader hover:text-ink">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -331,7 +331,7 @@ export function PaymentHistoryModal({
               type="button"
               onClick={handleSavePrice}
               disabled={isPending}
-              className="inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-box border border-brass/40 bg-brass-strong px-4 py-2 text-sm font-bold text-white transition hover:bg-brass disabled:opacity-50">
+              className="inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-box bg-[#A66A32] px-4 py-2 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)] transition-all duration-200 hover:bg-[#B8783B] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none">
               <Save className="h-3.5 w-3.5" />
               {priceSaved ? '✓ შენახულია' : 'ფასის შენახვა'}
             </button>

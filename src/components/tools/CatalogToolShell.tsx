@@ -22,7 +22,7 @@ export function CatalogToolShell({ locale, tool, item, sectionTitle, copy }: Cat
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
         <Link
           href={localePath(locale, '/tools')}
-          className="inline-flex items-center gap-2 text-sm font-medium text-navy hover:text-navy-strong">
+          className="inline-flex items-center gap-2 text-sm font-bold text-[#465D73] transition-colors hover:text-[#526C85]">
           <ArrowLeft className="size-4" aria-hidden="true" />
           {copy.back}
         </Link>
@@ -35,7 +35,7 @@ export function CatalogToolShell({ locale, tool, item, sectionTitle, copy }: Cat
             description={item.description}
           />
         </div>
-        <section className="mt-8 rounded-box border border-hairline bg-white p-6 shadow-sm sm:p-8">
+        <section className="relative mt-8 overflow-hidden rounded-box border border-hairline bg-main p-6 shadow-sm before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass sm:p-8">
           <span className={`inline-flex size-12 items-center justify-center rounded-box ${tone.chip}`}>
             <Icon className="size-6" aria-hidden="true" />
           </span>
