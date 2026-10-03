@@ -18,6 +18,17 @@ export const DIAGNOSTIC_EVENT_KINDS = [
   'ice_state_changed',
   'livekit_error',
   'server_mismatch',
+  'pc_state_changed',
+  'dtls_state_changed',
+  'data_channel_changed',
+  'browser_offline',
+  'browser_online',
+  'browser_network_changed',
+  'browser_visibility_changed',
+  'whiteboard_send_failed',
+  'whiteboard_send_skipped',
+  'whiteboard_receive_failed',
+  'board_link_changed',
 ] as const;
 
 export type DiagnosticEventKind = (typeof DIAGNOSTIC_EVENT_KINDS)[number];
@@ -34,6 +45,15 @@ export const NOTABLE_EVENT_KINDS: readonly DiagnosticEventKind[] = [
   'ice_state_changed',
   'livekit_error',
   'server_mismatch',
+  'pc_state_changed',
+  'dtls_state_changed',
+  'data_channel_changed',
+  'browser_offline',
+  'browser_network_changed',
+  'whiteboard_send_failed',
+  'whiteboard_send_skipped',
+  'whiteboard_receive_failed',
+  'board_link_changed',
 ];
 
 export const THRESHOLDS = {
@@ -59,6 +79,36 @@ export interface DiagnosticSample {
   quality: string;
   state: string;
   ice: string | null;
+  pc?: string | null;
+  subscriberPc?: string | null;
+  subscriberIce?: string | null;
+  dtls?: string | null;
+  online?: boolean | null;
+  visibility?: string | null;
+  effectiveType?: string | null;
+  packetsSent?: number | null;
+  packetsReceived?: number | null;
+  pathBytesSent?: number | null;
+  pathBytesReceived?: number | null;
+  dataChannelState?: string | null;
+  dataMessagesSent?: number | null;
+  dataMessagesReceived?: number | null;
+  dataBytesSent?: number | null;
+  dataBytesReceived?: number | null;
+  whiteboardSent?: number | null;
+  whiteboardReceived?: number | null;
+  whiteboardPointerSent?: number | null;
+  whiteboardPointerReceived?: number | null;
+  whiteboardErrors?: number | null;
+  whiteboardSkipped?: number | null;
+  whiteboardPublishMs?: number | null;
+  clockOffsetMs?: number | null;
+  boardState?: string | null;
+  boardIce?: string | null;
+  boardPc?: string | null;
+  boardDataState?: string | null;
+  boardMessagesSent?: number | null;
+  boardMessagesReceived?: number | null;
 }
 
 export interface ServerParticipantSnapshot {
@@ -325,6 +375,14 @@ const SIMULTANEOUS_KINDS = new Set<string>([
   'ice_state_changed',
   'livekit_error',
   'server_mismatch',
+  'pc_state_changed',
+  'dtls_state_changed',
+  'data_channel_changed',
+  'browser_offline',
+  'whiteboard_send_failed',
+  'whiteboard_send_skipped',
+  'whiteboard_receive_failed',
+  'board_link_changed',
 ]);
 
 export function simultaneousProblemNote(events: TimedEvent[]): string | null {
@@ -437,6 +495,17 @@ export const EVENT_LABELS: Record<DiagnosticEventKind, string> = {
   ice_state_changed: 'ICE connection state changed',
   livekit_error: 'LiveKit error',
   server_mismatch: 'Server participant list does not match the client',
+  pc_state_changed: 'WebRTC connection state changed',
+  dtls_state_changed: 'DTLS state changed',
+  data_channel_changed: 'Data channel state changed',
+  browser_offline: 'Browser went offline',
+  browser_online: 'Browser came online',
+  browser_network_changed: 'Browser network type changed',
+  browser_visibility_changed: 'Page visibility changed',
+  whiteboard_send_failed: 'Whiteboard send failed',
+  whiteboard_send_skipped: 'Whiteboard send skipped',
+  whiteboard_receive_failed: 'Whiteboard receive failed',
+  board_link_changed: 'Whiteboard link changed',
 };
 
 export function eventLabel(kind: string): string {
@@ -448,4 +517,117 @@ export function eventLabel(kind: string): string {
 
 export function isNotableKind(kind: string): boolean {
   return (NOTABLE_EVENT_KINDS as readonly string[]).includes(kind);
+}
+
+const SAMPLE_MIN_GAP_MS = 7_000;
+const SAMPLE_QUIET_GAP_MS = 15_000;
+const SAMPLE_DENSE_WINDOW_MS = 8 * 60_000;
+const SAMPLE_SPARSE_GAP_MS = 60_000;
+const SAMPLE_CAP = 360;
+
+function sampleText(value: string | null | undefined): string | null {
+  return value ?? null;
+}
+
+function metricJump(previous: number | null, next: number | null, threshold: number): boolean {
+  if (previous === null && next === null) return false;
+  if (previous === null || next === null) return true;
+  return Math.abs(previous - next) >= threshold;
+}
+
+export function sampleChanged(previous: DiagnosticSample, next: DiagnosticSample): boolean {
+  if (
+    previous.quality !== next.quality ||
+    previous.state !== next.state ||
+    sampleText(previous.ice) !== sampleText(next.ice) ||
+    sampleText(previous.pc) !== sampleText(next.pc) ||
+    sampleText(previous.subscriberPc) !== sampleText(next.subscriberPc) ||
+    sampleText(previous.subscriberIce) !== sampleText(next.subscriberIce) ||
+    sampleText(previous.dtls) !== sampleText(next.dtls) ||
+    sampleText(previous.dataChannelState) !== sampleText(next.dataChannelState) ||
+    sampleText(previous.effectiveType) !== sampleText(next.effectiveType) ||
+    sampleText(previous.visibility) !== sampleText(next.visibility) ||
+    sampleText(previous.boardState) !== sampleText(next.boardState) ||
+    sampleText(previous.boardIce) !== sampleText(next.boardIce) ||
+    sampleText(previous.boardPc) !== sampleText(next.boardPc) ||
+    sampleText(previous.boardDataState) !== sampleText(next.boardDataState) ||
+    (previous.online ?? null) !== (next.online ?? null)
+  ) {
+    return true;
+  }
+  if (metricJump(previous.rttMs, next.rttMs, 50)) return true;
+  if (metricJump(previous.sendLossPct, next.sendLossPct, 1)) return true;
+  if (metricJump(previous.receiveLossPct, next.receiveLossPct, 1)) return true;
+  if (metricJump(previous.jitterMs, next.jitterMs, 10)) return true;
+  if ((next.whiteboardErrors ?? 0) > 0 || (next.whiteboardSkipped ?? 0) > 0) return true;
+  const previousFlow = (previous.whiteboardSent ?? 0) + (previous.whiteboardReceived ?? 0) > 0;
+  const nextFlow = (next.whiteboardSent ?? 0) + (next.whiteboardReceived ?? 0) > 0;
+  if (previousFlow !== nextFlow) return true;
+  const previousPointer = (previous.whiteboardPointerSent ?? 0) + (previous.whiteboardPointerReceived ?? 0) > 0;
+  const nextPointer = (next.whiteboardPointerSent ?? 0) + (next.whiteboardPointerReceived ?? 0) > 0;
+  if (previousPointer !== nextPointer) return true;
+  const previousData = (previous.dataMessagesSent ?? 0) + (previous.dataMessagesReceived ?? 0) > 0;
+  const nextData = (next.dataMessagesSent ?? 0) + (next.dataMessagesReceived ?? 0) > 0;
+  if (previousData !== nextData) return true;
+  const previousPackets = (previous.packetsSent ?? 0) + (previous.packetsReceived ?? 0) > 0;
+  const nextPackets = (next.packetsSent ?? 0) + (next.packetsReceived ?? 0) > 0;
+  return previousPackets !== nextPackets;
+}
+
+export function compactDiagnosticSamples(samples: DiagnosticSample[], nowMs: number): DiagnosticSample[] {
+  const denseAfter = nowMs - SAMPLE_DENSE_WINDOW_MS;
+  const kept: DiagnosticSample[] = [];
+  for (const sample of samples) {
+    const at = Date.parse(sample.t);
+    const previous = kept.at(-1);
+    if (!previous || !Number.isFinite(at)) {
+      kept.push(sample);
+      continue;
+    }
+    const recent = at >= denseAfter;
+    const gap = at - Date.parse(previous.t);
+    if (recent || gap >= SAMPLE_SPARSE_GAP_MS || sampleChanged(previous, sample)) kept.push(sample);
+  }
+  if (kept.length > SAMPLE_CAP) return kept.slice(kept.length - SAMPLE_CAP);
+  return kept;
+}
+
+export function appendDiagnosticSample(
+  existing: DiagnosticSample[],
+  sample: DiagnosticSample,
+  nowMs: number,
+): DiagnosticSample[] {
+  const last = existing.at(-1);
+  if (last) {
+    const gap = nowMs - Date.parse(last.t);
+    if (!Number.isFinite(gap) || gap < SAMPLE_MIN_GAP_MS) return existing;
+    if (gap < SAMPLE_QUIET_GAP_MS && !sampleChanged(last, sample)) return existing;
+  }
+  return compactDiagnosticSamples([...existing, sample], nowMs);
+}
+
+export function isAroundClock(iso: string, targetMinute: number, windowMinutes: number): boolean {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return false;
+  const minute = date.getHours() * 60 + date.getMinutes() + date.getSeconds() / 60;
+  const diff = Math.abs(minute - targetMinute);
+  return Math.min(diff, 24 * 60 - diff) <= windowMinutes;
+}
+
+export function incidentInstants(
+  serverIso: string,
+  clockOffsetMs: number | null | undefined,
+  clientIso?: string | null,
+): string[] {
+  const times = [serverIso];
+  if (clientIso) times.push(clientIso);
+  if (typeof clockOffsetMs === 'number' && Number.isFinite(clockOffsetMs) && Math.abs(clockOffsetMs) >= 2000) {
+    const clientMs = Date.parse(serverIso) - clockOffsetMs;
+    if (Number.isFinite(clientMs)) times.push(new Date(clientMs).toISOString());
+  }
+  return times;
+}
+
+export function matchesIncidentWindow(instants: readonly string[], targetMinute: number, windowMinutes: number): boolean {
+  return instants.some((iso) => isAroundClock(iso, targetMinute, windowMinutes));
 }

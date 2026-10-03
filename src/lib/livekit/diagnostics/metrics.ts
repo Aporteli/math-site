@@ -14,6 +14,14 @@ export interface MetricCounters {
   receiveAudioBytes: number | null;
   inboundPacketsReceived: number | null;
   inboundPacketsLost: number | null;
+  pathPacketsSent: number | null;
+  pathPacketsReceived: number | null;
+  pathBytesSent: number | null;
+  pathBytesReceived: number | null;
+  dataMessagesSent: number | null;
+  dataMessagesReceived: number | null;
+  dataBytesSent: number | null;
+  dataBytesReceived: number | null;
 }
 
 export interface ConnectionMetrics {
@@ -27,6 +35,15 @@ export interface ConnectionMetrics {
   dtlsState: string | null;
   candidateRoute: string | null;
   reportedNetworkType: string | null;
+  packetsSentDelta: number | null;
+  packetsReceivedDelta: number | null;
+  pathBytesSentDelta: number | null;
+  pathBytesReceivedDelta: number | null;
+  dataChannelState: string | null;
+  dataMessagesSentDelta: number | null;
+  dataMessagesReceivedDelta: number | null;
+  dataBytesSentDelta: number | null;
+  dataBytesReceivedDelta: number | null;
 }
 
 export interface ParsedConnection {
@@ -78,6 +95,27 @@ function bitrateKbps(
   return (deltaBytes * 8) / deltaSec / 1000;
 }
 
+function counterDelta(previous: number | null, next: number | null): number | null {
+  if (previous === null || next === null) return null;
+  const value = next - previous;
+  if (value < 0) return null;
+  return value;
+}
+
+const DATA_CHANNEL_RANK: Record<string, number> = {
+  open: 1,
+  connecting: 2,
+  closing: 3,
+  closed: 4,
+};
+
+function worseDataState(current: string | null, next: string | null): string | null {
+  if (!next) return current;
+  if (!current) return next;
+  if (current === 'open' || next === 'open') return 'open';
+  return (DATA_CHANNEL_RANK[next] ?? 0) > (DATA_CHANNEL_RANK[current] ?? 0) ? next : current;
+}
+
 function fractionToPct(value: number | null): number | null {
   if (value === null || value < 0) return null;
   if (value <= 1) return value * 100;
@@ -102,6 +140,17 @@ export function parseConnectionMetrics(
   let sawInbound = false;
   let maxJitterMs: number | null = null;
   let maxSendLossPct: number | null = null;
+  let pathPacketsSent: number | null = null;
+  let pathPacketsReceived: number | null = null;
+  let pathBytesSent: number | null = null;
+  let pathBytesReceived: number | null = null;
+  let dataMessagesSent = 0;
+  let dataMessagesReceived = 0;
+  let dataBytesSent = 0;
+  let dataBytesReceived = 0;
+  let sawDataMessages = false;
+  let sawDataBytes = false;
+  let dataChannelState: string | null = null;
 
   for (const report of reports) {
     report.forEach((stat) => {
@@ -139,6 +188,23 @@ export function parseConnectionMetrics(
       const jitter = secondsToMs(num(stat.jitter));
       if (jitter !== null) maxJitterMs = maxJitterMs === null ? jitter : Math.max(maxJitterMs, jitter);
     }
+    if (stat.type === 'data-channel') {
+      dataChannelState = worseDataState(dataChannelState, text(stat.state));
+      const messagesSent = num(stat.messagesSent);
+      const messagesReceived = num(stat.messagesReceived);
+      if (messagesSent !== null || messagesReceived !== null) {
+        sawDataMessages = true;
+        dataMessagesSent += messagesSent ?? 0;
+        dataMessagesReceived += messagesReceived ?? 0;
+      }
+      const bytesSent = num(stat.bytesSent);
+      const bytesReceived = num(stat.bytesReceived);
+      if (bytesSent !== null || bytesReceived !== null) {
+        sawDataBytes = true;
+        dataBytesSent += bytesSent ?? 0;
+        dataBytesReceived += bytesReceived ?? 0;
+      }
+    }
   }
 
   const selectedPairId = text(transport?.selectedCandidatePairId);
@@ -153,6 +219,10 @@ export function parseConnectionMetrics(
   const remoteType = text(remote?.candidateType);
   const protocol = text(local?.protocol);
   const route = localType && remoteType ? `${localType}/${protocol ?? 'unknown'} -> ${remoteType}` : null;
+  pathPacketsSent = num(pair?.packetsSent);
+  pathPacketsReceived = num(pair?.packetsReceived);
+  pathBytesSent = num(pair?.bytesSent);
+  pathBytesReceived = num(pair?.bytesReceived);
 
   const counters: MetricCounters = {
     atMs: nowMs,
@@ -160,6 +230,14 @@ export function parseConnectionMetrics(
     receiveAudioBytes: sawReceiveAudio ? receiveAudioBytes : null,
     inboundPacketsReceived: sawInbound ? inboundReceived : null,
     inboundPacketsLost: sawInbound ? inboundLost : null,
+    pathPacketsSent,
+    pathPacketsReceived,
+    pathBytesSent,
+    pathBytesReceived,
+    dataMessagesSent: sawDataMessages ? dataMessagesSent : null,
+    dataMessagesReceived: sawDataMessages ? dataMessagesReceived : null,
+    dataBytesSent: sawDataBytes ? dataBytesSent : null,
+    dataBytesReceived: sawDataBytes ? dataBytesReceived : null,
   };
 
   return {
@@ -185,6 +263,15 @@ export function parseConnectionMetrics(
       dtlsState: text(transport?.dtlsState),
       candidateRoute: route,
       reportedNetworkType: text(local?.networkType),
+      packetsSentDelta: counterDelta(previous?.pathPacketsSent ?? null, counters.pathPacketsSent),
+      packetsReceivedDelta: counterDelta(previous?.pathPacketsReceived ?? null, counters.pathPacketsReceived),
+      pathBytesSentDelta: counterDelta(previous?.pathBytesSent ?? null, counters.pathBytesSent),
+      pathBytesReceivedDelta: counterDelta(previous?.pathBytesReceived ?? null, counters.pathBytesReceived),
+      dataChannelState,
+      dataMessagesSentDelta: counterDelta(previous?.dataMessagesSent ?? null, counters.dataMessagesSent),
+      dataMessagesReceivedDelta: counterDelta(previous?.dataMessagesReceived ?? null, counters.dataMessagesReceived),
+      dataBytesSentDelta: counterDelta(previous?.dataBytesSent ?? null, counters.dataBytesSent),
+      dataBytesReceivedDelta: counterDelta(previous?.dataBytesReceived ?? null, counters.dataBytesReceived),
     },
   };
 }

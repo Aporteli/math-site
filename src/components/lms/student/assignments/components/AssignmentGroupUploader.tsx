@@ -44,7 +44,7 @@ export function AssignmentGroupUploader({
               type="button"
               disabled={isWithdrawing}
               onClick={() => onResetGroup(selectedDateKey, taskAssignments)}
-              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box border border-loss/30 bg-loss-tint px-3.5 py-2 text-xs font-bold text-loss transition hover:bg-loss/10 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none">
+              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-box border border-loss/30 bg-loss-tint px-3.5 py-2 text-xs font-bold text-mainText transition hover:bg-loss/10 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none">
               {isWithdrawing ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCcw className="size-3.5" />}
               <span>პასუხის დაბრუნება</span>
             </button>

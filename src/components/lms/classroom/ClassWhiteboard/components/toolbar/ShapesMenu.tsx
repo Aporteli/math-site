@@ -25,15 +25,10 @@ interface Props {
 export function ShapesMenu({ menuRef, isOpen, setIsOpen, activeTool, setActiveTool, closeOtherMenus }: Props) {
   const currentShapeObj = SHAPE_TOOLS.find((s) => s.id === activeTool) || SHAPE_TOOLS[2];
   const CurrentShapeIcon = currentShapeObj.icon;
-  const isShapeActive = SHAPE_TOOLS.some((s) => s.id === activeTool);
 
   return (
-    <div ref={menuRef} className="relative flex shrink-0 items-center">
-      <div className={`flex items-center h-7 sm:h-8 rounded-box transition-all shadow-xs ${
-        isShapeActive
-          ? 'bg-indigo-600 text-white ring-2 ring-indigo-600/20'
-          : 'bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'
-      }`}>
+    <div ref={menuRef} data-toolbar-key="shapes" className="relative flex shrink-0 items-center">
+      <div className="flex h-7 items-center rounded-box text-slate-700 transition-all hover:bg-slate-100 sm:h-8 dark:text-slate-200 dark:hover:bg-slate-800">
         <button
           type="button"
           title="ფიგურა"
@@ -46,12 +41,8 @@ export function ShapesMenu({ menuRef, isOpen, setIsOpen, activeTool, setActiveTo
           type="button"
           title="ფიგურების მენიუ"
           onClick={() => { setIsOpen(!isOpen); closeOtherMenus(); }}
-          className={`flex items-center justify-center px-1 h-full rounded-box transition-colors border-l ${
-            isShapeActive
-              ? 'border-indigo-500/40 hover:bg-indigo-700'
-              : 'border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600'
-          }`}>
-          <ChevronDown className={`size-2.5 sm:size-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          className="flex h-full items-center justify-center rounded-box border-l border-slate-200 px-1 transition-colors hover:bg-slate-200 dark:border-slate-700 dark:hover:bg-slate-600">
+          <ChevronDown className={`size-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
@@ -71,7 +62,7 @@ export function ShapesMenu({ menuRef, isOpen, setIsOpen, activeTool, setActiveTo
                       ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500'
                       : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}>
-                  <SIcon className="size-4" />
+                  <SIcon className="size-3.5" />
                 </button>
               );
             })}

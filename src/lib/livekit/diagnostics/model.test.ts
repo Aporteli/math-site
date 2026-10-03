@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict';
 import {
+  appendDiagnosticSample,
   classifyHistory,
   classifyLive,
   degradationTransition,
   formatDuration,
+  incidentInstants,
   isDegradedSample,
+  matchesIncidentWindow,
   sanitizeRoute,
   simultaneousProblemNote,
+  type DiagnosticSample,
   type ParticipantHealthInput,
 } from './model';
 
@@ -126,5 +130,53 @@ assert.equal(sanitizeRoute('relay/udp -> host'), 'relay/udp -> host');
 assert.equal(sanitizeRoute('192.168.1.10/udp -> host'), null);
 assert.equal(sanitizeRoute('host/udp -> [2001:db8::1]'), null);
 assert.equal(formatDuration(89 * 60 * 1000), '1h 29m');
+
+function sample(atMs: number, overrides: Partial<DiagnosticSample> = {}): DiagnosticSample {
+  return {
+    t: new Date(atMs).toISOString(),
+    rttMs: 40,
+    sendLossPct: 0.2,
+    receiveLossPct: 0.1,
+    jitterMs: 4,
+    bitrateKbps: 32,
+    quality: 'good',
+    state: 'connected',
+    ice: 'connected',
+    pc: 'connected',
+    ...overrides,
+  };
+}
+
+let samples = appendDiagnosticSample([], sample(0), 0);
+samples = appendDiagnosticSample(samples, sample(8_000), 8_000);
+assert.equal(samples.length, 1);
+samples = appendDiagnosticSample(samples, sample(16_000), 16_000);
+assert.equal(samples.length, 2);
+samples = appendDiagnosticSample(samples, sample(24_000, { rttMs: 420, quality: 'poor' }), 24_000);
+assert.equal(samples.length, 3);
+assert.equal(samples.at(-1)?.rttMs, 420);
+
+let flowing = appendDiagnosticSample([], sample(0, { whiteboardSent: 4, whiteboardReceived: 4 }), 0);
+flowing = appendDiagnosticSample(flowing, sample(8_000, { whiteboardSent: 3, whiteboardReceived: 3 }), 8_000);
+assert.equal(flowing.length, 1);
+flowing = appendDiagnosticSample(flowing, sample(16_000, { whiteboardSent: 0, whiteboardReceived: 0 }), 16_000);
+assert.equal(flowing.length, 2);
+let stoppedSoon = appendDiagnosticSample([], sample(0, { whiteboardSent: 4, whiteboardReceived: 2 }), 0);
+stoppedSoon = appendDiagnosticSample(stoppedSoon, sample(8_000, { whiteboardSent: 0, whiteboardReceived: 0 }), 8_000);
+assert.equal(stoppedSoon.length, 2);
+let media = appendDiagnosticSample([], sample(0, { packetsSent: 40, packetsReceived: 36 }), 0);
+media = appendDiagnosticSample(media, sample(8_000, { packetsSent: 0, packetsReceived: 0 }), 8_000);
+assert.equal(media.length, 2);
+assert.equal(media.at(-1)?.packetsSent, 0);
+
+const reported = new Date(2026, 9, 3, 11, 19, 0);
+const serverBefore = new Date(2026, 9, 3, 11, 10, 0);
+const offsetMs = serverBefore.getTime() - reported.getTime();
+assert.equal(
+  matchesIncidentWindow(incidentInstants(serverBefore.toISOString(), offsetMs), 11 * 60 + 19, 3),
+  true,
+);
+assert.equal(matchesIncidentWindow([serverBefore.toISOString()], 11 * 60 + 19, 3), false);
+assert.equal(matchesIncidentWindow([reported.toISOString()], 11 * 60 + 19, 3), true);
 
 console.log('livekit diagnostics model tests passed');

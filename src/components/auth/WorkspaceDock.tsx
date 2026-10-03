@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, LayoutDashboard, UserPlus } from "lucide-react";
+import { ArrowUpRight, LayoutDashboard } from "lucide-react";
 import { localePath } from "@/i18n/config";
 import { dashboardHomeForRole } from "@/lib/auth/paths";
 import type { WorkspaceDockProps } from './types';
@@ -18,20 +18,12 @@ export function WorkspaceDock({
   // 1. გამოიტანს როლს ბრაუზერის კონსოლში კომპონენტის ჩატვირთვისთანავე
   console.log("⚡ [WorkspaceDock Rendered] Current Role:", role);
 
-  const isVisitor = role === "VISITOR";
-  const href = isVisitor 
-    ? localePath(locale, "/?joinModal=true") 
-    : localePath(locale, dashboardHomeForRole(role));
-
-  const displayRoleLabel = isVisitor ? "Guest" : roleLabel;
-  const displayLabel = isVisitor ? "შეუერთდი კლასს" : label;
-  const displayHint = isVisitor ? "შეიყვანეთ კლასის კოდი" : hint;
+  const href = localePath(locale, dashboardHomeForRole(role));
 
   // 2. დაკლიკების ფუნქცია კონსოლში გამოსატანად
   const handleDockClick = () => {
     console.log("🖱️ [WorkspaceDock Clicked]:", {
       role: role,
-      isVisitor: isVisitor,
       targetHref: href,
       time: new Date().toLocaleTimeString(),
     });
@@ -42,15 +34,11 @@ export function WorkspaceDock({
       <Link
         href={href}
         onClick={handleDockClick}
-        aria-label={displayHint}
+        aria-label={hint}
         className="inline-flex min-w-0 items-center gap-2 rounded-box bg-navy px-3 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-navy-strong"
       >
-        {isVisitor ? (
-          <UserPlus className="size-4 shrink-0" aria-hidden="true" />
-        ) : (
-          <LayoutDashboard className="size-4 shrink-0" aria-hidden="true" />
-        )}
-        <span className="truncate">{displayLabel}</span>
+        <LayoutDashboard className="size-4 shrink-0" aria-hidden="true" />
+        <span className="truncate">{label}</span>
       </Link>
     );
   }
@@ -63,21 +51,17 @@ export function WorkspaceDock({
         className="pointer-events-auto flex max-w-xs items-center gap-3 overflow-hidden rounded-box border border-hairline bg-main p-3 shadow-md transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-lg"
       >
           <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-box bg-navy text-white shadow-sm">
-          {isVisitor ? (
-            <UserPlus className="size-5" aria-hidden="true" />
-          ) : (
-            <LayoutDashboard className="size-5" aria-hidden="true" />
-          )}
+          <LayoutDashboard className="size-5" aria-hidden="true" />
         </span>
         <span className="min-w-0">
           <span className="block text-xs font-semibold tracking-wide text-brass">
-            {displayRoleLabel}
+            {roleLabel}
           </span>
           <span className="mt-0.5 flex items-center gap-1 text-sm font-bold text-ink">
-            {displayLabel}
+            {label}
             <ArrowUpRight className="size-3.5 shrink-0 text-navy" aria-hidden="true" />
           </span>
-          <span className="mt-0.5 block text-xs text-muted">{displayHint}</span>
+          <span className="mt-0.5 block text-xs text-muted">{hint}</span>
         </span>
       </Link>
     </aside>

@@ -27,6 +27,7 @@ export function StylusMenu({
       <div ref={menuRef} className="relative flex shrink-0 items-center gap-0.5">
         <button
           type="button"
+          data-toolbar-key="stylus"
           onClick={onToggleStylusOnly}
           title={stylusOnly ? 'მხოლოდ სტილუსი (ჩართული)' : 'მხოლოდ სტილუსი (გამორთული)'}
           className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-box transition-colors ${
@@ -53,7 +54,7 @@ export function StylusMenu({
           <div className="absolute top-full mt-2 right-0 z-[120] w-64 rounded-box bg-white dark:bg-slate-900 p-3 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-150">
             <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-3">სტილუსის ღილაკები</p>
 
-            <label htmlFor="stylus-primary-action" className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+            <label htmlFor="stylus-primary-action" className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
               სტილუსის ღილაკი 1 (ქვედა)
             </label>
             <select
@@ -66,7 +67,7 @@ export function StylusMenu({
               ))}
             </select>
 
-            <label htmlFor="stylus-secondary-action" className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+            <label htmlFor="stylus-secondary-action" className="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">
               სტილუსის ღილაკი 2 (ზედა)
             </label>
             <select

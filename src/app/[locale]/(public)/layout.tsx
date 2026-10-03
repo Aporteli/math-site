@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import { WorkspaceDock } from '@/components/auth/WorkspaceDock';
-import { JoinClassModal } from '@/components/auth/JoinClassModal';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { isLocale } from '@/i18n/config';
@@ -33,13 +32,8 @@ export default async function PublicLayout({
 
   const roleLabel = user?.role === 'STUDENT' ? dict.dashboard.student.role : dict.dashboard.teacher.role;
 
-  // თუ მომხმარებელი შესულია, მაგრამ აქვს VISITOR როლი, გამოვუჩინოთ კლასის კოდის მოდალი
-  const showJoinModal = user?.role === 'VISITOR';
-
   return (
     <div className="flex min-h-screen flex-col bg-paper pb-[calc(4.25rem+env(safe-area-inset-bottom))] min-[500px]:pb-0">
-      {showJoinModal ? <JoinClassModal locale={locale} /> : null}
-
       <SiteHeader locale={locale} dict={dict} session={user} />
       <main className="flex-1">{children}</main>
 

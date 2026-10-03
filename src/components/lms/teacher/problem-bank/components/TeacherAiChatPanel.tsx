@@ -916,7 +916,6 @@ export function TeacherAiChatPanel({
             ))}
           </ul>
         ) : null}
-        <p className="text-xs text-mainText/70">{copy.imageHint}</p>
         <div className="relative">
           {slashEnabled && slashMenuOpen ? (
             <AdminSlashPromptMenu

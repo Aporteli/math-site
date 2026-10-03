@@ -96,7 +96,7 @@ export function ClassroomRoomModal({
         <div
           ref={classroomRootRef}
           data-classroom-root
-          className={`fixed inset-0 z-50 flex h-[100dvh] w-screen flex-col overflow-hidden bg-slate-950 ${
+          className={`fixed inset-0 z-50 flex h-[100dvh] w-screen flex-col overflow-hidden bg-mainBackground ${
             isBoardFullscreen
               ? 'p-0'
               : 'pt-2 pr-2 pl-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] sm:pt-3 sm:pr-3 sm:pl-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))]'

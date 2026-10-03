@@ -14,6 +14,7 @@ import {
   sharedFullSyncPayload,
   type BoardAssignmentMap,
 } from '@/lib/livekit/board-assignment';
+import { noteWhiteboard, whiteboardPayloadType } from '@/lib/livekit/diagnostics/whiteboard-trace';
 import { isStaffParticipant, participantUserId } from '@/lib/livekit/participant-identity';
 
 const TRACK_STUDENT_HISTORY = false;
@@ -129,6 +130,7 @@ export function useWhiteboardDataChannel(opts: Options) {
         if (!fullPayload) return;
 
         const data = JSON.parse(new TextDecoder().decode(fullPayload));
+        noteWhiteboard({ kind: 'received', type: whiteboardPayloadType(data), at: Date.now() });
 
         if (data.type === 'BOARD_CONTROL') {
           setIsLocked(!!data.enabled);
@@ -280,6 +282,12 @@ export function useWhiteboardDataChannel(opts: Options) {
           }
         }
       } catch (err) {
+        noteWhiteboard({
+          kind: 'receive_error',
+          type: 'unknown',
+          at: Date.now(),
+          message: err instanceof Error ? err.message : 'Whiteboard message could not be read',
+        });
         console.error('Packet reassembly error:', err);
       }
     };

@@ -20,6 +20,7 @@ import {
 import { logLiveKitDiagnostic } from '@/lib/livekit/diagnostics/log';
 import {
   NOTABLE_EVENT_KINDS,
+  appendDiagnosticSample,
   cleanDisplayName,
   isNotableKind,
   sanitizeNetworkType,
@@ -32,8 +33,6 @@ import { getServerSnapshot } from '@/lib/livekit/diagnostics/server-snapshot';
 
 const STALE_MS = 3 * 60 * 1000;
 const METRIC_GAP_MS = 4000;
-const SAMPLE_GAP_MS = 30_000;
-const SAMPLE_CAP = 180;
 const SILENT_SERVER_MS = 20_000;
 const HISTORY_LIMIT = 40;
 
@@ -100,12 +99,29 @@ function pickDtls(value: string | null): string | null {
   return DTLS_STATES.has(value) ? value : null;
 }
 
-function eventTime(iso: string, now: Date): Date {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return now;
-  const delta = parsed.getTime() - now.getTime();
-  if (delta > 60_000 || delta < -5 * 60_000) return now;
-  return parsed;
+function clockOffsetMs(clientNowIso: string | undefined, now: Date): number | null {
+  if (!clientNowIso) return null;
+  const clientNow = Date.parse(clientNowIso);
+  if (!Number.isFinite(clientNow)) return null;
+  const offset = now.getTime() - clientNow;
+  if (Math.abs(offset) > 10 * 60_000) return null;
+  return offset;
+}
+
+function eventTime(iso: string, now: Date, offsetMs: number | null): Date {
+  const parsed = Date.parse(iso);
+  if (!Number.isFinite(parsed)) return now;
+  const aligned = offsetMs === null ? parsed : parsed + offsetMs;
+  const delta = aligned - now.getTime();
+  if (delta > 60_000 || delta < -6 * 60 * 60_000) return now;
+  return new Date(aligned);
+}
+
+function clipState(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 40) return null;
+  return trimmed;
 }
 
 function staffRole(userRole: string, isTeacher: boolean): 'teacher' | 'student' | 'admin' {
@@ -152,18 +168,6 @@ function normalizeJson(value: unknown): unknown {
 
 function jsonValue(value: unknown): Prisma.InputJsonValue {
   return normalizeJson(value) as Prisma.InputJsonValue;
-}
-
-function nextSamples(existing: unknown, sample: DiagnosticSample): DiagnosticSample[] {
-  const samples = readSamples(existing);
-  const last = samples.at(-1);
-  if (last) {
-    const at = Date.parse(last.t);
-    if (Number.isFinite(at) && Date.now() - at < SAMPLE_GAP_MS) return samples;
-  }
-  const next = [...samples, sample];
-  if (next.length > SAMPLE_CAP) next.splice(0, next.length - SAMPLE_CAP);
-  return next;
 }
 
 function asParticipant(row: {
@@ -375,7 +379,14 @@ export async function ingestDiagnostics(access: CourseAccess, report: Diagnostic
   const now = new Date();
   const postKey = `${access.userId}:${roomName}`;
   const lastPost = recentPosts.get(postKey) ?? 0;
-  if (!report.leaving && report.events.length === 0 && now.getTime() - lastPost < 2000) {
+  const whiteboardActivity =
+    (report.self.whiteboardSent ?? 0) > 0 ||
+    (report.self.whiteboardReceived ?? 0) > 0 ||
+    (report.self.whiteboardPointerSent ?? 0) > 0 ||
+    (report.self.whiteboardPointerReceived ?? 0) > 0 ||
+    (report.self.whiteboardErrors ?? 0) > 0 ||
+    (report.self.whiteboardSkipped ?? 0) > 0;
+  if (!report.leaving && report.events.length === 0 && !whiteboardActivity && now.getTime() - lastPost < 2000) {
     return { ok: true };
   }
   recentPosts.set(postKey, now.getTime());
@@ -388,6 +399,7 @@ export async function ingestDiagnostics(access: CourseAccess, report: Diagnostic
   const displayName = cleanDisplayName(access.userName);
   const state = pickState(report.self.connectionState);
   const quality = pickQuality(report.self.quality);
+  const offsetMs = clockOffsetMs(report.clientNow, now);
 
   const existingRows = await prisma.liveKitDiagnosticParticipant.findMany({ where: { sessionId: session.id } });
   const participants = existingRows.map((row) => asParticipant(row));
@@ -401,8 +413,10 @@ export async function ingestDiagnostics(access: CourseAccess, report: Diagnostic
 
   await prisma.$transaction(async (tx) => {
     for (const event of report.events) {
-      const occurredAt = eventTime(event.occurredAt, now);
+      const occurredAt = eventTime(event.occurredAt, now, offsetMs);
       const detail = mergeDetail(event.detail, snapshot, report.self.identity, participants);
+      detail.clientOccurredAt = event.occurredAt;
+      if (offsetMs !== null) detail.clockOffsetMs = offsetMs;
       const duplicate = await tx.liveKitDiagnosticEvent.findUnique({
         where: { sessionId_dedupeKey: { sessionId: session.id, dedupeKey: event.dedupeKey } },
         select: { id: true },
@@ -470,6 +484,36 @@ export async function ingestDiagnostics(access: CourseAccess, report: Diagnostic
       quality,
       state,
       ice: pickIce(report.self.iceState),
+      pc: clipState(report.self.publisherPcState),
+      subscriberPc: clipState(report.self.subscriberPcState),
+      subscriberIce: pickIce(report.self.iceSubscriberState),
+      dtls: pickDtls(report.self.dtlsState),
+      online: typeof report.self.browserOnline === 'boolean' ? report.self.browserOnline : null,
+      visibility: report.self.pageVisibility ?? null,
+      effectiveType: sanitizeNetworkType(report.self.effectiveType ?? null),
+      packetsSent: report.self.packetsSent ?? null,
+      packetsReceived: report.self.packetsReceived ?? null,
+      pathBytesSent: report.self.pathBytesSent ?? null,
+      pathBytesReceived: report.self.pathBytesReceived ?? null,
+      dataChannelState: clipState(report.self.dataChannelState),
+      dataMessagesSent: report.self.dataMessagesSent ?? null,
+      dataMessagesReceived: report.self.dataMessagesReceived ?? null,
+      dataBytesSent: report.self.dataBytesSent ?? null,
+      dataBytesReceived: report.self.dataBytesReceived ?? null,
+      whiteboardSent: report.self.whiteboardSent ?? null,
+      whiteboardReceived: report.self.whiteboardReceived ?? null,
+      whiteboardPointerSent: report.self.whiteboardPointerSent ?? null,
+      whiteboardPointerReceived: report.self.whiteboardPointerReceived ?? null,
+      whiteboardErrors: report.self.whiteboardErrors ?? null,
+      whiteboardSkipped: report.self.whiteboardSkipped ?? null,
+      whiteboardPublishMs: report.self.whiteboardPublishMs ?? null,
+      clockOffsetMs: offsetMs,
+      boardState: clipState(report.self.boardConnectionState),
+      boardIce: pickIce(report.self.boardIceState ?? null),
+      boardPc: clipState(report.self.boardPcState),
+      boardDataState: clipState(report.self.boardDataChannelState),
+      boardMessagesSent: report.self.boardMessagesSent ?? null,
+      boardMessagesReceived: report.self.boardMessagesReceived ?? null,
     };
 
     const shared = {
@@ -521,7 +565,7 @@ export async function ingestDiagnostics(access: CourseAccess, report: Diagnostic
             avgJitterMs: jitter?.avg ?? existing?.avgJitterMs ?? null,
             maxJitterMs: nextMax(existing?.maxJitterMs ?? null, report.self.jitterMs),
             audioBitrateKbps: report.self.audioBitrateKbps,
-            samples: jsonValue(nextSamples(existing?.samples, sample)),
+            samples: jsonValue(appendDiagnosticSample(readSamples(existing?.samples), sample, now.getTime())),
           }
         : {}),
     };
@@ -715,7 +759,7 @@ export async function getDiagnosticSession(
     where: { id: sessionId },
     include: {
       participants: { orderBy: { joinedAt: 'asc' } },
-      events: { orderBy: { occurredAt: 'desc' }, take: 300 },
+      events: { orderBy: { occurredAt: 'desc' }, take: 1000 },
     },
   });
   if (!session) return null;

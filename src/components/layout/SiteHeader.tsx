@@ -72,7 +72,7 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
           <SearchTrigger variant="icon" className="inline-flex" />
           <LanguageSwitcher locale={locale} label={dict.header.language} menuPlacement="above" menuAlign="center" />
           <ThemeToggle label={dict.header.theme} />
-          {session ? (
+          {session && session.role !== 'VISITOR' ? (
             <WorkspaceDock
               locale={locale}
               role={session.role}
@@ -81,7 +81,7 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
               hint={dict.dashboard.openWorkspace}
               variant="bar"
             />
-          ) : (
+          ) : !session ? (
             <AuthEntry
               locale={locale}
               loginLabel={dict.header.login}
@@ -89,7 +89,7 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
               session={null}
               withText
             />
-          )}
+          ) : null}
         </div>
       </nav>
     </SiteSearch>

@@ -78,5 +78,38 @@ assert.equal(empty.metrics.rttMs, null);
 assert.equal(empty.metrics.sendLossPct, null);
 assert.equal(empty.metrics.jitterMs, null);
 assert.equal(empty.metrics.iceState, null);
+assert.equal(empty.metrics.packetsSentDelta, null);
+assert.equal(empty.metrics.dataChannelState, null);
+
+const withData = parseConnectionMetrics(
+  [
+    report([
+      { id: 'transport', type: 'transport', selectedCandidatePairId: 'pair' },
+      { id: 'pair', type: 'candidate-pair', packetsSent: 1000, packetsReceived: 800, bytesSent: 80_000, bytesReceived: 40_000 },
+      { id: 'dc', type: 'data-channel', state: 'open', messagesSent: 10, messagesReceived: 4, bytesSent: 2000, bytesReceived: 800 },
+    ]),
+  ],
+  null,
+  4_000,
+);
+const withDataNext = parseConnectionMetrics(
+  [
+    report([
+      { id: 'transport', type: 'transport', selectedCandidatePairId: 'pair' },
+      { id: 'pair', type: 'candidate-pair', packetsSent: 1100, packetsReceived: 800, bytesSent: 92_000, bytesReceived: 40_000 },
+      { id: 'dc', type: 'data-channel', state: 'closed', messagesSent: 10, messagesReceived: 4, bytesSent: 2000, bytesReceived: 800 },
+    ]),
+  ],
+  withData.counters,
+  12_000,
+);
+assert.equal(withData.metrics.dataChannelState, 'open');
+assert.equal(withData.metrics.packetsSentDelta, null);
+assert.equal(withDataNext.metrics.dataChannelState, 'closed');
+assert.equal(withDataNext.metrics.packetsSentDelta, 100);
+assert.equal(withDataNext.metrics.packetsReceivedDelta, 0);
+assert.equal(withDataNext.metrics.pathBytesSentDelta, 12_000);
+assert.equal(withDataNext.metrics.dataMessagesSentDelta, 0);
+assert.equal(withDataNext.metrics.dataBytesReceivedDelta, 0);
 
 console.log('livekit diagnostics metrics tests passed');

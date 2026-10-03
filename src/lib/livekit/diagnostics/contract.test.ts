@@ -46,4 +46,44 @@ const parsed = diagnosticsReportSchema.safeParse({
 
 assert.equal(parsed.success, true);
 
+const extended = diagnosticsReportSchema.safeParse({
+  ...parsed.data,
+  clientNow: '2026-10-02T10:42:16.000Z',
+  self: {
+    ...parsed.data.self,
+    publisherPcState: 'connected',
+    browserOnline: true,
+    pageVisibility: 'visible',
+    packetsSent: 20,
+    packetsReceived: 0,
+    whiteboardSent: 0,
+    whiteboardReceived: 2,
+    whiteboardErrors: 0,
+    dataChannelState: 'open',
+  },
+  events: [
+    ...parsed.data.events,
+    {
+      kind: 'pc_state_changed',
+      occurredAt: '2026-10-02T10:42:16.000Z',
+      dedupeKey: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
+      detail: {
+        side: 'publisher',
+        pc: 'disconnected',
+        previousPc: 'connected',
+        online: false,
+        visibility: 'hidden',
+        message: 'Publisher WebRTC state changed',
+      },
+    },
+    {
+      kind: 'whiteboard_send_failed',
+      occurredAt: '2026-10-02T10:42:17.000Z',
+      dedupeKey: 'bbbbbbbb-cccc-4ddd-8eee-ffffffffffff',
+      detail: { whiteboardType: 'WHITEBOARD_SYNC', message: 'Data channel closed' },
+    },
+  ],
+});
+assert.equal(extended.success, true);
+
 console.log('livekit diagnostics contract tests passed');

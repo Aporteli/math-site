@@ -199,6 +199,14 @@ function readNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
+function readText(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function readBool(value: unknown): boolean | null {
+  return typeof value === 'boolean' ? value : null;
+}
+
 export function readSamples(value: unknown): DiagnosticSample[] {
   if (!Array.isArray(value)) return [];
   const samples: DiagnosticSample[] = [];
@@ -216,6 +224,36 @@ export function readSamples(value: unknown): DiagnosticSample[] {
       quality: typeof row.quality === 'string' ? row.quality : 'unknown',
       state: typeof row.state === 'string' ? row.state : 'unknown',
       ice: typeof row.ice === 'string' ? row.ice : null,
+      pc: readText(row.pc),
+      subscriberPc: readText(row.subscriberPc),
+      subscriberIce: readText(row.subscriberIce),
+      dtls: readText(row.dtls),
+      online: readBool(row.online),
+      visibility: readText(row.visibility),
+      effectiveType: readText(row.effectiveType),
+      packetsSent: readNumber(row.packetsSent),
+      packetsReceived: readNumber(row.packetsReceived),
+      pathBytesSent: readNumber(row.pathBytesSent),
+      pathBytesReceived: readNumber(row.pathBytesReceived),
+      dataChannelState: readText(row.dataChannelState),
+      dataMessagesSent: readNumber(row.dataMessagesSent),
+      dataMessagesReceived: readNumber(row.dataMessagesReceived),
+      dataBytesSent: readNumber(row.dataBytesSent),
+      dataBytesReceived: readNumber(row.dataBytesReceived),
+      whiteboardSent: readNumber(row.whiteboardSent),
+      whiteboardReceived: readNumber(row.whiteboardReceived),
+      whiteboardPointerSent: readNumber(row.whiteboardPointerSent),
+      whiteboardPointerReceived: readNumber(row.whiteboardPointerReceived),
+      whiteboardErrors: readNumber(row.whiteboardErrors),
+      whiteboardSkipped: readNumber(row.whiteboardSkipped),
+      whiteboardPublishMs: readNumber(row.whiteboardPublishMs),
+      clockOffsetMs: readNumber(row.clockOffsetMs),
+      boardState: readText(row.boardState),
+      boardIce: readText(row.boardIce),
+      boardPc: readText(row.boardPc),
+      boardDataState: readText(row.boardDataState),
+      boardMessagesSent: readNumber(row.boardMessagesSent),
+      boardMessagesReceived: readNumber(row.boardMessagesReceived),
     });
   }
   return samples;
