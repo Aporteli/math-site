@@ -60,7 +60,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto thin-scrollbar rounded-box border border-hairline bg-surface shadow-sm">
         <div className="custom-scrollbar overflow-x-auto overscroll-x-contain">
           <table className="w-full border-collapse text-left">
-            <thead className="bg-paper">
+            <thead className="bg-sectionHeader">
               <tr className="border-b border-hairline text-[10px] font-bold uppercase tracking-wider text-muted">
                 <th className="px-4 py-3">მოსწავლე</th>
                 <th className="px-4 py-3 text-right">გადახდის თარიღი</th>
@@ -70,7 +70,10 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
             <tbody>
               {sections.map((section) => (
                 <Fragment key={section.key}>
-                  <tr className={`${section.kind === 'home' || section.kind === 'individual' ? 'bg-brass-tint/80' : 'bg-sectionHeader'}  border-t border-hairline font-bold uppercase tracking-wider text-muted`} onMouseEnter={() => setHoveringSection(section.key)} onMouseLeave={() => setHoveringSection(null)}>
+                  <tr
+                    className={`${section.kind === 'home' || section.kind === 'individual' ? 'bg-brass-tint/80' : 'bg-navy/10'}  border-t border-hairline font-bold uppercase tracking-wider text-muted`}
+                    onMouseEnter={() => setHoveringSection(section.key)}
+                    onMouseLeave={() => setHoveringSection(null)}>
                     <td colSpan={2} className="pr-4 pl-2 py-2">
                       <div className="flex items-center gap-1">
                         <span className="text-[14px] font-bold tracking-wide text-ink">{section.title}</span>
@@ -81,8 +84,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
                               event.stopPropagation();
                               void onDisbandHomeGroup(section.groupId!);
                             }}
-                            className={` ml-auto cursor-pointer rounded-box px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted transition hover:bg-sectionHeader hover:text-ink hover:opacity-100 ${hoveringSection === section.key ? 'opacity-15' : 'opacity-0 pointer-events-none'}`}
-                          >
+                            className={` ml-auto cursor-pointer rounded-box px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted transition hover:bg-sectionHeader hover:text-ink hover:opacity-100 ${hoveringSection === section.key ? 'opacity-15' : 'opacity-0 pointer-events-none'}`}>
                             დაშლა
                           </button>
                         ) : null}
@@ -163,7 +165,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
       </div>
 
       <div className="flex max-h-[24rem] w-full shrink-0 flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-sm lg:h-full lg:max-h-none lg:w-[30rem]">
-        <div className="flex shrink-0 items-center gap-3 border-b border-hairline px-3 py-2.5">
+        <div className="flex shrink-0 bg-sectionHeader items-center gap-3 border-b border-hairline px-3 py-2.5">
           <span className="flex size-8 items-center justify-center rounded-box bg-[#465D73] text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
             {todayDate.getDate()}
           </span>
@@ -176,14 +178,14 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
           </div>
         </div>
 
-        <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto p-2">
+        <div className="custom-scrollbar bg-main min-h-0 flex-1 overflow-y-auto p-2">
           {todaySessions.length === 0 ? (
             <p className="px-2 py-10 text-center text-xs font-medium text-muted">ამ დღეს გაკვეთილი არ არის</p>
           ) : (
             <div className="space-y-3">
               {todaySessions.map((session) => (
                 <div key={session.key} className="flex gap-3">
-                  <div className="w-12 shrink-0 pt-1 text-right text-[11px] font-bold tabular-nums text-muted">
+                  <div className="w-12 shrink-0 pt-1 text-right text-[11px] font-bold tabular-nums text-mainText">
                     {session.startTime}
                   </div>
                   <div className="min-w-0 flex-1 space-y-1.5 border-l border-hairline pl-3">
@@ -191,7 +193,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
                       {session.kind === 'group'
                         ? `${getGroupName(session.groupId, groups)} · ${session.lessons.length} მოსწავლე`
                         : 'სახლში'}
-                      <span className="ml-1 font-medium text-muted">
+                      <span className="ml-1 font-medium text-mainText">
                         {session.startTime}–{session.endTime}
                       </span>
                     </p>

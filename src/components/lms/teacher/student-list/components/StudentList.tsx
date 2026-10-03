@@ -525,8 +525,8 @@ export function StudentList({
         <div className="flex min-w-0 flex-col gap-3 p-3 sm:p-5">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="hidden sm:flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
-              <Users className="size-5" />
+            <span className="inline-flex size-10 shrink-0 items-center justify-center  text-brass-strong">
+              <Users className="size-7" strokeWidth={2.5}/>
             </span>
           </div>
 

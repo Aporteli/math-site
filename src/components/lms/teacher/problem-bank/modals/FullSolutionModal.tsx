@@ -144,20 +144,20 @@ ${styles}
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
-          className="pointer-events-auto flex max-h-full min-h-0 w-full max-w-3xl flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl print:max-h-none print:max-w-none print:rounded-box print:border-0 print:shadow-none">
-          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5 print:hidden">
+          className="pointer-events-auto flex max-h-full min-h-0 w-full max-w-3xl flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-2xl print:max-h-none print:max-w-none print:rounded-box print:border-0 print:shadow-none">
+          <div className="flex shrink-0 bg-sectionHeader items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5 print:hidden">
             <div>
               <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
                 {ui.title}
               </h2>
-              <p className="mt-1 text-sm text-muted">{index >= 0 ? `${index + 1} / ${problems.length}` : null}</p>
+              <p className="mt-1 text-sm text-mainText">{index >= 0 ? `${index + 1} / ${problems.length}` : null}</p>
             </div>
             <button
               type="button"
-              className="inline-flex size-9 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
+              className="inline-flex size-9 items-center justify-center rounded-box text-mainText hover:bg-sectionHeader hover:text-navy"
               aria-label={ui.close}
               onClick={onClose}>
-              <X className="size-4" aria-hidden="true" />
+              <X className="size-7" aria-hidden="true" />
             </button>
           </div>
 
@@ -194,7 +194,7 @@ ${styles}
             </div>
           </div>
 
-          <div className="flex shrink-0 flex-col gap-2 border-t border-hairline px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-5 print:hidden">
+          <div className="flex bg-sectionHeader shrink-0 flex-col gap-2 border-t border-hairline px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-5 print:hidden">
             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               <button
                 type="button"

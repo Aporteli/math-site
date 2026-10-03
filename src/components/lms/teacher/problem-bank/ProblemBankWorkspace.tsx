@@ -1178,8 +1178,8 @@ export function ProblemBankWorkspace({
 
               const body = (
                 <>
-                  <span className="flex items-start gap-2">
-                    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
+                  <span className="flex items-center  gap-2">
+                    <span className="inline-flex size-8 shrink-0 items-center justify-center  text-brass-strong">
                       <Icon className="size-4" aria-hidden="true" />
                     </span>
                     <span className="min-w-0 text-sm font-semibold text-ink">{item.title}</span>
@@ -1392,7 +1392,9 @@ export function ProblemBankWorkspace({
                   type="button"
                   className={[
                     'w-full rounded-box px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
-                    genMode === 'diverse' ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-body hover:bg-mainButtonHover hover:text-mainText',
+                    genMode === 'diverse'
+                      ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                      : 'text-body hover:bg-mainButtonHover hover:text-mainText',
                   ].join(' ')}
                   aria-pressed={genMode === 'diverse'}
                   onClick={() => setGenMode('diverse')}>
@@ -1402,7 +1404,9 @@ export function ProblemBankWorkspace({
                   type="button"
                   className={[
                     'w-full rounded-box px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
-                    genMode === 'algorithms' ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-body hover:bg-mainButtonHover hover:text-mainText',
+                    genMode === 'algorithms'
+                      ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                      : 'text-body hover:bg-mainButtonHover hover:text-mainText',
                   ].join(' ')}
                   aria-pressed={genMode === 'algorithms'}
                   onClick={() => {
@@ -1417,7 +1421,9 @@ export function ProblemBankWorkspace({
                   type="button"
                   className={[
                     'w-full rounded-box px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
-                    genMode === 'families' ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-body hover:bg-mainButtonHover hover:text-mainText',
+                    genMode === 'families'
+                      ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                      : 'text-body hover:bg-mainButtonHover hover:text-mainText',
                   ].join(' ')}
                   aria-pressed={genMode === 'families'}
                   onClick={() => {
@@ -1439,7 +1445,9 @@ export function ProblemBankWorkspace({
                       type="button"
                       className={[
                         'w-full rounded-box px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
-                        genCheck === 'verified' ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-body hover:bg-mainButtonHover hover:text-mainText',
+                        genCheck === 'verified'
+                          ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                          : 'text-body hover:bg-mainButtonHover hover:text-mainText',
                       ].join(' ')}
                       aria-pressed={genCheck === 'verified'}
                       onClick={() => setGenCheck('verified')}>
@@ -1449,7 +1457,9 @@ export function ProblemBankWorkspace({
                       type="button"
                       className={[
                         'w-full rounded-box px-3 py-2 text-sm font-semibold transition-colors sm:w-auto sm:py-1.5',
-                        genCheck === 'plain' ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]' : 'text-body hover:bg-mainButtonHover hover:text-mainText',
+                        genCheck === 'plain'
+                          ? 'bg-mainButton font-bold text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.12)]'
+                          : 'text-body hover:bg-mainButtonHover hover:text-mainText',
                       ].join(' ')}
                       aria-pressed={genCheck === 'plain'}
                       onClick={() => setGenCheck('plain')}>
@@ -1814,61 +1824,61 @@ export function ProblemBankWorkspace({
       <div className="mt-6 grid gap-5 xl:h-[calc(100vh-9rem)] xl:min-h-[36rem] xl:grid-cols-[16.5rem_minmax(0,1fr)_21rem] xl:items-stretch">
         <aside className="relative z-20 order-1 flex min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
           <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
-          <div className="flex min-h-0 flex-1 flex-col p-4 sm:p-5">
-          <h2 className="shrink-0 border-b border-hairline pb-3 text-sm font-semibold tracking-wide text-brass">
-            {copy.filtersTitle}
-          </h2>
-          <div className="mt-4 min-h-0 flex-1 space-y-8 overflow-y-auto gap-10 pe-0.5">
-            <label className="sr-only" htmlFor={searchId}>
-              {copy.searchLabel}
-            </label>
-            <input
-              id={searchId}
-              className={fieldClass}
-              type="search"
-              value={filters.query}
-              placeholder={copy.searchPlaceholder}
-              onChange={(event) => updateFilter('query', event.target.value)}
-            />
+          <div className="flex min-h-0 flex-1 flex-col ">
+            <h2 className="shrink-0 bg-sectionHeader border-b border-hairline py-5 px-2 text-sm font-semibold tracking-wide text-brass">
+              {copy.filtersTitle}
+            </h2>
+            <div className="mt-4 bg-main min-h-0 flex-1 space-y-8 overflow-y-auto gap-10 px-4 py-3">
+              <label className="sr-only" htmlFor={searchId}>
+                {copy.searchLabel}
+              </label>
+              <input
+                id={searchId}
+                className={fieldClass}
+                type="search"
+                value={filters.query}
+                placeholder={copy.searchPlaceholder}
+                onChange={(event) => updateFilter('query', event.target.value)}
+              />
 
-            <div className="space-y-5 border-t border-hairline-soft pt-3">
-              <FilterSelect
-                key="filter-branch"
-                label={copy.branchFilter}
-                value={filters.branchId}
-                allLabel={copy.allBranches}
-                options={branchOptions}
-                labels={taxonomyLabels}
-                onChange={(value) => updateTaxonomyFilter('branchId', value)}
-              />
-              <FilterSelect
-                key="filter-topic"
-                label={copy.topicFilter}
-                value={filters.topicNodeId}
-                allLabel={copy.allTopics}
-                options={topicOptions}
-                labels={taxonomyLabels}
-                onChange={(value) => updateTaxonomyFilter('topicNodeId', value)}
-              />
-              <FilterSelect
-                key="filter-difficulty"
-                label={copy.generate.difficulty}
-                value={filters.difficulty}
-                allLabel={copy.allDifficulties}
-                options={PROBLEM_DIFFICULTIES}
-                labels={copy.difficulties}
-                onChange={(value) => updateFilter('difficulty', value)}
-              />
+              <div className="space-y-5 border-t border-hairline-soft pt-3">
+                <FilterSelect
+                  key="filter-branch"
+                  label={copy.branchFilter}
+                  value={filters.branchId}
+                  allLabel={copy.allBranches}
+                  options={branchOptions}
+                  labels={taxonomyLabels}
+                  onChange={(value) => updateTaxonomyFilter('branchId', value)}
+                />
+                <FilterSelect
+                  key="filter-topic"
+                  label={copy.topicFilter}
+                  value={filters.topicNodeId}
+                  allLabel={copy.allTopics}
+                  options={topicOptions}
+                  labels={taxonomyLabels}
+                  onChange={(value) => updateTaxonomyFilter('topicNodeId', value)}
+                />
+                <FilterSelect
+                  key="filter-difficulty"
+                  label={copy.generate.difficulty}
+                  value={filters.difficulty}
+                  allLabel={copy.allDifficulties}
+                  options={PROBLEM_DIFFICULTIES}
+                  labels={copy.difficulties}
+                  onChange={(value) => updateFilter('difficulty', value)}
+                />
+              </div>
+              <div className="border-t flex justify-center border-hairline-soft pt-3">
+                <button
+                  type="button"
+                  className="mt-6 flex w-50 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main px-4 py-2.5 text-sm font-bold text-ink shadow-sm transition-colors hover:bg-mainButtonHover"
+                  onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
+                  {copy.resetFilters}
+                </button>
+              </div>
             </div>
-            <div className="border-t flex justify-center border-hairline-soft pt-3">
-              <button
-                type="button"
-                className="mt-6 flex w-50 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main px-4 py-2.5 text-sm font-bold text-ink shadow-sm transition-colors hover:bg-mainButtonHover"
-                onClick={() => setFilters(EMPTY_PROBLEM_FILTERS)}>
-                {copy.resetFilters}
-              </button>
-            </div>
-          </div>
           </div>
         </aside>
 
@@ -2182,66 +2192,7 @@ export function ProblemBankWorkspace({
           }}
         />
       ) : null}
-      <section className={`${panelClass} mt-6`} aria-label={copy.lessonSet}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold tracking-tight text-ink">
-            {copy.lessonSet}
-            <span className="ml-2 text-sm font-medium text-muted">{replaceCount(copy.results, lessonSet.length)}</span>
-          </h2>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
-            {lessonSet.length > 0 ? (
-              <button
-                type="button"
-                disabled={saving}
-                className="inline-flex items-center justify-center rounded-box border border-hairline px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy disabled:opacity-60 sm:py-1.5"
-                onClick={() => {
-                  void (async () => {
-                    setSaving(true);
-                    try {
-                      await persistLessonSet([]);
-                    } finally {
-                      setSaving(false);
-                    }
-                  })();
-                }}>
-                {copy.clearSet}
-              </button>
-            ) : null}
-            <Link
-              href={localePath(locale, '/teacher/homework')}
-              className="inline-flex items-center justify-center rounded-box border border-hairline bg-white px-3 py-2.5 text-sm font-medium text-body hover:border-navy/30 hover:text-navy sm:py-1.5">
-              {copy.actions.openHomework}
-            </Link>
-          </div>
-        </div>
-        {lessonSet.length === 0 ? (
-          <p className="mt-3 text-sm text-body">{copy.lessonSetEmpty}</p>
-        ) : (
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {lessonSet.map((problem) => (
-              <li
-                key={problem.id}
-                className="inline-flex max-w-full items-center gap-1 rounded-box border border-hairline bg-paper py-1 pr-1 pl-3 text-sm text-ink">
-                <button
-                  type="button"
-                  className="inline-flex min-w-0 max-w-[min(100%,16rem)] items-center gap-2 overflow-hidden hover:text-navy sm:max-w-[18rem]"
-                  onClick={() => setSelectedId(problem.id)}>
-                  <span className="min-w-0">
-                    <KatexPreview tex={problem.promptTex} className="whitespace-nowrap [&_.katex]:text-[0.9rem]" />
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-box text-muted hover:bg-white hover:text-navy"
-                  aria-label={copy.removeFromSet}
-                  onClick={() => void toggleInSet(problem.id)}>
-                  <X className="size-3.5" aria-hidden="true" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+   
     </div>
   );
 }
