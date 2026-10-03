@@ -62,3 +62,52 @@ export function identitiesForStudent(room: Room | null, userId: string): string[
   if (!room) return [];
   return liveIdentitiesFor(room.remoteParticipants.values(), userId);
 }
+
+const FULL_SYNC_ALL = '*';
+const fullSyncInFlight = new Set<string>();
+let fullSyncEpoch = 0;
+
+export function fullSyncKind(assignedPageIndex: number | null | undefined): string {
+  return typeof assignedPageIndex === 'number' ? `assigned:${assignedPageIndex}` : 'shared';
+}
+
+/** Page structure changed, so a newer snapshot must not be collapsed into one already uploading. */
+export function invalidateWhiteboardFullSync(): void {
+  fullSyncEpoch += 1;
+}
+
+export interface FullSyncClaim {
+  identities: string[] | undefined;
+  release: () => void;
+}
+
+/**
+ * Reserves a full snapshot for destinations that are not already receiving one of the same kind.
+ * Call `release` when publishing finishes. Page deletion bumps the epoch first so the new snapshot is sent.
+ */
+export function beginWhiteboardFullSync(identities: string[] | undefined, kind: string): FullSyncClaim | null {
+  if (identities && identities.length === 0) return null;
+  const epoch = String(fullSyncEpoch);
+  const allKey = `${epoch}\0${kind}\0${FULL_SYNC_ALL}`;
+  const everyone = identities === undefined;
+  const selected = everyone ? undefined : identities.filter((identity) => !fullSyncInFlight.has(`${epoch}\0${kind}\0${identity}`));
+  if (fullSyncInFlight.has(allKey)) return null;
+  if (!selected || selected.length === 0) {
+    if (!everyone) return null;
+  }
+
+  const keys =
+    selected && selected.length > 0 ? selected.map((identity) => `${epoch}\0${kind}\0${identity}`) : [allKey];
+  for (const key of keys) fullSyncInFlight.add(key);
+
+  let released = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const release = () => {
+    if (released) return;
+    released = true;
+    if (timer) clearTimeout(timer);
+    for (const key of keys) fullSyncInFlight.delete(key);
+  };
+  timer = setTimeout(release, 20_000);
+  return { identities: everyone ? undefined : selected, release };
+}

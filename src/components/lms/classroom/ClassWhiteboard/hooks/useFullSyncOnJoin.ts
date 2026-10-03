@@ -7,6 +7,8 @@ import type { RemoteParticipant } from 'livekit-client';
 import { isStaffParticipant, participantUserId } from '@/lib/livekit/participant-identity';
 import {
   assignedFullSyncPayload,
+  beginWhiteboardFullSync,
+  fullSyncKind,
   sharedFullSyncPayload,
   identitiesForStudent,
   type BoardAssignmentMap,
@@ -33,11 +35,13 @@ export function useFullSyncOnJoin(
       const board = pagesRef.current;
       const pristine = board.length <= 1 && (board[0]?.length ?? 0) === 0;
       if (pristine) return;
+      const claim = beginWhiteboardFullSync([participant.identity], fullSyncKind(null));
+      if (!claim) return;
       void publishRef.current(
         sharedFullSyncPayload(board, currentPageIndexRef.current),
         true,
-        [participant.identity],
-      );
+        claim.identities,
+      ).finally(claim.release);
     };
 
     const sendToParticipant = (participant: RemoteParticipant) => {
@@ -50,7 +54,9 @@ export function useFullSyncOnJoin(
         typeof assigned === 'number'
           ? assignedFullSyncPayload(pagesRef.current, assigned)
           : sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current);
-      void publishRef.current(payload, true, dest);
+      const claim = beginWhiteboardFullSync(dest, fullSyncKind(assigned));
+      if (!claim) return;
+      void publishRef.current(payload, true, claim.identities).finally(claim.release);
     };
 
     const handleParticipantConnected = (participant: RemoteParticipant) => {

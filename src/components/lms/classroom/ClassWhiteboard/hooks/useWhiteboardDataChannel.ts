@@ -11,9 +11,12 @@ import { adaptElementsForTheme } from '../utils/theme';
 import type { BoardView, HistoryMap } from '../utils/types';
 import {
   assignedFullSyncPayload,
+  beginWhiteboardFullSync,
+  fullSyncKind,
   sharedFullSyncPayload,
   type BoardAssignmentMap,
 } from '@/lib/livekit/board-assignment';
+import { applyPageDelta } from '../utils/whiteboard-delta';
 import { noteWhiteboard, whiteboardPayloadType } from '@/lib/livekit/diagnostics/whiteboard-trace';
 import {
   expectWhiteboardPaint,
@@ -42,6 +45,9 @@ interface WhiteboardPacket {
   sequence?: unknown;
   pageIndex?: number;
   elements?: CanvasElement[];
+  added?: CanvasElement[];
+  updated?: CanvasElement[];
+  deleted?: string[];
   pages?: CanvasElement[][];
   currentPageIndex?: number;
   assignedPageIndex?: number | null;
@@ -62,6 +68,9 @@ function finiteTime(value: unknown): number | undefined {
 }
 
 function packetElements(packet: WhiteboardPacket): number | null {
+  if (packet.type === 'WHITEBOARD_DELTA') {
+    return (packet.added?.length ?? 0) + (packet.updated?.length ?? 0) + (packet.deleted?.length ?? 0);
+  }
   if (Array.isArray(packet.elements)) return packet.elements.length;
   if (!Array.isArray(packet.pages)) return null;
   let total = 0;
@@ -355,7 +364,8 @@ export function useWhiteboardDataChannel(opts: Options) {
             typeof assigned === 'number'
               ? assignedFullSyncPayload(pagesRef.current, assigned)
               : sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current);
-          void publish(payloadToSend, true, [participant.identity]);
+          const claim = beginWhiteboardFullSync([participant.identity], fullSyncKind(assigned));
+          if (claim) void publish(payloadToSend, true, claim.identities).finally(claim.release);
           if (messageId) noteWhiteboardIgnored({ messageId, reason: 'sync_request', at: Date.now() });
           return;
         }
@@ -415,15 +425,8 @@ export function useWhiteboardDataChannel(opts: Options) {
           return;
         }
 
-        if (data.type === 'WHITEBOARD_SYNC' && Array.isArray(data.elements)) {
-          const pageIndex = typeof data.pageIndex === 'number' ? data.pageIndex : 0;
-          if (!isTeacher && assignedPageIndex !== null && pageIndex !== assignedPageIndex) {
-            if (messageId) noteWhiteboardIgnored({ messageId, reason: 'assigned_page', at: Date.now() });
-            return;
-          }
-          isRemoteUpdateRef.current = true;
-          if (hasAppliedLiveSyncRef) hasAppliedLiveSyncRef.current = true;
-          const adaptedElements = adaptElementsForTheme(data.elements, isDark);
+        const commitRemotePage = (pageIndex: number, elements: CanvasElement[], adapt = true) => {
+          const adaptedElements = adapt ? adaptElementsForTheme(elements, isDark) : elements;
           const updated = [...pagesRef.current];
           while (updated.length <= pageIndex) updated.push([]);
           updated[pageIndex] = adaptedElements;
@@ -439,11 +442,49 @@ export function useWhiteboardDataChannel(opts: Options) {
             historyMapRef.current.set(pageIndex, pHist);
             updateUndoRedoState();
           }
-
           setTimeout(() => {
             isRemoteUpdateRef.current = false;
           }, 30);
           finish(pageIndex, adaptedElements.length);
+        };
+
+        if (data.type === 'WHITEBOARD_DELTA') {
+          const pageIndex = typeof data.pageIndex === 'number' ? data.pageIndex : 0;
+          const hasChange =
+            (Array.isArray(data.added) && data.added.length > 0) ||
+            (Array.isArray(data.updated) && data.updated.length > 0) ||
+            (Array.isArray(data.deleted) && data.deleted.length > 0);
+          if (!hasChange) {
+            if (messageId) noteWhiteboardIgnored({ messageId, reason: 'empty_delta', at: Date.now() });
+            return;
+          }
+          if (!isTeacher && assignedPageIndex !== null && pageIndex !== assignedPageIndex) {
+            if (messageId) noteWhiteboardIgnored({ messageId, reason: 'assigned_page', at: Date.now() });
+            return;
+          }
+          isRemoteUpdateRef.current = true;
+          if (hasAppliedLiveSyncRef) hasAppliedLiveSyncRef.current = true;
+          const current = pagesRef.current[pageIndex] ?? [];
+          const themeIncoming = (elements: CanvasElement[] | undefined) =>
+            Array.isArray(elements) ? adaptElementsForTheme(elements, isDark) : [];
+          const merged = applyPageDelta(current, {
+            added: themeIncoming(data.added),
+            updated: themeIncoming(data.updated),
+            deleted: data.deleted,
+          });
+          commitRemotePage(pageIndex, merged, false);
+          return;
+        }
+
+        if (data.type === 'WHITEBOARD_SYNC' && Array.isArray(data.elements)) {
+          const pageIndex = typeof data.pageIndex === 'number' ? data.pageIndex : 0;
+          if (!isTeacher && assignedPageIndex !== null && pageIndex !== assignedPageIndex) {
+            if (messageId) noteWhiteboardIgnored({ messageId, reason: 'assigned_page', at: Date.now() });
+            return;
+          }
+          isRemoteUpdateRef.current = true;
+          if (hasAppliedLiveSyncRef) hasAppliedLiveSyncRef.current = true;
+          commitRemotePage(pageIndex, data.elements);
         } else if (data.type === 'WHITEBOARD_SYNC') {
           if (messageId) noteWhiteboardIgnored({ messageId, reason: 'missing_elements', at: Date.now() });
         } else if (data.type === 'WHITEBOARD_PAGE_COUNT') {

@@ -32,7 +32,9 @@ import { useBoardControlContext } from '../ClassroomRoomModal/components/BoardCo
 import { useBreakout } from '../ClassroomRoomModal/breakout/BreakoutContext';
 import {
   assignedFullSyncPayload,
+  beginWhiteboardFullSync,
   destinationsForPage,
+  fullSyncKind,
   identitiesForStudent,
   sharedFullSyncPayload,
 } from '@/lib/livekit/board-assignment';
@@ -180,21 +182,37 @@ export function ClassWhiteboard({
       const dest = identitiesForStudent(room, studentId);
       if (dest.length === 0) continue;
       dest.forEach((identity) => sent.add(identity));
-      void publishDataSafe(assignedFullSyncPayload(pagesRef.current, pageIndex), true, dest);
+      const assignedClaim = beginWhiteboardFullSync(dest, fullSyncKind(pageIndex));
+      if (assignedClaim) {
+        void publishDataSafe(assignedFullSyncPayload(pagesRef.current, pageIndex), true, assignedClaim.identities).finally(
+          assignedClaim.release,
+        );
+      }
     }
     const rest = [...room.remoteParticipants.values()]
       .filter((participant) => !isStaffParticipant(participant) && !sent.has(participant.identity))
       .map((participant) => participant.identity);
     if (Object.keys(assignedPageByStudent).length === 0) {
-      void publishDataSafe(sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current), true);
+      const everyone = [...room.remoteParticipants.values()].map((participant) => participant.identity);
+      const claim = beginWhiteboardFullSync(everyone, fullSyncKind(null));
+      if (claim?.identities && claim.identities.length > 0) {
+        void publishDataSafe(
+          sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current),
+          true,
+          claim.identities,
+        ).finally(claim.release);
+      }
       return;
     }
     if (rest.length > 0) {
-      void publishDataSafe(
-        sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current),
-        true,
-        rest,
-      );
+      const claim = beginWhiteboardFullSync(rest, fullSyncKind(null));
+      if (claim) {
+        void publishDataSafe(
+          sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current),
+          true,
+          claim.identities,
+        ).finally(claim.release);
+      }
     }
   };
 

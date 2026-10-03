@@ -7,6 +7,8 @@ import type { CanvasElement } from '../../KonvaCanvas/utils/types';
 import { adaptStrokeForTheme } from '../utils/theme';
 import type { HistoryMap } from '../utils/types';
 import { getCourseWhiteboardAction, saveCourseWhiteboardAction } from '@/lib/actions/course-whiteboard';
+import { beginWhiteboardFullSync, fullSyncKind, invalidateWhiteboardFullSync } from '@/lib/livekit/board-assignment';
+import { diffPageElements } from '../utils/whiteboard-delta';
 
 interface Options {
   courseId: string;
@@ -161,11 +163,33 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     };
   }, [isTeacher, courseId]);
 
+  const publishPageDelta = useCallback(
+    (pageIndex: number, previous: readonly CanvasElement[], next: readonly CanvasElement[]) => {
+      const destinations = getSyncDestinations?.(pageIndex);
+      if (destinations && destinations.length === 0) return;
+      const delta = diffPageElements(previous, next);
+      if (delta.added.length === 0 && delta.updated.length === 0 && delta.deleted.length === 0) return;
+      void publishDataSafe(
+        {
+          type: 'WHITEBOARD_DELTA',
+          pageIndex,
+          ...(delta.added.length > 0 ? { added: delta.added } : {}),
+          ...(delta.updated.length > 0 ? { updated: delta.updated } : {}),
+          ...(delta.deleted.length > 0 ? { deleted: delta.deleted } : {}),
+        },
+        true,
+        destinations,
+      );
+    },
+    [getSyncDestinations, publishDataSafe],
+  );
+
   const handleElementsChange = useCallback(
     (newElems: CanvasElement[], options?: { commitHistory?: boolean }) => {
       if (!isTeacher) return;
       if (isRemoteUpdateRef.current) return;
       const pIndex = currentPageIndexRef.current;
+      const previous = pagesRef.current[pIndex] ?? [];
       const updated = [...pagesRef.current];
       updated[pIndex] = newElems;
       setPages(updated);
@@ -180,19 +204,9 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
         updateUndoRedoState();
       }
 
-      const destinations = getSyncDestinations?.(pIndex);
-      if (destinations && destinations.length === 0) return;
-      void publishDataSafe(
-        {
-          type: 'WHITEBOARD_SYNC',
-          pageIndex: pIndex,
-          elements: newElems,
-        },
-        true,
-        destinations,
-      );
+      publishPageDelta(pIndex, previous, newElems);
     },
-    [isTeacher, publishDataSafe, updateUndoRedoState, getSyncDestinations],
+    [isTeacher, publishPageDelta, updateUndoRedoState],
   );
 
   const handleUndo = useCallback(() => {
@@ -203,6 +217,7 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
 
     pageHist.index -= 1;
     const targetElements = pageHist.states[pageHist.index];
+    const previous = pagesRef.current[pIndex] ?? [];
 
     const updated = [...pagesRef.current];
     updated[pIndex] = targetElements;
@@ -210,14 +225,8 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     pagesRef.current = updated;
 
     updateUndoRedoState();
-    const destinations = getSyncDestinations?.(pIndex);
-    if (destinations && destinations.length === 0) return;
-    void publishDataSafe(
-      { type: 'WHITEBOARD_SYNC', pageIndex: pIndex, elements: targetElements },
-      true,
-      destinations,
-    );
-  }, [isTeacher, publishDataSafe, updateUndoRedoState, getSyncDestinations]);
+    publishPageDelta(pIndex, previous, targetElements);
+  }, [isTeacher, publishPageDelta, updateUndoRedoState]);
 
   const handleRedo = useCallback(() => {
     const pIndex = currentPageIndexRef.current;
@@ -226,6 +235,7 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
 
     pageHist.index += 1;
     const targetElements = pageHist.states[pageHist.index];
+    const previous = pagesRef.current[pIndex] ?? [];
 
     const updated = [...pagesRef.current];
     updated[pIndex] = targetElements;
@@ -233,24 +243,21 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     pagesRef.current = updated;
 
     updateUndoRedoState();
-    const destinations = getSyncDestinations?.(pIndex);
-    if (destinations && destinations.length === 0) return;
-    void publishDataSafe(
-      { type: 'WHITEBOARD_SYNC', pageIndex: pIndex, elements: targetElements },
-      true,
-      destinations,
-    );
-  }, [publishDataSafe, updateUndoRedoState, getSyncDestinations]);
+    publishPageDelta(pIndex, previous, targetElements);
+  }, [publishPageDelta, updateUndoRedoState]);
 
   const handleClearPage = useCallback(() => {
     handleElementsChange([]);
   }, [handleElementsChange]);
 
   const publishFullSync = useCallback(() => {
+    invalidateWhiteboardFullSync();
     if (broadcastBoard) {
       broadcastBoard();
       return;
     }
+    const claim = beginWhiteboardFullSync(undefined, fullSyncKind(null));
+    if (!claim) return;
     void publishDataSafe(
       {
         type: 'WHITEBOARD_FULL_SYNC',
@@ -258,7 +265,7 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
         currentPageIndex: currentPageIndexRef.current,
       },
       true,
-    );
+    ).finally(claim.release);
   }, [broadcastBoard, publishDataSafe]);
 
   const handleAddNewPage = useCallback(() => {

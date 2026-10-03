@@ -82,6 +82,7 @@ export type WhiteboardMessageStatus = (typeof WHITEBOARD_MESSAGE_STATUSES)[numbe
 
 const TRACED_TYPES = new Set([
   'WHITEBOARD_SYNC',
+  'WHITEBOARD_DELTA',
   'WHITEBOARD_FULL_SYNC',
   'WHITEBOARD_PAGE_INDEX',
   'WHITEBOARD_PAGE_COUNT',
@@ -92,6 +93,7 @@ const TRACED_TYPES = new Set([
 
 const ACKED_TYPES = new Set([
   'WHITEBOARD_SYNC',
+  'WHITEBOARD_DELTA',
   'WHITEBOARD_FULL_SYNC',
   'WHITEBOARD_PAGE_INDEX',
   'WHITEBOARD_PAGE_COUNT',
@@ -159,6 +161,12 @@ function integerField(value: unknown): number | null {
 }
 
 function countElements(record: Record<string, unknown>): number | null {
+  if (record.type === 'WHITEBOARD_DELTA') {
+    const added = Array.isArray(record.added) ? record.added.length : 0;
+    const updated = Array.isArray(record.updated) ? record.updated.length : 0;
+    const deleted = Array.isArray(record.deleted) ? record.deleted.length : 0;
+    return added + updated + deleted;
+  }
   if (Array.isArray(record.elements)) return record.elements.length;
   if (!Array.isArray(record.pages)) return null;
   let total = 0;
