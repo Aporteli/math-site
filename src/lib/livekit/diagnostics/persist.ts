@@ -385,7 +385,9 @@ export async function ingestDiagnostics(access: CourseAccess, report: Diagnostic
     (report.self.whiteboardPointerSent ?? 0) > 0 ||
     (report.self.whiteboardPointerReceived ?? 0) > 0 ||
     (report.self.whiteboardErrors ?? 0) > 0 ||
-    (report.self.whiteboardSkipped ?? 0) > 0;
+    (report.self.whiteboardSkipped ?? 0) > 0 ||
+    (report.whiteboardMessages?.length ?? 0) > 0 ||
+    (report.self.mainThreadGapMs ?? 0) >= 400;
   if (!report.leaving && report.events.length === 0 && !whiteboardActivity && now.getTime() - lastPost < 2000) {
     return { ok: true };
   }
@@ -507,6 +509,8 @@ export async function ingestDiagnostics(access: CourseAccess, report: Diagnostic
       whiteboardErrors: report.self.whiteboardErrors ?? null,
       whiteboardSkipped: report.self.whiteboardSkipped ?? null,
       whiteboardPublishMs: report.self.whiteboardPublishMs ?? null,
+      mainThreadGapMs: report.self.mainThreadGapMs ?? null,
+      whiteboardMessages: report.whiteboardMessages,
       clockOffsetMs: offsetMs,
       boardState: clipState(report.self.boardConnectionState),
       boardIce: pickIce(report.self.boardIceState ?? null),

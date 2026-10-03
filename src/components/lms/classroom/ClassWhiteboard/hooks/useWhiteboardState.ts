@@ -12,7 +12,7 @@ interface Options {
   courseId: string;
   isTeacher: boolean;
   isDark: boolean;
-  publishDataSafe: (payload: any, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>;
+  publishDataSafe: (payload: object, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>;
   getSyncDestinations?: (pageIndex: number) => string[] | undefined;
   broadcastBoard?: () => void;
 }

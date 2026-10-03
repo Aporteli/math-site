@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DIAGNOSTIC_EVENT_KINDS } from './model';
+import { whiteboardMessageSchema } from './whiteboard-message';
 
 const metric = z.number().finite().min(0).max(120_000).nullable();
 const count = z.number().finite().min(0).max(50_000_000).nullable();
@@ -39,6 +40,8 @@ export const diagnosticDetailSchema = z.object({
   dataChannelState: stateText.optional(),
   previousDataChannelState: stateText.optional(),
   whiteboardType: z.string().trim().max(40).nullable().optional(),
+  messageId: z.string().trim().min(4).max(40).optional(),
+  sequence: z.number().int().min(0).max(50_000_000).optional(),
   boardState: stateText.optional(),
   previousBoardState: stateText.optional(),
   boardIce: stateText.optional(),
@@ -102,6 +105,7 @@ export const diagnosticsReportSchema = z.object({
     whiteboardErrors: count.optional(),
     whiteboardSkipped: count.optional(),
     whiteboardPublishMs: metric.optional(),
+    mainThreadGapMs: z.number().finite().min(0).max(600_000).nullable().optional(),
     boardConnectionState: stateText.optional(),
     boardIceState: stateText.optional(),
     boardPcState: stateText.optional(),
@@ -110,6 +114,7 @@ export const diagnosticsReportSchema = z.object({
     boardMessagesReceived: count.optional(),
   }),
   clientNow: z.string().datetime().optional(),
+  whiteboardMessages: z.array(whiteboardMessageSchema).max(48).optional(),
   events: z.array(diagnosticEventSchema).max(25),
 });
 

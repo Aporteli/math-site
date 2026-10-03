@@ -6,6 +6,8 @@ export interface WhiteboardNote {
   at: number;
   durationMs?: number;
   message?: string;
+  messageId?: string;
+  sequence?: number;
 }
 
 export interface WhiteboardCounts {
@@ -77,14 +79,17 @@ export function subscribeWhiteboard(listener: (note: WhiteboardNote) => void): (
 export function noteWhiteboard(note: WhiteboardNote): void {
   try {
     const pointer = note.type === 'WHITEBOARD_LASER';
+    const quiet = note.type === 'WHITEBOARD_ACK';
     if (note.kind === 'sent') {
-      if (pointer) counts.pointerSent += 1;
-      else counts.sent += 1;
-      if (typeof note.durationMs === 'number' && Number.isFinite(note.durationMs) && note.durationMs >= 0) {
+      if (!quiet && pointer) counts.pointerSent += 1;
+      else if (!quiet) counts.sent += 1;
+      if (!quiet && typeof note.durationMs === 'number' && Number.isFinite(note.durationMs) && note.durationMs >= 0) {
         counts.maxPublishMs = Math.max(counts.maxPublishMs ?? 0, note.durationMs);
       }
     } else if (note.kind === 'received') {
-      if (pointer) counts.pointerReceived += 1;
+      if (quiet) {
+        // Acknowledgements are tracked on the message trace, not as board receives.
+      } else if (pointer) counts.pointerReceived += 1;
       else counts.received += 1;
     } else if (note.kind === 'send_error') {
       counts.sendErrors += 1;

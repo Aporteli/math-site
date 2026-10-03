@@ -10,6 +10,7 @@ import {
   type PresenceLevel,
   type ServerRoomSnapshot,
 } from '@/lib/livekit/diagnostics/model';
+import { whiteboardMessageSchema, type WhiteboardMessageTrace } from '@/lib/livekit/diagnostics/whiteboard-message';
 
 export interface ParticipantRecord {
   id: string;
@@ -207,6 +208,16 @@ function readBool(value: unknown): boolean | null {
   return typeof value === 'boolean' ? value : null;
 }
 
+function readWhiteboardMessages(value: unknown): WhiteboardMessageTrace[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const messages: WhiteboardMessageTrace[] = [];
+  for (const item of value) {
+    const parsed = whiteboardMessageSchema.safeParse(item);
+    if (parsed.success) messages.push(parsed.data);
+  }
+  return messages.length > 0 ? messages : undefined;
+}
+
 export function readSamples(value: unknown): DiagnosticSample[] {
   if (!Array.isArray(value)) return [];
   const samples: DiagnosticSample[] = [];
@@ -247,6 +258,8 @@ export function readSamples(value: unknown): DiagnosticSample[] {
       whiteboardErrors: readNumber(row.whiteboardErrors),
       whiteboardSkipped: readNumber(row.whiteboardSkipped),
       whiteboardPublishMs: readNumber(row.whiteboardPublishMs),
+      mainThreadGapMs: readNumber(row.mainThreadGapMs),
+      whiteboardMessages: readWhiteboardMessages(row.whiteboardMessages),
       clockOffsetMs: readNumber(row.clockOffsetMs),
       boardState: readText(row.boardState),
       boardIce: readText(row.boardIce),

@@ -1,3 +1,5 @@
+import type { WhiteboardMessageTrace } from './whiteboard-message';
+
 export const DIAGNOSTIC_EVENT_KINDS = [
   'connected',
   'disconnected',
@@ -102,6 +104,8 @@ export interface DiagnosticSample {
   whiteboardErrors?: number | null;
   whiteboardSkipped?: number | null;
   whiteboardPublishMs?: number | null;
+  mainThreadGapMs?: number | null;
+  whiteboardMessages?: WhiteboardMessageTrace[];
   clockOffsetMs?: number | null;
   boardState?: string | null;
   boardIce?: string | null;
@@ -571,7 +575,10 @@ export function sampleChanged(previous: DiagnosticSample, next: DiagnosticSample
   if (previousData !== nextData) return true;
   const previousPackets = (previous.packetsSent ?? 0) + (previous.packetsReceived ?? 0) > 0;
   const nextPackets = (next.packetsSent ?? 0) + (next.packetsReceived ?? 0) > 0;
-  return previousPackets !== nextPackets;
+  if (previousPackets !== nextPackets) return true;
+  if ((next.whiteboardMessages?.length ?? 0) > 0) return true;
+  if ((next.mainThreadGapMs ?? 0) >= 400 && (next.mainThreadGapMs ?? 0) !== (previous.mainThreadGapMs ?? 0)) return true;
+  return false;
 }
 
 export function compactDiagnosticSamples(samples: DiagnosticSample[], nowMs: number): DiagnosticSample[] {
@@ -592,6 +599,26 @@ export function compactDiagnosticSamples(samples: DiagnosticSample[], nowMs: num
   return kept;
 }
 
+function attachWhiteboardMessages(
+  existing: DiagnosticSample[],
+  sample: DiagnosticSample,
+  nowMs: number,
+): DiagnosticSample[] {
+  const incoming = sample.whiteboardMessages;
+  if (!incoming || incoming.length === 0) return existing;
+  const last = existing.at(-1);
+  if (!last) return compactDiagnosticSamples([{ ...sample, whiteboardMessages: incoming.slice(-48) }], nowMs);
+  const merged = [...(last.whiteboardMessages ?? []), ...incoming].slice(-48);
+  const mainThreadGapMs = Math.max(last.mainThreadGapMs ?? 0, sample.mainThreadGapMs ?? 0);
+  const next = existing.slice(0, -1);
+  next.push({
+    ...last,
+    whiteboardMessages: merged,
+    mainThreadGapMs: mainThreadGapMs > 0 ? mainThreadGapMs : last.mainThreadGapMs,
+  });
+  return compactDiagnosticSamples(next, nowMs);
+}
+
 export function appendDiagnosticSample(
   existing: DiagnosticSample[],
   sample: DiagnosticSample,
@@ -600,8 +627,9 @@ export function appendDiagnosticSample(
   const last = existing.at(-1);
   if (last) {
     const gap = nowMs - Date.parse(last.t);
-    if (!Number.isFinite(gap) || gap < SAMPLE_MIN_GAP_MS) return existing;
-    if (gap < SAMPLE_QUIET_GAP_MS && !sampleChanged(last, sample)) return existing;
+    const tooSoon = !Number.isFinite(gap) || gap < SAMPLE_MIN_GAP_MS;
+    const quiet = Number.isFinite(gap) && gap < SAMPLE_QUIET_GAP_MS && !sampleChanged(last, sample);
+    if (tooSoon || quiet) return attachWhiteboardMessages(existing, sample, nowMs);
   }
   return compactDiagnosticSamples([...existing, sample], nowMs);
 }

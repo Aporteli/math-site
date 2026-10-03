@@ -3,7 +3,7 @@
 import { useCallback, useRef, type MutableRefObject } from 'react';
 
 interface Options {
-  publishDataSafe: (payload: any, reliable?: boolean) => Promise<void>;
+  publishDataSafe: (payload: object, reliable?: boolean) => Promise<void>;
   currentPageIndexRef: MutableRefObject<number>;
 }
 

@@ -86,4 +86,24 @@ const extended = diagnosticsReportSchema.safeParse({
 });
 assert.equal(extended.success, true);
 
+const traced = diagnosticsReportSchema.safeParse({
+  ...extended.data,
+  self: { ...extended.data.self, mainThreadGapMs: 840 },
+  whiteboardMessages: [
+    {
+      messageId: 'wb_abc12345',
+      slot: 'send',
+      type: 'WHITEBOARD_SYNC',
+      status: 'sent',
+      updatedAt: Date.parse('2026-10-02T10:42:18.000Z'),
+      sequence: 1842,
+      payloadBytes: 128000,
+      chunkCount: 3,
+      destinations: 'student-123',
+    },
+  ],
+});
+assert.equal(traced.success, true);
+assert.equal(traced.data?.whiteboardMessages?.[0]?.sequence, 1842);
+
 console.log('livekit diagnostics contract tests passed');

@@ -177,8 +177,8 @@ export function AdminTerminal({ locale }: { locale: Locale }) {
       <div className="h-1 bg-brass" aria-hidden="true" />
       <div className="p-5">
       <div className="flex items-start gap-3">
-        <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
-          <Terminal className="size-4" aria-hidden="true" />
+        <span className="inline-flex size-9 shrink-0 items-center justify-center  text-brass-strong">
+          <Terminal className="size-8" aria-hidden="true" strokeWidth={2.5}/>
         </span>
         <div>
           <h3 className="text-base font-semibold text-ink">VPS terminal</h3>

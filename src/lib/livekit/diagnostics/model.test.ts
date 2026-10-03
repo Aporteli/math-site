@@ -179,4 +179,39 @@ assert.equal(
 assert.equal(matchesIncidentWindow([serverBefore.toISOString()], 11 * 60 + 19, 3), false);
 assert.equal(matchesIncidentWindow([reported.toISOString()], 11 * 60 + 19, 3), true);
 
+const tracedSample = sample(0, {
+  whiteboardMessages: [
+    {
+      messageId: 'wb_abc12345',
+      slot: 'send',
+      type: 'WHITEBOARD_SYNC',
+      status: 'sent',
+      updatedAt: 4_000,
+      sequence: 1842,
+    },
+  ],
+});
+let kept = appendDiagnosticSample([], sample(0), 0);
+kept = appendDiagnosticSample(
+  kept,
+  sample(4_000, {
+    whiteboardMessages: [
+      {
+        messageId: 'wb_late',
+        slot: 'receive',
+        type: 'WHITEBOARD_SYNC',
+        status: 'applied',
+        updatedAt: 4_000,
+        sequence: 1842,
+      },
+    ],
+  }),
+  4_000,
+);
+assert.equal(kept.length, 1);
+assert.equal(kept[0]?.whiteboardMessages?.length, 1);
+kept = appendDiagnosticSample(kept, tracedSample, 8_000);
+assert.equal(kept.length, 2);
+assert.equal(kept.at(-1)?.whiteboardMessages?.[0]?.messageId, 'wb_abc12345');
+
 console.log('livekit diagnostics model tests passed');

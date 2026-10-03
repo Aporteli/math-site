@@ -16,7 +16,7 @@ import type { CanvasElement } from '../../KonvaCanvas/utils/types';
 export function useFullSyncOnJoin(
   isTeacher: boolean,
   room: Room | null,
-  publishDataSafe: (payload: any, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>,
+  publishDataSafe: (payload: object, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>,
   pagesRef: MutableRefObject<CanvasElement[][]>,
   currentPageIndexRef: MutableRefObject<number>,
   assignedPageByStudent: BoardAssignmentMap,

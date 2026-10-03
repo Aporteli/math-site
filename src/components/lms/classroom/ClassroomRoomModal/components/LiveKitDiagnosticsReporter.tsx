@@ -30,6 +30,15 @@ import {
   type WhiteboardCounts,
   type WhiteboardNote,
 } from '@/lib/livekit/diagnostics/whiteboard-trace';
+import {
+  noteMainThreadGap,
+  restoreMainThreadGap,
+  restoreWhiteboardMessages,
+  sanitizeWhiteboardMessages,
+  takeMainThreadGap,
+  takeWhiteboardMessages,
+  type WhiteboardMessageTrace,
+} from '@/lib/livekit/diagnostics/whiteboard-message';
 
 const VOLUNTARY = new Set<DisconnectReason>([
   DisconnectReason.CLIENT_INITIATED,
@@ -367,20 +376,27 @@ export function LiveKitDiagnosticsReporter({
       const nowMs = Date.now();
       if (nowMs - (whiteboardEventAt.get(note.kind) ?? 0) < 15_000) return;
       whiteboardEventAt.set(note.kind, nowMs);
+      const correlation = {
+        ...(note.messageId ? { messageId: note.messageId } : {}),
+        ...(typeof note.sequence === 'number' ? { sequence: note.sequence } : {}),
+      };
       if (note.kind === 'send_error') {
         push('whiteboard_send_failed', {
           message: note.message ?? 'Whiteboard publish failed',
           whiteboardType: note.type,
+          ...correlation,
         });
       } else if (note.kind === 'receive_error') {
         push('whiteboard_receive_failed', {
           message: note.message ?? 'Whiteboard message could not be read',
           whiteboardType: note.type,
+          ...correlation,
         });
       } else {
         push('whiteboard_send_skipped', {
-          message: 'Whiteboard publish skipped because the room was not connected',
+          message: note.message ?? 'Whiteboard publish skipped because the room was not connected',
           whiteboardType: note.type,
+          ...correlation,
         });
       }
       requestFlush();
@@ -540,7 +556,13 @@ export function LiveKitDiagnosticsReporter({
     const connection = browserConnection();
     connection?.addEventListener('change', onNetwork);
 
-    const buildReport = (leaving: boolean, whiteboard: WhiteboardCounts, board: BoardLink | null): DiagnosticsReport | null => {
+    const buildReport = (
+      leaving: boolean,
+      whiteboard: WhiteboardCounts,
+      board: BoardLink | null,
+      messages: WhiteboardMessageTrace[],
+      mainThreadGapMs: number | null,
+    ): DiagnosticsReport | null => {
       const identity = room.localParticipant.identity;
       if (!identity) return null;
       const microphone = localMicrophone(room);
@@ -554,6 +576,7 @@ export function LiveKitDiagnosticsReporter({
         secondary,
         leaving,
         clientNow: new Date().toISOString(),
+        whiteboardMessages: messages.length > 0 ? messages : undefined,
         self: {
           identity,
           displayName: room.localParticipant.name?.trim() || 'Participant',
@@ -597,6 +620,7 @@ export function LiveKitDiagnosticsReporter({
           whiteboardErrors: whiteboard.sendErrors + whiteboard.receiveErrors,
           whiteboardSkipped: whiteboard.skipped,
           whiteboardPublishMs: metric(whiteboard.maxPublishMs),
+          mainThreadGapMs,
           boardConnectionState: board?.state ?? null,
           boardIceState: board?.ice ?? null,
           boardPcState: board?.pc ?? null,
@@ -678,6 +702,13 @@ export function LiveKitDiagnosticsReporter({
       inFlush = true;
       const isLeave = leaving;
       let whiteboard: WhiteboardCounts | null = null;
+      let messages: WhiteboardMessageTrace[] | null = null;
+      let mainThread: number | null = null;
+      const restoreDiagnostics = () => {
+        if (whiteboard) restoreWhiteboardCounts(whiteboard);
+        if (messages) restoreWhiteboardMessages(messages);
+        if (mainThread !== null) restoreMainThreadGap(mainThread);
+      };
       try {
         rebind();
         const reports = await readStats(room);
@@ -706,23 +737,25 @@ export function LiveKitDiagnosticsReporter({
         else previousBoard = null;
         if (!subscriptions) subscriptions = subscribedMicrophones(room);
         whiteboard = takeWhiteboardCounts();
+        messages = takeWhiteboardMessages();
+        mainThread = takeMainThreadGap();
 
-        const report = buildReport(isLeave, whiteboard, latestBoard);
+        const report = buildReport(isLeave, whiteboard, latestBoard, sanitizeWhiteboardMessages(messages), mainThread);
         if (!report) {
-          restoreWhiteboardCounts(whiteboard);
+          restoreDiagnostics();
           return;
         }
         const sent = await send(report, isLeave);
         if (!sent) {
           restore(report.events);
-          restoreWhiteboardCounts(whiteboard);
+          restoreDiagnostics();
           if (Date.now() - loggedFailureAt > 30_000) {
             loggedFailureAt = Date.now();
             console.error('LiveKit diagnostics report failed');
           }
         }
       } catch (error) {
-        if (whiteboard) restoreWhiteboardCounts(whiteboard);
+        restoreDiagnostics();
         if (Date.now() - loggedFailureAt > 30_000) {
           loggedFailureAt = Date.now();
           console.error('LiveKit diagnostics report failed', error instanceof Error ? error.message : 'unknown');
@@ -745,7 +778,14 @@ export function LiveKitDiagnosticsReporter({
 
     const started = window.setTimeout(() => void flush(false), 1000);
     timer = window.setInterval(() => void flush(false), 8000);
-    watchTimer = window.setInterval(rebind, 2000);
+    let lastWatch = Date.now();
+    watchTimer = window.setInterval(() => {
+      const now = Date.now();
+      const gap = now - lastWatch - 2000;
+      lastWatch = now;
+      if (gap >= 400) noteMainThreadGap(gap);
+      rebind();
+    }, 2000);
     const onHide = () => void flush(true);
     window.addEventListener('pagehide', onHide);
 

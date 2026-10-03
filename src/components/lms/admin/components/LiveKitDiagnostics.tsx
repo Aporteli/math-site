@@ -22,6 +22,11 @@ import {
   type HealthLevel,
   type PresenceLevel,
 } from '@/lib/livekit/diagnostics/model';
+import {
+  buildWhiteboardDeliveries,
+  type WhiteboardDeliveryView,
+  type WhiteboardLivekitSnap,
+} from '@/lib/livekit/diagnostics/whiteboard-message';
 
 interface DiagnosticsListResponse {
   active: DiagnosticsListItem[];
@@ -37,6 +42,7 @@ const LIMITATIONS = [
   'Health labels describe the telemetry. They do not identify a root cause.',
   'Metric samples are about every 15 seconds, and sooner when the path or whiteboard flow changes. Packets and bytes are the change since the previous sample.',
   'Whiteboard counts are messages this page sent or received. They do not change drawing. During a breakout, the separate whiteboard connection is labeled as the board link.',
+  'Whiteboard message times use each browser’s own clock. Durations measured on one browser (publish, assembly, parse, apply, paint) can be compared directly. A send-to-receive gap uses two clocks and can disagree by that participant’s clock offset. These times are not a shared LiveKit clock.',
 ];
 
 function roleLabel(role: string): string {
@@ -227,6 +233,8 @@ function sampleSummary(sample: DiagnosticSample): string {
     parts.push(`pointer ${sample.whiteboardPointerSent ?? 0}/${sample.whiteboardPointerReceived ?? 0}`);
   }
   if ((sample.whiteboardSkipped ?? 0) > 0) parts.push(`${sample.whiteboardSkipped} whiteboard sends skipped`);
+  if ((sample.whiteboardMessages?.length ?? 0) > 0) parts.push(`${sample.whiteboardMessages?.length} whiteboard traces`);
+  if ((sample.mainThreadGapMs ?? 0) >= 400) parts.push(`main thread delayed ${formatMs(sample.mainThreadGapMs ?? null)}`);
   if (typeof sample.whiteboardPublishMs === 'number' && sample.whiteboardPublishMs >= 500) {
     parts.push(`whiteboard publish ${formatMs(sample.whiteboardPublishMs)}`);
   }
@@ -362,12 +370,111 @@ function EventRow({ event }: { event: DiagnosticsEventView }) {
           <span>Page {visibility}</span>
         ) : null}
         {whiteboardType ? <span>Message {whiteboardType}</span> : null}
+        {eventText(event.detail, 'messageId') ? <span>ID {eventText(event.detail, 'messageId')}</span> : null}
+        {eventMetric(event.detail, 'sequence') !== null ? (
+          <span>Sequence {eventMetric(event.detail, 'sequence')}</span>
+        ) : null}
         {remote ? <span>Remote {remote}</span> : null}
         {typeof serverSeen === 'boolean' ? (
           <span>Server lists participant: {serverSeen ? (serverState ?? 'yes') : 'no'}</span>
         ) : null}
       </div>
     </li>
+  );
+}
+
+function formatPrecise(ms: number | null): string {
+  if (ms === null || !Number.isFinite(ms)) return '—';
+  const date = new Date(ms);
+  if (Number.isNaN(date.getTime())) return '—';
+  const clock = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return `${clock}.${String(date.getMilliseconds()).padStart(3, '0')}`;
+}
+
+function formatSignedMs(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) return '—';
+  return `${Math.round(value)} ms`;
+}
+
+function livekitLine(snap: WhiteboardLivekitSnap): string {
+  const stall =
+    snap.mainThreadGapMs !== null && snap.mainThreadGapMs >= 400
+      ? ` · main thread delayed ${formatMs(snap.mainThreadGapMs)}`
+      : '';
+  return `${snap.name} ${formatClock(snap.at)} · RTT ${formatMs(snap.rttMs)} · jitter ${formatMs(snap.jitterMs)} · send loss ${formatPct(snap.sendLossPct)} · receive loss ${formatPct(snap.receiveLossPct)} · ICE ${snap.ice ?? 'unavailable'} · LiveKit ${snap.state ?? 'unavailable'}${stall}`;
+}
+
+function WhiteboardMessageCard({ view }: { view: WhiteboardDeliveryView }) {
+  return (
+    <details className="rounded-box border border-hairline bg-sectionHeader px-3 py-2">
+      <summary className="cursor-pointer list-none">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="text-sm font-medium text-ink">{view.type}</span>
+          <span className="font-mono text-xs text-muted">{view.messageId}</span>
+          {view.sequence !== null ? <span className="text-xs text-muted">#{view.sequence}</span> : null}
+          <span className="text-xs font-semibold text-ink">{view.status}</span>
+        </div>
+      </summary>
+      <div className="mt-2 space-y-2 text-[11px] leading-5 text-muted">
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          {view.senderName ? <span>Sender {view.senderName}</span> : null}
+          <span>Payload {formatBytes(view.payloadBytes) ?? '—'}</span>
+          <span>Chunks {view.chunkCount ?? '—'}</span>
+          {view.chunkBytes ? <span>Chunk sizes {view.chunkBytes}</span> : null}
+          <span>Destination {view.destinations ?? '—'}</span>
+          {view.pageIndex !== null ? <span>Page {view.pageIndex}</span> : null}
+          {view.elementCount !== null ? <span>Elements {view.elementCount}</span> : null}
+        </div>
+        {view.note ? <p className="text-body">{view.note}</p> : null}
+        {view.timeline.length > 0 ? (
+          <ul className="space-y-0.5">
+            {view.timeline.map((point) => (
+              <li key={point.label}>
+                {point.label}: {formatPrecise(point.at)}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {view.receivers.map((receiver) => (
+          <div key={receiver.identity} className="rounded-box bg-main px-2 py-1.5">
+            <div className="font-medium text-ink">
+              {receiver.name} · {receiver.status}
+            </div>
+            {receiver.detail ? <div>{receiver.detail}</div> : null}
+            {receiver.timeline.length > 0 ? (
+              <ul className="mt-1 space-y-0.5">
+                {receiver.timeline.map((point) => (
+                  <li key={point.label}>
+                    {point.label}: {formatPrecise(point.at)}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {receiver.durations.length > 0 ? (
+              <div className="mt-1 flex flex-wrap gap-x-3">
+                {receiver.durations.map((item) => (
+                  <span key={item.label}>
+                    {item.label} {formatSignedMs(item.ms)}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ))}
+        {view.durations.some((item) => item.ms !== null) ? (
+          <div className="flex flex-wrap gap-x-3">
+            {view.durations.map((item) => (
+              <span key={item.label}>
+                {item.label} {formatSignedMs(item.ms)}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        {view.livekit.map((snap) => (
+          <p key={`${snap.name}:${snap.at}`}>{livekitLine(snap)}</p>
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -590,6 +697,34 @@ export function LiveKitDiagnostics() {
     }
     timeline.sort((left, right) => left.at - right.at);
   }
+  const whiteboardDeliveries = visibleDetail
+    ? buildWhiteboardDeliveries(
+        people.map((person) => ({
+          name: person.name,
+          identity: person.identity,
+          samples: person.samples,
+        })),
+      ).filter((view) => {
+        if (focus !== 'all' && !view.involvedIdentities.includes(focus)) return false;
+        if (targetMinute !== null && !matchesIncidentWindow(view.instants, targetMinute, INCIDENT_WINDOW_MINUTES)) {
+          return false;
+        }
+        return true;
+      })
+    : [];
+  const shownDeliveries = targetMinute === null ? whiteboardDeliveries.slice(-20) : whiteboardDeliveries;
+  const sentSequences = shownDeliveries
+    .filter((view) => view.kind === 'message' && view.sequence !== null)
+    .map((view) => view.sequence as number);
+  const appliedSequences = shownDeliveries
+    .filter(
+      (view) =>
+        view.sequence !== null &&
+        view.receivers.some((receiver) => receiver.status === 'Applied' || receiver.status === 'ACK missing'),
+    )
+    .map((view) => view.sequence as number);
+  const lastSentSequence = sentSequences.length > 0 ? Math.max(...sentSequences) : null;
+  const lastAppliedSequence = appliedSequences.length > 0 ? Math.max(...appliedSequences) : null;
 
   return (
     <div className="space-y-4">
@@ -904,6 +1039,22 @@ export function LiveKitDiagnostics() {
                     Enter the time someone reported, for example 11:19. The list shows the 3 minutes before and after
                     on the server clock and on that participant’s phone clock when the clocks differ.
                   </p>
+                  <div className="mt-4">
+                    <h5 className="text-sm font-semibold text-ink">Whiteboard messages</h5>
+                    <p className="mt-1 text-xs text-muted">
+                      Last sent {lastSentSequence ?? '—'} · last applied {lastAppliedSequence ?? '—'}. A missing sequence
+                      means this browser did not handle that number. It does not by itself mean LiveKit dropped it.
+                    </p>
+                    <div className="mt-2 max-h-[28rem] space-y-2 overflow-auto">
+                      {shownDeliveries.length > 0 ? (
+                        shownDeliveries.map((view) => <WhiteboardMessageCard key={view.messageId} view={view} />)
+                      ) : (
+                        <div className="rounded-box border border-dashed border-hairline p-4 text-sm text-muted">
+                          No whiteboard message traces in this view.
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   <ol className="mt-3 max-h-[36rem] space-y-2 overflow-auto">
                     {timeline.length > 0 ? (
                       timeline.map((row) =>
