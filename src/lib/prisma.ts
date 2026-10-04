@@ -14,8 +14,22 @@ function createPrismaClient(): PrismaClient {
   if (!url) {
     throw new Error('DATABASE_URL is not set');
   }
+  //როცა Neon ზე გადახვალ, ჩართე ეს კოდი, რომ Neon ზე მუშაობდეს
+  // const pool = new Pool({ connectionString: url });
 
-  const pool = new Pool({ connectionString: url });
+//როცა Neon ზე გადახვალ, გათიშე ეს კოდი, აქედან...
+  const ca = process.env.DATABASE_CA;
+  if (!ca) {
+    throw new Error('DATABASE_CA is not set');
+  }
+  const pool = new Pool({
+    connectionString: url,
+    ssl: {
+      ca,
+    },
+  });
+//აქამდე
+
   const adapter = new PrismaPg(pool);
 
   return new PrismaClient({ adapter });
