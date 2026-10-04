@@ -42,7 +42,7 @@ export function SelectPanButtons({
         <div ref={menuRef} className="relative flex shrink-0 items-center">
           <div
             data-toolbar-key="select"
-            className="flex h-7 items-center rounded-box text-icons transition-colors sm:h-8">
+            className="flex h-7 items-center rounded-box text-mainText transition-colors sm:h-8">
             <button
               type="button"
               title={
@@ -131,7 +131,7 @@ export function SelectPanButtons({
           setActiveTool('hand');
           closeAllMenus();
         }}
-        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 sm:size-8">
+        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-mainText transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40 sm:size-8">
         <Hand className="size-3.5 sm:size-4" />
       </button>
     </div>

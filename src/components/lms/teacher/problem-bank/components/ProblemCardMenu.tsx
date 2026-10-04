@@ -91,7 +91,7 @@ export function ProblemCardMenu({
           setCourseGroups(
             (res.success && res.courseGroups ? res.courseGroups : [])
               .slice()
-              .sort((a, b) => a.title.localeCompare(b.title))
+              .sort((a, b) => a.title.localeCompare(b.title)),
           );
           setExpandedCourseIds([]);
         }
@@ -220,16 +220,14 @@ export function ProblemCardMenu({
 
   function toggleCourseExpand(courseId: string) {
     setExpandedCourseIds((prev) =>
-      prev.includes(courseId) ? prev.filter((id) => id !== courseId) : [...prev, courseId]
+      prev.includes(courseId) ? prev.filter((id) => id !== courseId) : [...prev, courseId],
     );
   }
 
   const filteredCourseGroups = courseGroups.filter(
     (group) =>
       group.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      group.students.some((student) =>
-        student.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      group.students.some((student) => student.name.toLowerCase().includes(searchQuery.toLowerCase())),
   );
 
   const items = [
@@ -328,17 +326,16 @@ export function ProblemCardMenu({
       {isClassModalOpen && typeof document !== 'undefined'
         ? createPortal(
             <div
-              className="fixed inset-0 z-[100] flex animate-in items-center justify-center bg-black/60 p-4 backdrop-blur-sm fade-in duration-200"
+              className="fixed inset-0 z-[100] flex animate-in items-center justify-center bg-black/60 backdrop-blur-sm fade-in duration-200"
               onClick={() => setIsClassModalOpen(false)}>
               <div
-                className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-box border border-hairline bg-white p-5 shadow-2xl transition-all sm:p-6"
+                className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-box border border-hairline bg-white shadow-2xl transition-all "
                 onClick={(e) => e.stopPropagation()}>
-                
                 {/* Header */}
-                <div className="flex items-center justify-between pb-3 border-b border-hairline">
+                <div className="flex items-center justify-between bg-sectionHeader border-b border-hairline px-4 py-5">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex size-9 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
-                      <GraduationCap className="size-5" />
+                    <div className="flex size-9 items-center justify-center text-brass-strong">
+                      <GraduationCap className="size-7" strokeWidth={2} />
                     </div>
                     <div>
                       <h3 className="text-base font-bold text-ink">ამოცანის გაგზავნა</h3>
@@ -348,168 +345,162 @@ export function ProblemCardMenu({
                   <button
                     type="button"
                     onClick={() => setIsClassModalOpen(false)}
-                    className="flex size-8 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-ink transition">
-                    <X className="size-4" />
+                    className="flex size-8 items-center justify-center text-muted hover:text-loss transition cursor-pointer">
+                    <X className="size-7" strokeWidth={2} />
                   </button>
                 </div>
+                <div className="px-4 pb-4">
+                  {/* Search */}
+                  <div className="relative my-3">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="მოძებნეთ კლასი ან მოსწავლე..."
+                      className="w-full rounded-box border border-hairline bg-inputs py-2.5 pl-10 pr-4 text-xs font-medium text-ink outline-none focus:ring-2 focus:ring-navy/20 transition"
+                    />
+                  </div>
 
-                {/* Search */}
-                <div className="relative my-3">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="მოძებნეთ კლასი ან მოსწავლე..."
-                    className="w-full rounded-box border border-hairline bg-paper py-2.5 pl-10 pr-4 text-xs font-medium text-ink outline-none focus:ring-2 focus:ring-navy/20 transition"
-                  />
-                </div>
+                  {/* Class / Student List */}
+                  <div className="flex-1 space-y-2 overflow-y-auto thin-scrollbar bg-mainBackground px-4 py-2 max-h-[320px]">
+                    {isLoadingClasses ? (
+                      <div className="py-10 flex flex-col items-center justify-center gap-2 text-xs text-muted">
+                        <Loader2 className="size-5 animate-spin text-navy" />
+                        <span>კლასები იტვირთება...</span>
+                      </div>
+                    ) : filteredCourseGroups.length === 0 ? (
+                      <div className="py-8 text-center text-xs text-muted">კლასი ვერ მოიძებნა</div>
+                    ) : (
+                      filteredCourseGroups.map((group) => {
+                        const isExpanded = expandedCourseIds.includes(group.id);
+                        const isClassSent = sentClassIds.includes(group.id);
+                        const isClassSending = sendingClassId === group.id;
 
-                {/* Class / Student List */}
-                <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[320px]">
-                  {isLoadingClasses ? (
-                    <div className="py-10 flex flex-col items-center justify-center gap-2 text-xs text-muted">
-                      <Loader2 className="size-5 animate-spin text-navy" />
-                      <span>კლასები იტვირთება...</span>
-                    </div>
-                  ) : filteredCourseGroups.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-muted">კლასი ვერ მოიძებნა</div>
-                  ) : (
-                    filteredCourseGroups.map((group) => {
-                      const isExpanded = expandedCourseIds.includes(group.id);
-                      const isClassSent = sentClassIds.includes(group.id);
-                      const isClassSending = sendingClassId === group.id;
+                        return (
+                          <div
+                            key={group.id}
+                            className="overflow-hidden rounded-box border border-hairline bg-main transition hover:border-navy/30">
+                            <div className="flex bg-sectionHeader items-center gap-2 p-3">
+                              <button
+                                type="button"
+                                onClick={() => toggleCourseExpand(group.id)}
+                                className="flex min-w-0 bg flex-1 items-center gap-3 text-left">
+                              
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-ink truncate">{group.title}</p>
+                                  <p className="text-[11px] text-muted">{group.students.length} მოსწავლე</p>
+                                </div>
+                              </button>
 
-                      return (
-                        <div
-                          key={group.id}
-                          className="overflow-hidden rounded-box border border-hairline bg-main transition hover:border-navy/30">
-                          <div className="flex items-center gap-2 p-3">
-                            <button
-                              type="button"
-                              onClick={() => toggleCourseExpand(group.id)}
-                              className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                              <div className="flex size-9 shrink-0 items-center justify-center rounded-box bg-[#465D73] shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] text-white text-xs font-bold">
-                                {group.title.charAt(0)}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold text-ink truncate">{group.title}</p>
-                                <p className="text-[11px] text-muted">{group.students.length} მოსწავლე</p>
-                              </div>
-                            </button>
+                              <button
+                                type="button"
+                                disabled={isClassSent || isClassSending}
+                                onClick={() => handleSendToClass(group)}
+                                className={[
+                                  'inline-flex items-center gap-1.5 rounded-box px-3 py-1.5 text-xs font-bold transition shadow-xs',
+                                  isClassSent
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : isClassSending
+                                      ? 'bg-paper text-muted border border-hairline'
+                                      : 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] hover:bg-[#526C85]',
+                                ].join(' ')}>
+                                {isClassSending ? (
+                                  <Loader2 className="size-3 animate-spin" />
+                                ) : isClassSent ? (
+                                  <Check className="size-3 text-emerald-600" />
+                                ) : (
+                                  <Send className="size-3" />
+                                )}
+                                <span>{isClassSent ? 'გაგზავნილია' : 'კლასს'}</span>
+                              </button>
 
-                            <button
-                              type="button"
-                              disabled={isClassSent || isClassSending}
-                              onClick={() => handleSendToClass(group)}
-                              className={[
-                                'inline-flex items-center gap-1.5 rounded-box px-3 py-1.5 text-xs font-bold transition shadow-xs',
-                                isClassSent
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : isClassSending
-                                    ? 'bg-paper text-muted border border-hairline'
-                                    : 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] hover:bg-[#526C85]',
-                              ].join(' ')}>
-                              {isClassSending ? (
-                                <Loader2 className="size-3 animate-spin" />
-                              ) : isClassSent ? (
-                                <Check className="size-3 text-emerald-600" />
-                              ) : (
-                                <Send className="size-3" />
-                              )}
-                              <span>{isClassSent ? 'გაგზავნილია' : 'კლასს'}</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => toggleCourseExpand(group.id)}
-                              aria-label={isExpanded ? 'დახურვა' : 'გახსნა'}
-                              className="flex size-7 shrink-0 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-ink transition">
-                              <ChevronDown
-                                className={`size-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                              />
-                            </button>
-                          </div>
-
-                          {isExpanded && (
-                            <div className="space-y-1 border-t border-hairline bg-sectionHeader p-2">
-                              {group.students.length === 0 ? (
-                                <p className="p-2 text-center text-[11px] text-muted">
-                                  ამ კლასში მოსწავლეები არ არიან
-                                </p>
-                              ) : (
-                                group.students.map((student) => {
-                                  const isStudentSent = sentStudentIds.includes(student.id);
-                                  const isStudentSending = sendingStudentId === student.id;
-
-                                  return (
-                                    <div
-                                      key={student.id}
-                                      className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-main p-2">
-                                      <div className="flex min-w-0 items-center gap-2">
-                                        <div className="flex size-7 shrink-0 items-center justify-center rounded-box bg-paper-deep text-[10px] font-bold text-muted">
-                                          {student.name.charAt(0)}
-                                        </div>
-                                        <span className="truncate text-xs font-medium text-ink">
-                                          {student.name}
-                                        </span>
-                                      </div>
-
-                                      <button
-                                        type="button"
-                                        disabled={isStudentSent || isStudentSending}
-                                        onClick={() => handleSendToStudent(student)}
-                                        className={[
-                                          'inline-flex items-center gap-1.5 rounded-box px-3 py-1.5 text-xs font-bold transition shadow-xs',
-                                          isStudentSent
-                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                            : isStudentSending
-                                              ? 'bg-paper text-muted border border-hairline'
-                                              : 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] hover:bg-[#526C85]',
-                                        ].join(' ')}>
-                                        {isStudentSending ? (
-                                          <Loader2 className="size-3 animate-spin" />
-                                        ) : isStudentSent ? (
-                                          <Check className="size-3 text-emerald-600" />
-                                        ) : (
-                                          <Send className="size-3" />
-                                        )}
-                                        <span>{isStudentSent ? 'გაგზავნილია' : 'გაგზავნა'}</span>
-                                      </button>
-                                    </div>
-                                  );
-                                })
-                              )}
+                              <button
+                                type="button"
+                                onClick={() => toggleCourseExpand(group.id)}
+                                aria-label={isExpanded ? 'დახურვა' : 'გახსნა'}
+                                className="flex size-7 shrink-0 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-ink transition">
+                                <ChevronDown
+                                  className={`size-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                />
+                              </button>
                             </div>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
 
-                {/* Comment / Instruction */}
-                <div className="mt-3 pt-3 border-t border-hairline">
-                  <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted">
-                    <MessageSquare className="size-3.5" />
-                    შენიშვნა / ინსტრუქცია
-                  </label>
-                  <textarea
-                    value={assignComment}
-                    onChange={(e) => setAssignComment(e.target.value)}
-                    placeholder="ჩაწერეთ დამატებითი მითითება მოსწავლეებისთვის..."
-                    className="w-full resize-none rounded-box border border-hairline bg-paper p-2.5 text-xs text-ink outline-none transition focus:border-navy focus:bg-white"
-                    rows={2}
-                  />
-                </div>
+                            {isExpanded && (
+                              <div className="space-y-1 border-t border-hairline bg-mainBackground p-2">
+                                {group.students.length === 0 ? (
+                                  <p className="p-2 text-center text-[11px] text-muted">
+                                    ამ კლასში მოსწავლეები არ არიან
+                                  </p>
+                                ) : (
+                                  group.students.map((student) => {
+                                    const isStudentSent = sentStudentIds.includes(student.id);
+                                    const isStudentSending = sendingStudentId === student.id;
 
-                <div className="pt-3 mt-2 border-t border-hairline flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setIsClassModalOpen(false)}
-                    className="rounded-box bg-paper px-4 py-2 text-xs font-bold text-ink hover:bg-paper-deep transition">
-                    დახურვა
-                  </button>
+                                    return (
+                                      <div
+                                        key={student.id}
+                                        className="flex items-center justify-between gap-2 rounded-box border border-hairline bg-main p-2">
+                                        <div className="flex min-w-0 items-center gap-2">
+                                          <span className="truncate text-xs font-medium text-ink">{student.name}</span>
+                                        </div>
+
+                                        <button
+                                          type="button"
+                                          disabled={isStudentSent || isStudentSending}
+                                          onClick={() => handleSendToStudent(student)}
+                                          className={[
+                                            'inline-flex items-center gap-1.5 rounded-box px-3 py-1.5 text-xs font-bold transition shadow-xs',
+                                            isStudentSent
+                                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                              : isStudentSending
+                                                ? 'bg-paper text-muted border border-hairline'
+                                                : 'bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] hover:bg-[#526C85]',
+                                          ].join(' ')}>
+                                          {isStudentSending ? (
+                                            <Loader2 className="size-3 animate-spin" />
+                                          ) : isStudentSent ? (
+                                            <Check className="size-3 text-emerald-600" />
+                                          ) : (
+                                            <Send className="size-3" />
+                                          )}
+                                          <span>{isStudentSent ? 'გაგზავნილია' : 'გაგზავნა'}</span>
+                                        </button>
+                                      </div>
+                                    );
+                                  })
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Comment / Instruction */}
+                  <div className="mt-3 pt-3 border-t border-hairline">
+                    <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted">
+                      <MessageSquare className="size-3.5" />
+                      შენიშვნა / ინსტრუქცია
+                    </label>
+                    <textarea
+                      value={assignComment}
+                      onChange={(e) => setAssignComment(e.target.value)}
+                      placeholder="ჩაწერეთ დამატებითი მითითება მოსწავლეებისთვის..."
+                      className="w-full resize-none rounded-box border border-hairline bg-inputs p-2.5 text-xs text-ink outline-none transition focus:border-navy focus:bg-white"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="pt-3 mt-2 border-t border-hairline flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setIsClassModalOpen(false)}
+                      className="rounded-box bg-paper px-4 py-2 text-xs font-bold text-ink hover:bg-paper-deep transition">
+                      დახურვა
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>,

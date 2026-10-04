@@ -116,8 +116,8 @@ export function StudentFlashcardsWorkspace({
 
       {assignments.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-box border border-dashed border-hairline bg-sectionHeader py-24 text-center">
-          <div className="flex size-16 items-center justify-center rounded-box bg-paper-deep text-muted/50 mb-4">
-            <Sparkles className="size-8" />
+          <div className="flex size-16 items-center justify-center  text-brass-strong/70 mb-4">
+            <Sparkles className="size-12" strokeWidth={2}/>
           </div>
           <h3 className="text-lg font-bold text-ink">{copy.emptyTitle}</h3>
           <p className="mt-1 max-w-sm text-sm text-muted">

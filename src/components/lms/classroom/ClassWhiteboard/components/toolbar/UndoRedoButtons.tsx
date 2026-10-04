@@ -20,7 +20,7 @@ export function UndoRedoButtons({ canUndo, canRedo, onUndo, onRedo }: Props) {
         onClick={onUndo}
         className={`flex size-7 items-center justify-center rounded-box transition-all duration-200 sm:size-8 ${
           canUndo
-            ? 'cursor-pointer text-icons hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98]'
+            ? 'cursor-pointer text-mainText hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98]'
             : 'cursor-not-allowed text-muted/40'
         }`}>
         <Undo2 className="size-3.5 sm:size-4" />
@@ -34,7 +34,7 @@ export function UndoRedoButtons({ canUndo, canRedo, onUndo, onRedo }: Props) {
         onClick={onRedo}
         className={`flex size-7 items-center justify-center rounded-box transition-all duration-200 sm:size-8 ${
           canRedo
-            ? 'cursor-pointer text-icons hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98]'
+            ? 'cursor-pointer text-mainText hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98]'
             : 'cursor-not-allowed text-muted/40'
         }`}>
         <Redo2 className="size-3.5 sm:size-4" />

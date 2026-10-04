@@ -19,7 +19,7 @@ import type { Locale } from '@/i18n/config';
 export const fieldClass =
   'w-full min-w-0 rounded-box border border-hairline bg-searchInput px-3 py-2 text-sm font-medium text-searchInputText shadow-sm transition-colors placeholder:text-muted focus:border-navy focus:outline-none';
 
-export const panelClass = 'rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5';
+export const panelClass = 'rounded-box border border-hairline bg-main shadow-sm ';
 
 export function sourceBadgeLabel(copy: ProblemBankCopy, problem: BankProblem) {
   if (problem.templateId === 'ai-verified') return copy.sources.verified;
@@ -149,10 +149,10 @@ export function uniqueProviders(status: AiModelStatus[]) {
 }
 
 export const difficultyTone: Record<ProblemDifficulty, string> = {
-  easy: 'bg-navy-tint text-navy',
-  medium: 'bg-brass-tint text-brass',
-  hard: 'border border-hairline bg-paper-deep text-brass-strong',
-  olympiad: 'bg-navy text-brass-soft',
+  easy: ' text-navy',
+  medium: ' text-brass',
+  hard: 'border border-hairline  text-brass-strong',
+  olympiad: ' text-brass-soft',
 };
 
 // components/lms/problem-bank/helpers.ts

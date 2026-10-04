@@ -225,17 +225,6 @@ export function ReportsView({
         <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
         <div className="p-3 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {/* <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
-              <BarChart3 className="size-5" />
-            </span>
-            <div className="min-w-0">
-              <h2 className="truncate text-base font-bold text-ink sm:text-lg">
-                ანგარიში
-              </h2>
-            </div>
-          </div> */}
-
           <div className="flex flex-wrap items-center gap-2">
             <div className="grid grid-cols-2 gap-1 bg-main p-1">
               <button

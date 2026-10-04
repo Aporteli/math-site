@@ -19,7 +19,7 @@ export function EraserMenu({
 }: Props) {
   return (
     <div ref={menuRef} data-toolbar-key="eraser" className="relative flex shrink-0 items-center">
-      <div className="flex h-7 items-center rounded-box text-icons transition-all hover:bg-mainButtonHover hover:text-mainText sm:h-8">
+      <div className="flex h-7 items-center rounded-box text-mainText transition-all hover:bg-mainButtonHover hover:text-mainText sm:h-8">
         <button
           type="button"
           title="საშლელი"
@@ -60,7 +60,7 @@ export function EraserMenu({
                 className={`flex size-6 cursor-pointer items-center justify-center rounded-box transition-colors sm:size-7 ${
                   eraserWidth === size
                     ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]'
-                    : 'text-icons hover:bg-sectionHeader hover:text-mainText'
+                    : 'text-mainText hover:bg-sectionHeader hover:text-mainText'
                 }`}>
                 <div className="rounded-box border-2 border-current" style={{ width: Math.min(16, 4 + size / 8), height: Math.min(16, 4 + size / 8) }} />
               </button>

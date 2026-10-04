@@ -123,8 +123,8 @@ export function LessonEditorModal({
       >
         <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex size-9 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
-              <Clock3 className="h-4 w-4" />
+            <span className="inline-flex size-9 items-center justify-center  text-brass-strong">
+              <Clock3 className="size-7" strokeWidth={2} />
             </span>
 
             <div className="min-w-0">

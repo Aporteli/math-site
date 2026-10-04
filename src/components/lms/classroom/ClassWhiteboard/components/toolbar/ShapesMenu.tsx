@@ -28,7 +28,7 @@ export function ShapesMenu({ menuRef, isOpen, setIsOpen, activeTool, setActiveTo
 
   return (
     <div ref={menuRef} data-toolbar-key="shapes" className="relative flex shrink-0 items-center">
-      <div className="flex h-7 items-center rounded-box text-icons transition-all hover:bg-mainButtonHover hover:text-mainText sm:h-8">
+      <div className="flex h-7 items-center rounded-box text-mainText transition-all hover:bg-mainButtonHover hover:text-mainText sm:h-8">
         <button
           type="button"
           title="ფიგურა"

@@ -25,7 +25,7 @@ export function ColorMenu({
         title="ფერის არჩევა"
         className="flex h-7 cursor-pointer items-center gap-1 rounded-box border border-hairline bg-main px-1.5 transition-colors duration-200 hover:bg-mainButtonHover sm:h-8">
         <div className="size-4 rounded-box border border-hairline shadow-2xs sm:size-4.5" style={{ backgroundColor: effectiveStroke }} />
-        <ChevronDown className={`size-3 text-icons transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`size-3 text-mainText transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (

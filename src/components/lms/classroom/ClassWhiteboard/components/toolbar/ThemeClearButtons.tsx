@@ -18,7 +18,7 @@ export function ThemeClearButtons({ isTeacher, isStudent, isDark, onToggleDark, 
         data-toolbar-key="theme"
         onClick={onToggleDark}
         title="თემის შეცვლა"
-        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] sm:size-8">
+        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-mainText transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] sm:size-8">
         {isDark ? <Sun className="size-3.5 text-brass sm:size-4" /> : <Moon className="size-3.5 sm:size-4" />}
       </button>
       {isTeacher && (

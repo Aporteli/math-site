@@ -36,12 +36,12 @@ export function TextImageButtons({
           setIsOpen(false);
           closeOtherMenus();
         }}
-        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] sm:size-8">
+        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-mainText transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] sm:size-8">
         <Type className="size-3.5 sm:size-4" />
       </button>
 
       <div ref={menuRef} data-toolbar-key="image" className="relative flex shrink-0 items-center">
-        <div className="flex h-7 items-center rounded-box text-icons transition-colors sm:h-8">
+        <div className="flex h-7 items-center rounded-box text-mainText transition-colors sm:h-8">
           <button
             type="button"
             title="სურათის ატვირთვა"
@@ -60,7 +60,7 @@ export function TextImageButtons({
               setIsOpen(!isOpen);
               closeOtherMenus();
             }}
-            className="flex h-full cursor-pointer items-center justify-center rounded-box border-l border-hairline px-1 text-icons transition-colors duration-200 hover:bg-mainButtonHover hover:text-mainText">
+            className="flex h-full cursor-pointer items-center justify-center rounded-box border-l border-hairline px-1 text-mainText transition-colors duration-200 hover:bg-mainButtonHover hover:text-mainText">
             <ChevronDown
               className={`size-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
             />

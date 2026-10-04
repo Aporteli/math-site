@@ -27,13 +27,13 @@ export function MaterialPreviewModal({ modal, onClose }: MaterialPreviewModalPro
         <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-surface px-5 py-4">
           <div className="flex min-w-0 items-center gap-3 pr-2">
             <div
-              className={`flex size-10 shrink-0 items-center justify-center rounded-box border ${
+              className={`flex size-10 shrink-0 items-center justify-center  ${
                 modal.isAnswer
-                  ? 'border-win/20 bg-win-tint text-win'
-                  : 'border-brass/25 bg-brass-tint text-brass-strong'
+                  ? ' text-win'
+                  : ' text-brass-strong'
               }`}
             >
-              {modal.isAnswer ? <CheckCircle2 className="size-5" /> : <Layers className="size-5" />}
+              {modal.isAnswer ? <CheckCircle2 className="size-7" strokeWidth={2}/> : <Layers className="size-7" strokeWidth={2}/>}
             </div>
             <div className="min-w-0">
               <h3 className="text-sm font-bold text-ink truncate">{modal.title}</h3>
@@ -56,8 +56,8 @@ export function MaterialPreviewModal({ modal, onClose }: MaterialPreviewModalPro
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-muted transition hover:bg-paper-deep hover:text-ink">
-              <X className="size-4" />
+              className="flex size-8 cursor-pointer items-center justify-center  text-mainText transition hover:text-navy">
+              <X className="size-7" />
             </button>
           </div>
         </div>

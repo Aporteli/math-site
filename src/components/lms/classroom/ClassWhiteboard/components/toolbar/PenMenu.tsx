@@ -25,7 +25,7 @@ export function PenMenu({
 }: Props) {
   return (
     <div ref={menuRef} data-toolbar-key="pen" className="relative flex shrink-0 items-center">
-      <div className="flex h-7 items-center text-icons transition-all sm:h-8">
+      <div className="flex h-7 items-center text-mainText transition-all sm:h-8">
         <button
           type="button"
           title="კალამი"
@@ -79,7 +79,7 @@ export function PenMenu({
                 className={`flex size-6 cursor-pointer items-center justify-center rounded-box transition-colors sm:size-7 ${
                   strokeWidth === size
                     ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]'
-                    : 'text-icons hover:bg-sectionHeader hover:text-mainText'
+                    : 'text-mainText hover:bg-sectionHeader hover:text-mainText'
                 }`}>
                 <div
                   className="rounded-box bg-current"

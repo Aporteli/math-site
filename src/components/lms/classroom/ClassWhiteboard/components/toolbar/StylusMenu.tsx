@@ -33,7 +33,7 @@ export function StylusMenu({
           className={`flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box transition-all duration-200 active:scale-[0.98] sm:size-8 ${
             stylusOnly
               ? 'bg-[#A66A32] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_5px_rgba(166,106,50,0.22)]'
-              : 'text-icons hover:bg-mainButtonHover hover:text-mainText'
+              : 'text-mainText hover:bg-mainButtonHover hover:text-mainText'
           }`}>
           <PenTool className="size-3.5 sm:size-4" />
         </button>
@@ -45,7 +45,7 @@ export function StylusMenu({
           className={`flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box transition-all duration-200 active:scale-[0.98] sm:size-8 ${
             isOpen
               ? 'bg-mainButton text-mainText shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-1px_0_rgba(0,0,0,0.08)]'
-              : 'text-icons hover:bg-mainButtonHover hover:text-mainText'
+              : 'text-mainText hover:bg-mainButtonHover hover:text-mainText'
           }`}>
           <Settings2 className="size-3.5 sm:size-4" />
         </button>

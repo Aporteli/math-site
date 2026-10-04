@@ -574,7 +574,7 @@ export function TeacherAiChatPanel({
         </h2>
         <button
           type="button"
-          className="inline-flex size-9 items-center justify-center rounded-box text-mainText hover:text-navy transition-colors cursor-pointer"
+          className="inline-flex size-9 items-center justify-center rounded-box text-mainText hover:text-loss transition-colors cursor-pointer"
           aria-label={copy.close}
           onClick={onClose}>
           <X className="size-6" strokeWidth={2.5} aria-hidden="true" />

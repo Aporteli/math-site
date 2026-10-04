@@ -60,7 +60,7 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
       <span className={`h-1 w-full shrink-0 ${isGraded ? 'bg-win' : 'bg-navy'}`} aria-hidden="true" />
 
       <div
-        className={`relative mx-3 mt-3 overflow-hidden rounded-box   bg-main ${
+        className={`relative mx-3 mt-3 overflow-hidden  bg-main ${
           imageUrls.length > 1 ? 'max-h-52' : 'h-36'
         }`}>
         {imageUrls.length > 1 ? (
@@ -97,7 +97,7 @@ export function AssignmentTaskCard({ assignment, onSelectProblem }: AssignmentTa
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3 bg-sectionHeader">
+      <div className="flex flex-1 flex-col border-t border-border/10 mt-4 justify-between gap-3 px-3.5 pb-3.5 pt-3 bg-sectionHeader">
         <div className="space-y-2">
           <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{assignment.title}</p>
           {showNote ? (

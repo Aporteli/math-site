@@ -1825,7 +1825,7 @@ export function ProblemBankWorkspace({
         <aside className="relative z-20 order-1 flex min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
           <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
           <div className="flex min-h-0 flex-1 flex-col ">
-            <h2 className="shrink-0 bg-sectionHeader border-b border-hairline py-5 px-2 text-sm font-semibold tracking-wide text-brass">
+            <h2 className="shrink-0 bg-sectionHeader border-b border-hairline py-5 px-4 text-sm font-semibold tracking-wide text-brass">
               {copy.filtersTitle}
             </h2>
             <div className="mt-4 bg-main min-h-0 flex-1 space-y-8 overflow-y-auto gap-10 px-4 py-3">
@@ -1883,15 +1883,16 @@ export function ProblemBankWorkspace({
         </aside>
 
         <section
-          className={`${panelClass} order-3 flex min-h-[20rem] min-w-0 flex-col xl:order-2 xl:min-h-0`}
+          className={`${panelClass} order-3 flex min-h-[20rem] min-w-0 flex-col overflow-hidden xl:order-2 xl:min-h-0`}
           aria-label={copy.listLabel}>
-          <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-hairline pb-3">
-            <p className="text-sm text-muted" aria-live="polite">
+          <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
+          <div className="flex shrink-0 flex-wrap bg-sectionHeader items-center justify-between gap-2 border-b border-hairline py-5 px-4">
+            <p className="text-sm text-mainText" aria-live="polite">
               {replaceCount(copy.results, visible.length)}
             </p>
             {bulkSelectMode && visible.length > 0 ? (
               <div className="flex flex-wrap items-center gap-2">
-                <label className="inline-flex items-center gap-2 text-xs font-medium text-body">
+                <label className="inline-flex items-center gap-2 text-xs font-medium text-mainText">
                   <input
                     type="checkbox"
                     className="size-3.5 rounded border-hairline text-navy focus:ring-navy/30"
@@ -1903,7 +1904,7 @@ export function ProblemBankWorkspace({
                 {selectedVisibleIds.length > 0 ? (
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1 rounded-box bg-paper px-2 py-1 text-xs font-medium text-body hover:text-navy disabled:opacity-50"
+                    className="inline-flex items-center gap-1 rounded-box bg-mainButton px-2 py-1 text-xs font-medium text-mainText hover:text-navy disabled:opacity-50"
                     disabled={saving}
                     onClick={() => void discardSelectedProblems()}>
                     <Trash2 className="size-3.5" aria-hidden="true" />
@@ -1931,7 +1932,7 @@ export function ProblemBankWorkspace({
               </div>
             </div>
           ) : (
-            <ul className="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto pe-0.5">
+            <ul className="mt-3 min-h-0 flex-1 space-y-2 overflow-y-auto thin-scrollbar pe-0.5 px-4">
               {visible.map((problem) => {
                 const active = problem.id === selectedId;
                 const inSet = lessonSetIds.includes(problem.id);
@@ -1994,7 +1995,7 @@ export function ProblemBankWorkspace({
                           </span>
                           {problem.year ? <span className="text-xs text-muted">{copy.years[problem.year]}</span> : null}
                           {problem.source !== 'bank' ? (
-                            <span className="rounded-box bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
+                            <span className="rounded-box px-2 py-0.5 text-[11px] font-semibold text-brass">
                               {sourceBadgeLabel(copy, problem)}
                             </span>
                           ) : null}
@@ -2004,7 +2005,7 @@ export function ProblemBankWorkspace({
                           {showSaveToLab && labIds.includes(problem.id) ? (
                             <span
                               className={[
-                                'rounded-box bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass',
+                                'rounded-box px-2 py-0.5 text-[11px] font-semibold text-brass',
                                 inSet ? '' : 'ml-auto',
                               ].join(' ')}>
                               {copy.stats.inLab}
@@ -2013,7 +2014,7 @@ export function ProblemBankWorkspace({
                           {!showSaveToLab && !isUnsavedId(problem.id) && !isCatalogSeedId(problem.id) ? (
                             <span
                               className={[
-                                'rounded-box bg-navy-tint px-2 py-0.5 text-[11px] font-semibold text-navy',
+                                'rounded-box  px-2 py-0.5 text-[11px] font-semibold text-navy',
                                 inSet ? '' : 'ml-auto',
                               ].join(' ')}>
                               {copy.stats.inBank}
@@ -2072,14 +2073,15 @@ export function ProblemBankWorkspace({
         </section>
 
         <section
-          className="order-2 flex min-h-0 min-w-0 flex-col rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5 xl:order-3"
+          className="order-2 flex min-h-0 min-w-0 flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-sm xl:order-3"
           aria-label={copy.previewLabel}>
+          <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
           {selected ? (
             <>
-              <p className="shrink-0 border-b border-navy/10 pb-3 text-sm font-semibold tracking-wide text-brass">
+              <p className="shrink-0 bg-sectionHeader border-b border-navy/10  text-sm font-semibold tracking-wide text-brass px-4 py-5">
                 {copy.prompt}
               </p>
-              <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-y-auto pe-0.5">
+              <div className="mt-4 flex min-h-0 flex-1 flex-col overflow-y-auto px-4">
                 <div className="group relative min-w-0 overflow-x-auto rounded-box bg-paper-deep px-4 py-5 pe-12">
                   <KatexPreview tex={selected.promptTex} displayMode className="block min-w-0 text-ink" />
                   <CopyPromptButton
@@ -2099,12 +2101,12 @@ export function ProblemBankWorkspace({
                     </>
                   ) : null}
                   {showSaveToLab && labIds.includes(selected.id) ? (
-                    <span className="rounded-box bg-brass-tint px-2 py-0.5 text-[11px] font-semibold text-brass">
+                    <span className="rounded-box px-2 py-0.5 text-[11px] font-semibold text-brass">
                       {copy.stats.inLab}
                     </span>
                   ) : null}
                   {!showSaveToLab && !isUnsavedId(selected.id) && !isCatalogSeedId(selected.id) ? (
-                    <span className="rounded-box bg-navy-tint px-2 py-0.5 text-[11px] font-semibold text-navy">
+                    <span className="rounded-box  px-2 py-0.5 text-[11px] font-semibold text-navy">
                       {copy.stats.inBank}
                     </span>
                   ) : null}

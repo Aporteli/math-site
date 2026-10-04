@@ -16,7 +16,7 @@ export function LaserButton({ setActiveTool, closeAllMenus }: Props) {
         data-toolbar-key="laser"
         title="ლაზერული მაჩვენებელი (Laser Pointer)"
         onClick={() => { setActiveTool('laser'); closeAllMenus(); }}
-        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-icons transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] sm:size-8">
+        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-mainText transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] sm:size-8">
         <Crosshair className="size-3.5 sm:size-4" />
       </button>
     </div>

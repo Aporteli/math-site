@@ -100,11 +100,11 @@ export function ProblemDetailModal({
           <div className="flex items-center justify-between border-b border-hairline bg-surface px-5 py-4">
             <div className="flex min-w-0 items-center gap-3 pr-2">
               <div
-                className={`flex size-10 shrink-0 items-center justify-center rounded-box border ${
-                  isGraded ? 'border-win/20 bg-win-tint text-win' : 'border-navy/20 bg-navy-tint text-navy'
+                className={`flex size-10 shrink-0 items-center justify-center  ${
+                  isGraded ? ' text-win' : ' text-navy'
                 }`}
               >
-                {isGraded ? <CheckCircle2 className="size-5" /> : <BookOpen className="size-5" />}
+                {isGraded ? <CheckCircle2 className="size-7" strokeWidth={2}/> : <BookOpen className="size-7" strokeWidth={2}/>}
               </div>
               <div className="min-w-0">
                 <h3 className="truncate text-sm font-bold text-ink">
@@ -116,9 +116,9 @@ export function ProblemDetailModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-box border border-hairline bg-paper text-muted transition hover:bg-paper-deep hover:text-ink"
+              className="flex size-8 shrink-0 cursor-pointer items-center justify-center  text-mainText transition  hover:text-navy"
             >
-              <X className="size-4" />
+              <X className="size-7" />
             </button>
           </div>
 

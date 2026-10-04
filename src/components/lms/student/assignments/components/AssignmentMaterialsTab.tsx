@@ -99,7 +99,7 @@ export function AssignmentMaterialsTab({
                   )}
                 </div>
 
-                <div className="flex flex-1 flex-col justify-between gap-3 px-3.5 pb-3.5 pt-3">
+                <div className="flex flex-1 flex-col border-t border-border/10 justify-between gap-3 px-3.5 pb-3.5 pt-3">
                   <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{material.title}</p>
                   <span
                     className="inline-flex items-center gap-1.5

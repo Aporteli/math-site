@@ -352,20 +352,20 @@ export function EditProblemModal({
           aria-modal="true"
           aria-labelledby={titleId}
           className="pointer-events-auto flex max-h-full w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl">
-          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
+          <div className="flex shrink-0 items-start bg-sectionHeader justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
             <h2 id={titleId} className="text-lg font-semibold tracking-tight text-ink">
               {ui.title}
             </h2>
             <button
               type="button"
-              className="inline-flex size-9 items-center justify-center rounded-box text-muted hover:bg-paper hover:text-navy"
+              className="inline-flex size-9 items-center justify-center text-muted hover:text-loss"
               aria-label={ui.close}
               onClick={onClose}>
-              <X className="size-4" aria-hidden="true" />
+              <X className="size-7" aria-hidden="true" />
             </button>
           </div>
 
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
+          <div className="min-h-0 flex-1 bg-main space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
                 <label className="block text-sm font-medium text-ink" htmlFor={`${titleId}-difficulty`}>
@@ -489,7 +489,7 @@ export function EditProblemModal({
             <MathFieldPreview label={ui.previewLabel} tex={solution} />
           </div>
 
-          <div className="flex shrink-0 flex-col gap-2 border-t border-hairline px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:px-5">
+          <div className="flex shrink-0 flex-col gap-2 border-t border-hairline bg-sectionHeader px-4 py-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:px-5">
             {notice ? <p className="w-full text-sm text-brass-strong sm:me-auto sm:w-auto">{notice}</p> : null}
             <button
               type="button"
