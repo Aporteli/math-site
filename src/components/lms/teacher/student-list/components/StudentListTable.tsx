@@ -189,7 +189,7 @@ export function StudentListTable({ sections, groups, payments, onSelect, onUpdat
                     {session.startTime}
                   </div>
                   <div className="min-w-0 flex-1 space-y-1.5 border-l border-hairline pl-3">
-                    <p className="rounded-box bg-brass-tint px-1.5 py-0.5 text-[10px] font-bold text-brass-strong">
+                    <p className=" px-1.5 py-0.5 text-[10px] font-bold text-brass-strong">
                       {session.kind === 'group'
                         ? `${getGroupName(session.groupId, groups)} · ${session.lessons.length} მოსწავლე`
                         : 'სახლში'}

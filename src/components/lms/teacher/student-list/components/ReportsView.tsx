@@ -680,7 +680,7 @@ function YearlyReport({ data, year }: { data: YearlyData; year: number }) {
             <p className="text-sm font-bold text-ink">{year} წლის შემოსავალი</p>
           </div>
           {data.best.total > 0 && (
-            <div className="rounded-box border border-brass/30 bg-brass-tint px-2.5 py-1 text-[10px] font-bold text-brass-strong">
+            <div className=" px-2.5 py-1 text-[10px] font-bold text-brass-strong">
               საუკეთესო: {data.best.label} ({formatPrice(data.best.total)})
             </div>
           )}

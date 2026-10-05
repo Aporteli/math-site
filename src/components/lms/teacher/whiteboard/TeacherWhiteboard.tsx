@@ -2173,11 +2173,11 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             className="absolute bottom-14 z-30 w-auto max-w-[calc(100%-1rem)] animate-in rounded-box border border-hairline bg-main/95 p-3 shadow-2xl backdrop-blur-md fade-in zoom-in-95 slide-in-from-bottom-2 duration-150 inset-x-2 sm:inset-x-auto sm:max-w-2xl">
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-hairline px-1">
               <div className="flex items-center gap-2">
-                <Layers className="size-4 text-navy" />
+                <Layers className="size-3" strokeWidth={2} />
                 <span className="text-xs font-bold text-ink">დაფის გვერდები ({pages.length})</span>
               </div>
-              <button type="button" onClick={() => setIsPagesTrayOpen(false)} className="text-muted hover:text-ink">
-                <X className="size-4" />
+              <button type="button" onClick={() => setIsPagesTrayOpen(false)} className="text-muted hover:text-loss cursor-pointer transition-colors">
+                <X className="size-4" strokeWidth={2} />
               </button>
             </div>
             <div className="flex items-center gap-3 overflow-x-auto pb-1.5 pt-1 px-1 custom-scrollbar">
@@ -2290,8 +2290,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           <div className="flex max-h-[88vh] w-full max-w-xl animate-in flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-hairline bg-paper/30 px-6 py-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex size-9 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
-                  <Send className="size-4" />
+                <div className="flex size-9 items-center justify-center text-brass-strong">
+                  <Send className="size-7" strokeWidth={2} />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-ink leading-tight">დაფის გაგზავნა მოსწავლეებთან</h3>
@@ -2304,8 +2304,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
                   setIsAssignModalOpen(false);
                   setAssignError(null);
                 }}
-                className="flex size-7 cursor-pointer items-center justify-center rounded-box border border-hairline bg-main text-muted transition-colors hover:bg-sectionHeader hover:text-ink">
-                <X className="size-4" />
+                className="flex size-7 cursor-pointer items-center justify-center text-muted transition-colors hover:text-loss">
+                <X className="size-7" strokeWidth={2} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">

@@ -26,8 +26,8 @@ export function CourseModal({
         <div className="w-full max-w-md rounded-box border border-hairline bg-paper p-6 shadow-2xl">
           <div className="flex justify-between items-center mb-5 border-b border-hairline pb-3">
             <h3 className="text-lg font-bold text-ink">{formData.id ? 'ჯგუფის რედაქტირება' : 'ახალი ჯგუფო'}</h3>
-            <button onClick={closeCourseModal} className="cursor-pointer text-muted transition-colors hover:text-ink">
-              <X className="size-5" />
+            <button onClick={closeCourseModal} className="cursor-pointer text-muted transition-colors hover:text-loss">
+              <X className="size-7"  strokeWidth={2}/>
             </button>
           </div>
 

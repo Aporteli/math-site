@@ -156,8 +156,8 @@ export function ClassroomAiModal({ isOpen, onClose }: ClassroomAiModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 cursor-pointer items-center justify-center rounded-box text-muted transition-colors hover:bg-rose-500/15 hover:text-rose-500">
-              <X className="size-4" />
+              className="flex size-8 cursor-pointer items-center justify-center  text-muted transition-colors  hover:text-loss">
+              <X className="size-7" strokeWidth={2} />
             </button>
           </div>
         </div>

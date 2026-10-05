@@ -28,8 +28,8 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
       <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl">
         <div className="flex items-center justify-between border-b border-hairline bg-sectionHeader px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
-              <UserCheck className="size-5" />
+            <div className="flex size-10 items-center justify-center text-brass-strong">
+              <UserCheck className="size-7" strokeWidth={2} />
             </div>
             <div>
               <h3 className="text-lg font-bold text-ink">მოსწავლეების მიბმა ჯგუფებზე</h3>
@@ -41,8 +41,8 @@ export function AttachStudentsModal({ startEditStudentEnrollments, isStudentsMod
               setIsStudentsModalOpen(false);
               setEditingStudent(null);
             }}
-            className="cursor-pointer text-muted transition-colors hover:text-ink">
-            <X className="size-5" />
+            className="cursor-pointer text-muted transition-colors hover:text-loss">
+            <X className="size-7" strokeWidth={2} />
           </button>
         </div>
 

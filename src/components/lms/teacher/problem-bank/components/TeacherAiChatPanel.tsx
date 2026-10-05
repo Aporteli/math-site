@@ -1013,8 +1013,8 @@ export function TeacherAiChatPanel({
           <div className="flex max-h-[85vh] w-full max-w-lg animate-in flex-col overflow-hidden rounded-box border border-hairline bg-paper shadow-2xl zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-hairline bg-paper/30 px-6 py-4">
               <div className="flex items-center gap-2.5">
-                <div className="flex size-9 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
-                  <Send className="size-4" />
+                <div className="flex size-9 items-center justify-center text-brass-strong">
+                  <Send className="size-7" strokeWidth={2} />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-ink leading-tight">ამოცანის გაგზავნა მოსწავლეებთან</h3>
@@ -1027,8 +1027,8 @@ export function TeacherAiChatPanel({
                   setIsAssignModalOpen(false);
                   setAssignError(null);
                 }}
-                className="flex size-7 items-center justify-center rounded-box border border-hairline bg-white text-muted hover:bg-paper hover:text-ink transition-colors">
-                <X className="size-4" />
+                className="flex size-7 items-center justify-center rounded-box border border-hairline  text-muted  hover:text-loss transition-colors">
+                <X className="size-4"  strokeWidth={2}/>
               </button>
             </div>
 

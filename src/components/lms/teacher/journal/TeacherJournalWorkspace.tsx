@@ -986,13 +986,6 @@ export function TeacherJournalWorkspace() {
             <PanelLeftOpen className="size-4" />
           </button>
 
-          <div className="hidden size-9 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong sm:flex">
-            {loading ? (
-              <Loader2 className="size-4 animate-spin text-brass-strong" />
-            ) : (
-              <CalendarIcon className="size-4 text-brass-strong" />
-            )}
-          </div>
           <div>
             <h3 className="text-base font-bold text-ink leading-tight">ჟურნალი</h3>
             <p className="text-xs text-muted capitalize">{headerTitle}</p>

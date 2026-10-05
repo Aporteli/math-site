@@ -520,7 +520,7 @@ export function StudentList({
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
-      <div className="flex min-w-0 flex-col gap-3 overflow-hidden rounded-box border border-hairline bg-main shadow-sm">
+      <div className="flex min-w-0 flex-col gap-3 overflow-visible rounded-box border border-hairline bg-main shadow-sm">
         <div className="h-1 shrink-0 bg-brass" aria-hidden="true" />
         <div className="flex min-w-0 flex-col gap-3 p-3 sm:p-5">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

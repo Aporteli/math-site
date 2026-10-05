@@ -61,7 +61,7 @@ export function TeacherWorkspaceHeader({
         </div>
 
         {activeStudent ? (
-          <div className="flex w-full items-stretch overflow-hidden rounded-box border border-border/10 bg-main shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_4px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.04)] transition-shadow duration-200 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_10px_rgba(0,0,0,0.10),0_1px_2px_rgba(0,0,0,0.05)] sm:w-auto">
+          <div className="flex w-fit max-w-full shrink-0 items-stretch overflow-hidden rounded-box border border-border/10 bg-main shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_2px_4px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.04)] transition-shadow duration-200 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_4px_10px_rgba(0,0,0,0.10),0_1px_2px_rgba(0,0,0,0.05)]">
           <button
             type="button"
             onClick={() => onShiftDate(-1)}

@@ -56,7 +56,7 @@ function CourseCard({
 
   return (
     <article className="relative flex h-full min-w-0 flex-col overflow-hidden rounded-box border border-hairline bg-main p-5 shadow-sm transition-all duration-200 before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass hover:-translate-y-0.5 hover:shadow-md sm:p-6">
-      <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
+      <span className="inline-flex size-10 shrink-0 items-center justify-center  text-brass-strong">
         <Icon className="size-5" aria-hidden="true" />
       </span>
       <h3 className="mt-4 break-words text-lg font-semibold leading-snug text-ink">{item.title}</h3>

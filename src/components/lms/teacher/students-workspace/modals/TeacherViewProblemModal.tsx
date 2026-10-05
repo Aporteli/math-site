@@ -107,7 +107,7 @@ export function TeacherViewProblemModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex size-7 shrink-0 items-center justify-center text-mainText hover:text-navy transition-colors cursor-pointer">
+              className="flex size-7 shrink-0 items-center justify-center text-mainText hover:text-loss transition-colors cursor-pointer">
               <X className="size-6" strokeWidth={2.5} />
             </button>
           </div>

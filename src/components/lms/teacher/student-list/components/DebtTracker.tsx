@@ -204,7 +204,7 @@ export function DebtTracker({
                         {student.firstName} {student.lastName}
                       </p>
                       {isIndividual ? (
-                        <span className="shrink-0 rounded-box border border-brass/30 bg-brass-tint px-2 py-0.5 text-[9px] font-bold text-brass-strong">
+                        <span className="shrink-0 px-2 py-0.5 text-[9px] font-bold text-brass-strong">
                           სახლში
                         </span>
                       ) : null}

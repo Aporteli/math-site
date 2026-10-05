@@ -47,9 +47,9 @@ function ToolCard({
   return (
     <article className="group relative flex h-full min-w-0 flex-col overflow-hidden rounded-box border border-hairline bg-main shadow-sm transition-all before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-brass hover:shadow-md">
       <Link href={localePath(locale, tool.href)} className="flex h-full min-w-0 flex-1 flex-col p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-3">
-          <span className={`inline-flex size-10 shrink-0 items-center justify-center rounded-box ${tone.chip}`}>
-            <Icon className="size-5" aria-hidden="true" />
+        <div className="flex items-center justify-between gap-3">
+          <span className={`inline-flex size-10 shrink-0 items-center justify-center  ${tone.chip}`}>
+            <Icon className="size-7" aria-hidden="true" strokeWidth={2} />
           </span>
           <span
             className={`min-w-0 max-w-[11rem] truncate rounded-box px-2.5 py-1 text-xs font-semibold leading-none ${tone.badge}`}>

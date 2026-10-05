@@ -122,8 +122,8 @@ export function IndividualStudentModal({
       >
         <div className="flex items-center justify-between gap-3 border-b border-hairline px-4 py-4 sm:px-5">
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex size-9 items-center justify-center rounded-box border border-hairline bg-brass-tint text-brass-strong">
-              <User2 className="h-4 w-4" />
+            <span className="inline-flex size-9 items-center justify-center  text-brass-strong">
+              <User2 className="size-7" strokeWidth={2} />
             </span>
             <div className="min-w-0">
               <h2 className="text-sm font-bold text-ink">
@@ -134,9 +134,9 @@ export function IndividualStudentModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-box text-muted transition hover:bg-sectionHeader hover:text-ink"
+            className="flex size-10 shrink-0 cursor-pointer items-center justify-center text-muted transition hover:text-loss"
           >
-            <X className="h-4 w-4" />
+            <X className="size-7" strokeWidth={2} />
           </button>
         </div>
 

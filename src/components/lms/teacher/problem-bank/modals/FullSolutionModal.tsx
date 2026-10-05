@@ -154,10 +154,10 @@ ${styles}
             </div>
             <button
               type="button"
-              className="inline-flex size-9 items-center justify-center rounded-box text-mainText hover:bg-sectionHeader hover:text-navy"
+              className="inline-flex size-9 items-center justify-center rounded-box text-mainText hover:bg-sectionHeader hover:text-loss"
               aria-label={ui.close}
               onClick={onClose}>
-              <X className="size-7" aria-hidden="true" />
+              <X className="size-7" aria-hidden="true"  strokeWidth={2}/>
             </button>
           </div>
 

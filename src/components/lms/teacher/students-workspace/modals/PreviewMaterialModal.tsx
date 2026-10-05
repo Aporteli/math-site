@@ -55,8 +55,8 @@ export function PreviewMaterialModal({ material, onClose }: PreviewMaterialModal
             <button
               type="button"
               onClick={onClose}
-              className="flex size-8 items-center justify-center rounded-box border border-hairline bg-surface text-muted hover:bg-paper-deep hover:text-ink transition-colors cursor-pointer">
-              <X className="size-4" />
+              className="flex size-8 items-center justify-center text-muted hover:text-loss transition-colors cursor-pointer">
+              <X className="size-7" strokeWidth={2} />
             </button>
           </div>
         </div>
