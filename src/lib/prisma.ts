@@ -1,24 +1,25 @@
-import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
-export const runtime = 'nodejs';
+const PRISMA_GENERATION = 'livekit-diagnostics-v1';
 
-export async function GET() {
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+  prismaGeneration: string | undefined;
+};
+
+function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL;
-  const ca = process.env.DATABASE_CA;
 
   if (!url) {
-    return NextResponse.json(
-      { ok: false, error: 'DATABASE_URL is not set' },
-      { status: 500 }
-    );
+    throw new Error('DATABASE_URL is not set');
   }
 
+  const ca = process.env.DATABASE_CA;
+
   if (!ca) {
-    return NextResponse.json(
-      { ok: false, error: 'DATABASE_CA is not set' },
-      { status: 500 }
-    );
+    throw new Error('DATABASE_CA is not set');
   }
 
   const pool = new Pool({
@@ -29,46 +30,63 @@ export async function GET() {
     },
   });
 
-  try {
-    const result = await pool.query(`
-      SELECT
-        current_user,
-        current_database(),
-        inet_client_addr()::text AS client_ip,
-        ssl,
-        version,
-        cipher
-      FROM pg_stat_ssl
-      WHERE pid = pg_backend_pid()
-    `);
+  const adapter = new PrismaPg(pool);
 
-    return NextResponse.json({
-      ok: true,
-      database: result.rows[0],
-    });
-  } catch (error: unknown) {
-    const e = error as {
-      code?: string;
-      severity?: string;
-      message?: string;
-      detail?: string;
-      hint?: string;
-    };
+  return new PrismaClient({ adapter });
+}
 
-    return NextResponse.json(
-      {
-        ok: false,
-        error: {
-          code: e.code,
-          severity: e.severity,
-          message: e.message,
-          detail: e.detail,
-          hint: e.hint,
-        },
-      },
-      { status: 500 }
-    );
-  } finally {
-    await pool.end();
-  }
+function hasCurrentDelegates(client: PrismaClient | undefined) {
+  if (!client) return false;
+
+  const family = (client as { problemFamily?: { findMany?: unknown } }).problemFamily;
+  if (typeof family?.findMany !== 'function') return false;
+
+  const homeGroup = (client as { homeGroup?: { findMany?: unknown } }).homeGroup;
+  if (typeof homeGroup?.findMany !== 'function') return false;
+
+  const diagnostics = (
+    client as {
+      liveKitDiagnosticSession?: { findMany?: unknown };
+    }
+  ).liveKitDiagnosticSession;
+
+  if (typeof diagnostics?.findMany !== 'function') return false;
+
+  const dmmf = (
+    client as {
+      _runtimeDataModel?: {
+        models?: {
+          Problem?: {
+            fields?: { name: string }[];
+          };
+        };
+      };
+    }
+  )._runtimeDataModel?.models?.Problem?.fields;
+
+  if (!Array.isArray(dmmf)) return true;
+
+  const names = new Set(dmmf.map((field) => field.name));
+
+  return names.has('collection') && names.has('originId');
+}
+
+if (
+  process.env.NODE_ENV !== 'production' &&
+  globalForPrisma.prisma &&
+  (
+    globalForPrisma.prismaGeneration !== PRISMA_GENERATION ||
+    !hasCurrentDelegates(globalForPrisma.prisma)
+  )
+) {
+  void globalForPrisma.prisma.$disconnect();
+  globalForPrisma.prisma = undefined;
+}
+
+export const prisma =
+  globalForPrisma.prisma ?? createPrismaClient();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+  globalForPrisma.prismaGeneration = PRISMA_GENERATION;
 }
