@@ -12,6 +12,11 @@ import type { UserRole } from "@/lib/auth/roles";
 
 export const getSession = cache(() => getServerSession(authOptions));
 
+export function deletedAccountRedirect(locale: Locale): never {
+  const next = encodeURIComponent(localePath(locale, "/"));
+  redirect(`/api/auth/account-status?next=${next}`);
+}
+
 export async function requireRole(locale: Locale, roles: UserRole[]) {
   const session = await getSession();
 
@@ -20,9 +25,12 @@ export async function requireRole(locale: Locale, roles: UserRole[]) {
     redirect(localePath(locale, LOGIN_PATH));
   }
   let currentRole = session.user.role;
+  let accountMissing = false;
   try {
     const dbUser = await findRequestUser(session.user.id ?? "", email);
-    if (dbUser) {
+    if (!dbUser) {
+      accountMissing = true;
+    } else {
       currentRole = dbUser.role as UserRole;
       session.user.role = currentRole;
       session.user.id = dbUser.id;
@@ -31,6 +39,7 @@ export async function requireRole(locale: Locale, roles: UserRole[]) {
   } catch (error) {
     console.error("REQUIRE_ROLE_DB_FETCH_ERROR:", error);
   }
+  if (accountMissing) deletedAccountRedirect(locale);
   if (!roles.includes(currentRole)) {
     redirect(localePath(locale, dashboardHomeForRole(currentRole)));
   }

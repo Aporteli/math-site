@@ -3,7 +3,7 @@ import { DashboardShell } from '@/components/layout/DashboardShell';
 import { isLocale, localePath } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
 import { findRequestUser } from '@/lib/auth/request-user';
-import { getSession } from '@/lib/auth/session';
+import { deletedAccountRedirect, getSession } from '@/lib/auth/session';
 import { isLocalDashboardPreview } from '@/lib/auth/paths';
 
 export const dynamic = 'force-dynamic';
@@ -26,8 +26,9 @@ export default async function StudentLayout({
 
   // ვიღებთ მომხმარებლის რეალურ, უახლეს როლს პირდაპირ ბაზიდან (და არა ძველი JWT ქუქიდან)
   const dbUser = await findRequestUser(session.user.id, session.user.email ?? '');
+  if (!dbUser) deletedAccountRedirect(locale);
 
-  const currentRole = dbUser?.role ?? session.user.role;
+  const currentRole = dbUser.role;
 
   // თუ ბაზაშიც არ არის STUDENT ან ADMIN, მხოლოდ მაშინ გადავიდეს მთავარზე
   if (currentRole !== 'STUDENT' && currentRole !== 'ADMIN') {

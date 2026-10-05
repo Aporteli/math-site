@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { SignOutButton } from '@/components/auth/SignOutButton';
+import { DashboardAccountWatch } from '@/components/layout/DashboardAccountWatch';
 import { DashboardNav } from '@/components/layout/DashboardNav';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
@@ -169,6 +170,7 @@ export function DashboardFrame(props: DashboardFrameProps) {
         sidebarActions,
         setSidebarActions,
       }}>
+      <DashboardAccountWatch locale={locale} />
       <div
         className={`text-ink ${isJournalPage ? 'h-[100dvh] overflow-hidden flex flex-col bg-paper' : 'min-h-screen bg-mainBackground'}`}>
         {!isJournalPage && (

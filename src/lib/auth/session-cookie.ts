@@ -47,6 +47,21 @@ export function writeSessionCookie(response: NextResponse, request: NextRequest,
   }
 }
 
+export function clearSessionCookie(response: NextResponse, request: NextRequest) {
+  const secure = useSecureAuthCookie(request.url);
+  const name = sessionCookieName(secure);
+  const clear = cookieOptions(secure, 0);
+  const names = new Set<string>([name]);
+
+  for (const cookie of request.cookies.getAll()) {
+    if (cookie.name === name || cookie.name.startsWith(`${name}.`)) names.add(cookie.name);
+  }
+
+  for (const cookieName of names) {
+    response.cookies.set(cookieName, '', clear);
+  }
+}
+
 export function writeRoleSyncMarker(response: NextResponse, request: NextRequest, pathname: string) {
   const secure = useSecureAuthCookie(request.url);
   response.cookies.set(ROLE_SYNC_COOKIE, pathname, cookieOptions(secure, 15));

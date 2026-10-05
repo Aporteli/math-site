@@ -12,7 +12,7 @@ import {
   LOGIN_PATH,
   splitLocalePath,
 } from '@/lib/auth/paths';
-import { useSecureAuthCookie, writeRoleSyncMarker, writeSessionCookie } from '@/lib/auth/session-cookie';
+import { clearSessionCookie, useSecureAuthCookie, writeRoleSyncMarker, writeSessionCookie } from '@/lib/auth/session-cookie';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -63,7 +63,12 @@ export async function GET(request: NextRequest) {
 
   try {
     const dbUser = await findRequestUser(userId, email);
-    const liveRole: UserRole = dbUser && isUserRole(dbUser.role) ? dbUser.role : jwtRole;
+    if (!dbUser) {
+      const response = NextResponse.redirect(home);
+      clearSessionCookie(response, request);
+      return response;
+    }
+    const liveRole: UserRole = isUserRole(dbUser.role) ? dbUser.role : jwtRole;
     const callbackPath = callback ? splitLocalePath(callback.pathname).path : null;
     const destination =
       callback && callbackPath && canAccessPath(callbackPath, liveRole)
