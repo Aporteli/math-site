@@ -23,11 +23,12 @@ function createPrismaClient(): PrismaClient {
     throw new Error('DATABASE_CA is not set');
   }
   const pool = new Pool({
-    connectionString: url,
-    ssl: {
-      ca,
-    },
-  });
+  connectionString: url,
+  ssl: {
+    ca,
+    rejectUnauthorized: true,
+  },
+});დ
 //აქამდე
 
   const adapter = new PrismaPg(pool);
