@@ -48,6 +48,8 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
             <NavLinks locale={locale} labels={dict.nav} menus={dict.menus} />
           </nav>
 
+        
+
           <div className="ml-auto flex min-w-0 items-center gap-2 xl:ml-0">
             <div className="hidden min-[500px]:contents">
               {search}
@@ -62,6 +64,11 @@ export function SiteHeader({ locale, dict, session }: SiteHeaderProps) {
               {session ? <SignOutButton locale={locale} label={dict.dashboard.signOut} variant="header" /> : null}
             </MobileMenu>
           </div>
+          {!session && (
+            <div className="ml-auto flex min-w-0 items-center gap-2 xl:ml-0">
+              <AuthEntry locale={locale} loginLabel={dict.header.login} signOutLabel={dict.dashboard.signOut} session={null} withText />
+            </div>
+          )}
         </div>
       </header>
 
