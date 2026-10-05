@@ -218,7 +218,7 @@ export function AdminPanel({
               <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader p-5 shadow-sm">
                 <h2 className="text-lg font-bold tracking-tight text-ink">{active.title}</h2>
 
-                <p className="mt-1 text-sm text-body">{active.description}</p>
+                
               </div>
 
               <div className="overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5">

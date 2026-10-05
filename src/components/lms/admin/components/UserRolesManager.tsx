@@ -6,10 +6,12 @@ import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/types";
 import { USER_ROLES, type UserRole } from "@/lib/auth/roles";
 import {
+  deleteAdminUserAction,
   listAdminUsersAction,
   updateAdminUserRoleAction,
   type ManagedUser,
   type RoleUpdateError,
+  type UserDeleteError,
 } from "@/lib/actions/admin-users";
 
 type UsersToolCopy = Dictionary["dashboard"]["teacher"]["admin"]["usersTool"];
@@ -39,6 +41,7 @@ export function UserRolesManager({ locale, copy }: { locale: Locale; copy: Users
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<RoleFilter>("ALL");
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [rowMessage, setRowMessage] = useState<Record<string, { tone: "ok" | "error"; text: string }>>({});
 
@@ -83,7 +86,7 @@ export function UserRolesManager({ locale, copy }: { locale: Locale; copy: Users
 
   async function saveRole(user: ManagedUser) {
     const next = drafts[user.id] ?? user.role;
-    if (next === user.role || user.isSelf || savingId) return;
+    if (next === user.role || user.isSelf || savingId || deletingId) return;
     if (user.isOwner && next !== "ADMIN") return;
     if (user.isLastAdmin && next !== "ADMIN") return;
 
@@ -116,6 +119,59 @@ export function UserRolesManager({ locale, copy }: { locale: Locale; copy: Users
       }));
     }
     setSavingId(null);
+  }
+
+  async function deleteUser(user: ManagedUser) {
+    if (user.isSelf || user.isOwner || user.isLastAdmin || savingId || deletingId) return;
+
+    const template = user.coursesTaught > 0 ? copy.confirmDeleteCourses : copy.confirmDelete;
+    const confirmed = window.confirm(
+      template
+        .replace("{name}", user.name)
+        .replace("{email}", user.email)
+        .replace("{count}", String(user.coursesTaught)),
+    );
+    if (!confirmed) return;
+
+    setNotice(null);
+    setDeletingId(user.id);
+    setRowMessage((current) => {
+      const rest = { ...current };
+      delete rest[user.id];
+      return rest;
+    });
+
+    const result = await deleteAdminUserAction(locale, user.id);
+    if (result.success) {
+      setUsers((current) => {
+        const next = current.filter((item) => item.id !== user.id);
+        const adminCount = next.filter((item) => item.role === "ADMIN").length;
+        return next.map((item) => ({
+          ...item,
+          isLastAdmin: item.role === "ADMIN" && adminCount <= 1,
+        }));
+      });
+      setDrafts((current) => {
+        const rest = { ...current };
+        delete rest[user.id];
+        return rest;
+      });
+      setNotice(copy.deleted);
+    } else {
+      const code = result.error as UserDeleteError;
+      const deleteErrors: Record<UserDeleteError, string> = {
+        not_found: copy.errors.not_found,
+        self: copy.errors.deleteSelf,
+        owner: copy.errors.deleteOwner,
+        last_admin: copy.errors.deleteLastAdmin,
+        failed: copy.errors.deleteFailed,
+      };
+      setRowMessage((current) => ({
+        ...current,
+        [user.id]: { tone: "error", text: deleteErrors[code] ?? copy.errors.deleteFailed },
+      }));
+    }
+    setDeletingId(null);
   }
 
   if (loading) {
@@ -175,6 +231,8 @@ export function UserRolesManager({ locale, copy }: { locale: Locale; copy: Users
             const draft = drafts[user.id] ?? user.role;
             const dirty = draft !== user.role;
             const locked = user.isSelf || (user.isOwner && draft !== "ADMIN") || (user.isLastAdmin && draft !== "ADMIN");
+            const deleteLocked = user.isSelf || user.isOwner || user.isLastAdmin;
+            const rowBusy = savingId === user.id || deletingId === user.id;
             const message = rowMessage[user.id];
 
             return (
@@ -207,14 +265,14 @@ export function UserRolesManager({ locale, copy }: { locale: Locale; copy: Users
                   ) : null}
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <label className="sr-only" htmlFor={`role-${user.id}`}>
                     {copy.roleLabel.replace("{name}", user.name)}
                   </label>
                   <select
                     id={`role-${user.id}`}
                     value={draft}
-                    disabled={user.isSelf || savingId === user.id}
+                    disabled={user.isSelf || rowBusy}
                     onChange={(event) => {
                       const value = event.target.value;
                       if (!USER_ROLES.includes(value as UserRole)) return;
@@ -239,10 +297,17 @@ export function UserRolesManager({ locale, copy }: { locale: Locale; copy: Users
                   </select>
                   <button
                     type="button"
-                    disabled={!dirty || locked || savingId === user.id}
+                    disabled={!dirty || locked || rowBusy}
                     onClick={() => void saveRole(user)}
                     className="inline-flex cursor-pointer items-center justify-center rounded-box bg-[#465D73] px-3 py-2 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] disabled:cursor-not-allowed disabled:opacity-40">
                     {savingId === user.id ? copy.saving : copy.save}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deleteLocked || rowBusy}
+                    onClick={() => void deleteUser(user)}
+                    className="inline-flex cursor-pointer items-center justify-center rounded-box border border-loss/30 bg-loss-tint px-3 py-2 text-sm font-bold text-loss transition-all duration-200 hover:bg-loss/20 disabled:cursor-not-allowed disabled:opacity-40">
+                    {deletingId === user.id ? copy.deleting : copy.delete}
                   </button>
                 </div>
               </li>

@@ -94,7 +94,7 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
 
-    async jwt({ token, user, trigger, session }) {
+    async jwt({ token, user }) {
       // 1. პირველი შესვლისას ვინახავთ ID-ს, მეილსა და საწყის როლს
       if (user) {
         token.id = user.id;
@@ -102,7 +102,7 @@ export const authOptions: NextAuthOptions = {
         token.role = ((user as { role?: UserRole }).role ?? 'VISITOR') as UserRole;
       }
 
-      // 2. ID-ით ან მეილით ყოველ ჯერზე ვამოწმებთ ბაზაში უახლეს როლს
+      // 2. როლი ყოველთვის ბაზიდან იწერება. კლიენტის update() ვერ ცვლის მას.
       const userLookupId = typeof token.id === 'string' ? token.id : '';
       const userLookupEmail = typeof token.email === 'string' ? token.email : '';
 
@@ -118,10 +118,6 @@ export const authOptions: NextAuthOptions = {
         } catch (e) {
           console.error('JWT_FETCH_USER_ERROR:', e);
         }
-      }
-
-      if (trigger === 'update' && session?.role) {
-        token.role = session.role as UserRole;
       }
 
       return token;

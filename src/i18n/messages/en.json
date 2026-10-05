@@ -1077,6 +1077,11 @@
           "lastAdminLocked": "The last admin cannot be changed",
           "roleLabel": "Status for {name}",
           "confirmAdmin": "Change {name} to {role}?",
+          "delete": "Delete",
+          "deleting": "Deleting...",
+          "deleted": "Account deleted",
+          "confirmDelete": "Delete {name}'s account ({email})? Their enrolments and submitted work will be removed too. This cannot be undone.",
+          "confirmDeleteCourses": "Delete {name}'s account ({email})? Their {count} groups, enrolments, and submitted work will be removed too. This cannot be undone.",
           "roles": {
             "VISITOR": "Visitor",
             "STUDENT": "Student",
@@ -1090,7 +1095,11 @@
             "not_found": "User not found",
             "self": "You cannot change your own status here",
             "owner": "The owner stays an admin",
-            "last_admin": "The last admin cannot be changed"
+            "last_admin": "The last admin cannot be changed",
+            "deleteSelf": "You cannot delete your own account here",
+            "deleteOwner": "The owner account cannot be deleted",
+            "deleteLastAdmin": "The last admin cannot be deleted",
+            "deleteFailed": "Could not delete the account"
           }
         },
         "sections": {
@@ -1104,7 +1113,7 @@
           },
           "users": {
             "title": "Users",
-            "description": "Switch a registered user's status between visitor, student, teacher, and admin."
+            "description": "Switch a registered user's status between visitor, student, teacher, and admin, or delete the account."
           },
           "roles": {
             "title": "Roles & access",

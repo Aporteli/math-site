@@ -13,6 +13,7 @@ import {
   splitLocalePath,
 } from '@/lib/auth/paths';
 import { isUserRole } from '@/lib/auth/roles';
+import { ROLE_SYNC_COOKIE, useSecureAuthCookie } from '@/lib/auth/session-cookie';
 
 function detectLocale(request: NextRequest) {
   const saved = request.cookies.get(localeCookie)?.value;
@@ -42,11 +43,10 @@ export async function proxy(request: NextRequest) {
   if (!locale) return NextResponse.next();
   const needsAuth = isTeacherPath(path) || isStudentPath(path) || isLoginPath(path);
   if (!needsAuth) return NextResponse.next();
-  const isSecure = process.env.NODE_ENV === 'production' || request.url.startsWith('https://');
   const token = await getToken({
     req: request,
     secret: authSecret,
-    secureCookie: isSecure,
+    secureCookie: useSecureAuthCookie(request.url),
   });
 
   const role = isUserRole(token?.role) ? token.role : null;
@@ -68,16 +68,24 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  // თუ როლი არ ემთხვევა გვერდს (მაგ. STUDENT ცდილობს TEACHER-ის გვერდზე შესვლას)
+  // ქუქში ჩაწერილი როლი შესვლის მომენტისია. როლის შეცვლის შემდეგ ჯერ ბაზას ვუსწორებთ სესიას.
   if (!canAccessPath(path, role)) {
-    const home = request.nextUrl.clone();
-    if (role === 'VISITOR') {
-      home.pathname = `/${locale}`;
-    } else {
-      home.pathname = `/${locale}${dashboardHomeForRole(role)}`;
+    if (request.cookies.get(ROLE_SYNC_COOKIE)?.value === pathname) {
+      const home = request.nextUrl.clone();
+      if (role === 'VISITOR') {
+        home.pathname = `/${locale}`;
+      } else {
+        home.pathname = `/${locale}${dashboardHomeForRole(role)}`;
+      }
+      home.search = '';
+      return NextResponse.redirect(home);
     }
-    home.search = '';
-    return NextResponse.redirect(home);
+
+    const sync = request.nextUrl.clone();
+    sync.pathname = '/api/auth/sync-role';
+    sync.search = '';
+    sync.searchParams.set('callbackUrl', `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(sync);
   }
 
   return NextResponse.next();
