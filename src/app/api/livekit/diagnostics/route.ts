@@ -8,8 +8,8 @@ import {
   listDiagnosticSessions,
   type DiagnosticsAccess,
 } from '@/lib/livekit/diagnostics/persist';
+import { findRequestUser } from '@/lib/auth/request-user';
 import { loadCourseAccess } from '@/lib/livekit/course-access';
-import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,12 +18,12 @@ async function readAccess(): Promise<DiagnosticsAccess | null> {
   const session = await getSession();
   const userId = session?.user?.id;
   if (!userId) return null;
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { role: true },
-  });
-  if (!user || (user.role !== 'ADMIN' && user.role !== 'TEACHER')) return null;
-  return { userId, role: user.role };
+  const user = await findRequestUser(userId, session.user.email ?? '');
+  if (!user) return null;
+  if (user.role === 'ADMIN' || user.role === 'TEACHER') {
+    return { userId, role: user.role };
+  }
+  return null;
 }
 
 export async function POST(request: Request) {

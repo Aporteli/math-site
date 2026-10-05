@@ -32,8 +32,11 @@ import {
 import { getServerSnapshot } from '@/lib/livekit/diagnostics/server-snapshot';
 
 const STALE_MS = 3 * 60 * 1000;
+const STALE_SWEEP_MS = 60_000;
 const METRIC_GAP_MS = 4000;
 const SILENT_SERVER_MS = 20_000;
+const SILENT_SWEEP_GAP_MS = 20_000;
+const RECOMPUTE_GAP_MS = 30_000;
 const HISTORY_LIMIT = 40;
 
 const CONNECTION_STATES = new Set([
@@ -48,6 +51,10 @@ const ICE_STATES = new Set(['new', 'checking', 'connected', 'completed', 'failed
 const DTLS_STATES = new Set(['new', 'connecting', 'connected', 'closed', 'failed']);
 
 const recentPosts = new Map<string, number>();
+const silentSweepAt = new Map<string, number>();
+const recomputedAt = new Map<string, number>();
+let staleSweepAt = 0;
+let staleSweep: Promise<void> | null = null;
 
 export interface DiagnosticsAccess {
   userId: string;
@@ -279,16 +286,41 @@ async function recompute(sessionId: string, snapshot: ServerRoomSnapshot | null)
       serverSnapshot: snapshot ? jsonValue(snapshot) : undefined,
     },
   });
+  recomputedAt.set(sessionId, Date.now());
+}
+
+async function recomputeIfDue(
+  sessionId: string,
+  snapshot: ServerRoomSnapshot | null,
+  force: boolean,
+): Promise<void> {
+  if (!force && Date.now() - (recomputedAt.get(sessionId) ?? 0) < RECOMPUTE_GAP_MS) return;
+  await recompute(sessionId, snapshot);
 }
 
 export async function closeStaleSessions(): Promise<void> {
-  const stale = await prisma.liveKitDiagnosticSession.findMany({
-    where: { status: 'active', lastActivityAt: { lt: new Date(Date.now() - STALE_MS) } },
-    select: { id: true },
+  if (staleSweep) return staleSweep;
+  if (Date.now() - staleSweepAt < STALE_SWEEP_MS) return;
+  staleSweepAt = Date.now();
+  staleSweep = (async () => {
+    const stale = await prisma.liveKitDiagnosticSession.findMany({
+      where: { status: 'active', lastActivityAt: { lt: new Date(Date.now() - STALE_MS) } },
+      select: { id: true },
+    });
+    for (const session of stale) {
+      await finalizeSession(session.id);
+    }
+  })().finally(() => {
+    staleSweep = null;
   });
-  for (const session of stale) {
-    await finalizeSession(session.id);
-  }
+  return staleSweep;
+}
+
+function claimSilentSweep(roomName: string, nowMs: number): boolean {
+  const last = silentSweepAt.get(roomName) ?? 0;
+  if (nowMs - last < SILENT_SWEEP_GAP_MS) return false;
+  silentSweepAt.set(roomName, nowMs);
+  return true;
 }
 
 export async function finalizeSession(sessionId: string): Promise<void> {
@@ -403,7 +435,14 @@ export async function ingestDiagnostics(access: CourseAccess, report: Diagnostic
   const quality = pickQuality(report.self.quality);
   const offsetMs = clockOffsetMs(report.clientNow, now);
 
-  const existingRows = await prisma.liveKitDiagnosticParticipant.findMany({ where: { sessionId: session.id } });
+  const sweepOthers = Boolean(snapshot?.roomExists) && claimSilentSweep(roomName, now.getTime());
+  const existingRows = sweepOthers
+    ? await prisma.liveKitDiagnosticParticipant.findMany({ where: { sessionId: session.id } })
+    : await prisma.liveKitDiagnosticParticipant
+        .findUnique({
+          where: { sessionId_identity: { sessionId: session.id, identity: report.self.identity } },
+        })
+        .then((row) => (row ? [row] : []));
   const participants = existingRows.map((row) => asParticipant(row));
   const existing = existingRows.find((row) => row.identity === report.self.identity) ?? null;
   const acceptMetrics = !existing || now.getTime() - existing.lastSeenAt.getTime() >= METRIC_GAP_MS;
@@ -414,43 +453,62 @@ export async function ingestDiagnostics(access: CourseAccess, report: Diagnostic
   let reconnectingSince = existing?.reconnectingSince ?? null;
 
   await prisma.$transaction(async (tx) => {
-    for (const event of report.events) {
-      const occurredAt = eventTime(event.occurredAt, now, offsetMs);
-      const detail = mergeDetail(event.detail, snapshot, report.self.identity, participants);
-      detail.clientOccurredAt = event.occurredAt;
-      if (offsetMs !== null) detail.clockOffsetMs = offsetMs;
-      const duplicate = await tx.liveKitDiagnosticEvent.findUnique({
-        where: { sessionId_dedupeKey: { sessionId: session.id, dedupeKey: event.dedupeKey } },
-        select: { id: true },
+    if (report.events.length > 0) {
+      const keys = [...new Set(report.events.map((event) => event.dedupeKey))];
+      const already = await tx.liveKitDiagnosticEvent.findMany({
+        where: { sessionId: session.id, dedupeKey: { in: keys } },
+        select: { dedupeKey: true },
       });
-      if (duplicate) continue;
-      await tx.liveKitDiagnosticEvent.create({
-        data: {
-          sessionId: session.id,
-          occurredAt,
-          kind: event.kind,
-          participant: displayName,
-          identity: report.self.identity,
-          role,
-          dedupeKey: event.dedupeKey,
-          detail: jsonValue(detail),
-        },
-      });
-      if (event.kind === 'reconnecting') reconnects += 1;
-      if (event.kind === 'disconnected') {
-        disconnects += 1;
-        if (detail.reason && /^[A-Z0-9_]+$/.test(detail.reason)) lastDisconnectReason = detail.reason;
+      const seen = new Set(already.flatMap((row) => (row.dedupeKey ? [row.dedupeKey] : [])));
+      const pending: Array<{
+        event: (typeof report.events)[number];
+        occurredAt: Date;
+        detail: DiagnosticEventDetail;
+      }> = [];
+      for (const event of report.events) {
+        if (seen.has(event.dedupeKey)) continue;
+        seen.add(event.dedupeKey);
+        const occurredAt = eventTime(event.occurredAt, now, offsetMs);
+        const detail = mergeDetail(event.detail, snapshot, report.self.identity, participants);
+        detail.clientOccurredAt = event.occurredAt;
+        if (offsetMs !== null) detail.clockOffsetMs = offsetMs;
+        pending.push({ event, occurredAt, detail });
       }
-      if (isNotableKind(event.kind)) {
-        logLiveKitDiagnostic({
-          event: event.kind,
-          room: roomName,
-          participant: displayName,
-          timestamp: occurredAt.toISOString(),
-          rttMs: detail.rttMs ?? null,
-          packetLossPct: detail.packetLossPct ?? null,
-          jitterMs: detail.jitterMs ?? null,
+      if (pending.length > 0) {
+        const inserted = await tx.liveKitDiagnosticEvent.createManyAndReturn({
+          data: pending.map(({ event, occurredAt, detail }) => ({
+            sessionId: session.id,
+            occurredAt,
+            kind: event.kind,
+            participant: displayName,
+            identity: report.self.identity,
+            role,
+            dedupeKey: event.dedupeKey,
+            detail: jsonValue(detail),
+          })),
+          skipDuplicates: true,
+          select: { dedupeKey: true },
         });
+        const insertedKeys = new Set(inserted.flatMap((row) => (row.dedupeKey ? [row.dedupeKey] : [])));
+        for (const { event, occurredAt, detail } of pending) {
+          if (!insertedKeys.has(event.dedupeKey)) continue;
+          if (event.kind === 'reconnecting') reconnects += 1;
+          if (event.kind === 'disconnected') {
+            disconnects += 1;
+            if (detail.reason && /^[A-Z0-9_]+$/.test(detail.reason)) lastDisconnectReason = detail.reason;
+          }
+          if (isNotableKind(event.kind)) {
+            logLiveKitDiagnostic({
+              event: event.kind,
+              room: roomName,
+              participant: displayName,
+              timestamp: occurredAt.toISOString(),
+              rttMs: detail.rttMs ?? null,
+              packetLossPct: detail.packetLossPct ?? null,
+              jitterMs: detail.jitterMs ?? null,
+            });
+          }
+        }
       }
     }
 
@@ -678,7 +736,7 @@ export async function ingestDiagnostics(access: CourseAccess, report: Diagnostic
     }
   });
 
-  await recompute(session.id, snapshot);
+  await recomputeIfDue(session.id, snapshot, report.leaving || report.events.length > 0 || !existing);
 
   if (report.leaving && snapshot) {
     const othersPresent = snapshot.participants.some(

@@ -646,10 +646,11 @@ export function LiveKitDiagnostics() {
           if (!cancelled) setError(err instanceof Error ? err.message : 'Session diagnostics could not be loaded');
         });
     };
-    run();
+    const start = window.setTimeout(run, 2500);
     const timer = window.setInterval(run, 5000);
     return () => {
       cancelled = true;
+      window.clearTimeout(start);
       window.clearInterval(timer);
     };
   }, [loadDetail, selectedId]);

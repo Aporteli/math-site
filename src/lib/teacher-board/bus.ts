@@ -1,4 +1,4 @@
-import { Client } from 'pg';
+import { prisma } from '@/lib/prisma';
 
 export type TeacherBoardEvent = {
   userId: string;
@@ -28,11 +28,15 @@ type Bus = {
   handlers: Map<string, Set<Handler>>;
   latest: Map<string, LiveBoard>;
   inkFloor: Map<string, number>;
-  client: Client | null;
-  ready: Promise<void> | null;
+  dbRevision: Map<string, number>;
+  poll: ReturnType<typeof setInterval> | null;
+  polling: boolean;
+  client?: { end: () => Promise<void> } | null;
 };
 
 const globalBus = globalThis as typeof globalThis & { __teacherBoardBus?: Bus };
+
+const BOARD_POLL_MS = 2000;
 
 function getBus(): Bus {
   if (!globalBus.__teacherBoardBus) {
@@ -40,13 +44,29 @@ function getBus(): Bus {
       handlers: new Map(),
       latest: new Map(),
       inkFloor: new Map(),
-      client: null,
-      ready: null,
+      dbRevision: new Map(),
+      poll: null,
+      polling: false,
     };
   }
-  if (!globalBus.__teacherBoardBus.latest) globalBus.__teacherBoardBus.latest = new Map();
-  if (!globalBus.__teacherBoardBus.inkFloor) globalBus.__teacherBoardBus.inkFloor = new Map();
-  return globalBus.__teacherBoardBus;
+  const bus = globalBus.__teacherBoardBus;
+  if (!bus.latest) bus.latest = new Map();
+  if (!bus.inkFloor) bus.inkFloor = new Map();
+  if (!bus.dbRevision) bus.dbRevision = new Map();
+  if (bus.poll === undefined) bus.poll = null;
+  if (bus.polling === undefined) bus.polling = false;
+  if (bus.client) {
+    const leftover = bus.client;
+    bus.client = null;
+    void leftover.end().catch(() => undefined);
+  }
+  return bus;
+}
+
+function subscriberCount(bus: Bus) {
+  let count = 0;
+  for (const handlers of bus.handlers.values()) count += handlers.size;
+  return count;
 }
 
 export function publishLiveTeacherBoard(input: {
@@ -80,7 +100,6 @@ export function publishLiveTeacherBoard(input: {
 export function readLiveTeacherBoard(userId: string) {
   return getBus().latest.get(userId) ?? null;
 }
-
 
 export function publishTeacherBoardLaser(input: {
   userId: string;
@@ -135,36 +154,67 @@ export function publishTeacherBoard(event: TeacherBoardEvent) {
   dispatch(event);
 }
 
-function ensureListen() {
+function stopPollIfIdle() {
   const bus = getBus();
-  if (bus.ready) return bus.ready;
-  const url = process.env.DATABASE_URL;
-  if (!url) return Promise.resolve();
+  if (subscriberCount(bus) > 0 || !bus.poll) return;
+  clearInterval(bus.poll);
+  bus.poll = null;
+}
 
-  const client = new Client({ connectionString: url });
-  bus.client = client;
-  bus.ready = (async () => {
-    await client.connect();
-    await client.query('LISTEN teacher_board');
-    client.on('notification', (msg) => {
-      if (msg.channel !== 'teacher_board' || !msg.payload) return;
-      try {
-        const event = JSON.parse(msg.payload) as TeacherBoardEvent;
-        if (!event?.userId || typeof event.revision !== 'number') return;
-        dispatch({ userId: event.userId, revision: event.revision, clientId: event.clientId ?? '' });
-      } catch {
-        /* ignore malformed payload */
-      }
+async function pollStoredBoards() {
+  const bus = getBus();
+  if (bus.polling) return;
+  const userIds = [...bus.handlers.keys()];
+  if (userIds.length === 0) {
+    stopPollIfIdle();
+    return;
+  }
+
+  bus.polling = true;
+  try {
+    const heads = await prisma.teacherBoard.findMany({
+      where: { userId: { in: userIds } },
+      select: { userId: true, revision: true },
     });
-    client.on('error', () => {
-      bus.ready = null;
-      bus.client = null;
+    const changed: string[] = [];
+    for (const row of heads) {
+      const previous = bus.dbRevision.get(row.userId);
+      if (previous === row.revision) continue;
+      changed.push(row.userId);
+    }
+    if (changed.length === 0) return;
+
+    const boards = await prisma.teacherBoard.findMany({
+      where: { userId: { in: changed } },
+      select: { userId: true, revision: true, pages: true, currentPageIndex: true },
     });
-  })().catch(() => {
-    bus.ready = null;
-    bus.client = null;
-  });
-  return bus.ready;
+    for (const board of boards) {
+      bus.dbRevision.set(board.userId, board.revision);
+      dispatch({
+        userId: board.userId,
+        clientId: '',
+        revision: board.revision,
+        pages: board.pages,
+        currentPageIndex: board.currentPageIndex,
+      });
+    }
+  } catch {
+    /* The SSE client refetches when the stream goes quiet. */
+  } finally {
+    bus.polling = false;
+  }
+}
+
+function ensurePoll() {
+  const bus = getBus();
+  if (bus.poll) return;
+  const timer = setInterval(() => {
+    void pollStoredBoards();
+  }, BOARD_POLL_MS);
+  if (typeof timer === 'object' && timer !== null && 'unref' in timer) {
+    timer.unref();
+  }
+  bus.poll = timer;
 }
 
 export function subscribeTeacherBoard(userId: string, handler: Handler) {
@@ -175,9 +225,13 @@ export function subscribeTeacherBoard(userId: string, handler: Handler) {
     bus.handlers.set(userId, set);
   }
   set.add(handler);
-  void ensureListen();
+  ensurePoll();
   return () => {
     set.delete(handler);
-    if (set.size === 0) bus.handlers.delete(userId);
+    if (set.size === 0) {
+      bus.handlers.delete(userId);
+      bus.dbRevision.delete(userId);
+    }
+    stopPollIfIdle();
   };
 }

@@ -4,8 +4,9 @@ import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { isLocale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
+import { findRequestUser } from '@/lib/auth/request-user';
+import { isUserRole } from '@/lib/auth/roles';
 import { getSession } from '@/lib/auth/session';
-import { prisma } from '@/lib/prisma';
 
 export default async function PublicLayout({
   children,
@@ -20,12 +21,10 @@ export default async function PublicLayout({
   const dict = getDictionary(locale);
   const session = await getSession();
   const databaseUser = session?.user?.email
-    ? await prisma.user.findUnique({
-        where: { email: session.user.email.trim().toLowerCase() },
-        select: { role: true },
-      })
+    ? await findRequestUser(session.user.id ?? '', session.user.email)
     : null;
-  const user = session?.user ? { role: databaseUser?.role ?? session.user.role } : null;
+  const databaseRole = databaseUser && isUserRole(databaseUser.role) ? databaseUser.role : null;
+  const user = session?.user ? { role: databaseRole ?? session.user.role } : null;
 
   // სამუშაო სივრცის მენიუ (Dock) გამოუჩნდეს მხოლოდ სტუდენტს, მასწავლებელს ან ადმინს
   const hasWorkspaceAccess = user?.role === 'STUDENT' || user?.role === 'TEACHER' || user?.role === 'ADMIN';

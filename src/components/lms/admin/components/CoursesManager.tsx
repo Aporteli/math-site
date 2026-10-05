@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { getAdminCoursesAction } from "@/lib/actions/admin-courses";
-import { getAdminTeachersAction } from "@/lib/actions/admin-courses";
-import { getAdminStudentsWithEnrollmentsAction } from "@/lib/actions/admin-courses";
+import { getAdminCourseManagerDataAction } from "@/lib/actions/admin-courses";
 import { updateAdminCourseAction } from "@/lib/actions/admin-courses";
 import { createAdminCourseAction } from "@/lib/actions/admin-courses";
 import { deleteAdminCourseAction } from "@/lib/actions/admin-courses";
@@ -39,14 +37,10 @@ export function CoursesManager() {
   
     async function loadData() {
       setLoading(true);
-      const [coursesRes, teachersRes, studentsRes] = await Promise.all([
-        getAdminCoursesAction(),
-        getAdminTeachersAction(),
-        getAdminStudentsWithEnrollmentsAction(),
-      ]);
-      if (coursesRes.success) setCourses(coursesRes.data || []);
-      if (teachersRes.success) setTeachers(teachersRes.data || []);
-      if (studentsRes.success) setStudents(studentsRes.data || []);
+      const result = await getAdminCourseManagerDataAction();
+      setCourses(result.courses || []);
+      setTeachers(result.teachers || []);
+      setStudents(result.students || []);
       setLoading(false);
     }
   

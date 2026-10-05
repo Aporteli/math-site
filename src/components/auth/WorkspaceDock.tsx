@@ -50,8 +50,8 @@ export function WorkspaceDock({
         onClick={handleDockClick}
         className="pointer-events-auto flex max-w-xs items-center gap-3 overflow-hidden rounded-box border border-hairline bg-main p-3 shadow-md transition hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-lg"
       >
-          <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-box bg-brass-tint text-brass-strong">
-          <LayoutDashboard className="size-5" aria-hidden="true" />
+          <span className="inline-flex size-11 shrink-0 items-center justify-center  text-brass-strong">
+          <LayoutDashboard className="size-12" aria-hidden="true" strokeWidth={1.5} />
         </span>
         <span className="min-w-0">
           <span className="block text-xs font-semibold tracking-wide text-brass">

@@ -5,6 +5,7 @@ import { LOGIN_PATH } from '@/lib/auth/paths';
 import { loginSchema } from '@/lib/auth/schemas';
 import { authSecret } from '@/lib/auth/secret';
 import { prisma } from '@/lib/prisma';
+import { findRequestUser } from '@/lib/auth/request-user';
 import { findUserByEmail, passwordsMatch, toPublicUser } from '@/lib/auth/users';
 import { isOwnerEmail, isUserRole, type UserRole } from '@/lib/auth/roles';
 
@@ -102,20 +103,12 @@ export const authOptions: NextAuthOptions = {
       }
 
       // 2. ID-ით ან მეილით ყოველ ჯერზე ვამოწმებთ ბაზაში უახლეს როლს
-      const userLookupId = (token.id as string) || undefined;
-      const userLookupEmail = token.email ? token.email.trim().toLowerCase() : undefined;
+      const userLookupId = typeof token.id === 'string' ? token.id : '';
+      const userLookupEmail = typeof token.email === 'string' ? token.email : '';
 
       if (userLookupId || userLookupEmail) {
         try {
-          const dbUser = await prisma.user.findFirst({
-            where: {
-              OR: [
-                ...(userLookupId ? [{ id: userLookupId }] : []),
-                ...(userLookupEmail ? [{ email: userLookupEmail }] : []),
-              ],
-            },
-            select: { id: true, role: true, email: true },
-          });
+          const dbUser = await findRequestUser(userLookupId, userLookupEmail);
 
           if (dbUser) {
             token.id = dbUser.id;

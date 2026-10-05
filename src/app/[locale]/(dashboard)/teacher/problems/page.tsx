@@ -39,15 +39,14 @@ export default async function TeacherProblemsPage({ params }: PageProps) {
   if (session?.user?.email) {
     try {
       const user = await ensureDbUser(session.user);
-      const [problems, draftIds, taxonomy] = await Promise.all([
+      const [problems, draftIds] = await Promise.all([
         loadTeacherProblems(user.id),
         loadDraftLessonSet(user.id),
-        ensureDefaultTaxonomy().catch((error) => {
-          console.error('Failed to load taxonomy', error);
-          return [] as Awaited<ReturnType<typeof ensureDefaultTaxonomy>>;
-        }),
       ]);
-      taxonomyNodes = taxonomy;
+      taxonomyNodes = await ensureDefaultTaxonomy().catch((error) => {
+        console.error('Failed to load taxonomy', error);
+        return [] as Awaited<ReturnType<typeof ensureDefaultTaxonomy>>;
+      });
       saved = problems;
       lessonSetIds = draftIds;
     } catch (error) {

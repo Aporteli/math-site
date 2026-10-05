@@ -24,14 +24,15 @@ export default async function TeacherStudentPage({ params }: PageProps) {
   const { studentId } = await params;
   const teacherId = session.user.id;
 
-  const [groups, groupStudents, individualStudents, groupPayments, individualPayments] =
-    await Promise.all([
-      getTeacherGroups(teacherId),
-      getTeacherStudents(teacherId),
-      getTeacherIndividualStudents(teacherId),
-      getTeacherPayments(teacherId),
-      getTeacherIndividualPayments(teacherId),
-    ]);
+  const groups = await getTeacherGroups(teacherId);
+  const [groupStudents, individualStudents] = await Promise.all([
+    getTeacherStudents(teacherId),
+    getTeacherIndividualStudents(teacherId),
+  ]);
+  const [groupPayments, individualPayments] = await Promise.all([
+    getTeacherPayments(teacherId),
+    getTeacherIndividualPayments(teacherId),
+  ]);
 
   return (
     <StudentListClient

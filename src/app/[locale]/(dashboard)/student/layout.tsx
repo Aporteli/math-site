@@ -2,9 +2,9 @@ import { notFound, redirect } from 'next/navigation';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { isLocale, localePath } from '@/i18n/config';
 import { getDictionary } from '@/i18n/get-dictionary';
+import { findRequestUser } from '@/lib/auth/request-user';
 import { getSession } from '@/lib/auth/session';
 import { isLocalDashboardPreview } from '@/lib/auth/paths';
-import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,10 +25,7 @@ export default async function StudentLayout({
   }
 
   // ვიღებთ მომხმარებლის რეალურ, უახლეს როლს პირდაპირ ბაზიდან (და არა ძველი JWT ქუქიდან)
-  const dbUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { id: true, name: true, email: true, role: true },
-  });
+  const dbUser = await findRequestUser(session.user.id, session.user.email ?? '');
 
   const currentRole = dbUser?.role ?? session.user.role;
 

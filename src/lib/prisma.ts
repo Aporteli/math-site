@@ -6,6 +6,7 @@ const PRISMA_GENERATION = 'livekit-diagnostics-v1';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
+  prismaPool: Pool | undefined;
   prismaGeneration: string | undefined;
 };
 
@@ -24,15 +25,24 @@ function createPrismaClient(): PrismaClient {
 
   const pool = new Pool({
     connectionString: url,
+    max: 2,
+    idleTimeoutMillis: 5000,
+    connectionTimeoutMillis: 5000,
     ssl: {
       ca,
       rejectUnauthorized: true,
     },
   });
 
-  const adapter = new PrismaPg(pool);
-
-  return new PrismaClient({ adapter });
+  try {
+    const adapter = new PrismaPg(pool);
+    const client = new PrismaClient({ adapter });
+    globalForPrisma.prismaPool = pool;
+    return client;
+  } catch (error) {
+    void pool.end().catch(() => undefined);
+    throw error;
+  }
 }
 
 function hasCurrentDelegates(client: PrismaClient | undefined) {
@@ -71,22 +81,28 @@ function hasCurrentDelegates(client: PrismaClient | undefined) {
   return names.has('collection') && names.has('originId');
 }
 
-if (
-  process.env.NODE_ENV !== 'production' &&
-  globalForPrisma.prisma &&
-  (
-    globalForPrisma.prismaGeneration !== PRISMA_GENERATION ||
-    !hasCurrentDelegates(globalForPrisma.prisma)
-  )
-) {
-  void globalForPrisma.prisma.$disconnect();
+function discardStaleDevelopmentClient() {
+  if (process.env.NODE_ENV === 'production') return;
+
+  const existing = globalForPrisma.prisma;
+  if (!existing) return;
+  if (
+    globalForPrisma.prismaGeneration === PRISMA_GENERATION &&
+    hasCurrentDelegates(existing)
+  ) {
+    return;
+  }
+
+  void existing.$disconnect().catch(() => undefined);
+  void globalForPrisma.prismaPool?.end().catch(() => undefined);
   globalForPrisma.prisma = undefined;
+  globalForPrisma.prismaPool = undefined;
+  globalForPrisma.prismaGeneration = undefined;
 }
 
-export const prisma =
-  globalForPrisma.prisma ?? createPrismaClient();
+discardStaleDevelopmentClient();
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-  globalForPrisma.prismaGeneration = PRISMA_GENERATION;
-}
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+
+globalForPrisma.prisma = prisma;
+globalForPrisma.prismaGeneration = PRISMA_GENERATION;

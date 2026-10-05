@@ -18,6 +18,11 @@ export async function ensureDbUser(input: {
   const name = input.name?.trim() || email;
   const role = input.role as Role;
 
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing && existing.name === name && existing.role === role) {
+    return existing;
+  }
+
   return prisma.user.upsert({
     where: { email },
     create: {

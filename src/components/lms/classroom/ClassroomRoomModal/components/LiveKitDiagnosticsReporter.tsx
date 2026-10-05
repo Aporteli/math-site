@@ -776,8 +776,8 @@ export function LiveKitDiagnosticsReporter({
     if (microphone.publishing) push('audio_published', { audioTrackState: microphone.state });
     rebind();
 
-    const started = window.setTimeout(() => void flush(false), 1000);
-    timer = window.setInterval(() => void flush(false), 8000);
+    const started = window.setTimeout(() => void flush(false), 1000 + Math.floor(Math.random() * 4000));
+    timer = window.setInterval(() => void flush(false), 12000);
     let lastWatch = Date.now();
     watchTimer = window.setInterval(() => {
       const now = Date.now();

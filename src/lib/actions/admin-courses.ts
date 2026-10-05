@@ -11,17 +11,47 @@ function toPlainCourse<T extends { defaultMonthlyPrice: unknown }>(course: T) {
   };
 }
 
+function loadAdminCourses() {
+  return prisma.course.findMany({
+    include: {
+      teacher: { select: { id: true, name: true, email: true } },
+      _count: { select: { enrollments: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  }).then((courses) => courses.map(toPlainCourse));
+}
+
+function loadAdminTeachers() {
+  return prisma.user.findMany({
+    where: { role: { in: ["TEACHER", "ADMIN"] } },
+    select: { id: true, name: true, email: true },
+    orderBy: { name: "asc" },
+  });
+}
+
+function loadAdminStudents() {
+  return prisma.user.findMany({
+    where: { role: "STUDENT" },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      enrollments: {
+        select: {
+          courseId: true,
+          course: { select: { id: true, title: true } },
+        },
+      },
+    },
+    orderBy: { name: "asc" },
+  });
+}
+
 export async function getAdminCoursesAction() {
   await requireRole("ka", ["ADMIN"]);
   try {
-    const courses = await prisma.course.findMany({
-      include: {
-        teacher: { select: { id: true, name: true, email: true } },
-        _count: { select: { enrollments: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-    return { success: true, data: courses.map(toPlainCourse) };
+    const courses = await loadAdminCourses();
+    return { success: true, data: courses };
   } catch (error) {
     console.error("Failed to fetch courses:", error);
     return { success: false, error: "კურსების წამოღება ვერ მოხერხდა" };
@@ -31,12 +61,7 @@ export async function getAdminCoursesAction() {
 export async function getAdminTeachersAction() {
   await requireRole("ka", ["ADMIN"]);
   try {
-    const teachers = await prisma.user.findMany({
-      where: { role: { in: ["TEACHER", "ADMIN"] } },
-      select: { id: true, name: true, email: true },
-      orderBy: { name: "asc" },
-    });
-    return { success: true, data: teachers };
+    return { success: true, data: await loadAdminTeachers() };
   } catch (error) {
     console.error("Failed to fetch teachers:", error);
     return { success: false, error: "მასწავლებლების წამოღება ვერ მოხერხდა" };
@@ -46,26 +71,30 @@ export async function getAdminTeachersAction() {
 export async function getAdminStudentsWithEnrollmentsAction() {
   await requireRole("ka", ["ADMIN"]);
   try {
-    const students = await prisma.user.findMany({
-      where: { role: "STUDENT" },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        enrollments: {
-          select: {
-            courseId: true,
-            course: { select: { id: true, title: true } },
-          },
-        },
-      },
-      orderBy: { name: "asc" },
-    });
-    return { success: true, data: students };
+    return { success: true, data: await loadAdminStudents() };
   } catch (error) {
     console.error("Failed to fetch students:", error);
     return { success: false, error: "მოსწავლეების წამოღება ვერ მოხერხდა" };
   }
+}
+
+export async function getAdminCourseManagerDataAction() {
+  await requireRole("ka", ["ADMIN"]);
+  const [courses, teachers] = await Promise.all([
+    loadAdminCourses().catch((error) => {
+      console.error("Failed to fetch courses:", error);
+      return [];
+    }),
+    loadAdminTeachers().catch((error) => {
+      console.error("Failed to fetch teachers:", error);
+      return [];
+    }),
+  ]);
+  const students = await loadAdminStudents().catch((error) => {
+    console.error("Failed to fetch students:", error);
+    return [];
+  });
+  return { success: true as const, courses, teachers, students };
 }
 
 export async function updateStudentEnrollmentsAction(studentId: string, courseIds: string[]) {
