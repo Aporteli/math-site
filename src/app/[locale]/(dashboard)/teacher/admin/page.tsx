@@ -30,6 +30,7 @@ export default async function TeacherAdminPage({ params }: PageProps) {
       taxonomyCopy={dict.dashboard.teacher.taxonomy}
       taxonomyNodes={nodes}
       canUseTerminal={session.user.role === 'ADMIN'}
+      canManageUsers={session.user.role === 'ADMIN'}
     />
   );
 }

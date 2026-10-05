@@ -1060,6 +1060,39 @@
         "comingSoon": "Coming soon",
         "comingSoonHint": "This section is reserved. The layout is ready for tools we add next.",
         "overviewHint": "Pick a section below or from the side menu. Curriculum taxonomy is live; other tools will land here step by step.",
+        "usersTool": {
+          "hint": "The new status applies on that person's next request. You cannot change your own status here.",
+          "searchPlaceholder": "Name or email",
+          "allRoles": "All",
+          "empty": "No users found",
+          "loading": "Loading...",
+          "save": "Save",
+          "saving": "Saving...",
+          "saved": "Saved",
+          "you": "You",
+          "groups": "groups",
+          "enrollments": "enrolments",
+          "selfLocked": "You cannot change your own status here",
+          "ownerLocked": "The owner stays an admin",
+          "lastAdminLocked": "The last admin cannot be changed",
+          "roleLabel": "Status for {name}",
+          "confirmAdmin": "Change {name} to {role}?",
+          "roles": {
+            "VISITOR": "Visitor",
+            "STUDENT": "Student",
+            "TEACHER": "Teacher",
+            "ADMIN": "Admin"
+          },
+          "errors": {
+            "load": "Could not load users",
+            "failed": "Could not change the status",
+            "invalid_role": "Invalid status",
+            "not_found": "User not found",
+            "self": "You cannot change your own status here",
+            "owner": "The owner stays an admin",
+            "last_admin": "The last admin cannot be changed"
+          }
+        },
         "sections": {
           "overview": {
             "title": "Overview",
@@ -1071,7 +1104,7 @@
           },
           "users": {
             "title": "Users",
-            "description": "Accounts, demo users and profiles."
+            "description": "Switch a registered user's status between visitor, student, teacher, and admin."
           },
           "roles": {
             "title": "Roles & access",

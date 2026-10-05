@@ -33,6 +33,7 @@ import { ComingSoonCard } from './components/ComingSoonCard';
 import { AdminTerminal } from './components/AdminTerminal';
 import { ServerManager } from '@/components/ServerManager';
 import { LiveKitDiagnostics } from './components/LiveKitDiagnostics';
+import { UserRolesManager } from './components/UserRolesManager';
 
 type AdminCopy = Dictionary['dashboard']['teacher']['admin'];
 type TaxonomyCopy = Dictionary['dashboard']['teacher']['taxonomy'];
@@ -61,8 +62,10 @@ const SECTION_ICONS: Record<AdminSectionId, LucideIcon> = {
   terminal: Terminal,
 };
 
-function visibleSections(canUseTerminal: boolean): AdminSectionId[] {
-  const sections: AdminSectionId[] = ['taxonomy', 'courses', 'server', 'diagnostics'];
+function visibleSections(canUseTerminal: boolean, canManageUsers: boolean): AdminSectionId[] {
+  const sections: AdminSectionId[] = ['taxonomy', 'courses'];
+  if (canManageUsers) sections.push('users');
+  sections.push('server', 'diagnostics');
   if (canUseTerminal) sections.push('terminal');
   return sections;
 }
@@ -73,15 +76,20 @@ export function AdminPanel({
   taxonomyCopy,
   taxonomyNodes,
   canUseTerminal,
+  canManageUsers,
 }: {
   locale: Locale;
   copy: AdminCopy;
   taxonomyCopy: TaxonomyCopy;
   taxonomyNodes: TaxonomyNodeDto[];
   canUseTerminal: boolean;
+  canManageUsers: boolean;
 }) {
   const [section, setSection] = useState<AdminSectionId>('overview');
-  const sections = useMemo(() => visibleSections(canUseTerminal), [canUseTerminal]);
+  const sections = useMemo(
+    () => visibleSections(canUseTerminal, canManageUsers),
+    [canUseTerminal, canManageUsers],
+  );
 
   const getActiveSectionInfo = (id: AdminSectionId) => {
     if (id === 'courses') {
@@ -205,6 +213,20 @@ export function AdminPanel({
             </div>
           ) : null}
 
+          {section === 'users' && canManageUsers ? (
+            <div className="space-y-4">
+              <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader p-5 shadow-sm">
+                <h2 className="text-lg font-bold tracking-tight text-ink">{active.title}</h2>
+
+                <p className="mt-1 text-sm text-body">{active.description}</p>
+              </div>
+
+              <div className="overflow-hidden rounded-box border border-hairline bg-main p-4 shadow-sm sm:p-5">
+                <UserRolesManager locale={locale} copy={copy.usersTool} />
+              </div>
+            </div>
+          ) : null}
+
           {section === 'courses' ? (
             <div className="space-y-4">
               <div className="overflow-hidden rounded-box border border-hairline bg-sectionHeader p-5 shadow-sm">
@@ -257,6 +279,7 @@ export function AdminPanel({
 
           {section !== 'overview' &&
           section !== 'taxonomy' &&
+          section !== 'users' &&
           section !== 'courses' &&
           section !== 'server' &&
           section !== 'diagnostics' &&
