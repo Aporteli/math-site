@@ -28,7 +28,7 @@ function createPrismaClient(): PrismaClient {
     ca,
     rejectUnauthorized: true,
   },
-});დ
+});
 //აქამდე
 
   const adapter = new PrismaPg(pool);
