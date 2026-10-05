@@ -42,15 +42,18 @@ export async function GET() {
   });
 
   try {
-    // 1. Basic PostgreSQL + SSL connection
+    // ---------------------------------------------------------
+    // 1. BASIC CONNECTION
+    // ---------------------------------------------------------
+
     try {
       const result = await pool.query(`
         SELECT
           current_user,
           current_database(),
+          current_schema(),
           inet_client_addr()::text AS client_ip,
           version(),
-          current_schema(),
           now() AS server_time
       `);
 
@@ -65,7 +68,10 @@ export async function GET() {
       };
     }
 
-    // 2. SSL information
+    // ---------------------------------------------------------
+    // 2. SSL / TLS
+    // ---------------------------------------------------------
+
     try {
       const result = await pool.query(`
         SELECT
@@ -87,7 +93,154 @@ export async function GET() {
       };
     }
 
-    // 3. Check whether User table exists
+    // ---------------------------------------------------------
+    // 3. CONNECTION LIMIT
+    // ---------------------------------------------------------
+
+    try {
+      const result = await pool.query(`
+        SELECT
+          count(*)::int AS total_connections,
+
+          count(*) FILTER (
+            WHERE state = 'active'
+          )::int AS active_connections,
+
+          count(*) FILTER (
+            WHERE state = 'idle'
+          )::int AS idle_connections,
+
+          count(*) FILTER (
+            WHERE state = 'idle in transaction'
+          )::int AS idle_in_transaction_connections,
+
+          count(*) FILTER (
+            WHERE state = 'idle in transaction (aborted)'
+          )::int AS idle_in_transaction_aborted_connections,
+
+          current_setting('max_connections')::int AS max_connections,
+
+          current_setting('superuser_reserved_connections')::int
+            AS superuser_reserved_connections
+
+        FROM pg_stat_activity
+      `);
+
+      tests.connectionLimits = {
+        ok: true,
+        ...result.rows[0],
+      };
+    } catch (error: unknown) {
+      tests.connectionLimits = {
+        ok: false,
+        error: serializeError(error),
+      };
+    }
+
+    // ---------------------------------------------------------
+    // 4. CONNECTIONS BY USER
+    // ---------------------------------------------------------
+
+    try {
+      const result = await pool.query(`
+        SELECT
+          usename AS username,
+          count(*)::int AS connections,
+          count(*) FILTER (
+            WHERE state = 'active'
+          )::int AS active,
+          count(*) FILTER (
+            WHERE state = 'idle'
+          )::int AS idle
+        FROM pg_stat_activity
+        WHERE usename IS NOT NULL
+        GROUP BY usename
+        ORDER BY connections DESC
+      `);
+
+      tests.connectionsByUser = {
+        ok: true,
+        rows: result.rows,
+      };
+    } catch (error: unknown) {
+      tests.connectionsByUser = {
+        ok: false,
+        error: serializeError(error),
+      };
+    }
+
+    // ---------------------------------------------------------
+    // 5. CONNECTIONS BY APPLICATION
+    // ---------------------------------------------------------
+
+    try {
+      const result = await pool.query(`
+        SELECT
+          COALESCE(application_name, '') AS application_name,
+          count(*)::int AS connections,
+          count(*) FILTER (
+            WHERE state = 'active'
+          )::int AS active,
+          count(*) FILTER (
+            WHERE state = 'idle'
+          )::int AS idle
+        FROM pg_stat_activity
+        GROUP BY application_name
+        ORDER BY connections DESC
+      `);
+
+      tests.connectionsByApplication = {
+        ok: true,
+        rows: result.rows,
+      };
+    } catch (error: unknown) {
+      tests.connectionsByApplication = {
+        ok: false,
+        error: serializeError(error),
+      };
+    }
+
+    // ---------------------------------------------------------
+    // 6. ALL CONNECTION DETAILS
+    // ---------------------------------------------------------
+
+    try {
+      const result = await pool.query(`
+        SELECT
+          pid,
+          usename AS username,
+          datname AS database,
+          COALESCE(application_name, '') AS application_name,
+          client_addr::text AS client_addr,
+          state,
+          backend_start,
+          xact_start,
+          query_start,
+          state_change,
+          wait_event_type,
+          wait_event,
+          LEFT(query, 200) AS query
+        FROM pg_stat_activity
+        WHERE datname = current_database()
+        ORDER BY backend_start
+      `);
+
+      tests.connectionDetails = {
+        ok: true,
+        count: result.rows.length,
+        rows: result.rows,
+      };
+    } catch (error: unknown) {
+      tests.connectionDetails = {
+        ok: false,
+        error: serializeError(error),
+      };
+    }
+
+    // ---------------------------------------------------------
+    // 7. USER TABLE EXISTS
+    // ---------------------------------------------------------
+
     try {
       const result = await pool.query(`
         SELECT
@@ -110,7 +263,10 @@ export async function GET() {
       };
     }
 
-    // 4. Count users
+    // ---------------------------------------------------------
+    // 8. USER COUNT
+    // ---------------------------------------------------------
+
     try {
       const result = await pool.query(`
         SELECT COUNT(*)::int AS count
@@ -128,7 +284,10 @@ export async function GET() {
       };
     }
 
-    // 5. Read one user
+    // ---------------------------------------------------------
+    // 9. READ ONE USER
+    // ---------------------------------------------------------
+
     try {
       const result = await pool.query(`
         SELECT
@@ -157,8 +316,10 @@ export async function GET() {
       };
     }
 
-    // 6. Test the same type of query used by Prisma/NextAuth:
-    // SELECT one user with OR conditions.
+    // ---------------------------------------------------------
+    // 10. PRISMA findFirst EQUIVALENT QUERY
+    // ---------------------------------------------------------
+
     try {
       const result = await pool.query(
         `
@@ -186,7 +347,10 @@ export async function GET() {
       };
     }
 
-    // 7. Check privileges for current user
+    // ---------------------------------------------------------
+    // 11. USER PRIVILEGES
+    // ---------------------------------------------------------
+
     try {
       const result = await pool.query(`
         SELECT
@@ -195,16 +359,19 @@ export async function GET() {
             'public."User"',
             'SELECT'
           ) AS can_select,
+
           has_table_privilege(
             current_user,
             'public."User"',
             'INSERT'
           ) AS can_insert,
+
           has_table_privilege(
             current_user,
             'public."User"',
             'UPDATE'
           ) AS can_update,
+
           has_table_privilege(
             current_user,
             'public."User"',
@@ -222,6 +389,33 @@ export async function GET() {
         error: serializeError(error),
       };
     }
+
+    // ---------------------------------------------------------
+    // 12. DATABASE SIZE
+    // ---------------------------------------------------------
+
+    try {
+      const result = await pool.query(`
+        SELECT
+          pg_size_pretty(
+            pg_database_size(current_database())
+          ) AS database_size
+      `);
+
+      tests.databaseSize = {
+        ok: true,
+        ...result.rows[0],
+      };
+    } catch (error: unknown) {
+      tests.databaseSize = {
+        ok: false,
+        error: serializeError(error),
+      };
+    }
+
+    // ---------------------------------------------------------
+    // FINAL RESULT
+    // ---------------------------------------------------------
 
     const failedTests = Object.entries(tests)
       .filter(([, value]) => {
