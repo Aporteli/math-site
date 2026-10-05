@@ -242,9 +242,7 @@ export function UserRolesManager({ locale, copy }: { locale: Locale; copy: Users
                 <div className="min-w-0">
                   <div className="flex min-w-0 flex-wrap items-center gap-2">
                     <p className="truncate text-sm font-bold text-ink">{user.name}</p>
-                    <span className={`rounded-box px-2 py-0.5 text-[11px] font-bold ${ROLE_CHIP[user.role]}`}>
-                      {copy.roles[user.role]}
-                    </span>
+                    
                     {user.isSelf ? (
                       <span className="rounded-box bg-sectionHeader px-2 py-0.5 text-[11px] font-bold text-muted">{copy.you}</span>
                     ) : null}
