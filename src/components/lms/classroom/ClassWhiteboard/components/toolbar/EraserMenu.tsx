@@ -33,7 +33,7 @@ export function EraserMenu({
           type="button"
           title="საშლელის სისქე"
           onClick={() => { setActiveTool('eraser'); setIsOpen(!isOpen); closeOtherMenus(); }}
-          className="flex h-full cursor-pointer items-center justify-center rounded-box border-l border-hairline px-1 transition-colors duration-200 hover:bg-mainButtonHover hover:text-mainText">
+          className="flex h-full cursor-pointer items-center justify-center px-1 transition-colors duration-200 hover:bg-mainButtonHover hover:text-mainText">
           <ChevronDown className={`size-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>

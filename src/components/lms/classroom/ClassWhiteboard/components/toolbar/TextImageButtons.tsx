@@ -26,7 +26,7 @@ export function TextImageButtons({
   closeOtherMenus,
 }: Props) {
   return (
-    <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
+    <div className="flex shrink-0 items-center gap-0.5 border-hairline pr-1.5">
       <button
         type="button"
         data-toolbar-key="text"
@@ -36,7 +36,7 @@ export function TextImageButtons({
           setIsOpen(false);
           closeOtherMenus();
         }}
-        className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-box text-mainText transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] sm:size-8">
+        className="flex size-7 shrink-0 cursor-pointer items-center justify-center border-r border-hairline text-mainText transition-all duration-200 hover:bg-mainButtonHover hover:text-mainText active:scale-[0.98] sm:size-8">
         <Type className="size-3.5 sm:size-4" />
       </button>
 
@@ -60,7 +60,7 @@ export function TextImageButtons({
               setIsOpen(!isOpen);
               closeOtherMenus();
             }}
-            className="flex h-full cursor-pointer items-center justify-center rounded-box border-l border-hairline px-1 text-mainText transition-colors duration-200 hover:bg-mainButtonHover hover:text-mainText">
+            className="flex h-full cursor-pointer items-center justify-center px-1 text-mainText transition-colors duration-200 hover:bg-mainButtonHover hover:text-mainText">
             <ChevronDown
               className={`size-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
             />
