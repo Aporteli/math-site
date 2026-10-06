@@ -9,14 +9,10 @@ import type { CanvasElement, KonvaCanvasHandle } from '../../KonvaCanvas/utils/t
 import { ChunkAssembler, type ChunkObservation } from '../utils/chunk';
 import { adaptElementsForTheme } from '../utils/theme';
 import type { BoardView, HistoryMap } from '../utils/types';
-import {
-  assignedFullSyncPayload,
-  beginWhiteboardFullSync,
-  fullSyncKind,
-  sharedFullSyncPayload,
-  type BoardAssignmentMap,
-} from '@/lib/livekit/board-assignment';
+import { beginWhiteboardFullSync, fullSyncKind, type BoardAssignmentMap } from '@/lib/livekit/board-assignment';
 import { applyPageDelta } from '../utils/whiteboard-delta';
+import { enqueueFreshFullSync } from '../utils/enqueue-fresh-sync';
+import type { PublishDataSafe } from './usePublishDataSafe';
 import { noteWhiteboard, whiteboardPayloadType } from '@/lib/livekit/diagnostics/whiteboard-trace';
 import {
   expectWhiteboardPaint,
@@ -104,7 +100,9 @@ function noteChunk(observation: ChunkObservation, senderIdentity: string | null)
 interface Options {
   room: Room | null;
   isTeacher: boolean;
-  publishDataSafe?: (payload: object, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>;
+  publishDataSafe?: PublishDataSafe;
+  noteSnapshotSent?: (pages: CanvasElement[][], assignedPageIndex?: number | null) => void;
+  adoptRemotePage?: (pageIndex: number, previous: readonly CanvasElement[]) => void;
   isDark: boolean;
   updateUndoRedoState: () => void;
   canvasRef: RefObject<KonvaCanvasHandle | null>;
@@ -128,6 +126,8 @@ export function useWhiteboardDataChannel(opts: Options) {
     room,
     isTeacher,
     publishDataSafe,
+    noteSnapshotSent,
+    adoptRemotePage,
     isDark,
     updateUndoRedoState,
     canvasRef,
@@ -148,6 +148,11 @@ export function useWhiteboardDataChannel(opts: Options) {
 
   const publishRef = useRef<Options['publishDataSafe']>(publishDataSafe);
   publishRef.current = publishDataSafe;
+  const noteSnapshotSentRef = useRef(noteSnapshotSent);
+  noteSnapshotSentRef.current = noteSnapshotSent;
+  const adoptRemotePageRef = useRef(adoptRemotePage);
+  adoptRemotePageRef.current = adoptRemotePage;
+  const lastAppliedSequenceBySenderRef = useRef(new Map<string, number>());
   const fullSyncReceivedRef = useRef<Room | null>(null);
   const syncRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastRequestTimeRef = useRef(0);
@@ -192,7 +197,10 @@ export function useWhiteboardDataChannel(opts: Options) {
         transferId = result.observation.transferId;
         if (result.observation.messageId) failureId = result.observation.messageId;
         noteChunk(result.observation, participant?.identity ?? null);
-        for (const expired of chunkAssemblerRef.current.takeExpired()) noteChunk(expired, null);
+        for (const expired of chunkAssemblerRef.current.takeExpired()) {
+          noteChunk(expired, null);
+          if (expired.messageId || expired.transferId !== null) sendSyncRequest();
+        }
         if (!result.payload) return;
 
         const receivedAt = Date.now();
@@ -269,6 +277,23 @@ export function useWhiteboardDataChannel(opts: Options) {
             payloadBytes: result.payload.byteLength,
           });
         }
+
+        const sender = participant?.identity ?? 'unknown';
+        const rememberApplied = () => {
+          if (sequence === null) return;
+          const previous = lastAppliedSequenceBySenderRef.current.get(sender) ?? 0;
+          if (sequence > previous) lastAppliedSequenceBySenderRef.current.set(sender, sequence);
+        };
+        const gateContent = () => {
+          if (sequence === null) return true;
+          const last = lastAppliedSequenceBySenderRef.current.get(sender) ?? 0;
+          if (sequence > last + 1) sendSyncRequest();
+          if (sequence <= last) {
+            if (messageId) noteWhiteboardIgnored({ messageId, reason: 'stale_sequence', at: Date.now() });
+            return false;
+          }
+          return true;
+        };
 
         const stateStarted = Date.now();
         const finish = (pageIndex?: number, elementCount?: number | null, paint = true) => {
@@ -360,17 +385,23 @@ export function useWhiteboardDataChannel(opts: Options) {
           }
           const requesterId = participantUserId(participant);
           const assigned = assignedPageByStudent?.[requesterId];
-          const payloadToSend =
-            typeof assigned === 'number'
-              ? assignedFullSyncPayload(pagesRef.current, assigned)
-              : sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current);
           const claim = beginWhiteboardFullSync([participant.identity], fullSyncKind(assigned));
-          if (claim) void publish(payloadToSend, true, claim.identities).finally(claim.release);
+          if (claim && noteSnapshotSentRef.current) {
+            void enqueueFreshFullSync(
+              publish,
+              pagesRef,
+              currentPageIndexRef,
+              claim.identities,
+              typeof assigned === 'number' ? assigned : null,
+              noteSnapshotSentRef.current,
+            ).finally(claim.release);
+          }
           if (messageId) noteWhiteboardIgnored({ messageId, reason: 'sync_request', at: Date.now() });
           return;
         }
 
         if (data.type === 'WHITEBOARD_FULL_SYNC') {
+          if (!gateContent()) return;
           if (Array.isArray(data.pages)) {
             fullSyncReceivedRef.current = room;
             if (hasAppliedLiveSyncRef) hasAppliedLiveSyncRef.current = true;
@@ -398,6 +429,7 @@ export function useWhiteboardDataChannel(opts: Options) {
             });
             setPages(newPages);
             pagesRef.current = newPages;
+            noteSnapshotSentRef.current?.(newPages);
             setCurrentPageIndex(newPageIndex);
             currentPageIndexRef.current = newPageIndex;
             updateUndoRedoState();
@@ -432,6 +464,7 @@ export function useWhiteboardDataChannel(opts: Options) {
           updated[pageIndex] = adaptedElements;
           setPages(updated);
           pagesRef.current = updated;
+          isRemoteUpdateRef.current = false;
           if (isTeacher) {
             historyMapRef.current.set(pageIndex, { states: [adaptedElements], index: 0 });
             updateUndoRedoState();
@@ -442,13 +475,11 @@ export function useWhiteboardDataChannel(opts: Options) {
             historyMapRef.current.set(pageIndex, pHist);
             updateUndoRedoState();
           }
-          setTimeout(() => {
-            isRemoteUpdateRef.current = false;
-          }, 30);
           finish(pageIndex, adaptedElements.length);
         };
 
         if (data.type === 'WHITEBOARD_DELTA') {
+          if (!gateContent()) return;
           const pageIndex = typeof data.pageIndex === 'number' ? data.pageIndex : 0;
           const hasChange =
             (Array.isArray(data.added) && data.added.length > 0) ||
@@ -473,10 +504,13 @@ export function useWhiteboardDataChannel(opts: Options) {
             deleted: data.deleted,
           });
           commitRemotePage(pageIndex, merged, false);
+          rememberApplied();
+          adoptRemotePageRef.current?.(pageIndex, current);
           return;
         }
 
         if (data.type === 'WHITEBOARD_SYNC' && Array.isArray(data.elements)) {
+          if (!gateContent()) return;
           const pageIndex = typeof data.pageIndex === 'number' ? data.pageIndex : 0;
           if (!isTeacher && assignedPageIndex !== null && pageIndex !== assignedPageIndex) {
             if (messageId) noteWhiteboardIgnored({ messageId, reason: 'assigned_page', at: Date.now() });
@@ -484,7 +518,9 @@ export function useWhiteboardDataChannel(opts: Options) {
           }
           isRemoteUpdateRef.current = true;
           if (hasAppliedLiveSyncRef) hasAppliedLiveSyncRef.current = true;
+          const current = pagesRef.current[pageIndex] ?? [];
           commitRemotePage(pageIndex, data.elements);
+          adoptRemotePageRef.current?.(pageIndex, current);
         } else if (data.type === 'WHITEBOARD_SYNC') {
           if (messageId) noteWhiteboardIgnored({ messageId, reason: 'missing_elements', at: Date.now() });
         } else if (data.type === 'WHITEBOARD_PAGE_COUNT') {
@@ -524,7 +560,10 @@ export function useWhiteboardDataChannel(opts: Options) {
     };
 
     const expireTimer = setInterval(() => {
-      for (const expired of chunkAssemblerRef.current.takeExpired()) noteChunk(expired, null);
+      for (const expired of chunkAssemblerRef.current.takeExpired()) {
+        noteChunk(expired, null);
+        if (expired.messageId || expired.transferId !== null) sendSyncRequest();
+      }
     }, 2000);
 
     room.on(RoomEvent.DataReceived, handleData);

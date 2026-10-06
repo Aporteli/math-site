@@ -954,19 +954,27 @@ function betterStatus(current: WhiteboardMessageStatus, next: WhiteboardMessageS
   return rank(next) >= rank(current) ? next : current;
 }
 
+const CLEAR_MISSING_CHUNKS = new Set<WhiteboardMessageStatus>(['assembled', 'parsed', 'applied', 'ack_sent', 'ack_received']);
+
+export function mergeWhiteboardTraces(current: WhiteboardMessageTrace, incoming: WhiteboardMessageTrace): WhiteboardMessageTrace {
+  const older = current.updatedAt <= incoming.updatedAt ? current : incoming;
+  const newer = current.updatedAt <= incoming.updatedAt ? incoming : current;
+  const merged: WhiteboardMessageTrace = { ...older, ...newer };
+  merged.status = betterStatus(older.status, newer.status);
+  merged.updatedAt = Math.max(older.updatedAt, newer.updatedAt);
+  if (!newer.chunkPublishOffsetsMs && older.chunkPublishOffsetsMs) merged.chunkPublishOffsetsMs = older.chunkPublishOffsetsMs;
+  if (!newer.chunkReceiveOffsetsMs && older.chunkReceiveOffsetsMs) merged.chunkReceiveOffsetsMs = older.chunkReceiveOffsetsMs;
+  if (newer.gapSequences === 'none') merged.gapSequences = 'none';
+  if (CLEAR_MISSING_CHUNKS.has(merged.status)) delete merged.missingChunks;
+  return merged;
+}
+
 function mergeOwned(items: OwnedTrace[]): OwnedTrace {
   const ordered = [...items].sort((left, right) => left.trace.updatedAt - right.trace.updatedAt);
-  let trace: WhiteboardMessageTrace = { ...ordered[0].trace };
+  let trace = ordered[0].trace;
   let carrier = ordered[0];
   for (const item of ordered.slice(1)) {
-    const incoming = item.trace;
-    const merged: WhiteboardMessageTrace = { ...trace, ...incoming };
-    merged.status = betterStatus(trace.status, incoming.status);
-    merged.updatedAt = Math.max(trace.updatedAt, incoming.updatedAt);
-    if (!incoming.chunkPublishOffsetsMs && trace.chunkPublishOffsetsMs) merged.chunkPublishOffsetsMs = trace.chunkPublishOffsetsMs;
-    if (!incoming.chunkReceiveOffsetsMs && trace.chunkReceiveOffsetsMs) merged.chunkReceiveOffsetsMs = trace.chunkReceiveOffsetsMs;
-    if (incoming.gapSequences === 'none') merged.gapSequences = 'none';
-    trace = merged;
+    trace = mergeWhiteboardTraces(trace, item.trace);
     carrier = item;
   }
   return { ...carrier, trace };
@@ -993,15 +1001,18 @@ function chunkTimes(start: number | undefined, offsetsMs: number[] | undefined):
 }
 
 const RECEIVE_APPLIED = new Set<WhiteboardMessageStatus>(['applied', 'ack_sent', 'ack_received']);
+const BENIGN_IGNORE = new Set(['assigned_page', 'empty_delta', 'pristine_board', 'sync_request']);
 
 function receiverStatus(receive: WhiteboardMessageTrace, acked: boolean): string {
   if (receive.status === 'receive_error') return 'Receive failed';
+  if (receive.status === 'ignored' && receive.ignoreReason && BENIGN_IGNORE.has(receive.ignoreReason)) return 'Ignored';
   if (receive.status === 'ignored') return 'Not applied';
   if (receive.status === 'receiving' || (receive.missingChunks && !RECEIVE_APPLIED.has(receive.status) && receive.status !== 'parsed' && receive.status !== 'assembled')) {
     return 'Not assembled';
   }
   if (receive.status === 'assembled' || receive.status === 'parsed') return 'Not applied';
-  if (RECEIVE_APPLIED.has(receive.status) || receive.appliedAt !== undefined) return acked ? 'Applied' : 'ACK missing';
+  const acknowledged = acked || receive.status === 'ack_sent' || receive.ackSentAt !== undefined;
+  if (RECEIVE_APPLIED.has(receive.status) || receive.appliedAt !== undefined) return acknowledged ? 'Applied' : 'ACK missing';
   return 'Not applied';
 }
 
@@ -1010,7 +1021,7 @@ function worstStatus(statuses: string[]): string {
     'Applied',
     'Published',
     'No receiver report',
-    'Slow canvas update',
+    'Frame delay',
     'Missing sequence',
     'ACK missing',
     'Not received',
@@ -1038,7 +1049,7 @@ function receiveTimeline(receive: WhiteboardMessageTrace): Array<{ label: string
     { label: 'Assembled', at: receive.assembledAt ?? null },
     { label: 'Parsed', at: receive.parsedAt ?? null },
     { label: 'State update started', at: receive.stateUpdateStartedAt ?? null },
-    { label: 'Applied', at: receive.appliedAt ?? null },
+    { label: 'React state updated', at: receive.appliedAt ?? null },
     { label: 'ACK sent', at: receive.ackSentAt ?? null },
   ];
 }
@@ -1156,8 +1167,8 @@ export function buildWhiteboardDeliveries(sources: WhiteboardTraceSource[]): Whi
         elementCount: paint.trace.elementCount ?? null,
         senderName: paint.name,
         senderIdentity: paint.identity,
-        status: 'Slow canvas update',
-        note: 'The canvas took longer than usual to paint. This is UI time on that browser, not evidence that a whiteboard message was lost.',
+        status: 'Frame delay',
+        note: 'Two animation frames passed after the elements update before the browser painted. This is frame delay, not Konva draw time, and it is not evidence that a whiteboard message was lost.',
         timeline: [],
         durations: [{ label: 'Render', ms: paint.trace.renderDurationMs ?? null }],
         receivers: [],
@@ -1201,7 +1212,7 @@ export function buildWhiteboardDeliveries(sources: WhiteboardTraceSource[]): Whi
       const status = receiverStatus(item.trace, Boolean(ack || (acks.length === 1 && receives.length === 1)));
       const detail =
         [
-          item.trace.missingChunks ? `Missing chunks ${item.trace.missingChunks}` : null,
+          item.trace.status === 'receiving' && item.trace.missingChunks ? `Missing chunks ${item.trace.missingChunks}` : null,
           item.trace.duplicateChunks ? `Duplicate chunks ${item.trace.duplicateChunks}` : null,
           item.trace.outOfOrderChunks ? 'Chunks arrived out of order' : null,
           item.trace.duplicateMessage ? 'Duplicate message' : null,

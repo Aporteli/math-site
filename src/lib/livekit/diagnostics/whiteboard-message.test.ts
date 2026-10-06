@@ -220,6 +220,134 @@ function gapsAndAssembly() {
   assert.equal(partialView?.receivers[0]?.status ?? partialView?.status, 'Not assembled');
 }
 
+function labelFixes() {
+  const views = buildWhiteboardDeliveries([
+    {
+      name: 'Student',
+      identity: 'student-1',
+      samples: [
+        {
+          t: '2026-10-03T07:20:00.000Z',
+          whiteboardMessages: [
+            {
+              messageId: 'wb_stalechunks1',
+              slot: 'receive',
+              type: 'WHITEBOARD_DELTA',
+              status: 'receiving',
+              updatedAt: 1,
+              missingChunks: '1',
+              peerIdentity: 'teacher-1',
+            },
+            {
+              messageId: 'wb_stalechunks1',
+              slot: 'receive',
+              type: 'WHITEBOARD_DELTA',
+              status: 'applied',
+              updatedAt: 2,
+              appliedAt: 2,
+              ackSentAt: 3,
+              peerIdentity: 'teacher-1',
+            },
+            {
+              messageId: 'wb_ignoredpage1',
+              slot: 'receive',
+              type: 'WHITEBOARD_DELTA',
+              status: 'ignored',
+              updatedAt: 4,
+              ignoreReason: 'assigned_page',
+              peerIdentity: 'teacher-1',
+            },
+            {
+              messageId: 'wb_appliedok01',
+              slot: 'receive',
+              type: 'WHITEBOARD_DELTA',
+              status: 'applied',
+              updatedAt: 5,
+              appliedAt: 5,
+              ackSentAt: 6,
+              peerIdentity: 'teacher-1',
+            },
+            {
+              messageId: 'wb_acksentonly1',
+              slot: 'receive',
+              type: 'WHITEBOARD_DELTA',
+              status: 'ack_sent',
+              updatedAt: 7,
+              appliedAt: 7,
+              ackSentAt: 8,
+              peerIdentity: 'teacher-1',
+            },
+            {
+              messageId: 'wb_ackmissing1',
+              slot: 'receive',
+              type: 'WHITEBOARD_DELTA',
+              status: 'applied',
+              updatedAt: 9,
+              appliedAt: 9,
+              peerIdentity: 'teacher-1',
+            },
+            {
+              messageId: 'paint_framedelay1',
+              slot: 'paint',
+              type: 'CANVAS_PAINT',
+              status: 'slow_paint',
+              updatedAt: 10,
+              renderDurationMs: 80,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Other student',
+      identity: 'student-2',
+      samples: [
+        {
+          t: '2026-10-03T07:20:00.100Z',
+          whiteboardMessages: [
+            {
+              messageId: 'wb_appliedok01',
+              slot: 'receive',
+              type: 'WHITEBOARD_DELTA',
+              status: 'ignored',
+              updatedAt: 6,
+              ignoreReason: 'empty_delta',
+              peerIdentity: 'teacher-1',
+            },
+          ],
+        },
+      ],
+    },
+  ]);
+
+  const stale = views.find((view) => view.messageId === 'wb_stalechunks1');
+  assert.equal(stale?.receivers[0]?.status, 'Applied');
+  assert.equal(stale?.receivers[0]?.detail ?? null, null);
+  assert.equal(
+    stale?.receivers[0]?.timeline.some((point) => point.label === 'React state updated'),
+    true,
+  );
+
+  const ignored = views.find((view) => view.messageId === 'wb_ignoredpage1');
+  assert.equal(ignored?.receivers[0]?.status, 'Ignored');
+  assert.equal(ignored?.status, 'Ignored');
+
+  const mixed = views.find((view) => view.messageId === 'wb_appliedok01');
+  assert.equal(mixed?.status, 'Applied');
+  assert.equal(mixed?.receivers.some((receiver) => receiver.status === 'Ignored'), true);
+
+  const acked = views.find((view) => view.messageId === 'wb_acksentonly1');
+  assert.equal(acked?.receivers[0]?.status, 'Applied');
+
+  const missingAck = views.find((view) => view.messageId === 'wb_ackmissing1');
+  assert.equal(missingAck?.receivers[0]?.status, 'ACK missing');
+
+  const paint = views.find((view) => view.messageId === 'paint_framedelay1');
+  assert.equal(paint?.status, 'Frame delay');
+  assert.match(paint?.note ?? '', /frame delay/i);
+}
+
 lifecycle();
 gapsAndAssembly();
+labelFixes();
 console.log('whiteboard message diagnostics tests passed');

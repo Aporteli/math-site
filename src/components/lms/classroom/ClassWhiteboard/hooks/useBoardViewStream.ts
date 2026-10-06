@@ -9,7 +9,7 @@ interface Options {
   isTeacher: boolean;
   lockedStudentIds: Set<string>;
   assignedPageByStudent: Record<string, number>;
-  publishDataSafe: (payload: object, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>;
+  publishDataSafe: (payload: object, reliable?: boolean, destinationIdentities?: string[]) => Promise<unknown>;
   zoomScale: number;
   stagePos: { x: number; y: number };
   currentPageIndex: number;

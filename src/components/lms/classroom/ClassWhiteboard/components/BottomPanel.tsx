@@ -1,6 +1,6 @@
 'use client';
 
-import type { RefObject } from 'react';
+import { memo, type RefObject } from 'react';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { ZoomControls } from './bottom/ZoomControls';
 import { PageNavigation } from './bottom/PageNavigation';
@@ -32,7 +32,7 @@ interface Props {
   disabled?: boolean;
 }
 
-export function BottomPanel(props: Props) {
+export const BottomPanel = memo(function BottomPanel(props: Props) {
   return (
     <div className={`relative z-[100] flex w-full min-w-0 flex-col items-center justify-center pt-1 px-1 sm:px-2 pointer-events-auto shrink-0 select-none ${
       props.isFullscreen ? 'pb-[calc(0.75rem+env(safe-area-inset-bottom))]' : 'pb-3'
@@ -81,4 +81,4 @@ export function BottomPanel(props: Props) {
       </div>
     </div>
   );
-}
+});

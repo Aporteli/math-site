@@ -1,4 +1,4 @@
-import type { WhiteboardMessageTrace } from './whiteboard-message';
+import { mergeWhiteboardTraces, type WhiteboardMessageTrace } from './whiteboard-message';
 
 export const DIAGNOSTIC_EVENT_KINDS = [
   'connected',
@@ -599,6 +599,17 @@ export function compactDiagnosticSamples(samples: DiagnosticSample[], nowMs: num
   return kept;
 }
 
+function mergeSampleMessages(traces: WhiteboardMessageTrace[]): WhiteboardMessageTrace[] {
+  const merged = new Map<string, WhiteboardMessageTrace>();
+  for (const trace of traces) {
+    const key = `${trace.messageId}\u0000${trace.slot}\u0000${trace.peerIdentity ?? ''}`;
+    const existing = merged.get(key);
+    merged.set(key, existing ? mergeWhiteboardTraces(existing, trace) : trace);
+  }
+  const values = [...merged.values()];
+  return values.length > 48 ? values.slice(values.length - 48) : values;
+}
+
 function attachWhiteboardMessages(
   existing: DiagnosticSample[],
   sample: DiagnosticSample,
@@ -607,8 +618,8 @@ function attachWhiteboardMessages(
   const incoming = sample.whiteboardMessages;
   if (!incoming || incoming.length === 0) return existing;
   const last = existing.at(-1);
-  if (!last) return compactDiagnosticSamples([{ ...sample, whiteboardMessages: incoming.slice(-48) }], nowMs);
-  const merged = [...(last.whiteboardMessages ?? []), ...incoming].slice(-48);
+  if (!last) return compactDiagnosticSamples([{ ...sample, whiteboardMessages: mergeSampleMessages(incoming) }], nowMs);
+  const merged = mergeSampleMessages([...(last.whiteboardMessages ?? []), ...incoming]);
   const mainThreadGapMs = Math.max(last.mainThreadGapMs ?? 0, sample.mainThreadGapMs ?? 0);
   const next = existing.slice(0, -1);
   next.push({
@@ -624,14 +635,17 @@ export function appendDiagnosticSample(
   sample: DiagnosticSample,
   nowMs: number,
 ): DiagnosticSample[] {
+  const prepared = sample.whiteboardMessages?.length
+    ? { ...sample, whiteboardMessages: mergeSampleMessages(sample.whiteboardMessages) }
+    : sample;
   const last = existing.at(-1);
   if (last) {
     const gap = nowMs - Date.parse(last.t);
     const tooSoon = !Number.isFinite(gap) || gap < SAMPLE_MIN_GAP_MS;
     const quiet = Number.isFinite(gap) && gap < SAMPLE_QUIET_GAP_MS && !sampleChanged(last, sample);
-    if (tooSoon || quiet) return attachWhiteboardMessages(existing, sample, nowMs);
+    if (tooSoon || quiet) return attachWhiteboardMessages(existing, prepared, nowMs);
   }
-  return compactDiagnosticSamples([...existing, sample], nowMs);
+  return compactDiagnosticSamples([...existing, prepared], nowMs);
 }
 
 export function isAroundClock(iso: string, targetMinute: number, windowMinutes: number): boolean {

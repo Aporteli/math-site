@@ -3,25 +3,37 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Room } from 'livekit-client';
+import { ConnectionState, RoomEvent } from 'livekit-client';
 import type { CanvasElement } from '../../KonvaCanvas/utils/types';
-import { adaptStrokeForTheme } from '../utils/theme';
 import type { HistoryMap } from '../utils/types';
 import { getCourseWhiteboardAction, saveCourseWhiteboardAction } from '@/lib/actions/course-whiteboard';
 import { beginWhiteboardFullSync, fullSyncKind, invalidateWhiteboardFullSync } from '@/lib/livekit/board-assignment';
 import { diffPageElements } from '../utils/whiteboard-delta';
+import { enqueueFreshFullSync } from '../utils/enqueue-fresh-sync';
+import type { PublishDataSafe } from './usePublishDataSafe';
 
 interface Options {
   courseId: string;
   isTeacher: boolean;
   isDark: boolean;
-  publishDataSafe: (payload: object, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>;
+  room: Room | null;
+  publishDataSafe: PublishDataSafe;
   getSyncDestinations?: (pageIndex: number) => string[] | undefined;
-  broadcastBoard?: () => void;
+  broadcastBoard?: () => Promise<boolean>;
+}
+
+const HISTORY_LIMIT = 50;
+
+function capHistory(states: CanvasElement[][], index: number): { states: CanvasElement[][]; index: number } {
+  if (states.length <= HISTORY_LIMIT) return { states, index };
+  const extra = states.length - HISTORY_LIMIT;
+  return { states: states.slice(extra), index: Math.max(0, index - extra) };
 }
 
 const SAVE_DEBOUNCE_MS = 1500;
 
-export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSafe, getSyncDestinations, broadcastBoard }: Options) {
+export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe, getSyncDestinations, broadcastBoard }: Options) {
   const isRemoteUpdateRef = useRef(false);
   // True once the initial DB read has completed (whether or not a saved board
   // existed). Prevents the teacher from overwriting a saved board with the
@@ -45,6 +57,20 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
 
   const pagesRef = useRef<CanvasElement[][]>(pages);
   const currentPageIndexRef = useRef<number>(0);
+  const lastSentRef = useRef<CanvasElement[][]>(pages.map((page) => page));
+  const dirtyRef = useRef(false);
+  const fullSyncPendingRef = useRef(false);
+  const flushingRef = useRef(false);
+  const publishRef = useRef(publishDataSafe);
+  publishRef.current = publishDataSafe;
+  const getSyncDestinationsRef = useRef(getSyncDestinations);
+  getSyncDestinationsRef.current = getSyncDestinations;
+  const broadcastRef = useRef(broadcastBoard);
+  broadcastRef.current = broadcastBoard;
+  const roomRef = useRef(room);
+  roomRef.current = room;
+  const isTeacherRef = useRef(isTeacher);
+  isTeacherRef.current = isTeacher;
 
   const updateUndoRedoState = useCallback(() => {
     const pageHist = historyMapRef.current.get(currentPageIndexRef.current);
@@ -78,6 +104,7 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
 
             setPages(loadedPages);
             pagesRef.current = loadedPages;
+            lastSentRef.current = loadedPages.map((page) => page);
             setCurrentPageIndex(loadedIndex);
             currentPageIndexRef.current = loadedIndex;
 
@@ -95,35 +122,6 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
       cancelled = true;
     };
   }, [courseId, updateUndoRedoState]);
-
-  // Theme conversion
-  useEffect(() => {
-    let updated = false;
-    const newPages = pagesRef.current.map((page) =>
-      page.map((el) => {
-        const nextStroke = adaptStrokeForTheme(el.stroke, isDark);
-        if (nextStroke !== el.stroke) {
-          updated = true;
-          return { ...el, stroke: nextStroke };
-        }
-        return el;
-      }),
-    );
-
-    if (updated) {
-      setPages(newPages);
-      pagesRef.current = newPages;
-
-      const pIndex = currentPageIndexRef.current;
-      const hist = historyMapRef.current.get(pIndex);
-      if (hist) {
-        const nextStates = hist.states.slice(0, hist.index + 1);
-        nextStates.push(newPages[pIndex]);
-        historyMapRef.current.set(pIndex, { states: nextStates, index: nextStates.length - 1 });
-        updateUndoRedoState();
-      }
-    }
-  }, [isDark, updateUndoRedoState]);
 
   // Sync refs
   useEffect(() => {
@@ -163,50 +161,179 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     };
   }, [isTeacher, courseId]);
 
-  const publishPageDelta = useCallback(
-    (pageIndex: number, previous: readonly CanvasElement[], next: readonly CanvasElement[]) => {
-      const destinations = getSyncDestinations?.(pageIndex);
-      if (destinations && destinations.length === 0) return;
-      const delta = diffPageElements(previous, next);
-      if (delta.added.length === 0 && delta.updated.length === 0 && delta.deleted.length === 0) return;
-      void publishDataSafe(
-        {
-          type: 'WHITEBOARD_DELTA',
-          pageIndex,
-          ...(delta.added.length > 0 ? { added: delta.added } : {}),
-          ...(delta.updated.length > 0 ? { updated: delta.updated } : {}),
-          ...(delta.deleted.length > 0 ? { deleted: delta.deleted } : {}),
-        },
-        true,
-        destinations,
-      );
-    },
-    [getSyncDestinations, publishDataSafe],
-  );
+  const pushHistory = useCallback((pageIndex: number, elements: CanvasElement[]) => {
+    let pageHist = historyMapRef.current.get(pageIndex);
+    if (!pageHist) pageHist = { states: [[]], index: 0 };
+    const nextStates = pageHist.states.slice(0, pageHist.index + 1);
+    nextStates.push(elements);
+    const capped = capHistory(nextStates, nextStates.length - 1);
+    historyMapRef.current.set(pageIndex, capped);
+  }, []);
+
+  const noteSnapshotSent = useCallback((sentPages: CanvasElement[][], assignedPageIndex?: number | null) => {
+    if (typeof assignedPageIndex === 'number') {
+      const sent = lastSentRef.current.map((page) => page);
+      while (sent.length <= assignedPageIndex) sent.push([]);
+      sent[assignedPageIndex] = sentPages[assignedPageIndex] ?? [];
+      lastSentRef.current = sent;
+      return;
+    }
+    lastSentRef.current = sentPages.map((page) => page);
+  }, []);
+
+  const adoptRemotePage = useCallback((pageIndex: number, previous: readonly CanvasElement[]) => {
+    const sentPage = lastSentRef.current[pageIndex];
+    if (sentPage !== undefined && sentPage !== previous) return;
+    const sent = lastSentRef.current.map((page) => page);
+    sent[pageIndex] = pagesRef.current[pageIndex] ?? [];
+    lastSentRef.current = sent;
+  }, []);
+
+  const waitUntilConnected = useCallback(async () => {
+    const current = roomRef.current;
+    if (!current) return;
+    if (current.state === ConnectionState.Connected) return;
+    await new Promise<void>((resolve) => {
+      const done = () => {
+        current.off(RoomEvent.Connected, done);
+        current.off(RoomEvent.Reconnected, done);
+        resolve();
+      };
+      current.on(RoomEvent.Connected, done);
+      current.on(RoomEvent.Reconnected, done);
+    });
+  }, []);
+
+  const flushRef = useRef<() => void>(() => {});
+
+  const scheduleFlush = useCallback(() => {
+    if (!isTeacherRef.current) return;
+    dirtyRef.current = true;
+    flushRef.current();
+  }, []);
+
+  flushRef.current = () => {
+    if (flushingRef.current) return;
+    flushingRef.current = true;
+    void (async () => {
+      try {
+        while (dirtyRef.current || fullSyncPendingRef.current) {
+          await publishRef.current.whenContentIdle();
+          const currentRoom = roomRef.current;
+          if (!currentRoom || currentRoom.state !== ConnectionState.Connected) {
+            await waitUntilConnected();
+            if (!roomRef.current || roomRef.current.state !== ConnectionState.Connected) break;
+          }
+
+          if (fullSyncPendingRef.current) {
+            fullSyncPendingRef.current = false;
+            invalidateWhiteboardFullSync();
+            const broadcast = broadcastRef.current;
+            let ok = false;
+            if (broadcast) {
+              ok = await broadcast();
+            } else {
+              const claim = beginWhiteboardFullSync(undefined, fullSyncKind(null));
+              if (claim) {
+                const result = await enqueueFreshFullSync(
+                  publishRef.current,
+                  pagesRef,
+                  currentPageIndexRef,
+                  claim.identities,
+                  null,
+                  noteSnapshotSent,
+                ).finally(claim.release);
+                ok = result.ok;
+              }
+            }
+            if (!ok) {
+              fullSyncPendingRef.current = true;
+              dirtyRef.current = true;
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+              continue;
+            }
+          }
+
+          if (!dirtyRef.current) continue;
+          const snapshot = pagesRef.current.map((page) => page);
+          dirtyRef.current = false;
+          const base = lastSentRef.current;
+          let failed = false;
+          for (let pageIndex = 0; pageIndex < snapshot.length; pageIndex += 1) {
+            const previous = base[pageIndex] ?? [];
+            const next = snapshot[pageIndex] ?? [];
+            if (previous === next) continue;
+            const delta = diffPageElements(previous, next);
+            if (delta.added.length === 0 && delta.updated.length === 0 && delta.deleted.length === 0) {
+              const sent = lastSentRef.current.map((page) => page);
+              sent[pageIndex] = next;
+              lastSentRef.current = sent;
+              continue;
+            }
+            const destinations = getSyncDestinationsRef.current?.(pageIndex);
+            if (destinations && destinations.length === 0) continue;
+            const result = await publishRef.current(
+              {
+                type: 'WHITEBOARD_DELTA',
+                pageIndex,
+                ...(delta.added.length > 0 ? { added: delta.added } : {}),
+                ...(delta.updated.length > 0 ? { updated: delta.updated } : {}),
+                ...(delta.deleted.length > 0 ? { deleted: delta.deleted } : {}),
+              },
+              true,
+              destinations,
+            );
+            if (!result.ok) {
+              failed = true;
+              dirtyRef.current = true;
+              if (result.reason === 'not_connected') await waitUntilConnected();
+              else await new Promise((resolve) => setTimeout(resolve, 1000));
+              break;
+            }
+            const sent = lastSentRef.current.map((page) => page);
+            sent[pageIndex] = next;
+            lastSentRef.current = sent;
+          }
+          if (failed) continue;
+        }
+      } finally {
+        flushingRef.current = false;
+        if (dirtyRef.current || fullSyncPendingRef.current) flushRef.current();
+      }
+    })();
+  };
+
+  useEffect(() => {
+    if (!room) return;
+    const retry = () => {
+      if (dirtyRef.current || fullSyncPendingRef.current) flushRef.current();
+    };
+    room.on(RoomEvent.Connected, retry);
+    room.on(RoomEvent.Reconnected, retry);
+    return () => {
+      room.off(RoomEvent.Connected, retry);
+      room.off(RoomEvent.Reconnected, retry);
+    };
+  }, [room]);
 
   const handleElementsChange = useCallback(
-    (newElems: CanvasElement[], options?: { commitHistory?: boolean }) => {
+    (newElems: CanvasElement[], options?: { commitHistory?: boolean; publish?: boolean }) => {
       if (!isTeacher) return;
       if (isRemoteUpdateRef.current) return;
       const pIndex = currentPageIndexRef.current;
-      const previous = pagesRef.current[pIndex] ?? [];
       const updated = [...pagesRef.current];
       updated[pIndex] = newElems;
       setPages(updated);
       pagesRef.current = updated;
 
       if (options?.commitHistory !== false) {
-        let pageHist = historyMapRef.current.get(pIndex);
-        if (!pageHist) pageHist = { states: [[]], index: 0 };
-        const nextStates = pageHist.states.slice(0, pageHist.index + 1);
-        nextStates.push(newElems);
-        historyMapRef.current.set(pIndex, { states: nextStates, index: nextStates.length - 1 });
+        pushHistory(pIndex, newElems);
         updateUndoRedoState();
       }
 
-      publishPageDelta(pIndex, previous, newElems);
+      if (options?.publish !== false) scheduleFlush();
     },
-    [isTeacher, publishPageDelta, updateUndoRedoState],
+    [isTeacher, pushHistory, scheduleFlush, updateUndoRedoState],
   );
 
   const handleUndo = useCallback(() => {
@@ -217,7 +344,6 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
 
     pageHist.index -= 1;
     const targetElements = pageHist.states[pageHist.index];
-    const previous = pagesRef.current[pIndex] ?? [];
 
     const updated = [...pagesRef.current];
     updated[pIndex] = targetElements;
@@ -225,8 +351,8 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     pagesRef.current = updated;
 
     updateUndoRedoState();
-    publishPageDelta(pIndex, previous, targetElements);
-  }, [isTeacher, publishPageDelta, updateUndoRedoState]);
+    scheduleFlush();
+  }, [isTeacher, scheduleFlush, updateUndoRedoState]);
 
   const handleRedo = useCallback(() => {
     const pIndex = currentPageIndexRef.current;
@@ -235,7 +361,6 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
 
     pageHist.index += 1;
     const targetElements = pageHist.states[pageHist.index];
-    const previous = pagesRef.current[pIndex] ?? [];
 
     const updated = [...pagesRef.current];
     updated[pIndex] = targetElements;
@@ -243,8 +368,8 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     pagesRef.current = updated;
 
     updateUndoRedoState();
-    publishPageDelta(pIndex, previous, targetElements);
-  }, [publishPageDelta, updateUndoRedoState]);
+    scheduleFlush();
+  }, [scheduleFlush, updateUndoRedoState]);
 
   const handleClearPage = useCallback(() => {
     handleElementsChange([]);
@@ -252,21 +377,10 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
 
   const publishFullSync = useCallback(() => {
     invalidateWhiteboardFullSync();
-    if (broadcastBoard) {
-      broadcastBoard();
-      return;
-    }
-    const claim = beginWhiteboardFullSync(undefined, fullSyncKind(null));
-    if (!claim) return;
-    void publishDataSafe(
-      {
-        type: 'WHITEBOARD_FULL_SYNC',
-        pages: pagesRef.current,
-        currentPageIndex: currentPageIndexRef.current,
-      },
-      true,
-    ).finally(claim.release);
-  }, [broadcastBoard, publishDataSafe]);
+    fullSyncPendingRef.current = true;
+    dirtyRef.current = true;
+    flushRef.current();
+  }, []);
 
   const handleAddNewPage = useCallback(() => {
     const updated = [...pagesRef.current, []];
@@ -274,9 +388,15 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     setPages(updated);
     setCurrentPageIndex(newIdx);
     currentPageIndexRef.current = newIdx;
+    pagesRef.current = updated;
     historyMapRef.current.set(newIdx, { states: [[]], index: 0 });
-    void publishDataSafe({ type: 'WHITEBOARD_PAGE_COUNT', count: updated.length });
-  }, [publishDataSafe]);
+    const sent = lastSentRef.current.map((page) => page);
+    sent[newIdx] = updated[newIdx] ?? [];
+    lastSentRef.current = sent;
+    void publishDataSafe(() => ({ type: 'WHITEBOARD_PAGE_COUNT', count: pagesRef.current.length })).then((result) => {
+      if (!result.ok) publishFullSync();
+    });
+  }, [publishDataSafe, publishFullSync]);
 
   const handleDeletePages = useCallback(
     (indices: number[]) => {
@@ -324,7 +444,7 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
       updateUndoRedoState();
       publishFullSync();
     },
-    [handleElementsChange, publishDataSafe, publishFullSync, updateUndoRedoState],
+    [handleElementsChange, publishFullSync, updateUndoRedoState],
   );
 
   const handleDeletePage = useCallback(
@@ -373,12 +493,15 @@ export function useWhiteboardState({ courseId, isTeacher, isDark, publishDataSaf
     canRedo,
     updateUndoRedoState,
     handleElementsChange,
+    noteSnapshotSent,
+    adoptRemotePage,
     handleUndo,
     handleRedo,
     handleClearPage,
     handleAddNewPage,
     handleDeletePage,
     handleDeletePages,
+    publishFullSync,
     handleSwitchPage,
     togglePageSelect,
     selectAllPages,

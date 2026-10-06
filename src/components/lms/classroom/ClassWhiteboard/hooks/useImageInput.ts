@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, type MutableRefObject } from 'react';
 import type { CanvasElement } from '../../KonvaCanvas/utils/types';
+import { uploadImageToStorageAction } from '@/lib/actions/upload';
 
 interface Options {
   pagesRef: MutableRefObject<CanvasElement[][]>;
@@ -25,60 +26,65 @@ export function useImageInput({
       const img = new window.Image();
       img.src = dataUrl;
       img.onload = () => {
-        // How big the picture sits on the board. The stored bitmap stays sharper
-        // than this so text in a pasted screenshot is still readable.
-        const maxDisplay = 1200;
-        const maxBitmap = 2048;
-        const naturalW = img.naturalWidth || img.width || 300;
-        const naturalH = img.naturalHeight || img.height || 200;
+        void (async () => {
+          // How big the picture sits on the board. The stored bitmap stays sharper
+          // than this so text in a pasted screenshot is still readable.
+          const maxDisplay = 1200;
+          const maxBitmap = 2048;
+          const naturalW = img.naturalWidth || img.width || 300;
+          const naturalH = img.naturalHeight || img.height || 200;
 
-        let displayW = naturalW;
-        let displayH = naturalH;
-        if (displayW > maxDisplay || displayH > maxDisplay) {
-          const ratio = Math.min(maxDisplay / displayW, maxDisplay / displayH);
-          displayW = Math.round(displayW * ratio);
-          displayH = Math.round(displayH * ratio);
-        }
-
-        let src = dataUrl;
-        if (naturalW > maxBitmap || naturalH > maxBitmap) {
-          const ratio = Math.min(maxBitmap / naturalW, maxBitmap / naturalH);
-          const bitmapW = Math.max(1, Math.round(naturalW * ratio));
-          const bitmapH = Math.max(1, Math.round(naturalH * ratio));
-          const canvas = document.createElement('canvas');
-          canvas.width = bitmapW;
-          canvas.height = bitmapH;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return;
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          const keepPng = dataUrl.startsWith('data:image/png');
-          if (!keepPng) {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, bitmapW, bitmapH);
+          let displayW = naturalW;
+          let displayH = naturalH;
+          if (displayW > maxDisplay || displayH > maxDisplay) {
+            const ratio = Math.min(maxDisplay / displayW, maxDisplay / displayH);
+            displayW = Math.round(displayW * ratio);
+            displayH = Math.round(displayH * ratio);
           }
-          ctx.drawImage(img, 0, 0, bitmapW, bitmapH);
-          src = keepPng ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.92);
-        }
 
-        const newImageElem: CanvasElement = {
-          id: `el_img_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-          type: 'image',
-          x: pos ? pos.x : 100,
-          y: pos ? pos.y : 100,
-          width: displayW,
-          height: displayH,
-          src,
-          stroke: 'transparent',
-          strokeWidth: 0,
-        };
+          let src = dataUrl;
+          if (naturalW > maxBitmap || naturalH > maxBitmap) {
+            const ratio = Math.min(maxBitmap / naturalW, maxBitmap / naturalH);
+            const bitmapW = Math.max(1, Math.round(naturalW * ratio));
+            const bitmapH = Math.max(1, Math.round(naturalH * ratio));
+            const canvas = document.createElement('canvas');
+            canvas.width = bitmapW;
+            canvas.height = bitmapH;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            const keepPng = dataUrl.startsWith('data:image/png');
+            if (!keepPng) {
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, bitmapW, bitmapH);
+            }
+            ctx.drawImage(img, 0, 0, bitmapW, bitmapH);
+            src = keepPng ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.92);
+          }
 
-        const currentElems = pagesRef.current[targetPage] || [];
-        currentPageIndexRef.current = targetPage;
-        handleElementsChange([...currentElems, newImageElem]);
-        setActiveTool('select');
-        // Select on the next frame so the Konva node exists in the tree.
-        requestAnimationFrame(() => selectElement(newImageElem.id));
+          const uploaded = await uploadImageToStorageAction({ dataUrl: src });
+          if (!uploaded.success || !uploaded.url) return;
+
+          const newImageElem: CanvasElement = {
+            id: `el_img_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+            type: 'image',
+            x: pos ? pos.x : 100,
+            y: pos ? pos.y : 100,
+            width: displayW,
+            height: displayH,
+            src: uploaded.url,
+            stroke: 'transparent',
+            strokeWidth: 0,
+          };
+
+          const currentElems = pagesRef.current[targetPage] || [];
+          currentPageIndexRef.current = targetPage;
+          handleElementsChange([...currentElems, newImageElem]);
+          setActiveTool('select');
+          // Select on the next frame so the Konva node exists in the tree.
+          requestAnimationFrame(() => selectElement(newImageElem.id));
+        })();
       };
     },
     [pagesRef, currentPageIndexRef, handleElementsChange, setActiveTool, selectElement],

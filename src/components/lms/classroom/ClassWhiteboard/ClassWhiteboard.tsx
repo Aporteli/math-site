@@ -31,13 +31,12 @@ import { useBoardViewStream } from './hooks/useBoardViewStream';
 import { useBoardControlContext } from '../ClassroomRoomModal/components/BoardControlContext';
 import { useBreakout } from '../ClassroomRoomModal/breakout/BreakoutContext';
 import {
-  assignedFullSyncPayload,
   beginWhiteboardFullSync,
   destinationsForPage,
   fullSyncKind,
   identitiesForStudent,
-  sharedFullSyncPayload,
 } from '@/lib/livekit/board-assignment';
+import { enqueueFreshFullSync } from './utils/enqueue-fresh-sync';
 import { isStaffParticipant } from '@/lib/livekit/participant-identity';
 
 import { ClearConfirmDialog } from './components/ClearConfirmDialog';
@@ -133,16 +132,15 @@ export function ClassWhiteboard({
     [room, assignedPageByStudent],
   );
 
-  const broadcastImplRef = useRef(() => {});
-  const broadcastBoard = useCallback(() => {
-    broadcastImplRef.current();
-  }, []);
+  const broadcastImplRef = useRef<() => Promise<boolean>>(async () => false);
+  const broadcastBoard = useCallback(() => broadcastImplRef.current(), []);
 
   // --- Whiteboard pages & history ---
   const wb = useWhiteboardState({
     courseId,
     isTeacher,
     isDark,
+    room,
     publishDataSafe,
     getSyncDestinations,
     broadcastBoard,
@@ -165,18 +163,22 @@ export function ClassWhiteboard({
     canRedo,
     updateUndoRedoState,
     handleElementsChange,
+    noteSnapshotSent,
+    adoptRemotePage,
     handleUndo,
     handleRedo,
     handleClearPage,
     handleAddNewPage,
     handleDeletePages,
+    publishFullSync,
     handleSwitchPage,
     togglePageSelect,
     selectAllPages,
   } = wb;
 
-  broadcastImplRef.current = () => {
-    if (!isTeacher || !room) return;
+  broadcastImplRef.current = async () => {
+    if (!isTeacher || !room) return false;
+    const jobs: Promise<boolean>[] = [];
     const sent = new Set<string>();
     for (const [studentId, pageIndex] of Object.entries(assignedPageByStudent)) {
       const dest = identitiesForStudent(room, studentId);
@@ -184,8 +186,17 @@ export function ClassWhiteboard({
       dest.forEach((identity) => sent.add(identity));
       const assignedClaim = beginWhiteboardFullSync(dest, fullSyncKind(pageIndex));
       if (assignedClaim) {
-        void publishDataSafe(assignedFullSyncPayload(pagesRef.current, pageIndex), true, assignedClaim.identities).finally(
-          assignedClaim.release,
+        jobs.push(
+          enqueueFreshFullSync(
+            publishDataSafe,
+            pagesRef,
+            currentPageIndexRef,
+            assignedClaim.identities,
+            pageIndex,
+            noteSnapshotSent,
+          )
+            .finally(assignedClaim.release)
+            .then((result) => result.ok),
         );
       }
     }
@@ -196,24 +207,25 @@ export function ClassWhiteboard({
       const everyone = [...room.remoteParticipants.values()].map((participant) => participant.identity);
       const claim = beginWhiteboardFullSync(everyone, fullSyncKind(null));
       if (claim?.identities && claim.identities.length > 0) {
-        void publishDataSafe(
-          sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current),
-          true,
-          claim.identities,
-        ).finally(claim.release);
+        jobs.push(
+          enqueueFreshFullSync(publishDataSafe, pagesRef, currentPageIndexRef, claim.identities, null, noteSnapshotSent)
+            .finally(claim.release)
+            .then((result) => result.ok),
+        );
       }
-      return;
-    }
-    if (rest.length > 0) {
+    } else if (rest.length > 0) {
       const claim = beginWhiteboardFullSync(rest, fullSyncKind(null));
       if (claim) {
-        void publishDataSafe(
-          sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current),
-          true,
-          claim.identities,
-        ).finally(claim.release);
+        jobs.push(
+          enqueueFreshFullSync(publishDataSafe, pagesRef, currentPageIndexRef, claim.identities, null, noteSnapshotSent)
+            .finally(claim.release)
+            .then((result) => result.ok),
+        );
       }
     }
+    if (jobs.length === 0) return true;
+    const results = await Promise.all(jobs);
+    return results.every(Boolean);
   };
 
   useEffect(() => {
@@ -233,8 +245,10 @@ export function ClassWhiteboard({
         !!room && [...room.remoteParticipants.values()].some((participant) => isStaffParticipant(participant));
       if (otherStaffPresent) return;
     }
-    broadcastImplRef.current();
-  }, [assignedSnapshot, isTeacher, room]);
+    void broadcastImplRef.current().then((ok) => {
+      if (!ok) publishFullSync();
+    });
+  }, [assignedSnapshot, isTeacher, publishFullSync, room]);
 
   const breakoutWasActive = useRef(breakout.breakout.active);
   useEffect(() => {
@@ -430,11 +444,21 @@ export function ClassWhiteboard({
   });
   useUndoRedoEvents(handleUndo, handleRedo);
   useKeyboardShortcuts({ handleUndo, handleRedo, handleZoomIn, handleZoomOut, handleZoomReset, isLocked });
-  useFullSyncOnJoin(isTeacher, room, publishDataSafe, pagesRef, currentPageIndexRef, assignedPageByStudent);
+  useFullSyncOnJoin(
+    isTeacher,
+    room,
+    publishDataSafe,
+    pagesRef,
+    currentPageIndexRef,
+    assignedPageByStudent,
+    noteSnapshotSent,
+  );
   useWhiteboardDataChannel({
     room,
     isTeacher,
     publishDataSafe,
+    noteSnapshotSent,
+    adoptRemotePage,
     isDark,
     updateUndoRedoState,
     canvasRef,
@@ -458,16 +482,40 @@ export function ClassWhiteboard({
 
   const pageLocked = !isTeacher && assignedPageIndex !== null;
 
-  const openSendModal = () => {
+  const openSendModal = useCallback(() => {
     const pagesToAssign = selectedPages.length > 0 ? selectedPages : [currentPageIndex];
     setSelectedPagesForAssign(pagesToAssign);
     if (students.length > 0) setSelectedStudentIdentities([students[0].identity]);
     setIsAssignModalOpen(true);
-  };
+  }, [currentPageIndex, selectedPages, setSelectedPagesForAssign, setSelectedStudentIdentities, students]);
 
-  const handleAskAIFromBoard = () => handleAskAIAboutBoard(selectedPages, currentPageIndex);
+  const handleAskAIFromBoard = useCallback(
+    () => handleAskAIAboutBoard(selectedPages, currentPageIndex),
+    [currentPageIndex, handleAskAIAboutBoard, selectedPages],
+  );
 
-  const handleCropImage = () => canvasRef.current?.cropSelectedImage();
+  const handleCropImage = useCallback(() => {
+    canvasRef.current?.cropSelectedImage();
+  }, []);
+
+  const onToggleDark = useCallback(() => setIsDark((value) => !value), [setIsDark]);
+  const onToggleStylusOnly = useCallback(() => setStylusOnly((value) => !value), [setStylusOnly]);
+  const onFileInputClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+  const onClearClick = useCallback(() => setIsClearConfirmOpen(true), []);
+  const onFit = useCallback(() => {
+    canvasRef.current?.fitToContent();
+  }, []);
+  const onPrevPage = useCallback(() => {
+    handleSwitchPage(currentPageIndexRef.current - 1);
+  }, [currentPageIndexRef, handleSwitchPage]);
+  const onNextPage = useCallback(() => {
+    handleSwitchPage(currentPageIndexRef.current + 1);
+  }, [currentPageIndexRef, handleSwitchPage]);
+  const onToggleTray = useCallback(() => {
+    setIsPagesTrayOpen((open) => !open);
+  }, [setIsPagesTrayOpen]);
 
   return (
     <div
@@ -551,15 +599,15 @@ export function ClassWhiteboard({
         eraserWidth={eraserWidth}
         setEraserWidth={setEraserWidth}
         isDark={isDark}
-        onToggleDark={() => setIsDark(!isDark)}
+        onToggleDark={onToggleDark}
         stylusOnly={stylusOnly}
-        onToggleStylusOnly={() => setStylusOnly((p) => !p)}
+        onToggleStylusOnly={onToggleStylusOnly}
         stylusPrimaryAction={stylusPrimaryAction}
         setStylusPrimaryAction={setStylusPrimaryAction}
         stylusSecondaryAction={stylusSecondaryAction}
         setStylusSecondaryAction={setStylusSecondaryAction}
-        onFileInputClick={() => fileInputRef.current?.click()}
-        onClearClick={() => setIsClearConfirmOpen(true)}
+        onFileInputClick={onFileInputClick}
+        onClearClick={onClearClick}
         onPasteImage={pasteImageFromClipboard}
         onCropImage={handleCropImage}
         imageMenuRef={imageMenuRef}
@@ -641,14 +689,14 @@ export function ClassWhiteboard({
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
         onZoomReset={handleZoomReset}
-        onFit={() => canvasRef.current?.fitToContent()}
+        onFit={onFit}
         currentPageIndex={currentPageIndex}
         pagesLength={pages.length}
         selectedPagesCount={selectedPages.length}
         isPagesTrayOpen={isPagesTrayOpen}
-        onPrevPage={() => handleSwitchPage(currentPageIndex - 1)}
-        onNextPage={() => handleSwitchPage(currentPageIndex + 1)}
-        onToggleTray={() => setIsPagesTrayOpen(!isPagesTrayOpen)}
+        onPrevPage={onPrevPage}
+        onNextPage={onNextPage}
+        onToggleTray={onToggleTray}
         onAddNewPage={handleAddNewPage}
         onAskAI={handleAskAIFromBoard}
         onOpenSend={openSendModal}

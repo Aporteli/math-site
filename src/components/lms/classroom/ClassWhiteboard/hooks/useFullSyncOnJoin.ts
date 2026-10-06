@@ -6,27 +6,30 @@ import { RoomEvent } from 'livekit-client';
 import type { RemoteParticipant } from 'livekit-client';
 import { isStaffParticipant, participantUserId } from '@/lib/livekit/participant-identity';
 import {
-  assignedFullSyncPayload,
   beginWhiteboardFullSync,
   fullSyncKind,
-  sharedFullSyncPayload,
   identitiesForStudent,
   type BoardAssignmentMap,
 } from '@/lib/livekit/board-assignment';
 import type { CanvasElement } from '../../KonvaCanvas/utils/types';
+import type { PublishDataSafe } from './usePublishDataSafe';
+import { enqueueFreshFullSync } from '../utils/enqueue-fresh-sync';
 
 export function useFullSyncOnJoin(
   isTeacher: boolean,
   room: Room | null,
-  publishDataSafe: (payload: object, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>,
+  publishDataSafe: PublishDataSafe,
   pagesRef: MutableRefObject<CanvasElement[][]>,
   currentPageIndexRef: MutableRefObject<number>,
   assignedPageByStudent: BoardAssignmentMap,
+  noteSnapshotSent: (pages: CanvasElement[][], assignedPageIndex?: number | null) => void,
 ) {
   const publishRef = useRef(publishDataSafe);
   publishRef.current = publishDataSafe;
   const assignedRef = useRef(assignedPageByStudent);
   assignedRef.current = assignedPageByStudent;
+  const noteSnapshotSentRef = useRef(noteSnapshotSent);
+  noteSnapshotSentRef.current = noteSnapshotSent;
 
   useEffect(() => {
     if (!isTeacher || !room) return;
@@ -37,10 +40,13 @@ export function useFullSyncOnJoin(
       if (pristine) return;
       const claim = beginWhiteboardFullSync([participant.identity], fullSyncKind(null));
       if (!claim) return;
-      void publishRef.current(
-        sharedFullSyncPayload(board, currentPageIndexRef.current),
-        true,
+      void enqueueFreshFullSync(
+        publishRef.current,
+        pagesRef,
+        currentPageIndexRef,
         claim.identities,
+        null,
+        noteSnapshotSentRef.current,
       ).finally(claim.release);
     };
 
@@ -50,13 +56,16 @@ export function useFullSyncOnJoin(
       const assigned = assignedRef.current[userId];
       const dest = identitiesForStudent(room, userId);
       if (dest.length === 0) return;
-      const payload =
-        typeof assigned === 'number'
-          ? assignedFullSyncPayload(pagesRef.current, assigned)
-          : sharedFullSyncPayload(pagesRef.current, currentPageIndexRef.current);
       const claim = beginWhiteboardFullSync(dest, fullSyncKind(assigned));
       if (!claim) return;
-      void publishRef.current(payload, true, claim.identities).finally(claim.release);
+      void enqueueFreshFullSync(
+        publishRef.current,
+        pagesRef,
+        currentPageIndexRef,
+        claim.identities,
+        typeof assigned === 'number' ? assigned : null,
+        noteSnapshotSentRef.current,
+      ).finally(claim.release);
     };
 
     const handleParticipantConnected = (participant: RemoteParticipant) => {

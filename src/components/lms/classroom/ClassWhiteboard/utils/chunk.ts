@@ -99,6 +99,28 @@ export function sniffWhiteboardIdentity(bytes: Uint8Array): { messageId: string 
   };
 }
 
+interface EarlyChunk {
+  chunkIndex: number;
+  totalChunks: number;
+  data: Uint8Array;
+  at: number;
+}
+
+function storeChunk(entry: PendingEntry, chunkIndex: number, data: Uint8Array): { duplicate: boolean; outOfOrder: boolean } {
+  if (chunkIndex < entry.totalChunks && !entry.chunks[chunkIndex]) {
+    const outOfOrder = chunkIndex !== entry.received;
+    entry.chunks[chunkIndex] = data;
+    entry.received += 1;
+    if (outOfOrder) entry.outOfOrder = true;
+    return { duplicate: false, outOfOrder };
+  }
+  if (chunkIndex < entry.totalChunks && entry.chunks[chunkIndex]) {
+    entry.duplicateCount += 1;
+    return { duplicate: true, outOfOrder: false };
+  }
+  return { duplicate: false, outOfOrder: false };
+}
+
 function missingIndexes(entry: PendingEntry): number[] {
   const missing: number[] = [];
   const total = Math.min(entry.totalChunks, entry.chunks.length);
@@ -142,6 +164,7 @@ function observeEntry(
 
 export class ChunkAssembler {
   private pending = new Map<number, PendingEntry>();
+  private early = new Map<number, EarlyChunk[]>();
   private expired: ChunkObservation[] = [];
 
   push(bytes: Uint8Array): Uint8Array | null {
@@ -211,26 +234,46 @@ export class ChunkAssembler {
     let outOfOrder = false;
 
     if (magic === MAGIC_CHUNK_START) {
-      const entry: PendingEntry = {
-        totalChunks,
-        chunks: new Array<Uint8Array | null>(totalChunks).fill(null),
-        received: 0,
-        createdAt: now,
-        firstChunkAt: now,
-        lastChunkAt: now,
-        duplicateCount: 0,
-        outOfOrder: false,
-      };
-      if (chunkIndex < totalChunks) {
-        outOfOrder = chunkIndex !== 0;
-        entry.chunks[chunkIndex] = data;
-        entry.received += 1;
-        entry.outOfOrder = outOfOrder;
+      const existing = this.pending.get(transferId);
+      if (existing && existing.received > 0) {
+        duplicate = true;
+        existing.duplicateCount += 1;
+        existing.lastChunkAt = now;
+        existing.createdAt = now;
+      } else {
+        const entry: PendingEntry = {
+          totalChunks,
+          chunks: new Array<Uint8Array | null>(totalChunks).fill(null),
+          received: 0,
+          createdAt: now,
+          firstChunkAt: now,
+          lastChunkAt: now,
+          duplicateCount: 0,
+          outOfOrder: false,
+        };
+        const applied = storeChunk(entry, chunkIndex, data);
+        duplicate = applied.duplicate;
+        outOfOrder = applied.outOfOrder;
+        const buffered = this.early.get(transferId);
+        if (buffered) {
+          this.early.delete(transferId);
+          for (const item of buffered) {
+            const stored = storeChunk(entry, item.chunkIndex, item.data);
+            if (stored.outOfOrder) outOfOrder = true;
+            if (stored.duplicate) duplicate = true;
+            entry.lastChunkAt = Math.max(entry.lastChunkAt, item.at);
+          }
+        }
+        this.pending.set(transferId, entry);
       }
-      this.pending.set(transferId, entry);
     } else {
       const entry = this.pending.get(transferId);
       if (!entry) {
+        const buffered = this.early.get(transferId) ?? [];
+        buffered.push({ chunkIndex, totalChunks, data, at: now });
+        this.early.set(transferId, buffered);
+        this.cleanup(now);
+        const identity = sniffWhiteboardIdentity(data);
         return {
           payload: null,
           observation: {
@@ -240,28 +283,22 @@ export class ChunkAssembler {
             payloadBytes: data.length,
             duplicate: false,
             outOfOrder: false,
-            invalid: true,
+            invalid: false,
             complete: false,
             missing: [],
-            receivedCount: 0,
+            receivedCount: buffered.length,
             duplicateCount: 0,
-            firstChunkAt: now,
+            firstChunkAt: buffered[0]?.at ?? now,
             lastChunkAt: now,
             expired: false,
-            messageId: sniffWhiteboardIdentity(data).messageId,
-            sequence: sniffWhiteboardIdentity(data).sequence,
+            messageId: identity.messageId,
+            sequence: identity.sequence,
           },
         };
       }
-      if (chunkIndex < entry.totalChunks && !entry.chunks[chunkIndex]) {
-        outOfOrder = chunkIndex !== entry.received;
-        entry.chunks[chunkIndex] = data;
-        entry.received += 1;
-        if (outOfOrder) entry.outOfOrder = true;
-      } else if (chunkIndex < entry.totalChunks && entry.chunks[chunkIndex]) {
-        duplicate = true;
-        entry.duplicateCount += 1;
-      }
+      const applied = storeChunk(entry, chunkIndex, data);
+      duplicate = applied.duplicate;
+      outOfOrder = applied.outOfOrder;
       entry.lastChunkAt = now;
       // Keep the transfer alive while chunks are still flowing. Otherwise a
       // large (many-chunk) full sync can take longer than the absolute
@@ -336,6 +373,38 @@ export class ChunkAssembler {
         this.pending.delete(id);
         if (this.expired.length > 30) this.expired.shift();
       }
+    }
+    for (const [id, chunks] of this.early) {
+      const newest = chunks.reduce((max, item) => Math.max(max, item.at), 0);
+      if (now - newest <= 10_000) continue;
+      const first = chunks[0];
+      const identity = first ? sniffWhiteboardIdentity(first.data) : { messageId: null, sequence: null };
+      const received = new Set(chunks.map((item) => item.chunkIndex));
+      const total = first?.totalChunks ?? 0;
+      const missing: number[] = [];
+      for (let index = 0; index < total && missing.length < 12; index += 1) {
+        if (!received.has(index)) missing.push(index);
+      }
+      this.expired.push({
+        transferId: id,
+        chunkIndex: first?.chunkIndex ?? 0,
+        totalChunks: total,
+        payloadBytes: first?.data.length ?? 0,
+        duplicate: false,
+        outOfOrder: false,
+        invalid: false,
+        complete: false,
+        missing,
+        receivedCount: chunks.length,
+        duplicateCount: 0,
+        firstChunkAt: first?.at ?? now,
+        lastChunkAt: newest,
+        expired: true,
+        messageId: identity.messageId,
+        sequence: identity.sequence,
+      });
+      this.early.delete(id);
+      if (this.expired.length > 30) this.expired.shift();
     }
   }
 }

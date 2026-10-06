@@ -27,6 +27,7 @@ export function SelectionOverlay({
   onTransformEnd,
 }: SelectionOverlayProps) {
   const pendingRotationRef = useRef<{ id: string; rotation: number } | null>(null);
+  const vertexPointsRef = useRef<number[] | null>(null);
 
   if (activeTool !== 'select') return null;
 
@@ -190,20 +191,46 @@ export function SelectionOverlay({
               }}
               onDragStart={(e) => {
                 e.cancelBubble = true;
+                vertexPointsRef.current = [...(vertexPointsRef.current ?? single.points!)];
               }}
               onDragMove={(e) => {
                 e.cancelBubble = true;
-                const newPoints = [...single.points!];
+                const newPoints = [...(vertexPointsRef.current ?? single.points!)];
                 newPoints[i * 2] = e.target.x();
                 newPoints[i * 2 + 1] = e.target.y();
-                const updatedElements = elementsRef.current.map((el) =>
+                vertexPointsRef.current = newPoints;
+                const stage = e.target.getStage();
+                const node = stage?.findOne('#' + single.id) as unknown as {
+                  points?: (pts: number[]) => void;
+                  find?: (selector: string) => Array<{ points: (pts: number[]) => void }>;
+                } | undefined;
+                if (typeof node?.points === 'function') {
+                  node.points(newPoints);
+                } else if (typeof node?.find === 'function') {
+                  const lines = node.find('Line');
+                  const count = newPoints.length / 2;
+                  lines.forEach((line, index) => {
+                    const next = (index + 1) % count;
+                    line.points([
+                      newPoints[index * 2],
+                      newPoints[index * 2 + 1],
+                      newPoints[next * 2],
+                      newPoints[next * 2 + 1],
+                    ]);
+                  });
+                }
+                stage?.batchDraw();
+              }}
+              onDragEnd={(e) => {
+                e.cancelBubble = true;
+                const newPoints = vertexPointsRef.current;
+                vertexPointsRef.current = null;
+                if (!newPoints) return;
+                const updatedElements = (elementsRef.current ?? []).map((el) =>
                   el.id === single.id ? { ...el, points: newPoints } : el,
                 );
                 elementsRef.current = updatedElements;
                 onElementsChange(updatedElements);
-              }}
-              onDragEnd={(e) => {
-                e.cancelBubble = true;
               }}
               onMouseEnter={(e) => {
                 const c = e.target.getStage()?.container();

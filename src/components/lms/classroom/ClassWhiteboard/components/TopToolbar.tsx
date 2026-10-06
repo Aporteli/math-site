@@ -1,6 +1,6 @@
 'use client';
 
-import type { RefObject } from 'react';
+import { memo, type RefObject } from 'react';
 import type { StylusButtonAction } from '../constants/stylus';
 import { ToolbarIndicator } from './toolbar/ToolbarIndicator';
 import { getToolbarKey } from './toolbar/utils';
@@ -79,7 +79,7 @@ interface Props {
   setIsSelectMenuOpen: (open: boolean) => void;
 }
 
-export function TopToolbar(props: Props) {
+export const TopToolbar = memo(function TopToolbar(props: Props) {
   const {
     isTeacher,
     isStudent,
@@ -279,4 +279,4 @@ export function TopToolbar(props: Props) {
       </div>
     </div>
   );
-}
+});

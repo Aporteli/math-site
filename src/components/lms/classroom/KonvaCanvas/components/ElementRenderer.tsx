@@ -1,3 +1,4 @@
+import { memo, useRef, type MutableRefObject } from 'react';
 import { Line, Circle, Rect, Arrow, Star, Text, Group } from 'react-konva';
 import type { CanvasElement } from '../utils/types';
 import { adaptStrokeForTheme } from '../utils/theme';
@@ -15,22 +16,42 @@ interface ElementRendererProps {
   onDragEnd: (id: string, e: any) => void;
 }
 
-export function ElementRenderer({
-  elements,
+type ElementHandlers = Pick<ElementRendererProps, 'onElementClick' | 'onDragStart' | 'onDragMove' | 'onDragEnd'>;
+
+interface ShapeProps {
+  el: CanvasElement;
+  activeTool: string;
+  isDark: boolean;
+  strokeWidth: number;
+  editingTextId: string | null;
+  handlersRef: MutableRefObject<ElementHandlers>;
+}
+
+function shapesEqual(prev: ShapeProps, next: ShapeProps): boolean {
+  return (
+    prev.el === next.el &&
+    prev.activeTool === next.activeTool &&
+    prev.isDark === next.isDark &&
+    prev.strokeWidth === next.strokeWidth &&
+    prev.editingTextId === next.editingTextId &&
+    prev.handlersRef === next.handlersRef
+  );
+}
+
+const CanvasElementShape = memo(function CanvasElementShape({
+  el,
   activeTool,
   isDark,
   strokeWidth,
   editingTextId,
-  onElementClick,
-  onDragStart,
-  onDragMove,
-  onDragEnd,
-}: ElementRendererProps) {
-  return (
-    <>
-      {elements.map((el) => {
-        const isListening = activeTool === 'select';
-        const displayStroke = adaptStrokeForTheme(el.stroke, isDark);
+  handlersRef,
+}: ShapeProps) {
+  const onElementClick = (element: CanvasElement) => handlersRef.current.onElementClick(element);
+  const onDragStart = (id: string, e: any) => handlersRef.current.onDragStart(id, e);
+  const onDragMove = (id: string, e: any) => handlersRef.current.onDragMove(id, e);
+  const onDragEnd = (id: string, e: any) => handlersRef.current.onDragEnd(id, e);
+  const isListening = activeTool === 'select';
+  const displayStroke = adaptStrokeForTheme(el.stroke, isDark);
 
         if (el.type === 'image' && el.src) {
           return (
@@ -364,8 +385,35 @@ export function ElementRenderer({
             />
           );
         }
-        return null;
-      })}
+  return null;
+}, shapesEqual);
+
+export function ElementRenderer({
+  elements,
+  activeTool,
+  isDark,
+  strokeWidth,
+  editingTextId,
+  onElementClick,
+  onDragStart,
+  onDragMove,
+  onDragEnd,
+}: ElementRendererProps) {
+  const handlersRef = useRef<ElementHandlers>({ onElementClick, onDragStart, onDragMove, onDragEnd });
+  handlersRef.current = { onElementClick, onDragStart, onDragMove, onDragEnd };
+  return (
+    <>
+      {elements.map((el) => (
+        <CanvasElementShape
+          key={el.id}
+          el={el}
+          activeTool={activeTool}
+          isDark={isDark}
+          strokeWidth={strokeWidth}
+          editingTextId={editingTextId}
+          handlersRef={handlersRef}
+        />
+      ))}
     </>
   );
 }

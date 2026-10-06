@@ -48,7 +48,7 @@ export interface StagePosition {
 
 export interface KonvaCanvasProps {
   elements: CanvasElement[];
-  onElementsChange: (elements: CanvasElement[], options?: { commitHistory?: boolean }) => void;
+  onElementsChange: (elements: CanvasElement[], options?: { commitHistory?: boolean; publish?: boolean }) => void;
   activeTool: string;
   selectionMode?: 'rect' | 'freeform' | 'draw';
   strokeColor: string;

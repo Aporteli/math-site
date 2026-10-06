@@ -214,4 +214,33 @@ kept = appendDiagnosticSample(kept, tracedSample, 8_000);
 assert.equal(kept.length, 2);
 assert.equal(kept.at(-1)?.whiteboardMessages?.[0]?.messageId, 'wb_abc12345');
 
+const collapsed = appendDiagnosticSample(
+  [],
+  sample(0, {
+    whiteboardMessages: [
+      {
+        messageId: 'wb_same',
+        slot: 'receive',
+        type: 'WHITEBOARD_DELTA',
+        status: 'receiving',
+        updatedAt: 1,
+        missingChunks: '1',
+        peerIdentity: 'teacher-1',
+      },
+      {
+        messageId: 'wb_same',
+        slot: 'receive',
+        type: 'WHITEBOARD_DELTA',
+        status: 'applied',
+        updatedAt: 2,
+        peerIdentity: 'teacher-1',
+      },
+    ],
+  }),
+  0,
+);
+assert.equal(collapsed[0]?.whiteboardMessages?.length, 1);
+assert.equal(collapsed[0]?.whiteboardMessages?.[0]?.status, 'applied');
+assert.equal(collapsed[0]?.whiteboardMessages?.[0]?.missingChunks, undefined);
+
 console.log('livekit diagnostics model tests passed');

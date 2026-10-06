@@ -13,7 +13,7 @@ interface Options {
   room: Room | null;
   isTeacher: boolean;
   students: Student[];
-  publishDataSafe: (payload: object, reliable?: boolean, destinationIdentities?: string[]) => Promise<void>;
+  publishDataSafe: (payload: object, reliable?: boolean, destinationIdentities?: string[]) => Promise<unknown>;
 }
 
 export function useBoardControlState({ room, isTeacher, students, publishDataSafe }: Options) {

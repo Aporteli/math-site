@@ -5,7 +5,7 @@ import { distToSegmentSquared } from '../utils/geometry';
 
 interface UseEraserOptions {
   elementsRef: MutableRefObject<CanvasElement[]>;
-  onElementsChange: (elements: CanvasElement[], options?: { commitHistory?: boolean }) => void;
+  onElementsChange: (elements: CanvasElement[], options?: { commitHistory?: boolean; publish?: boolean }) => void;
   selectedIds: string[];
   setSelectedIds: (ids: string[]) => void;
   eraserWidth: number;
@@ -86,7 +86,7 @@ export function useEraser({
       if (hasChanges) {
         elementsRef.current = remaining;
         eraseStrokeDirtyRef.current = true;
-        onElementsChange(remaining, { commitHistory: false });
+        onElementsChange(remaining, { commitHistory: false, publish: false });
         if (selectedIds.length > 0) {
           const remainingIds = new Set(remaining.map((el) => el.id));
           const nextSelected = selectedIds.filter((id) => remainingIds.has(id));
