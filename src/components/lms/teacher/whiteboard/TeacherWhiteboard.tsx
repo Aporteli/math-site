@@ -1598,7 +1598,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       />
 
       <div className="relative z-30 min-w-0 shrink-0 border-b border-hairline bg-sectionHeader">
-        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2">
+        <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2">
           <button
             type="button"
             onClick={toggleSidebarDrawer}
