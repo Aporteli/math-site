@@ -4,9 +4,7 @@ export type BreakoutRoomKey = 'main' | 'a' | 'b';
 
 export interface BreakoutAssignment {
   active: boolean;
-  /** Account ids placed in Room A. */
   a: string[];
-  /** Account ids placed in Room B. */
   b: string[];
 }
 

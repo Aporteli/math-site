@@ -20,18 +20,14 @@ export async function loadCourseAccess(
   if (!userId) {
     return { ok: false, status: 401, message: 'Unauthorized' };
   }
-
   const course = await prisma.course.findUnique({
     where: { id: courseId },
     select: { teacherId: true },
   });
-
   if (!course) {
     return { ok: false, status: 404, message: 'Course not found' };
   }
-
   const isTeacher = course.teacherId === userId || userRole === 'ADMIN';
-
   if (!isTeacher) {
     const enrollment = await prisma.enrollment.findFirst({
       where: { courseId, userId, status: 'ACTIVE' },
@@ -40,7 +36,6 @@ export async function loadCourseAccess(
       return { ok: false, status: 403, message: 'Access denied for this course' };
     }
   }
-
   return {
     ok: true,
     access: { userId, userName, userRole, isTeacher, teacherId: course.teacherId },

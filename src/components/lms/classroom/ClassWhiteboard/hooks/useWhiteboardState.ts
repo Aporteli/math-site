@@ -33,6 +33,45 @@ function capHistory(states: CanvasElement[][], index: number): { states: CanvasE
 
 const SAVE_DEBOUNCE_MS = 1500;
 
+export function megabytes(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+export function fileBytesFromDataUrl(dataUrl: string): number {
+  const marker = 'base64,';
+  const index = dataUrl.indexOf(marker);
+  if (index < 0) return new TextEncoder().encode(dataUrl).length;
+  const base64 = dataUrl.slice(index + marker.length).replace(/\s/g, '');
+  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+  return Math.max(0, Math.floor((base64.length * 3) / 4) - padding);
+}
+
+function logWhiteboardSave(pages: CanvasElement[][]) {
+  const pagesBytes = new TextEncoder().encode(JSON.stringify(pages)).length;
+  const sources: string[] = [];
+  for (const page of pages) {
+    for (const element of page) {
+      if (element?.type === 'image' && typeof element.src === 'string' && element.src) sources.push(element.src);
+    }
+  }
+  console.log(`[whiteboard save] pages ${megabytes(pagesBytes)}`);
+  void Promise.all(
+    sources.map(async (src) => {
+      if (src.startsWith('data:')) return fileBytesFromDataUrl(src);
+      const response = await fetch(src);
+      const blob = await response.blob();
+      return blob.size;
+    }),
+  )
+    .then((sizes) => {
+      const sum = sizes.reduce((total, size) => total + size, 0);
+      console.log(`[whiteboard uploaded images] sum ${megabytes(sum)}`);
+    })
+    .catch((error: unknown) => {
+      console.log('[whiteboard uploaded images] sum unavailable', error);
+    });
+}
+
 export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe, getSyncDestinations, broadcastBoard }: Options) {
   const isRemoteUpdateRef = useRef(false);
   // True once the initial DB read has completed (whether or not a saved board
@@ -142,6 +181,7 @@ export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe,
       const pending = pendingSaveRef.current;
       pendingSaveRef.current = null;
       if (pending) {
+        logWhiteboardSave(pending.pages);
         void saveCourseWhiteboardAction(courseId, pending.pages, pending.pageIndex);
       }
     }, SAVE_DEBOUNCE_MS);
@@ -156,6 +196,7 @@ export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe,
       const pending = pendingSaveRef.current;
       pendingSaveRef.current = null;
       if (isTeacher && pending) {
+        logWhiteboardSave(pending.pages);
         void saveCourseWhiteboardAction(courseId, pending.pages, pending.pageIndex);
       }
     };

@@ -3,6 +3,71 @@
 import { useCallback, useEffect, useRef, type MutableRefObject } from 'react';
 import type { CanvasElement } from '../../KonvaCanvas/utils/types';
 import { uploadImageToStorageAction } from '@/lib/actions/upload';
+import { fileBytesFromDataUrl, megabytes } from './useWhiteboardState';
+
+const MAX_DISPLAY = 1200;
+const MAX_BITMAP = 2048;
+
+function readBlobAsDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') resolve(reader.result);
+      else reject(new Error('image read failed'));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error('image read failed'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality?: number): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    canvas.toBlob((result) => resolve(result), type, quality);
+  });
+}
+
+function displaySize(naturalW: number, naturalH: number): { displayW: number; displayH: number } {
+  let displayW = naturalW;
+  let displayH = naturalH;
+  if (displayW > MAX_DISPLAY || displayH > MAX_DISPLAY) {
+    const ratio = Math.min(MAX_DISPLAY / displayW, MAX_DISPLAY / displayH);
+    displayW = Math.round(displayW * ratio);
+    displayH = Math.round(displayH * ratio);
+  }
+  return { displayW, displayH };
+}
+
+async function resizedUploadBlob(bitmap: ImageBitmap, bitmapW: number, bitmapH: number, keepPng: boolean): Promise<Blob | null> {
+  let resized: ImageBitmap | null = null;
+  try {
+    resized = await createImageBitmap(bitmap, {
+      resizeWidth: bitmapW,
+      resizeHeight: bitmapH,
+      resizeQuality: 'high',
+    });
+  } catch {
+    resized = null;
+  }
+
+  const source = resized ?? bitmap;
+  const canvas = document.createElement('canvas');
+  canvas.width = bitmapW;
+  canvas.height = bitmapH;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    resized?.close();
+    return null;
+  }
+  if (!keepPng) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, bitmapW, bitmapH);
+  }
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(source, 0, 0, bitmapW, bitmapH);
+  resized?.close();
+  return canvasToBlob(canvas, keepPng ? 'image/png' : 'image/jpeg', keepPng ? undefined : 0.92);
+}
 
 interface Options {
   pagesRef: MutableRefObject<CanvasElement[][]>;
@@ -21,71 +86,73 @@ export function useImageInput({
   selectElement,
 }: Options) {
   const addImageToCanvas = useCallback(
-    (dataUrl: string, pos?: { x: number; y: number }, pageIndex?: number) => {
+    (file: Blob, pos?: { x: number; y: number }, pageIndex?: number) => {
       const targetPage = pageIndex ?? currentPageIndexRef.current;
-      const img = new window.Image();
-      img.src = dataUrl;
-      img.onload = () => {
-        void (async () => {
-          // How big the picture sits on the board. The stored bitmap stays sharper
-          // than this so text in a pasted screenshot is still readable.
-          const maxDisplay = 1200;
-          const maxBitmap = 2048;
-          const naturalW = img.naturalWidth || img.width || 300;
-          const naturalH = img.naturalHeight || img.height || 200;
+      void (async () => {
+        // Decode off the main thread. A large screenshot used to block here:
+        // FileReader built a giant data URL, Image decoded it, then drawImage
+        // and canvas.toDataURL ran synchronously inside this callback.
+        let bitmap: ImageBitmap;
+        try {
+          bitmap = await createImageBitmap(file);
+        } catch {
+          return;
+        }
 
-          let displayW = naturalW;
-          let displayH = naturalH;
-          if (displayW > maxDisplay || displayH > maxDisplay) {
-            const ratio = Math.min(maxDisplay / displayW, maxDisplay / displayH);
-            displayW = Math.round(displayW * ratio);
-            displayH = Math.round(displayH * ratio);
-          }
+        const naturalW = bitmap.width || 300;
+        const naturalH = bitmap.height || 200;
+        const { displayW, displayH } = displaySize(naturalW, naturalH);
 
-          let src = dataUrl;
-          if (naturalW > maxBitmap || naturalH > maxBitmap) {
-            const ratio = Math.min(maxBitmap / naturalW, maxBitmap / naturalH);
+        let uploadBlob: Blob = file;
+        try {
+          if (naturalW > MAX_BITMAP || naturalH > MAX_BITMAP) {
+            const ratio = Math.min(MAX_BITMAP / naturalW, MAX_BITMAP / naturalH);
             const bitmapW = Math.max(1, Math.round(naturalW * ratio));
             const bitmapH = Math.max(1, Math.round(naturalH * ratio));
-            const canvas = document.createElement('canvas');
-            canvas.width = bitmapW;
-            canvas.height = bitmapH;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            const keepPng = dataUrl.startsWith('data:image/png');
-            if (!keepPng) {
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(0, 0, bitmapW, bitmapH);
-            }
-            ctx.drawImage(img, 0, 0, bitmapW, bitmapH);
-            src = keepPng ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.92);
+            const encoded = await resizedUploadBlob(bitmap, bitmapW, bitmapH, file.type === 'image/png');
+            if (!encoded) return;
+            uploadBlob = encoded;
           }
+        } catch {
+          return;
+        } finally {
+          bitmap.close();
+        }
 
-          const uploaded = await uploadImageToStorageAction({ dataUrl: src });
-          if (!uploaded.success || !uploaded.url) return;
+        let src: string;
+        try {
+          src = await readBlobAsDataUrl(uploadBlob);
+        } catch {
+          return;
+        }
 
-          const newImageElem: CanvasElement = {
-            id: `el_img_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-            type: 'image',
-            x: pos ? pos.x : 100,
-            y: pos ? pos.y : 100,
-            width: displayW,
-            height: displayH,
-            src: uploaded.url,
-            stroke: 'transparent',
-            strokeWidth: 0,
-          };
+        const pastedFileBytes = file.size;
+        const uploadedFileBytes = fileBytesFromDataUrl(src);
+        console.log(
+          `[whiteboard uploaded image] pasted ${megabytes(pastedFileBytes)}, uploaded ${megabytes(uploadedFileBytes)}`,
+        );
+        const uploaded = await uploadImageToStorageAction({ dataUrl: src });
+        if (!uploaded.success || !uploaded.url) return;
 
-          const currentElems = pagesRef.current[targetPage] || [];
-          currentPageIndexRef.current = targetPage;
-          handleElementsChange([...currentElems, newImageElem]);
-          setActiveTool('select');
-          // Select on the next frame so the Konva node exists in the tree.
-          requestAnimationFrame(() => selectElement(newImageElem.id));
-        })();
-      };
+        const newImageElem: CanvasElement = {
+          id: `el_img_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          type: 'image',
+          x: pos ? pos.x : 100,
+          y: pos ? pos.y : 100,
+          width: displayW,
+          height: displayH,
+          src: uploaded.url,
+          stroke: 'transparent',
+          strokeWidth: 0,
+        };
+
+        const currentElems = pagesRef.current[targetPage] || [];
+        currentPageIndexRef.current = targetPage;
+        handleElementsChange([...currentElems, newImageElem]);
+        setActiveTool('select');
+        // Select on the next frame so the Konva node exists in the tree.
+        requestAnimationFrame(() => selectElement(newImageElem.id));
+      })();
     },
     [pagesRef, currentPageIndexRef, handleElementsChange, setActiveTool, selectElement],
   );
@@ -101,11 +168,7 @@ export function useImageInput({
         const imageTypes = item.types.filter((type) => type.startsWith('image/'));
         if (imageTypes.length > 0) {
           const blob = await item.getType(imageTypes[0]);
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result) addImageToCanvas(e.target.result as string);
-          };
-          reader.readAsDataURL(blob);
+          addImageToCanvas(blob);
           return;
         }
       }
@@ -147,12 +210,7 @@ export function useImageInput({
       if (typing && !blob) return;
       e.preventDefault();
       const pageIndex = currentPageIndexRef.current;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        if (base64) addImageToCanvas(base64, undefined, pageIndex);
-      };
-      reader.readAsDataURL(blob);
+      addImageToCanvas(blob, undefined, pageIndex);
     };
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
@@ -163,12 +221,7 @@ export function useImageInput({
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const base64 = event.target?.result as string;
-          if (base64) addImageToCanvas(base64);
-        };
-        reader.readAsDataURL(file);
+        addImageToCanvas(file);
       }
     }
   };
@@ -176,12 +229,7 @@ export function useImageInput({
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64 = event.target?.result as string;
-        if (base64) addImageToCanvas(base64);
-      };
-      reader.readAsDataURL(file);
+      addImageToCanvas(file);
       e.target.value = '';
     }
   };
