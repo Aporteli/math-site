@@ -139,6 +139,15 @@ it should never compete with navy as the primary action color.
      ```
   4. Provide a visual loading progress or spinner state while the background worker is computing.
 
+## Cursor Cloud specific instructions
+
+- Dependencies: Node 22 and npm. `npm ci`, then `npx prisma generate`. The generated client is gitignored at `src/generated/prisma`.
+- Database: local MariaDB. systemd is not running in this VM, and `policy-rc.d` blocks `service`, so start `mariadbd` on the socket `/run/mysqld/mysqld.sock`, bound to the loopback interface and port 3306. Create database `mathlab` and user `mathlab` with the same password. Before Prisma or `next dev`, export `DATABASE_URL` to that local MySQL database. An injected `DATABASE_URL` may point at Postgres; dotenv will not override it, and this schema is MySQL.
+- Schema sync: `npx prisma db push`. `prisma migrate deploy` fails on a fresh database because `prisma/migrations/20260820143000_problem_origin_id` indexes `problems.collection` before that column exists.
+- Dev server: `npm run dev -- --hostname 0.0.0.0 --port 3000`. Open the hostname printed as Local in the dev-server log. Next.js 16 blocks dev assets from the numeric loopback host unless `allowedDevOrigins` includes it, so client pages stay unhydrated on that origin.
+- Demo accounts live in `src/lib/auth/users.ts` (`teacher@mathlab.ge`, `student@mathlab.ge`, `admin@mathlab.ge`, password `mathlab-demo`). Signing in as the teacher and opening `/en/teacher/problems` upserts that user and seeds taxonomy nodes.
+- `npm run lint`, `npx tsc --noEmit`, and `npm run build` currently fail on existing problem-bank type and lint errors. `npm run dev` is the working path.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
