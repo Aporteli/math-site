@@ -14,9 +14,29 @@ export interface UpdateActiveShapeContext {
   penPoints?: { x: number; y: number }[];
 }
 
+function appendPenPoints(shape: { attrs: { points?: number[] }; points: (pts: number[]) => void }, incoming: { x: number; y: number }[]) {
+  const currentPts = shape.attrs.points;
+  if (!currentPts) return;
+  let grew = false;
+  for (const p of incoming) {
+    const n = currentPts.length;
+    if (n >= 2 && Math.hypot(p.x - currentPts[n - 2], p.y - currentPts[n - 1]) < 1.5) continue;
+    currentPts.push(p.x, p.y);
+    grew = true;
+  }
+  if (grew) shape.points(currentPts);
+}
+
 export function updateActiveShape(ctx: UpdateActiveShapeContext, pos: { x: number; y: number }): void {
   const shape = ctx.activeShapeRef.current;
   if (!shape) return;
+
+  if (ctx.activeTool === 'pen' && !ctx.shiftHeld) {
+    const incoming = ctx.penPoints && ctx.penPoints.length > 0 ? ctx.penPoints : [pos];
+    appendPenPoints(shape, incoming);
+    ctx.drawLayerRef.current?.batchDraw();
+    return;
+  }
 
   const snap = findSnapPoint(pos, ctx.elementsRef.current, ctx.activeTool);
   let snapX = snap.x;
@@ -35,23 +55,10 @@ export function updateActiveShape(ctx: UpdateActiveShapeContext, pos: { x: numbe
   }
 
   if (ctx.activeTool === 'pen') {
-    if (ctx.shiftHeld) {
-      const pts = shape.points();
-      const startX = pts[0];
-      const startY = pts[1];
-      shape.points([startX, startY, snapX, snapY]);
-    } else {
-      const incoming = ctx.penPoints && ctx.penPoints.length > 0 ? ctx.penPoints : [pos];
-      let currentPts = shape.points() as number[];
-      for (const p of incoming) {
-        const lastX = currentPts[currentPts.length - 2];
-        const lastY = currentPts[currentPts.length - 1];
-        if (Math.hypot(p.x - lastX, p.y - lastY) >= 1.5) {
-          currentPts = currentPts.concat([p.x, p.y]);
-        }
-      }
-      shape.points(currentPts);
-    }
+    const pts = shape.points();
+    const startX = pts[0];
+    const startY = pts[1];
+    shape.points([startX, startY, snapX, snapY]);
   } else if (ctx.activeTool === 'line' || ctx.activeTool === 'arrow') {
     const points = shape.points();
     shape.points([points[0], points[1], snapX, snapY]);

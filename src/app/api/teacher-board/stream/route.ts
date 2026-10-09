@@ -4,8 +4,8 @@ import { teacherBoardUserId } from '@/lib/teacher-board/actor';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function frame(data: unknown) {
-  let payload = `data: ${JSON.stringify(data)}\n\n`;
+function frame(data: unknown, eventId: string) {
+  let payload = `id: ${eventId}\ndata: ${JSON.stringify(data)}\n\n`;
   if (payload.length < 2048) payload += `:${' '.repeat(2048 - payload.length)}\n\n`;
   return payload;
 }
@@ -15,6 +15,11 @@ export async function GET(req: Request) {
   if (!userId) {
     return new Response('Unauthorized', { status: 401 });
   }
+
+  const streamUrl = new URL(req.url);
+  const subscriberClientId = streamUrl.searchParams.get('clientId')?.slice(0, 64) ?? '';
+  const revisionHeader = Number(streamUrl.searchParams.get('revision'));
+  let lastOwnRevision = Number.isFinite(revisionHeader) && revisionHeader > 0 ? revisionHeader : 0;
 
   const encoder = new TextEncoder();
   let unsubscribe = () => {};
@@ -75,20 +80,51 @@ export async function GET(req: Request) {
       controller = c;
       tryEnqueue(`:${' '.repeat(2048)}\n\n`);
       unsubscribe = subscribeTeacherBoard(userId, (event: TeacherBoardEvent) => {
-        const chunk = frame({
-          revision: event.revision,
-          clientId: event.clientId,
-          pages: event.pages,
-          currentPageIndex: event.currentPageIndex,
-          type: event.type,
-          point: event.point,
-          pageIndex: event.pageIndex,
-          points: event.points,
-          stroke: event.stroke,
-          strokeWidth: event.strokeWidth,
-          inkSeq: event.inkSeq,
-          base: event.base,
-        });
+        const own = subscriberClientId.length > 0 && event.clientId === subscriberClientId;
+        if (own && (event.type === 'ink' || event.type === 'laser')) return;
+        if (own && !event.type && typeof event.revision === 'number' && event.revision > lastOwnRevision) {
+          lastOwnRevision = event.revision;
+        }
+
+        const echo =
+          !event.type &&
+          subscriberClientId.length > 0 &&
+          typeof event.revision === 'number' &&
+          event.revision > 0 &&
+          event.revision <= lastOwnRevision;
+
+        const eventId =
+          event.type === 'ink'
+            ? `i${event.inkSeq ?? 0}`
+            : event.type === 'laser'
+              ? 'l'
+              : typeof event.revision === 'number'
+                ? `r${event.revision}`
+                : 'b';
+        const chunk = frame(
+          echo
+            ? {
+                revision: event.revision,
+                clientId: subscriberClientId,
+                currentPageIndex: event.currentPageIndex,
+                inkSeq: event.inkSeq,
+              }
+            : {
+                revision: event.revision,
+                clientId: event.clientId,
+                pages: event.pages,
+                currentPageIndex: event.currentPageIndex,
+                type: event.type,
+                point: event.point,
+                pageIndex: event.pageIndex,
+                points: event.points,
+                stroke: event.stroke,
+                strokeWidth: event.strokeWidth,
+                inkSeq: event.inkSeq,
+                base: event.base,
+              },
+          eventId,
+        );
         if (event.type === 'laser' || event.type === 'ink') pendingLive = chunk;
         else {
           pendingBoard = chunk;
@@ -97,7 +133,7 @@ export async function GET(req: Request) {
         flush();
       });
       heartbeat = setInterval(() => {
-        if (pendingBoard == null && pendingLive == null) pendingLive = frame({ type: 'ping' });
+        if (pendingBoard == null && pendingLive == null) pendingLive = frame({ type: 'ping' }, 'p');
         flush();
       }, 5000);
     },

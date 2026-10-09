@@ -7,6 +7,7 @@ import { handleEraserDown } from '../utils/pointer-down/handleEraserDown';
 import { handleSelectDown } from '../utils/pointer-down/handleSelectDown';
 import { handleTextDown } from '../utils/pointer-down/handleTextDown';
 import { handleShapeDown } from '../utils/pointer-down/handleShapeDown';
+import { capturePointerSpace } from '../utils/pointer-space';
 
 export function usePointerDownHandler(ctx: PointerHandlerContext) {
   const {
@@ -15,6 +16,9 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
     isStylusActiveRef,
     syncStylusButtonsFromEvent,
     activePointerIdRef,
+    containerRef,
+    stageRef,
+    pointerSpaceRef,
     activeTool,
     getRelativePointerPosition,
     isDrawing,
@@ -58,6 +62,10 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
 
       // 2. Claim pointer id
       if (!claimPointer(activePointerIdRef, evt)) return;
+
+      const stage = stageRef.current;
+      const container = containerRef.current;
+      pointerSpaceRef.current = stage && container ? capturePointerSpace(stage, container) : null;
 
       if (activeTool === 'hand') return;
 
@@ -115,6 +123,9 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
       isStylusActiveRef,
       syncStylusButtonsFromEvent,
       activePointerIdRef,
+      containerRef,
+      stageRef,
+      pointerSpaceRef,
       activeTool,
       getRelativePointerPosition,
       isDrawing,

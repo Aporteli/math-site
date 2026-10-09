@@ -53,7 +53,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     eraserWidth = 40,
     isDark,
     scale = 1,
-    onScaleChange,
     stagePos: stagePosProp,
     onStagePosChange,
     disabled = false,
@@ -178,16 +177,13 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     return transform.point(pos);
   }, []);
 
-  // ---- Pinch / zoom ----
+  // ---- Two-finger pan ----
   const { isPinching, handleTouchStart, handleTouchMove, handleTouchEnd } = usePinchZoom({
-    containerRef: containerRef as RefObject<HTMLDivElement>,
     stageRef: stageRef as RefObject<Konva.Stage>,
     drawLayerRef: drawLayerRef as RefObject<Konva.Layer>,
     isDrawing,
     activeShapeRef,
-    scale,
     stagePos,
-    onScaleChange,
     setStagePos,
     disabled,
   });

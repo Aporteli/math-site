@@ -5,6 +5,7 @@ import { updateEraserHover } from '../utils/pointer-move/updateEraserHover';
 import { handleLaserMove } from '../utils/pointer-move/handleLaserMove';
 import { handleEraserMove } from '../utils/pointer-move/handleEraserMove';
 import { updateActiveShape } from '../utils/pointer-move/updateActiveShape';
+import { pointerSpaceFor } from '../utils/pointer-space';
 
 export function usePointerMoveHandler(ctx: PointerHandlerContext) {
   const {
@@ -13,6 +14,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
     stylusOnly,
     containerRef,
     stageRef,
+    pointerSpaceRef,
     drawLayerRef,
     elementsRef,
     isDrawing,
@@ -61,7 +63,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
 
       if (
         handleLaserMove(
-          { activeTool, isLasering, containerRef, stageRef, addLaserPoint, onLaserMove },
+          { activeTool, isLasering, containerRef, stageRef, pointerSpaceRef, addLaserPoint, onLaserMove },
           nativeEvt,
           events,
         )
@@ -94,12 +96,10 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
 
       let penPoints: { x: number; y: number }[] | undefined;
       if (activeTool === 'pen' && !nativeEvt.shiftKey && !adjustingLine) {
-        const stage = stageRef.current;
-        const rect = containerRef.current?.getBoundingClientRect();
-        if (stage && rect) {
-          const transform = stage.getAbsoluteTransform().copy().invert();
+        const space = pointerSpaceFor(pointerSpaceRef, stageRef.current, containerRef.current);
+        if (space) {
           penPoints = events.map((ev) =>
-            transform.point({ x: ev.clientX - rect.left, y: ev.clientY - rect.top }),
+            space.transform.point({ x: ev.clientX - space.left, y: ev.clientY - space.top }),
           );
         }
       }
@@ -134,6 +134,7 @@ export function usePointerMoveHandler(ctx: PointerHandlerContext) {
       activePointerIdRef,
       stageRef,
       containerRef,
+      pointerSpaceRef,
       isLasering,
       addLaserPoint,
       onLaserMove,

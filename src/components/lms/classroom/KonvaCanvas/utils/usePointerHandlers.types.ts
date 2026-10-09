@@ -1,6 +1,7 @@
 import type { MutableRefObject, RefObject } from 'react';
 import Konva from 'konva';
 import type { CanvasElement } from './types';
+import type { PointerSpace } from './pointer-space';
 
 /**
  * Shared context object passed to every pointer-phase hook. This is the same
@@ -19,6 +20,7 @@ export interface PointerHandlerContext {
   // refs
   containerRef: RefObject<HTMLDivElement>;
   stageRef: RefObject<Konva.Stage>;
+  pointerSpaceRef: MutableRefObject<PointerSpace | null>;
   drawLayerRef: RefObject<Konva.Layer>;
   elementsRef: MutableRefObject<CanvasElement[]>;
   isDrawing: MutableRefObject<boolean>;

@@ -56,7 +56,6 @@ export interface KonvaCanvasProps {
   eraserWidth?: number;
   isDark: boolean;
   scale?: number;
-  onScaleChange?: (newScale: number) => void;
   stagePos?: StagePosition;
   onStagePosChange?: (pos: StagePosition) => void;
   disabled?: boolean;

@@ -317,8 +317,6 @@ export function ClassWhiteboard({
     viewport.width > 0 && viewport.height > 0
       ? Math.min(viewport.width / BOARD_WIDTH, viewport.height / BOARD_HEIGHT)
       : 1;
-  const fitScaleRef = useRef(fitScale);
-  fitScaleRef.current = fitScale;
   const zoomScaleRef = useRef(zoomScale);
   zoomScaleRef.current = zoomScale;
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
@@ -655,7 +653,6 @@ export function ClassWhiteboard({
           eraserWidth={eraserWidth}
           isDark={isDark}
           scale={zoomScale * fitScale}
-          onScaleChange={(newScale) => setZoomScale(newScale / (fitScaleRef.current || 1))}
           stagePos={stagePos}
           onStagePosChange={setStagePos}
           disabled={isLocked}

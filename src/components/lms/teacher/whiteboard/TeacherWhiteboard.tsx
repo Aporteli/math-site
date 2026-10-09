@@ -96,6 +96,35 @@ const BOARD_WIDTH = 1920;
 const BOARD_HEIGHT = 1080;
 const STORAGE_KEY_PAGES = 'teacher_whiteboard_permanent_pages_v7';
 const PREFS_KEY = 'teacher_whiteboard_permanent_prefs_v7';
+const HISTORY_LIMIT = 50;
+
+function capHistory(states: CanvasElement[][], index: number): { states: CanvasElement[][]; index: number } {
+  if (states.length <= HISTORY_LIMIT) return { states, index };
+  const extra = states.length - HISTORY_LIMIT;
+  return { states: states.slice(extra), index: Math.max(0, index - extra) };
+}
+
+const elementJsonCache = new WeakMap<CanvasElement, string>();
+
+function stringifyPages(pages: CanvasElement[][]): string {
+  const pageParts = new Array<string>(pages.length);
+  for (let p = 0; p < pages.length; p += 1) {
+    const page = pages[p] || [];
+    const parts = new Array<string>(page.length);
+    for (let i = 0; i < page.length; i += 1) {
+      const el = page[i];
+      let elJson = elementJsonCache.get(el);
+      if (elJson === undefined) {
+        elJson = JSON.stringify(el) ?? 'null';
+        elementJsonCache.set(el, elJson);
+      }
+      parts[i] = elJson;
+    }
+    pageParts[p] = `[${parts.join(',')}]`;
+  }
+  return `[${pageParts.join(',')}]`;
+}
+
 const DEFAULT_COLOR = '#1e293b';
 const DARK_COLORS = ['#1e293b', '#000000']; // default dark-blue and black
 const LIGHT_COLOR = '#ffffff';
@@ -511,7 +540,6 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const boardViewportRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
-  const skipCenterRef = useRef(false);
   useLayoutEffect(() => {
     const el = boardViewportRef.current;
     if (!el) return;
@@ -531,14 +559,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     viewport.width > 0 && viewport.height > 0
       ? Math.min(viewport.width / BOARD_WIDTH, viewport.height / BOARD_HEIGHT)
       : 1;
-  const fitScaleRef = useRef(fitScale);
-  fitScaleRef.current = fitScale;
   useLayoutEffect(() => {
     if (viewport.width === 0 || viewport.height === 0) return;
-    if (skipCenterRef.current) {
-      skipCenterRef.current = false;
-      return;
-    }
     const scale = zoomScale * fitScale;
     setStagePos({
       x: (viewport.width - BOARD_WIDTH * scale) / 2,
@@ -570,6 +592,9 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   const remoteInkFloorRef = useRef(0);
   const remoteStoreTimerRef = useRef<number | null>(null);
   const schedulePushRef = useRef<() => void>(() => {});
+  const scheduleLocalPagesSaveRef = useRef<() => void>(() => {});
+  const pagesJsonRef = useRef<{ pages: CanvasElement[][]; json: string } | null>(null);
+  const localPagesTimerRef = useRef<number | null>(null);
   const lastLaserSentRef = useRef(0);
 
   const [isPenMenuOpen, setIsPenMenuOpen] = useState(false);
@@ -700,6 +725,42 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     }
   }, []);
 
+  const writeLocalPages = useCallback(() => {
+    if (typeof window === 'undefined' || !isHydratedRef.current) return;
+    try {
+      const pages = pagesRef.current;
+      const cached = pagesJsonRef.current;
+      const json = cached && cached.pages === pages ? cached.json : stringifyPages(pages);
+      if (!cached || cached.pages !== pages) pagesJsonRef.current = { pages, json };
+      localStorage.setItem(STORAGE_KEY_PAGES, json);
+    } catch {}
+  }, []);
+
+  const scheduleLocalPagesSave = useCallback(() => {
+    if (typeof window === 'undefined' || !isHydratedRef.current) return;
+    if (localPagesTimerRef.current != null) return;
+    localPagesTimerRef.current = window.setTimeout(() => {
+      localPagesTimerRef.current = null;
+      writeLocalPages();
+    }, 400);
+  }, [writeLocalPages]);
+  scheduleLocalPagesSaveRef.current = scheduleLocalPagesSave;
+
+  useEffect(() => {
+    const flush = () => {
+      if (localPagesTimerRef.current != null) {
+        window.clearTimeout(localPagesTimerRef.current);
+        localPagesTimerRef.current = null;
+      }
+      writeLocalPages();
+    };
+    window.addEventListener('pagehide', flush);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      if (localPagesTimerRef.current != null) flush();
+    };
+  }, [writeLocalPages]);
+
   const schedulePush = useCallback(() => {
     if (!isHydratedRef.current || applyingRemoteRef.current) return;
     editEpochRef.current += 1;
@@ -712,7 +773,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       inkTimerRef.current = null;
     }
     inkAbortRef.current?.abort();
-    if (pushTimerRef.current != null) return;
+    if (pushTimerRef.current != null) window.clearTimeout(pushTimerRef.current);
     pushTimerRef.current = window.setTimeout(() => {
       pushTimerRef.current = null;
       const send = () => {
@@ -724,12 +785,19 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         pushQueuedRef.current = false;
         const controller = new AbortController();
         const killer = window.setTimeout(() => controller.abort(), 4000);
-        const body = JSON.stringify({
-          pages: pagesRef.current,
-          currentPageIndex: currentPageIndexRef.current,
-          clientId: clientIdRef.current,
-          inkSeq: inkSeqRef.current,
-        });
+        const pages = pagesRef.current;
+        const pagesJson = stringifyPages(pages);
+        pagesJsonRef.current = { pages, json: pagesJson };
+        const body =
+          '{"pages":' +
+          pagesJson +
+          ',"currentPageIndex":' +
+          currentPageIndexRef.current +
+          ',"clientId":' +
+          JSON.stringify(clientIdRef.current) +
+          ',"inkSeq":' +
+          inkSeqRef.current +
+          '}';
         void fetch('/api/teacher-board', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -742,9 +810,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
             if (typeof data.revision === 'number') {
               revisionRef.current = Math.max(revisionRef.current, data.revision);
             }
-            try {
-              localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(pagesRef.current));
-            } catch {}
+            scheduleLocalPagesSaveRef.current();
           })
           .catch(() => {})
           .finally(() => {
@@ -754,7 +820,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           });
       };
       send();
-    }, 40);
+    }, 400);
   }, []);
   schedulePushRef.current = schedulePush;
 
@@ -767,19 +833,23 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
         const current = liveStrokeRef.current;
         if (!current || current.points.length < 4) return;
         const base = Math.min(inkSentCountRef.current, current.points.length);
-        const points = current.points.slice(base);
-        if (points.length < 2) return;
+        if (current.points.length - base < 2) return;
         if (inkSendingRef.current) {
           inkQueuedRef.current = true;
           return;
         }
+        const points = current.points.slice(base);
+        const seq = inkSeqRef.current;
         inkSendingRef.current = true;
         inkQueuedRef.current = false;
-        const seq = inkSeqRef.current;
-        const sentCount = base + points.length;
+        inkSentCountRef.current = base + points.length;
         const controller = new AbortController();
         inkAbortRef.current = controller;
         const killer = window.setTimeout(() => controller.abort(), 2500);
+        const rewind = () => {
+          if (inkSeqRef.current !== seq) return;
+          if (inkSentCountRef.current > base) inkSentCountRef.current = base;
+        };
         void fetch('/api/teacher-board', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -796,17 +866,32 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           }),
         })
           .then((res) => {
-            if (res.ok && inkSeqRef.current === seq) {
-              inkSentCountRef.current = Math.max(inkSentCountRef.current, sentCount);
-            }
+            if (!res.ok) rewind();
           })
-          .catch(() => {})
+          .catch(() => {
+            rewind();
+          })
           .finally(() => {
             window.clearTimeout(killer);
+            if (inkAbortRef.current !== controller) return;
+            inkAbortRef.current = null;
             inkSendingRef.current = false;
+            if (inkSeqRef.current !== seq) return;
             if (inkQueuedRef.current) {
               inkQueuedRef.current = false;
               send();
+              return;
+            }
+            const pending = liveStrokeRef.current;
+            if (
+              pending &&
+              pending.points.length - inkSentCountRef.current >= 2 &&
+              inkTimerRef.current == null
+            ) {
+              inkTimerRef.current = window.setTimeout(() => {
+                inkTimerRef.current = null;
+                send();
+              }, 30);
             }
           });
       };
@@ -849,8 +934,8 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       if (remoteStoreTimerRef.current) window.clearTimeout(remoteStoreTimerRef.current);
       remoteStoreTimerRef.current = window.setTimeout(() => {
         remoteStoreTimerRef.current = null;
+        scheduleLocalPagesSaveRef.current();
         try {
-          localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(pagesRef.current));
           const raw = localStorage.getItem(PREFS_KEY);
           const prefs = raw ? JSON.parse(raw) : {};
           prefs.currentPageIndex = currentPageIndexRef.current;
@@ -864,26 +949,37 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
   useEffect(() => {
     let cancelled = false;
 
-    const pull = async () => {
-      const epoch = editEpochRef.current;
-      const res = await fetch('/api/teacher-board', { cache: 'no-store' });
-      if (!res.ok || cancelled) return;
-      const data = (await res.json()) as {
-        board: { pages: CanvasElement[][]; currentPageIndex: number; revision: number } | null;
-      };
-      if (cancelled || editEpochRef.current !== epoch) return;
-      if (!data.board) {
-        schedulePushRef.current();
-        return;
-      }
-      if (data.board.revision <= revisionRef.current) return;
-      applyRemoteBoard(data.board);
+    let pullTask: Promise<void> | null = null;
+    const pull = () => {
+      if (pullTask) return pullTask;
+      pullTask = (async () => {
+        try {
+          const epoch = editEpochRef.current;
+          const res = await fetch('/api/teacher-board', { cache: 'no-store' });
+          if (!res.ok || cancelled) return;
+          const data = (await res.json()) as {
+            board: { pages: CanvasElement[][]; currentPageIndex: number; revision: number } | null;
+          };
+          if (cancelled || editEpochRef.current !== epoch) return;
+          if (!data.board) {
+            schedulePushRef.current();
+            return;
+          }
+          if (data.board.revision <= revisionRef.current) return;
+          applyRemoteBoard(data.board);
+        } catch {
+          /* ignore a dropped pull */
+        } finally {
+          pullTask = null;
+        }
+      })();
+      return pullTask;
     };
-
-    void pull();
 
     let source: EventSource | null = null;
     let watchdog = 0;
+    let errorPull = 0;
+    let streamGeneration = 0;
 
     const armWatchdog = () => {
       window.clearTimeout(watchdog);
@@ -897,14 +993,27 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
 
     const open = () => {
       if (cancelled) return;
-      const next = new EventSource('/api/teacher-board/stream');
+      window.clearTimeout(errorPull);
+      errorPull = 0;
+      const generation = ++streamGeneration;
+      const next = new EventSource(
+        `/api/teacher-board/stream?clientId=${encodeURIComponent(clientIdRef.current)}&revision=${revisionRef.current}`,
+      );
       source = next;
       armWatchdog();
       next.onerror = () => {
-        void pull();
+        if (generation !== streamGeneration || errorPull || cancelled) return;
+        errorPull = window.setTimeout(() => {
+          errorPull = 0;
+          if (!cancelled) void pull();
+        }, 2000);
       };
       next.onmessage = (ev) => {
         armWatchdog();
+        if (ev.lastEventId.startsWith('r')) {
+          const rev = Number(ev.lastEventId.slice(1));
+          if (Number.isFinite(rev) && rev <= revisionRef.current) return;
+        }
         try {
           const msg = JSON.parse(ev.data) as {
             revision?: number;
@@ -980,31 +1089,41 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     };
 
     open();
+    const openedRevision = revisionRef.current;
+    void pull().finally(() => {
+      if (cancelled || revisionRef.current === openedRevision) return;
+      source?.close();
+      open();
+    });
 
     return () => {
       cancelled = true;
       window.clearTimeout(watchdog);
+      window.clearTimeout(errorPull);
       source?.close();
     };
   }, [applyRemoteBoard]);
 
   const handleElementsChange = useCallback(
-    (next: CanvasElement[]) => {
+    (next: CanvasElement[], options?: { commitHistory?: boolean; publish?: boolean }) => {
       const pIndex = currentPageIndexRef.current;
       const updated = [...pagesRef.current];
       updated[pIndex] = next;
       setPages(updated);
       pagesRef.current = updated;
-      schedulePushRef.current();
 
-      let hist = historyMapRef.current.get(pIndex);
-      if (!hist) {
-        hist = { states: [[]], index: 0 };
+      if (options?.publish !== false) schedulePushRef.current();
+
+      if (options?.commitHistory !== false) {
+        let hist = historyMapRef.current.get(pIndex);
+        if (!hist) {
+          hist = { states: [[]], index: 0 };
+        }
+        const nextStates = hist.states.slice(0, hist.index + 1);
+        nextStates.push(next);
+        historyMapRef.current.set(pIndex, capHistory(nextStates, nextStates.length - 1));
+        updateUndoRedoState();
       }
-      const nextStates = hist.states.slice(0, hist.index + 1);
-      nextStates.push(next);
-      historyMapRef.current.set(pIndex, { states: nextStates, index: nextStates.length - 1 });
-      updateUndoRedoState();
     },
     [updateUndoRedoState],
   );
@@ -1019,14 +1138,10 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     updated[pIndex] = targetElements;
     setPages(updated);
     pagesRef.current = updated;
-    if (isHydratedRef.current) {
-      try {
-        localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(updated));
-      } catch {}
-    }
+    scheduleLocalPagesSave();
     schedulePushRef.current();
     updateUndoRedoState();
-  }, [updateUndoRedoState]);
+  }, [scheduleLocalPagesSave, updateUndoRedoState]);
 
   const redo = useCallback(() => {
     const pIndex = currentPageIndexRef.current;
@@ -1038,14 +1153,10 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     updated[pIndex] = targetElements;
     setPages(updated);
     pagesRef.current = updated;
-    if (isHydratedRef.current) {
-      try {
-        localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(updated));
-      } catch {}
-    }
+    scheduleLocalPagesSave();
     schedulePushRef.current();
     updateUndoRedoState();
-  }, [updateUndoRedoState]);
+  }, [scheduleLocalPagesSave, updateUndoRedoState]);
 
   // --- 🌟 Smart theme conversion for existing elements ---
   useEffect(() => {
@@ -1082,16 +1193,11 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
       if (hist) {
         const nextStates = hist.states.slice(0, hist.index + 1);
         nextStates.push(newPages[pIndex]);
-        historyMapRef.current.set(pIndex, { states: nextStates, index: nextStates.length - 1 });
+        historyMapRef.current.set(pIndex, capHistory(nextStates, nextStates.length - 1));
         updateUndoRedoState();
       }
 
-      // Persist to localStorage
-      if (isHydratedRef.current) {
-        try {
-          localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(newPages));
-        } catch (e) {}
-      }
+      scheduleLocalPagesSaveRef.current();
     }
   }, [isDark, updateUndoRedoState]);
 
@@ -1390,11 +1496,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     setCurrentPageIndex(newIdx);
     currentPageIndexRef.current = newIdx;
     historyMapRef.current.set(newIdx, { states: [[]], index: 0 });
-    if (isHydratedRef.current) {
-      try {
-        localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(updated));
-      } catch {}
-    }
+    scheduleLocalPagesSave();
     savePreferencesImmediately({ pageIdx: newIdx });
     schedulePushRef.current();
     updateUndoRedoState();
@@ -1411,11 +1513,7 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
     const nextIdx = Math.min(currentPageIndex, updated.length - 1);
     setCurrentPageIndex(nextIdx);
     currentPageIndexRef.current = nextIdx;
-    if (isHydratedRef.current) {
-      try {
-        localStorage.setItem(STORAGE_KEY_PAGES, JSON.stringify(updated));
-      } catch {}
-    }
+    scheduleLocalPagesSave();
     savePreferencesImmediately({ pageIdx: nextIdx });
     schedulePushRef.current();
     updateUndoRedoState();
@@ -2150,12 +2248,6 @@ export function TeacherWhiteboard({ copy }: { copy: WhiteboardCopy }) {
           scale={zoomScale * fitScale}
           stagePos={stagePos}
           onStagePosChange={setStagePos}
-          onScaleChange={(s) => {
-            skipCenterRef.current = true;
-            const next = s / (fitScaleRef.current || 1);
-            setZoomScale(next);
-            savePreferencesImmediately({ zoomScale: next });
-          }}
           textPlaceholder={copy.textPlaceholder}
           onPasteImage={addImage}
           stylusOnly={stylusOnly}

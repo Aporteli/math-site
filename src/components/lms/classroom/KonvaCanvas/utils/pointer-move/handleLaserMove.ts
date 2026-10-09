@@ -1,11 +1,13 @@
 import type { MutableRefObject, RefObject } from 'react';
 import Konva from 'konva';
+import { pointerSpaceFor, type PointerSpace } from '../pointer-space';
 
 export interface HandleLaserMoveContext {
   activeTool: string;
   isLasering: MutableRefObject<boolean>;
   containerRef: RefObject<HTMLDivElement>;
   stageRef: RefObject<Konva.Stage>;
+  pointerSpaceRef: MutableRefObject<PointerSpace | null>;
   addLaserPoint: (pos: { x: number; y: number }) => void;
   onLaserMove?: (pos: { x: number; y: number } | null) => void;
 }
@@ -22,18 +24,14 @@ export function handleLaserMove(
   if (ctx.activeTool !== 'laser') return false;
 
   if (ctx.isLasering.current || nativeEvt.buttons === 1) {
-    const stage = ctx.stageRef.current;
-    if (!stage) return true;
-    const transform = stage.getAbsoluteTransform().copy().invert();
+    const space = pointerSpaceFor(ctx.pointerSpaceRef, ctx.stageRef.current, ctx.containerRef.current);
+    if (!space) return true;
 
     for (let i = 0; i < events.length; i++) {
-      const cPos = { x: events[i].clientX, y: events[i].clientY };
-      const rect = ctx.containerRef.current?.getBoundingClientRect();
-      if (rect) {
-        const relPos = transform.point({ x: cPos.x - rect.left, y: cPos.y - rect.top });
-        ctx.addLaserPoint(relPos);
-        if (i === events.length - 1) ctx.onLaserMove?.(relPos);
-      }
+      const ev = events[i];
+      const relPos = space.transform.point({ x: ev.clientX - space.left, y: ev.clientY - space.top });
+      ctx.addLaserPoint(relPos);
+      if (i === events.length - 1) ctx.onLaserMove?.(relPos);
     }
   }
   return true;

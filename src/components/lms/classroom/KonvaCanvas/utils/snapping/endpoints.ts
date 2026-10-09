@@ -2,6 +2,35 @@ import type { CanvasElement } from '../types';
 
 const SCREEN_THRESHOLD = 12;
 
+type Box = { minX: number; minY: number; maxX: number; maxY: number };
+
+const endpointBoxes = new WeakMap<CanvasElement, { box: Box; points: number[]; x: number; y: number }>();
+
+function endpointBox(el: CanvasElement): Box | null {
+  const pts = el.points;
+  if (!pts || pts.length < 2) return null;
+  const x = el.x || 0;
+  const y = el.y || 0;
+  const cached = endpointBoxes.get(el);
+  if (cached && cached.points === pts && cached.x === x && cached.y === y) return cached.box;
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i < pts.length; i += 2) {
+    const wx = pts[i] + x;
+    const wy = pts[i + 1] + y;
+    if (wx < minX) minX = wx;
+    if (wy < minY) minY = wy;
+    if (wx > maxX) maxX = wx;
+    if (wy > maxY) maxY = wy;
+  }
+  const box = { minX, minY, maxX, maxY };
+  endpointBoxes.set(el, { box, points: pts, x, y });
+  return box;
+}
+
 export function findNearbyEndpoint(
   pos: { x: number; y: number },
   elements: CanvasElement[],
@@ -19,6 +48,10 @@ export function findNearbyEndpoint(
 
     const ox = (el as any).x ?? 0;
     const oy = (el as any).y ?? 0;
+    const box = endpointBox(el);
+    if (box && (pos.x < box.minX - threshold || pos.x > box.maxX + threshold || pos.y < box.minY - threshold || pos.y > box.maxY + threshold)) {
+      continue;
+    }
 
     for (let i = 0; i < pts.length - 1; i += 2) {
       const wx = pts[i] + ox;
