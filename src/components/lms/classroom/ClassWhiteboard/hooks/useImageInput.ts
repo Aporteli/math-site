@@ -70,6 +70,7 @@ async function resizedUploadBlob(bitmap: ImageBitmap, bitmapW: number, bitmapH: 
 }
 
 interface Options {
+  allowImages?: boolean;
   pagesRef: MutableRefObject<CanvasElement[][]>;
   currentPageIndexRef: MutableRefObject<number>;
   handleElementsChange: (elems: CanvasElement[], options?: { commitHistory?: boolean }) => void;
@@ -79,14 +80,19 @@ interface Options {
 }
 
 export function useImageInput({
+  allowImages = true,
   pagesRef,
   currentPageIndexRef,
   handleElementsChange,
   setActiveTool,
   selectElement,
 }: Options) {
+  const allowImagesRef = useRef(allowImages);
+  allowImagesRef.current = allowImages;
+
   const addImageToCanvas = useCallback(
     (file: Blob, pos?: { x: number; y: number }, pageIndex?: number) => {
+      if (!allowImagesRef.current) return;
       const targetPage = pageIndex ?? currentPageIndexRef.current;
       void (async () => {
         // Decode off the main thread. A large screenshot used to block here:
@@ -181,6 +187,7 @@ export function useImageInput({
 
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
+      if (!allowImagesRef.current) return;
       const target = e.target as HTMLElement;
       const tag = target?.tagName;
       const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
@@ -218,6 +225,7 @@ export function useImageInput({
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    if (!allowImagesRef.current) return;
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       if (file.type.startsWith('image/')) {
@@ -227,6 +235,7 @@ export function useImageInput({
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!allowImagesRef.current) return;
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       addImageToCanvas(file);

@@ -15,7 +15,7 @@ import { useHideAiWidget } from '../hooks/useHideAiWidget';
 import { useTeacherKick } from '../hooks/useTeacherKick';
 import { BreakoutContext } from '../breakout/BreakoutContext';
 import { BoardDataRoom } from '../breakout/BoardDataRoom';
-import { BreakoutDashboard } from '../breakout/BreakoutDashboard';
+import { BreakoutDashboard } from '../breakout/breakout-dashboard/BreakoutDashboard';
 import { MonitorRoom } from '../breakout/MonitorRoom';
 import { useClassroomConnection } from '../breakout/useClassroomConnection';
 import { useWhiteboardHistory } from './classroom-video-panel/hooks/use-white-board-history';
@@ -69,6 +69,8 @@ export function ClassroomRoomModal({
       presentStudents: boardControl.presentStudents,
       lockedStudentIds: boardControl.lockedStudentIds,
       toggleStudentLock: boardControl.toggleStudentLock,
+      drawingStudentIds: boardControl.drawingStudentIds,
+      toggleStudentDraw: boardControl.toggleStudentDraw,
       pageCount: boardControl.pageCount,
       setPageCount: boardControl.setPageCount,
       assignedPageByStudent: boardControl.assignedPageByStudent,
@@ -79,6 +81,8 @@ export function ClassroomRoomModal({
       boardControl.presentStudents,
       boardControl.lockedStudentIds,
       boardControl.toggleStudentLock,
+      boardControl.drawingStudentIds,
+      boardControl.toggleStudentDraw,
       boardControl.pageCount,
       boardControl.setPageCount,
       boardControl.assignedPageByStudent,
@@ -153,9 +157,8 @@ export function ClassroomRoomModal({
               <ClassroomWhiteboardPanel
                 room={activeRoom}
                 hidden={activeTab === 'video'}
-
                 courseId={courseId}
-                courseTitle={courseTitle} 
+                courseTitle={courseTitle}
                 isFullscreen={isBoardFullscreen}
                 onToggleFullscreen={toggleClassroomFullscreen}
                 isTeacher={isTeacher}

@@ -8,6 +8,7 @@ import type { StylusButtonAction } from '../constants/stylus';
 import { getStylusButtonFromKeyboard } from '../utils/stylus';
 
 interface Options {
+  enabled?: boolean;
   activeTool: any;
   setActiveTool: (tool: any) => void;
   strokeColor: string;
@@ -19,7 +20,7 @@ interface Options {
 
 export function useStylusActions(opts: Options) {
   const {
-    activeTool, setActiveTool, strokeColor, setStrokeColor,
+    enabled = true, activeTool, setActiveTool, strokeColor, setStrokeColor,
     stylusPrimaryAction, stylusSecondaryAction, handleUndo,
   } = opts;
 
@@ -37,8 +38,18 @@ export function useStylusActions(opts: Options) {
   strokeColorRef.current = strokeColor;
   const handleUndoRef = useRef(handleUndo);
   handleUndoRef.current = handleUndo;
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
 
   const applyStylusAction = useCallback((buttonIndex: 1 | 2, state: 'down' | 'up') => {
+    if (!enabledRef.current) {
+      if (state === 'up') {
+        stylusButtonHeldRef.current[buttonIndex] = false;
+        temporaryEraserHoldersRef.current.delete(buttonIndex);
+        if (temporaryEraserHoldersRef.current.size === 0) isTemporaryEraserRef.current = false;
+      }
+      return;
+    }
     if (state === 'down') {
       if (stylusButtonHeldRef.current[buttonIndex]) return;
       stylusButtonHeldRef.current[buttonIndex] = true;

@@ -10,6 +10,10 @@ export interface BoardControlContextValue {
   lockedStudentIds: Set<string>;
   /** Lock/unlock the board view of a single student. */
   toggleStudentLock: (identity: string) => void;
+  /** Students allowed to use the pen, eraser, and stylus. */
+  drawingStudentIds: Set<string>;
+  /** Turn drawing tools on or off for a single student. */
+  toggleStudentDraw: (identity: string) => void;
   /** How many teacher boards currently exist. */
   pageCount: number;
   setPageCount: (count: number) => void;
@@ -23,6 +27,8 @@ export const BoardControlContext = createContext<BoardControlContextValue>({
   presentStudents: [],
   lockedStudentIds: new Set(),
   toggleStudentLock: () => {},
+  drawingStudentIds: new Set(),
+  toggleStudentDraw: () => {},
   pageCount: 1,
   setPageCount: () => {},
   assignedPageByStudent: {},

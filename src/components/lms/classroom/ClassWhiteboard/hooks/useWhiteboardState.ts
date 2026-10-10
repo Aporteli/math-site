@@ -16,6 +16,8 @@ import type { PublishDataSafe } from './usePublishDataSafe';
 interface Options {
   courseId: string;
   isTeacher: boolean;
+  /** Student was granted pen, eraser, and stylus by the teacher. */
+  canDraw?: boolean;
   isDark: boolean;
   room: Room | null;
   publishDataSafe: PublishDataSafe;
@@ -72,7 +74,7 @@ function logWhiteboardSave(pages: CanvasElement[][]) {
     });
 }
 
-export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe, getSyncDestinations, broadcastBoard }: Options) {
+export function useWhiteboardState({ courseId, isTeacher, canDraw = false, room, publishDataSafe, getSyncDestinations, broadcastBoard }: Options) {
   const isRemoteUpdateRef = useRef(false);
   // True once the initial DB read has completed (whether or not a saved board
   // existed). Prevents the teacher from overwriting a saved board with the
@@ -110,6 +112,8 @@ export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe,
   roomRef.current = room;
   const isTeacherRef = useRef(isTeacher);
   isTeacherRef.current = isTeacher;
+  const canEditRef = useRef(isTeacher || canDraw);
+  canEditRef.current = isTeacher || canDraw;
 
   const updateUndoRedoState = useCallback(() => {
     const pageHist = historyMapRef.current.get(currentPageIndexRef.current);
@@ -202,6 +206,16 @@ export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe,
     };
   }, [isTeacher, courseId]);
 
+  // A student who just received drawing tools undoes back to the board they
+  // currently see, not to an older local snapshot.
+  useEffect(() => {
+    if (isTeacher || !canDraw) return;
+    const pageIndex = currentPageIndexRef.current;
+    const page = pagesRef.current[pageIndex] ?? [];
+    historyMapRef.current.set(pageIndex, { states: [page], index: 0 });
+    updateUndoRedoState();
+  }, [canDraw, isTeacher, updateUndoRedoState]);
+
   const pushHistory = useCallback((pageIndex: number, elements: CanvasElement[]) => {
     let pageHist = historyMapRef.current.get(pageIndex);
     if (!pageHist) pageHist = { states: [[]], index: 0 };
@@ -248,7 +262,7 @@ export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe,
   const flushRef = useRef<() => void>(() => {});
 
   const scheduleFlush = useCallback(() => {
-    if (!isTeacherRef.current) return;
+    if (!canEditRef.current) return;
     dirtyRef.current = true;
     flushRef.current();
   }, []);
@@ -264,6 +278,10 @@ export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe,
           if (!currentRoom || currentRoom.state !== ConnectionState.Connected) {
             await waitUntilConnected();
             if (!roomRef.current || roomRef.current.state !== ConnectionState.Connected) break;
+          }
+
+          if (fullSyncPendingRef.current && !isTeacherRef.current) {
+            fullSyncPendingRef.current = false;
           }
 
           if (fullSyncPendingRef.current) {
@@ -359,7 +377,7 @@ export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe,
 
   const handleElementsChange = useCallback(
     (newElems: CanvasElement[], options?: { commitHistory?: boolean; publish?: boolean }) => {
-      if (!isTeacher) return;
+      if (!canEditRef.current) return;
       if (isRemoteUpdateRef.current) return;
       const pIndex = currentPageIndexRef.current;
       const updated = [...pagesRef.current];
@@ -374,11 +392,11 @@ export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe,
 
       if (options?.publish !== false) scheduleFlush();
     },
-    [isTeacher, pushHistory, scheduleFlush, updateUndoRedoState],
+    [pushHistory, scheduleFlush, updateUndoRedoState],
   );
 
   const handleUndo = useCallback(() => {
-    if (!isTeacher) return;
+    if (!canEditRef.current) return;
     const pIndex = currentPageIndexRef.current;
     const pageHist = historyMapRef.current.get(pIndex);
     if (!pageHist || pageHist.index <= 0) return;
@@ -393,9 +411,10 @@ export function useWhiteboardState({ courseId, isTeacher, room, publishDataSafe,
 
     updateUndoRedoState();
     scheduleFlush();
-  }, [isTeacher, scheduleFlush, updateUndoRedoState]);
+  }, [scheduleFlush, updateUndoRedoState]);
 
   const handleRedo = useCallback(() => {
+    if (!canEditRef.current) return;
     const pIndex = currentPageIndexRef.current;
     const pageHist = historyMapRef.current.get(pIndex);
     if (!pageHist || pageHist.index >= pageHist.states.length - 1) return;

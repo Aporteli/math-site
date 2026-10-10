@@ -51,12 +51,7 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
       const evt = e.evt as PointerEvent;
 
       // 1. Stylus / touch gating
-      if (
-        stylusDownPhase(
-          { stylusOnly, isStylusActiveRef, syncStylusButtonsFromEvent },
-          evt,
-        )
-      ) {
+      if (stylusDownPhase({ stylusOnly, isStylusActiveRef, syncStylusButtonsFromEvent }, evt)) {
         return;
       }
 
@@ -72,15 +67,9 @@ export function usePointerDownHandler(ctx: PointerHandlerContext) {
       const pos = getRelativePointerPosition();
       if (!pos) return;
 
-      // 3. Dispatch by tool
       if (handleLaserDown({ activeTool, isLasering, startLaserDrawing, onLaserMove }, pos)) return;
 
-      if (
-        handleEraserDown(
-          { activeTool, isErasing, eraseStrokeDirtyRef, setEraserCursorPos, eraseAtPosition },
-          pos,
-        )
-      )
+      if (handleEraserDown({ activeTool, isErasing, eraseStrokeDirtyRef, setEraserCursorPos, eraseAtPosition }, pos))
         return;
 
       if (handleSelectDown({ activeTool, getRelativePointerPosition, startMarquee }, e)) return;

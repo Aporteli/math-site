@@ -9,7 +9,7 @@ import { TeacherStudentsHeroAside } from './components/TeacherStudentsHeroAside'
 import { TeacherWorkspaceHeader } from './components/TeacherWorkspaceHeader';
 import { TeacherWorkspaceTabs } from './components/TeacherWorkspaceTabs';
 import { TeacherAssignmentsGrid } from './components/TeacherAssignmentsGrid';
-import { AssignProblemModal } from './modals/AssignProblemModal';
+import { AssignProblemModal } from './modals/assign-problem-modal/AssignProblemModal';
 import { UploadMaterialModal } from './modals/UploadMaterialModal';
 import { PreviewMaterialModal } from './modals/PreviewMaterialModal';
 import { DeleteConfirmModal } from './modals/DeleteConfirmModal';
@@ -17,7 +17,10 @@ import { TeacherViewProblemModal } from './modals/TeacherViewProblemModal';
 import type { TeacherStudentsWorkspaceProps } from './types/teacher-workspace.types';
 
 const ClassroomRoomModal = dynamic(
-  () => import('@/components/lms/classroom/ClassroomRoomModal/components/ClassroomRoomModal').then((m) => m.ClassroomRoomModal),
+  () =>
+    import('@/components/lms/classroom/ClassroomRoomModal/components/ClassroomRoomModal').then(
+      (m) => m.ClassroomRoomModal,
+    ),
   {
     ssr: false,
     loading: () => (
@@ -142,10 +145,7 @@ export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
       )}
 
       {ws.previewMaterialModal && (
-        <PreviewMaterialModal
-          material={ws.previewMaterialModal}
-          onClose={() => ws.setPreviewMaterialModal(null)}
-        />
+        <PreviewMaterialModal material={ws.previewMaterialModal} onClose={() => ws.setPreviewMaterialModal(null)} />
       )}
 
       {ws.deletingAssignmentId && (

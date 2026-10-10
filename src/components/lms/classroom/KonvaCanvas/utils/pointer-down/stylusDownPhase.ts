@@ -7,14 +7,9 @@ export interface StylusDownPhaseContext {
   syncStylusButtonsFromEvent: (evt: PointerEvent, phase: 'down' | 'move' | 'up' | 'cancel') => void;
 }
 
-/**
- * Handles the stylus/touch gating that happens before any tool logic.
- * Returns `true` when the caller should stop handling the pointer-down event.
- */
 export function stylusDownPhase(ctx: StylusDownPhaseContext, evt: PointerEvent): boolean {
   if (ctx.stylusOnly && evt.pointerType === 'touch') return true;
 
-  // Stylus-only mode: block touch (finger) input
   if (ctx.stylusOnly && evt.pointerType === 'touch') return true;
 
   if (evt.pointerType === 'touch' && ctx.isStylusActiveRef.current) return true;

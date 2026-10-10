@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { MessageSquare } from 'lucide-react';
-import { TeacherAiChatPanel } from '@/components/lms/teacher/problem-bank/components/TeacherAiChatPanel';
+import { TeacherAiChatPanel } from '@/components/lms/teacher/problem-bank/components/teacher-ai-chat-panel/TeacherAiChatPanel';
 import { loadAiModelStatusAction } from '@/lib/math/problems/actions';
 import { DEFAULT_AI_MODEL, type AiModelId, type AiModelStatus, type ProblemBankCopy } from '@/lib/math/problems';
 

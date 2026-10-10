@@ -19,11 +19,14 @@ interface Options {
 export function useBoardControlState({ room, isTeacher, students, publishDataSafe }: Options) {
   const [connectedIds, setConnectedIds] = useState<string[]>([]);
   const [lockedStudentIds, setLockedStudentIds] = useState<Set<string>>(new Set());
+  const [drawingStudentIds, setDrawingStudentIds] = useState<Set<string>>(new Set());
   const [pageCount, setPageCount] = useState(1);
   const [assignedPageByStudent, setAssignedPageByStudent] = useState<BoardAssignmentMap>({});
 
   const lockedIdsRef = useRef(lockedStudentIds);
   lockedIdsRef.current = lockedStudentIds;
+  const drawingIdsRef = useRef(drawingStudentIds);
+  drawingIdsRef.current = drawingStudentIds;
   const assignedRef = useRef(assignedPageByStudent);
   assignedRef.current = assignedPageByStudent;
 
@@ -71,6 +74,11 @@ export function useBoardControlState({ room, isTeacher, students, publishDataSaf
         if (destinations.length === 0) continue;
         void publishDataSafe({ type: 'BOARD_CONTROL', enabled: true }, true, destinations);
       }
+      for (const id of drawingIdsRef.current) {
+        const destinations = liveIdentitiesFor(participants, id);
+        if (destinations.length === 0) continue;
+        void publishDataSafe({ type: 'BOARD_DRAW', enabled: true }, true, destinations);
+      }
       for (const [studentId, pageIndex] of Object.entries(assignedRef.current)) {
         const destinations = liveIdentitiesFor(participants, studentId);
         if (destinations.length === 0) continue;
@@ -111,6 +119,28 @@ export function useBoardControlState({ room, isTeacher, students, publishDataSaf
     [isTeacher, lockedStudentIds, publishDataSafe, room],
   );
 
+  const toggleStudentDraw = useCallback(
+    (identity: string) => {
+      if (!isTeacher) return;
+
+      const willEnable = !drawingStudentIds.has(identity);
+      setDrawingStudentIds((prev) => {
+        const next = new Set(prev);
+        if (willEnable) next.add(identity);
+        else next.delete(identity);
+        return next;
+      });
+
+      const destinations = room
+        ? liveIdentitiesFor(room.remoteParticipants.values(), identity)
+        : [];
+      if (destinations.length > 0) {
+        void publishDataSafe({ type: 'BOARD_DRAW', enabled: willEnable }, true, destinations);
+      }
+    },
+    [isTeacher, drawingStudentIds, publishDataSafe, room],
+  );
+
   const assignStudentPage = useCallback(
     (studentId: string, pageIndex: number | null) => {
       if (!isTeacher) return;
@@ -146,6 +176,8 @@ export function useBoardControlState({ room, isTeacher, students, publishDataSaf
     presentStudents,
     lockedStudentIds,
     toggleStudentLock,
+    drawingStudentIds,
+    toggleStudentDraw,
     pageCount,
     setPageCount,
     assignedPageByStudent,

@@ -1,19 +1,11 @@
 'use client';
 
-import React, { useRef, useState, forwardRef, RefObject, useCallback, useEffect } from 'react';
-import { Trash2 } from 'lucide-react';
+import { forwardRef, useCallback, useState, type RefObject } from 'react';
 import Konva from 'konva';
-import { Stage, Layer } from 'react-konva';
-import type { CanvasElement, KonvaCanvasHandle, KonvaCanvasProps } from './utils/types';
-import { noteWhiteboardPaint } from '@/lib/livekit/diagnostics/whiteboard-message';
-import { findConnectedIds } from './utils/connectivity';
-import { TextEditorOverlay } from './components/TextEditorOverlay';
-import { ElementRenderer } from './components/ElementRenderer';
-import { SelectionOverlay } from './components/SelectionOverlay';
+import type { KonvaCanvasHandle, KonvaCanvasProps } from './utils/types';
 import { CanvasContainer } from './components/CanvasContainer';
-import { EraserCursorLayer } from './components/EraserCursorLayer';
-import { InlineImageToolbar } from './components/InlineImageToolbar';
-import { InlineCropOverlay } from './components/InlineCropOverlay';
+import { CanvasOverlays } from './components/CanvasOverlays';
+import { CanvasStage } from './components/CanvasStage';
 import { useStageSize } from './components/useStageSize';
 import { useLaser } from './components/useLaser';
 import { useEraser } from './components/useEraser';
@@ -27,20 +19,23 @@ import { usePointerHandlers } from './hooks/usePointerHandlers';
 import { useFitToContent } from './hooks/useFitToContent';
 import { useDeleteSelected } from './hooks/useDeleteSelected';
 import { useCanvasImperativeHandle } from './hooks/useCanvasImperativeHandle';
-import { useGlobalPointerHandlers } from './hooks/useGlobalPointerHandlers';
 import { useDrawLayerCleanup } from './hooks/useDrawLayerCleanup';
+import { useGlobalPointerHandlers } from './hooks/useGlobalPointerHandlers';
 import { useElementClickHandler } from './hooks/useElementClickHandler';
 import { useMarqueeSelection } from './hooks/useMarqueeSelection';
 import { useInlineCrop } from './hooks/useInlineCrop';
 import { useMiddleButtonPan } from './hooks/useMiddleButtonPan';
+import { useCanvasRefs } from './hooks/useCanvasRefs';
+import { useStagePosition } from './hooks/useStagePosition';
+import { useRelativePointerPosition } from './hooks/useRelativePointerPosition';
+import { useCropSelection } from './hooks/useCropSelection';
+import { useConnectedGroupDrag } from './hooks/useConnectedGroupDrag';
+import { useCopySelectedImage } from './hooks/useCopySelectedImage';
+import { useWhiteboardPaintNote } from './hooks/useWhiteboardPaintNote';
+import { useImageToolbarPosition } from './hooks/useImageToolbarPosition';
+import { useDeleteButtonPosition } from './hooks/useDeleteButtonPosition';
 
 Konva.dragButtons = [0];
-
-interface DragSnapshot {
-  points?: number[];
-  x: number;
-  y: number;
-}
 
 const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function KonvaCanvas(
   {
@@ -58,74 +53,42 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     disabled = false,
     onLaserMove,
     onLiveStroke,
-    textPlaceholder = 'ტექსტი...',
-    onCropImage,
     stylusOnly = false,
     onStylusButtonAction,
     penSmoothIntensity = 0,
   },
   ref,
 ) {
-  // ---- Core state ----
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [internalStagePos, setInternalStagePos] = useState({ x: 0, y: 0 });
+  const { stagePos, setStagePos } = useStagePosition(stagePosProp, onStagePosChange);
+  const {
+    containerRef,
+    stageRef,
+    mainLayerRef,
+    drawLayerRef,
+    marqueeLayerRef,
+    trRef,
+    isDrawing,
+    activeShapeRef,
+    activeShapeIdRef,
+    elementsRef,
+    isStylusActiveRef,
+    activePointerIdRef,
+  } = useCanvasRefs(elements);
 
-  const stagePos = stagePosProp ?? internalStagePos;
-  const setStagePos = useCallback(
-    (pos: { x: number; y: number }) => {
-      if (onStagePosChange) onStagePosChange(pos);
-      else setInternalStagePos(pos);
-    },
-    [onStagePosChange],
-  );
-
-  // ---- Refs ----
-  const containerRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<Konva.Stage>(null);
-  const mainLayerRef = useRef<Konva.Layer>(null);
-  const drawLayerRef = useRef<Konva.Layer>(null);
-  const marqueeLayerRef = useRef<Konva.Layer>(null);
-  const trRef = useRef<any>(null);
-
-  const isDrawing = useRef(false);
-  const activeShapeRef = useRef<any>(null);
-  const activeShapeIdRef = useRef<string>('');
-  const elementsRef = useRef<CanvasElement[]>(elements);
-  elementsRef.current = elements;
-  const isStylusActiveRef = useRef(false);
-  const activePointerIdRef = useRef<number | null>(null);
-
-  // ---- Connected-group drag bookkeeping ----
-  const dragSiblingsRef = useRef<Map<string, DragSnapshot>>(new Map());
-  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-
-  // ---- Stage size ----
   const stageSize = useStageSize(containerRef as RefObject<HTMLDivElement>);
 
-  // ---- Stylus ----
   const { stylusPrimaryHeldRef, stylusSecondaryHeldRef, syncStylusButtonsFromEvent } =
     useStylusButtons(onStylusButtonAction);
 
-  // ---- Selection-derived values ----
   const selectedElement = selectedIds.length === 1 ? elements.find((el) => el.id === selectedIds[0]) : undefined;
   const selectedImage = selectedElement?.type === 'image' ? selectedElement : null;
 
-  // ---- Inline crop ----
   const crop = useInlineCrop({ elementsRef, onElementsChange });
   const isCropping = crop.cropState !== null;
-
-  const handleCropImageClick = useCallback(() => {
-    if (selectedImage) crop.enter(selectedImage);
-  }, [selectedImage, crop]);
-
-  const cropSelectedImage = useCallback(() => {
-    if (selectedImage) crop.enter(selectedImage);
-  }, [selectedImage, crop]);
-
-  // ---- Imperative selection for external callers (useImageInput) ----
+  const { handleCropImageClick, cropSelectedImage } = useCropSelection(selectedImage, crop);
   const selectElement = useCallback((id: string) => setSelectedIds([id]), []);
 
-  // ---- Text editing ----
   const {
     editingTextId,
     editingTextValue,
@@ -144,7 +107,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     setSelectedIds,
   });
 
-  // ---- Laser ----
   const {
     laserLayerRef,
     isLasering,
@@ -155,7 +117,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     renderRemoteInk,
   } = useLaser();
 
-  // ---- Eraser ----
   const { eraserCursorPos, setEraserCursorPos, isErasing, eraseStrokeDirtyRef, eraseAtPosition, commitErase } =
     useEraser({
       elementsRef,
@@ -166,18 +127,8 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
       activeTool,
     });
 
-  // ---- Pointer helpers ----
-  const getRelativePointerPosition = React.useCallback(() => {
-    const stage = stageRef.current;
-    if (!stage) return null;
-    const transform = stage.getAbsoluteTransform().copy();
-    transform.invert();
-    const pos = stage.getPointerPosition();
-    if (!pos) return null;
-    return transform.point(pos);
-  }, []);
+  const getRelativePointerPosition = useRelativePointerPosition(stageRef);
 
-  // ---- Two-finger pan ----
   const { isPinching, handleTouchStart, handleTouchMove, handleTouchEnd } = usePinchZoom({
     stageRef: stageRef as RefObject<Konva.Stage>,
     drawLayerRef: drawLayerRef as RefObject<Konva.Layer>,
@@ -188,7 +139,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     disabled,
   });
 
-  // ---- Marquee ----
   const { startMarquee, updateMarquee, endMarquee } = useMarqueeSelection({
     elementsRef,
     marqueeLayerRef: marqueeLayerRef as RefObject<Konva.Layer>,
@@ -196,7 +146,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     mode: selectionMode,
   });
 
-  // ---- Pointer handlers (draw / erase / laser / marquee) ----
   const { handlePointerDown, handlePointerMove, handlePointerUp } = usePointerHandlers({
     activeTool,
     scale,
@@ -245,131 +194,26 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     disabled,
   });
 
-  // ---- Element transform (drag / transform) ----
   const { handleDragStart, handleDragMove, handleDragEnd, handleTransformEnd } = useElementTransform({
     elementsRef,
     onElementsChange,
     selectedIds,
-    trRef: trRef as RefObject<Konva.Transformer>,
+    trRef,
   });
 
-  // ---- Sync selection to the transformer ----
   useSelectionSync(selectedIds, trRef, stageRef as RefObject<Konva.Stage>, mainLayerRef as RefObject<Konva.Layer>);
 
-  // ---- Drag tracking for toolbar visibility ----
-  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const { isDraggingImage, handleDragStartWrapped, handleDragMoveWrapped, handleDragEndWrapped } =
+    useConnectedGroupDrag({
+      elementsRef,
+      stageRef,
+      onElementsChange,
+      selectedImageId: selectedImage?.id,
+      handleDragStart,
+      handleDragMove,
+      handleDragEnd,
+    });
 
-  /**
-   * Drag start: snapshot every element in the connected group so we can move
-   * siblings live during the drag and commit all of them on release.
-   */
-  const handleDragStartWrapped = useCallback(
-    (id: string, e: any) => {
-      if (id === selectedImage?.id) setIsDraggingImage(true);
-
-      const connected = findConnectedIds(id, elementsRef.current);
-      const snaps = new Map<string, DragSnapshot>();
-      for (const el of elementsRef.current) {
-        if (!connected.has(el.id)) continue;
-        snaps.set(el.id, {
-          points: el.points ? el.points.slice() : undefined,
-          x: (el as any).x ?? 0,
-          y: (el as any).y ?? 0,
-        });
-      }
-      dragSiblingsRef.current = snaps;
-      dragStartRef.current = { x: e.target.x(), y: e.target.y() };
-
-      handleDragStart(id, e);
-    },
-    [handleDragStart, selectedImage?.id],
-  );
-
-  /**
-   * Drag move: translate every sibling's Konva node by the same delta so the
-   * connected figure moves as one rigid body during the drag. The dragged
-   * node itself is moved by Konva.
-   */
-  const handleDragMoveWrapped = useCallback(
-    (id: string, e: any) => {
-      const snaps = dragSiblingsRef.current;
-      const dx = e.target.x() - dragStartRef.current.x;
-      const dy = e.target.y() - dragStartRef.current.y;
-
-      if (snaps.size > 1 && (dx !== 0 || dy !== 0)) {
-        const stage = stageRef.current;
-        if (stage) {
-          for (const [otherId, snap] of snaps) {
-            if (otherId === id) continue;
-            const node = stage.findOne('#' + otherId) as any;
-            if (!node) continue;
-
-            if (snap.points) {
-              // Line-like element: mutate points in place, keep transform identity.
-              node.points(snap.points.map((v, i) => (i % 2 === 0 ? v + dx : v + dy)));
-              node.x(0);
-              node.y(0);
-            } else {
-              node.x(snap.x + dx);
-              node.y(snap.y + dy);
-            }
-          }
-          stage.batchDraw();
-        }
-      }
-
-      handleDragMove(id, e);
-    },
-    [handleDragMove],
-  );
-
-  /**
-   * Drag end: commit new absolute positions for every sibling, then let the
-   * base handler commit the dragged element (it reads e.target.x/y and bakes
-   * the delta into that element's points).
-   */
-  const handleDragEndWrapped = useCallback(
-    (id: string, e: any) => {
-      const snaps = dragSiblingsRef.current;
-      const dx = e.target.x() - dragStartRef.current.x;
-      const dy = e.target.y() - dragStartRef.current.y;
-
-      if (snaps.size > 1 && (dx !== 0 || dy !== 0)) {
-        const updates = new Map<string, Partial<CanvasElement>>();
-        for (const [otherId, snap] of snaps) {
-          if (otherId === id) continue;
-          if (snap.points) {
-            updates.set(otherId, {
-              points: snap.points.map((v, i) => (i % 2 === 0 ? v + dx : v + dy)),
-              x: 0,
-              y: 0,
-            } as Partial<CanvasElement>);
-          } else {
-            updates.set(otherId, {
-              x: snap.x + dx,
-              y: snap.y + dy,
-            } as Partial<CanvasElement>);
-          }
-        }
-
-        if (updates.size > 0) {
-          const next = elementsRef.current.map((el) => {
-            const upd = updates.get(el.id);
-            return upd ? ({ ...el, ...upd } as CanvasElement) : el;
-          });
-          onElementsChange(next);
-        }
-      }
-
-      dragSiblingsRef.current = new Map();
-
-      handleDragEnd(id, e);
-      requestAnimationFrame(() => setIsDraggingImage(false));
-    },
-    [handleDragEnd, onElementsChange],
-  );
-
-  // ---- Fit to content ----
   const fitToContent = useFitToContent({
     containerRef: containerRef as RefObject<HTMLDivElement>,
     stageRef: stageRef as RefObject<Konva.Stage>,
@@ -378,7 +222,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     setStagePos,
   });
 
-  // ---- Delete selected ----
   const deleteSelected = useDeleteSelected({
     selectedIds,
     setSelectedIds,
@@ -386,7 +229,6 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     onElementsChange,
   });
 
-  // ---- Imperative handle ----
   useCanvasImperativeHandle({
     ref,
     stageRef: stageRef as RefObject<Konva.Stage>,
@@ -401,55 +243,10 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     selectElement,
   });
 
-  // ---- Global side-effects ----
   useKeyboardDelete(editingTextId, selectedIds, deleteSelected);
-  useEffect(() => {
-    if (disabled) return;
-    const onCopy = (e: ClipboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      const tag = target?.tagName;
-      if (tag === 'TEXTAREA' || tag === 'INPUT') return;
-      const src = selectedImage?.src;
-      if (!src) return;
-      e.preventDefault();
-      void (async () => {
-        const res = await fetch(src);
-        const blob = await res.blob();
-        await navigator.clipboard.write([new ClipboardItem({ [blob.type || 'image/png']: blob })]);
-      })();
-    };
-    window.addEventListener('copy', onCopy);
-    return () => window.removeEventListener('copy', onCopy);
-  }, [disabled, selectedImage]);
-
+  useCopySelectedImage(disabled, selectedImage);
   useDrawLayerCleanup(drawLayerRef as RefObject<Konva.Layer>, isDrawing, elements);
-  useEffect(() => {
-    const started = Date.now();
-    const elementCount = elements.length;
-    const stage = stageRef.current;
-    const width = stage?.width() ?? 0;
-    const height = stage?.height() ?? 0;
-    const pixelRatio = window.devicePixelRatio || 1;
-    let cancelled = false;
-    let second = 0;
-    const first = window.requestAnimationFrame(() => {
-      second = window.requestAnimationFrame(() => {
-        if (cancelled) return;
-        noteWhiteboardPaint({
-          elementCount,
-          stageWidth: width,
-          stageHeight: height,
-          devicePixelRatio: pixelRatio,
-          renderDurationMs: Date.now() - started,
-        });
-      });
-    });
-    return () => {
-      cancelled = true;
-      window.cancelAnimationFrame(first);
-      if (second) window.cancelAnimationFrame(second);
-    };
-  }, [elements]);
+  useWhiteboardPaintNote(elements, stageRef);
   useGlobalPointerHandlers({
     syncStylusButtonsFromEvent,
     commitErase,
@@ -458,218 +255,106 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
     onLaserMove,
   });
 
-  // ---- Element click ----
   const handleElementClick = useElementClickHandler({
     activeTool,
     setSelectedIds,
     startTextInlineEditing,
   });
 
-  // ---- Toolbar position ----
-  const [toolbarPos, setToolbarPos] = useState<{ x: number; y: number } | null>(null);
+  const toolbarPos = useImageToolbarPosition({
+    selectedImage,
+    activeTool,
+    isCropping,
+    disabled,
+    isDraggingImage,
+    elements,
+    scale,
+    stagePos,
+    stageRef,
+  });
 
-  useEffect(() => {
-    if (!selectedImage || activeTool !== 'select' || isCropping || disabled || isDraggingImage) {
-      setToolbarPos(null);
-      return;
-    }
-    const stage = stageRef.current;
-    if (!stage) return;
-    const node = stage.findOne('#' + selectedImage.id);
-    if (!node) {
-      setToolbarPos(null);
-      return;
-    }
-    const box = node.getClientRect({ skipStroke: true, skipShadow: true });
-    const cx = box.x + box.width / 2;
-    const above = box.y - 10;
-    setToolbarPos({
-      x: cx,
-      y: above < 44 ? box.y + box.height + 10 : above,
-    });
-  }, [selectedImage, activeTool, isCropping, disabled, isDraggingImage, elements, scale, stagePos.x, stagePos.y]);
-
-  const [deletePos, setDeletePos] = useState<{ x: number; y: number } | null>(null);
-
-  useEffect(() => {
-    if (activeTool !== 'select' || isCropping || disabled || selectedIds.length === 0 || selectedImage) {
-      setDeletePos(null);
-      return;
-    }
-    const stage = stageRef.current;
-    if (!stage) return;
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const id of selectedIds) {
-      const node = stage.findOne('#' + id);
-      if (!node) continue;
-      const box = node.getClientRect({ skipStroke: true, skipShadow: true });
-      minX = Math.min(minX, box.x);
-      minY = Math.min(minY, box.y);
-      maxX = Math.max(maxX, box.x + box.width);
-      maxY = Math.max(maxY, box.y + box.height);
-    }
-    if (!Number.isFinite(minX)) {
-      setDeletePos(null);
-      return;
-    }
-    const above = minY - 8;
-    setDeletePos({
-      x: (minX + maxX) / 2,
-      y: above < 28 ? maxY + 8 : above,
-    });
-  }, [selectedIds, selectedImage, activeTool, isCropping, disabled, elements, scale, stagePos.x, stagePos.y]);
+  const deletePos = useDeleteButtonPosition({
+    selectedIds,
+    selectedImage,
+    activeTool,
+    isCropping,
+    disabled,
+    elements,
+    scale,
+    stagePos,
+    stageRef,
+  });
 
   return (
     <CanvasContainer containerRef={containerRef as RefObject<HTMLDivElement>} activeTool={activeTool}>
-      {editingTextId && (
-        <TextEditorOverlay
-          editingPos={editingPos}
-          currentFontSize={currentFontSize}
-          isDark={isDark}
+      <CanvasOverlays
+        editingTextId={editingTextId}
+        editingPos={editingPos}
+        currentFontSize={currentFontSize}
+        isDark={isDark}
+        scale={scale}
+        strokeColor={strokeColor}
+        editingTextValue={editingTextValue}
+        textareaInputRef={textareaInputRef}
+        onFontSizeChange={updateFontSize}
+        onTextChange={setEditingTextValue}
+        finishTextEditing={finishTextEditing}
+        isCropping={isCropping}
+        toolbarPos={toolbarPos}
+        selectedImage={selectedImage}
+        onCrop={handleCropImageClick}
+        deletePos={deletePos}
+        deleteSelected={deleteSelected}
+        cropState={crop.cropState}
+        stageSize={stageSize}
+        confirmCrop={(rect) => crop.confirm(rect)}
+        cancelCrop={() => crop.cancel()}
+      >
+        <CanvasStage
+          stageRef={stageRef}
+          mainLayerRef={mainLayerRef}
+          drawLayerRef={drawLayerRef}
+          marqueeLayerRef={marqueeLayerRef}
+          laserLayerRef={laserLayerRef}
+          trRef={trRef}
+          elementsRef={elementsRef}
+          stageSize={stageSize}
           scale={scale}
+          stagePos={stagePos}
+          disabled={disabled}
+          activeTool={activeTool}
+          isDark={isDark}
           strokeColor={strokeColor}
-          editingTextValue={editingTextValue}
-          textareaInputRef={textareaInputRef as RefObject<HTMLTextAreaElement>}
-          onFontSizeChange={updateFontSize}
-          onTextChange={setEditingTextValue}
-          onBlur={finishTextEditing}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault();
-              finishTextEditing();
-            }
-          }}
-        />
-      )}
-
-      {stageSize.width > 0 && stageSize.height > 0 && (
-        <Stage
-          ref={stageRef}
-          width={stageSize.width}
-          height={stageSize.height}
-          scaleX={scale}
-          scaleY={scale}
-          x={stagePos.x}
-          y={stagePos.y}
-          draggable={!disabled && activeTool === 'hand'}
+          strokeWidth={strokeWidth}
+          eraserWidth={eraserWidth}
+          elements={elements}
+          editingTextId={editingTextId}
+          isCropping={isCropping}
+          eraserCursorPos={eraserCursorPos}
+          selectedIds={selectedIds}
+          isDrawing={isDrawing}
+          activeShapeRef={activeShapeRef}
+          isPinching={isPinching}
+          isErasing={isErasing}
+          setStagePos={setStagePos}
+          setEraserCursorPos={setEraserCursorPos}
+          finishTextEditing={finishTextEditing}
+          handlePointerDown={handlePointerDown}
+          handlePointerMove={handlePointerMove}
+          handlePointerUp={handlePointerUp}
+          middlePan={middlePan}
+          onLiveStroke={onLiveStroke}
+          onElementsChange={onElementsChange}
+          onElementClick={handleElementClick}
+          onDragStart={handleDragStartWrapped}
+          onDragMove={handleDragMoveWrapped}
+          onDragEnd={handleDragEndWrapped}
+          onTransformEnd={handleTransformEnd}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          onDragEnd={(e) => {
-            if (e.target === stageRef.current) setStagePos({ x: e.target.x(), y: e.target.y() });
-          }}
-          onPointerDown={(e) => {
-            if (disabled) return;
-            if (middlePan.onPointerDown(e)) return;
-            if (isCropping) return;
-            if (isPinching.current) return;
-            if (editingTextId) {
-              finishTextEditing();
-              return;
-            }
-            handlePointerDown(e);
-          }}
-          onPointerMove={(e) => {
-            if (disabled) return;
-            if (middlePan.onPointerMove(e)) return;
-            handlePointerMove(e);
-            if (onLiveStroke && activeTool === 'pen' && isDrawing.current && activeShapeRef.current) {
-              const pts = activeShapeRef.current.points() as number[];
-              if (pts.length >= 4) onLiveStroke({ points: pts, color: strokeColor, width: strokeWidth });
-            }
-          }}
-          onPointerUp={(e) => {
-            if (disabled) return;
-            if (middlePan.onPointerUp(e)) return;
-            if (onLiveStroke && activeTool === 'pen' && isDrawing.current && activeShapeRef.current) {
-              const pts = (activeShapeRef.current.points() as number[]).slice();
-              if (pts.length >= 4) onLiveStroke({ points: pts, color: strokeColor, width: strokeWidth });
-            }
-            handlePointerUp(e);
-          }}
-          onPointerLeave={() => {
-            if (!isErasing.current) setEraserCursorPos(null);
-          }}
-          pixelRatio={typeof window !== 'undefined' ? window.devicePixelRatio || 2 : 2}>
-          <Layer ref={mainLayerRef}>
-            <ElementRenderer
-              elements={elements}
-              activeTool={activeTool}
-              isDark={isDark}
-              strokeWidth={strokeWidth}
-              editingTextId={editingTextId}
-              onElementClick={handleElementClick}
-              onDragStart={handleDragStartWrapped}
-              onDragMove={handleDragMoveWrapped}
-              onDragEnd={handleDragEndWrapped}
-            />
-            {!isCropping && (
-              <SelectionOverlay
-                activeTool={activeTool}
-                selectedElements={selectedIds
-                  .map((id) => elements.find((el) => el.id === id))
-                  .filter((el): el is CanvasElement => Boolean(el))}
-                trRef={trRef}
-                elementsRef={elementsRef}
-                onElementsChange={onElementsChange}
-                onTransformEnd={handleTransformEnd}
-              />
-            )}
-          </Layer>
-          <Layer ref={drawLayerRef} />
-          <Layer ref={marqueeLayerRef} listening={false} />
-          <EraserCursorLayer
-            activeTool={activeTool}
-            eraserCursorPos={eraserCursorPos}
-            eraserWidth={eraserWidth}
-            isDark={isDark}
-          />
-          <Layer ref={laserLayerRef} listening={false} />
-        </Stage>
-      )}
-
-      {/* Inline overlays (DOM) */}
-      {!isCropping && toolbarPos && selectedImage && (
-        <InlineImageToolbar
-          x={toolbarPos.x}
-          y={toolbarPos.y}
-          onCrop={handleCropImageClick}
-          onDelete={() => deleteSelected()}
         />
-      )}
-
-      {!isCropping && deletePos && (
-        <button
-          type="button"
-          title="წაშლა"
-          aria-label="წაშლა"
-          className="pointer-events-auto absolute z-30 flex size-7 -translate-x-1/2 -translate-y-full cursor-pointer items-center justify-center rounded-box border border-rose-500/30 bg-rose-500/15 text-rose-500 shadow-sm"
-          style={{ left: deletePos.x, top: deletePos.y }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            deleteSelected();
-          }}
-        >
-          <Trash2 className="size-3.5" />
-        </button>
-      )}
-
-      {isCropping && crop.cropState && (
-        <InlineCropOverlay
-          src={crop.cropState.src}
-          naturalW={crop.cropState.naturalW}
-          naturalH={crop.cropState.naturalH}
-          initialRect={crop.cropState.rect}
-          containerW={stageSize.width}
-          containerH={stageSize.height}
-          onConfirm={(rect) => crop.confirm(rect)}
-          onCancel={() => crop.cancel()}
-        />
-      )}
+      </CanvasOverlays>
     </CanvasContainer>
   );
 });

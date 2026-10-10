@@ -89,6 +89,7 @@ const TRACED_TYPES = new Set([
   'WHITEBOARD_REQUEST_SYNC',
   'BOARD_ASSIGN',
   'BOARD_CONTROL',
+  'BOARD_DRAW',
 ]);
 
 const ACKED_TYPES = new Set([
@@ -99,6 +100,7 @@ const ACKED_TYPES = new Set([
   'WHITEBOARD_PAGE_COUNT',
   'BOARD_ASSIGN',
   'BOARD_CONTROL',
+  'BOARD_DRAW',
 ]);
 
 const STATUS_RANK: Record<WhiteboardMessageStatus, number> = {

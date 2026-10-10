@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Lock, LockOpen, Shield, ShieldAlert, Volume2 } from 'lucide-react';
+import { Lock, LockOpen, PenLine, Shield, ShieldAlert, Volume2 } from 'lucide-react';
 import { participantUserId } from '@/lib/livekit/participant-identity';
 import type { StudentModalProps } from './types';
 import { useBoardControlContext } from '../../BoardControlContext';
@@ -22,11 +22,12 @@ export function StudentModal({
 }: StudentModalProps) {
   const [mounted, setMounted] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
-  const { lockedStudentIds, toggleStudentLock } = useBoardControlContext();
+  const { lockedStudentIds, toggleStudentLock, drawingStudentIds, toggleStudentDraw } = useBoardControlContext();
   const { getVolume, setVolume } = useAudioVolume();
   // Board lock is tracked per account; volume stays per live connection.
   const studentUserId = student ? participantUserId(student) : null;
   const isLocked = studentUserId ? lockedStudentIds.has(studentUserId) : false;
+  const canDraw = studentUserId ? drawingStudentIds.has(studentUserId) : false;
   const volume = student ? getVolume(student.identity) : 1;
   const volumePercent = Math.round(volume * 100);
 
@@ -118,6 +119,27 @@ export function StudentModal({
             ) : (
               <LockOpen className="size-3.5 text-icons" />
             )}
+          </button>
+        )}
+
+        {isTeacher && (
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              toggleStudentDraw(participantUserId(student));
+            }}
+            aria-pressed={canDraw}
+            title="ხატვის ხელსაწყოები ამ მოსწავლისთვის"
+            className={`flex w-full cursor-pointer items-center justify-between rounded-box px-2 py-1.5 text-left font-bold transition-colors duration-200 ${
+              canDraw
+                ? 'border border-transparent bg-[#465D73] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]'
+                : 'border border-hairline bg-sectionHeader text-mainText hover:bg-mainButtonHover'
+            }`}>
+            <span>{canDraw ? 'ხატვა ჩართულია' : 'ხატვის ხელსაწყოები'}</span>
+            <PenLine className={`size-3.5 ${canDraw ? '' : 'text-icons'}`} />
           </button>
         )}
 

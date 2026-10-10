@@ -115,6 +115,8 @@ interface Options {
   setPages: (pages: CanvasElement[][]) => void;
   setCurrentPageIndex: (idx: number) => void;
   setIsLocked: (locked: boolean) => void;
+  canDraw: boolean;
+  setCanDraw: (enabled: boolean) => void;
   applyBoardView: (view: BoardView) => void;
   assignedPageIndex: number | null;
   setAssignedPageIndex: (pageIndex: number | null) => void;
@@ -140,6 +142,8 @@ export function useWhiteboardDataChannel(opts: Options) {
     setPages,
     setCurrentPageIndex,
     setIsLocked,
+    canDraw,
+    setCanDraw,
     applyBoardView,
     assignedPageIndex,
     setAssignedPageIndex,
@@ -148,6 +152,10 @@ export function useWhiteboardDataChannel(opts: Options) {
 
   const publishRef = useRef<Options['publishDataSafe']>(publishDataSafe);
   publishRef.current = publishDataSafe;
+  const canDrawRef = useRef(canDraw);
+  canDrawRef.current = canDraw;
+  const setCanDrawRef = useRef(setCanDraw);
+  setCanDrawRef.current = setCanDraw;
   const noteSnapshotSentRef = useRef(noteSnapshotSent);
   noteSnapshotSentRef.current = noteSnapshotSent;
   const adoptRemotePageRef = useRef(adoptRemotePage);
@@ -337,6 +345,12 @@ export function useWhiteboardDataChannel(opts: Options) {
           return;
         }
 
+        if (data.type === 'BOARD_DRAW' && !isTeacher) {
+          setCanDrawRef.current(!!data.enabled);
+          finish(undefined, null, false);
+          return;
+        }
+
         if (data.type === 'BOARD_ASSIGN' && !isTeacher) {
           const next =
             typeof data.pageIndex === 'number' && Number.isFinite(data.pageIndex)
@@ -465,7 +479,7 @@ export function useWhiteboardDataChannel(opts: Options) {
           setPages(updated);
           pagesRef.current = updated;
           isRemoteUpdateRef.current = false;
-          if (isTeacher) {
+          if (isTeacher || canDrawRef.current) {
             historyMapRef.current.set(pageIndex, { states: [adaptedElements], index: 0 });
             updateUndoRedoState();
           } else if (TRACK_STUDENT_HISTORY) {

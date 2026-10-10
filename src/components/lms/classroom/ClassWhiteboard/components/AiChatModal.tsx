@@ -1,6 +1,6 @@
 'use client';
 
-import { TeacherAiChatPanel } from '@/components/lms/teacher/problem-bank/components/TeacherAiChatPanel';
+import { TeacherAiChatPanel } from '@/components/lms/teacher/problem-bank/components/teacher-ai-chat-panel/TeacherAiChatPanel';
 import type { AiModelId, AiModelStatus } from '@/lib/math/problems';
 import { DEFAULT_AI_COPY } from '../constants/aiCopy';
 

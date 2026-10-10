@@ -18,6 +18,8 @@ import { ThemeClearButtons } from './toolbar/ThemeClearButtons';
 interface Props {
   isStudent: boolean;
   isTeacher: boolean;
+  /** Student was granted pen, eraser, color, and stylus. */
+  canDraw?: boolean;
   canUndo: boolean;
   canRedo: boolean;
   onUndo: () => void;
@@ -83,6 +85,7 @@ export const TopToolbar = memo(function TopToolbar(props: Props) {
   const {
     isTeacher,
     isStudent,
+    canDraw = false,
     canUndo,
     canRedo,
     onUndo,
@@ -133,6 +136,8 @@ export const TopToolbar = memo(function TopToolbar(props: Props) {
     setIsSelectMenuOpen,
   } = props;
 
+  const drawTools = isTeacher || canDraw;
+
   const closeAllMenus = () => {
     setIsPenMenuOpen(false);
     setIsEraserMenuOpen(false);
@@ -155,11 +160,11 @@ export const TopToolbar = memo(function TopToolbar(props: Props) {
           className="w-full"
         >
           <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-1.5 p-1 sm:p-1.5">
-            {isTeacher && (
+            {drawTools && (
               <UndoRedoButtons canUndo={canUndo} canRedo={canRedo} onUndo={onUndo} onRedo={onRedo} />
             )}
             <SelectPanButtons
-              isTeacher={isTeacher}
+              isTeacher={drawTools}
               activeTool={activeTool}
               setActiveTool={setActiveTool}
               closeAllMenus={closeAllMenus}
@@ -170,7 +175,7 @@ export const TopToolbar = memo(function TopToolbar(props: Props) {
               setIsSelectMenuOpen={setIsSelectMenuOpen}
             />
 
-            {isTeacher && (
+            {drawTools && (
               <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
                 <PenMenu
                   menuRef={penMenuRef}
@@ -218,7 +223,7 @@ export const TopToolbar = memo(function TopToolbar(props: Props) {
                 />
               </div>
             )}
-            {isTeacher && (
+            {drawTools && (
               <div className="flex shrink-0 items-center gap-0.5 border-r border-hairline pr-1.5">
                 <ShapesMenu
                   menuRef={shapesMenuRef}
@@ -254,7 +259,7 @@ export const TopToolbar = memo(function TopToolbar(props: Props) {
             {isTeacher && (
               <LaserButton activeTool={activeTool} setActiveTool={setActiveTool} closeAllMenus={closeAllMenus} />
             )}
-            {isTeacher && (
+            {drawTools && (
               <StylusMenu
                 menuRef={stylusMenuRef}
                 isOpen={isStylusMenuOpen}
