@@ -467,6 +467,7 @@ export function subscribeTeacherBoard(userId: string, handler: Handler) {
       bus.handlers.delete(userId);
       bus.dbRevision.delete(userId);
     }
+    
     stopPollIfIdle();
   };
 }
