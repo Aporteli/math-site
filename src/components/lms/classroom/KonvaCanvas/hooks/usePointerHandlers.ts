@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import type { PointerHandlerContext } from '../utils/usePointerHandlers.types';
 import type { PointerSpace } from '../utils/pointer-space';
 import { usePointerDownHandler } from './usePointerDownHandler';
@@ -35,9 +35,29 @@ export function usePointerHandlers(ctx: CanvasPointerContext) {
     isAdjustingLine,
   };
 
-  const handlePointerDown = usePointerDownHandler(fullCtx);
+  const handlePointerDownInner = usePointerDownHandler(fullCtx);
   const handlePointerMove = usePointerMoveHandler(fullCtx);
   const handlePointerUp = usePointerUpHandler(fullCtx);
+
+  // A fast lift often delivers the next contact before the previous pointerup.
+  // Commit the open stroke first so that dash is not thrown away.
+  const handlePointerDown = useCallback(
+    (event: { evt?: PointerEvent }) => {
+      const evt = event.evt;
+      const pointerId = evt?.pointerId ?? 1;
+      if (
+        evt &&
+        ctx.isDrawing.current &&
+        ctx.activePointerIdRef.current !== null &&
+        ctx.activePointerIdRef.current !== pointerId
+      ) {
+        ctx.activePointerIdRef.current = null;
+        handlePointerUp(event);
+      }
+      handlePointerDownInner(event);
+    },
+    [ctx.isDrawing, ctx.activePointerIdRef, handlePointerDownInner, handlePointerUp],
+  );
 
   return { handlePointerDown, handlePointerMove, handlePointerUp };
 }

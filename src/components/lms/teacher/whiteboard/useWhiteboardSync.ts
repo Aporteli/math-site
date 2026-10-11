@@ -15,6 +15,11 @@ const LASER_NULL_RETRY_COUNT = 3;
 /** retry-ებს შორის ინტერვალი */
 const LASER_NULL_RETRY_INTERVAL_MS = 100;
 /**
+ * Board writes wait until drawing has been quiet this long.
+ * A burst of separate dashes then becomes one save, instead of a save on every lift.
+ */
+const BOARD_PUSH_QUIET_MS = 450;
+/**
  * თუ დაფის ამ პროცენტზე მეტი გვერდი შეიცვალა — სჯობს სრული snapshot გაიგზავნოს.
  * დელტა მხოლოდ მაშინ არის მომგებიანი, როცა ცოტა გვერდი შეიცვალა.
  */
@@ -147,8 +152,15 @@ export function useWhiteboardSync(
     );
   }, [computeDelta]);
 
+  const armBoardPushRef = useRef<() => void>(() => {});
+
   const doSend = useCallback(() => {
     if (!isHydratedRef.current || applyingRemoteRef.current) return;
+    // The pen is down again. Writing now stalls the next dash and can drop it.
+    if (liveStrokeRef.current) {
+      armBoardPushRef.current();
+      return;
+    }
     if (pushSendingRef.current) {
       pushQueuedRef.current = true;
       return;
@@ -195,6 +207,15 @@ export function useWhiteboardSync(
       });
   }, [buildBody]);
 
+  const armBoardPush = useCallback(() => {
+    if (pushTimerRef.current != null) window.clearTimeout(pushTimerRef.current);
+    pushTimerRef.current = window.setTimeout(() => {
+      pushTimerRef.current = null;
+      doSend();
+    }, BOARD_PUSH_QUIET_MS);
+  }, [doSend]);
+  armBoardPushRef.current = armBoardPush;
+
   const schedulePush = useCallback(() => {
     if (!isHydratedRef.current || applyingRemoteRef.current) return;
     editEpochRef.current += 1;
@@ -211,12 +232,8 @@ export function useWhiteboardSync(
     inkAbortRef.current = null;
     inkSendingRef.current = false;
 
-    if (pushTimerRef.current != null) window.clearTimeout(pushTimerRef.current);
-    pushTimerRef.current = window.setTimeout(() => {
-      pushTimerRef.current = null;
-      doSend();
-    }, 250);
-  }, [doSend]);
+    armBoardPush();
+  }, [armBoardPush]);
   schedulePushRef.current = schedulePush;
 
   // ============================================================
@@ -254,6 +271,16 @@ export function useWhiteboardSync(
   const handleLiveStroke = useCallback(
     (stroke: { points: number[]; color: string; width: number }) => {
       liveStrokeRef.current = stroke;
+      // A lift already asked to save the board. Keep postponing that write
+      // until this stroke, and any dashes right after it, have paused.
+      if (
+        pushTimerRef.current != null ||
+        pushSendingRef.current ||
+        pushQueuedRef.current
+      ) {
+        if (pushSendingRef.current) pushQueuedRef.current = true;
+        armBoardPushRef.current();
+      }
       if (inkTimerRef.current != null) return;
       inkTimerRef.current = window.setTimeout(() => {
         inkTimerRef.current = null;

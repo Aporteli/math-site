@@ -39,6 +39,15 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
     (e: any) => {
       const evt = e.evt as PointerEvent;
 
+      // A late pointerup from the previous contact must not finish the stroke
+      // that already started under a new pointer id.
+      if (
+        activePointerIdRef.current !== null &&
+        evt.pointerId !== activePointerIdRef.current
+      ) {
+        return;
+      }
+
       if (stylusUpPhase({ isStylusActiveRef, syncStylusButtonsFromEvent }, evt)) {
         return;
       }

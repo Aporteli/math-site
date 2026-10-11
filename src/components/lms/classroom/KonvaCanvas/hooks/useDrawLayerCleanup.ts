@@ -9,9 +9,15 @@ export function useDrawLayerCleanup(
   elements: CanvasElement[],
 ) {
   useEffect(() => {
-    if (drawLayerRef.current && !isDrawing.current) {
-      drawLayerRef.current.destroyChildren();
-      drawLayerRef.current.batchDraw();
-    }
+    const layer = drawLayerRef.current;
+    if (!layer || isDrawing.current) return;
+    // Leave the preview up through the next paint, so the committed stroke
+    // is already on the main layer before the preview disappears.
+    const frame = requestAnimationFrame(() => {
+      if (isDrawing.current) return;
+      layer.destroyChildren();
+      layer.batchDraw();
+    });
+    return () => cancelAnimationFrame(frame);
   }, [elements, drawLayerRef, isDrawing]);
 }
