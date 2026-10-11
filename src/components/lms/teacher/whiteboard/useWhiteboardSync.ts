@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { PREFS_KEY } from './constants';
 import { stringifyPages } from './pageHistory';
 import type { CanvasElement } from '@/components/lms/classroom/KonvaCanvas/utils/types';
@@ -39,6 +39,7 @@ export function useWhiteboardSync(boardState: WhiteboardState, persistence: Whit
     historyMapRef,
     updateUndoRedoState,
   } = { ...boardState, ...persistence };
+  const pushBodyRef = useRef('');
   const schedulePush = useCallback(() => {
     if (!isHydratedRef.current || applyingRemoteRef.current) return;
     editEpochRef.current += 1;
@@ -51,6 +52,23 @@ export function useWhiteboardSync(boardState: WhiteboardState, persistence: Whit
       inkTimerRef.current = null;
     }
     inkAbortRef.current?.abort();
+    const pages = pagesRef.current;
+    const pagesJson = stringifyPages(pages);
+    pagesJsonRef.current = { pages, json: pagesJson };
+    const pageIndex = currentPageIndexRef.current;
+    const clientId = clientIdRef.current;
+    const inkSeq = inkSeqRef.current;
+    const body =
+      '{"pages":' +
+      pagesJson +
+      ',"currentPageIndex":' +
+      pageIndex +
+      ',"clientId":' +
+      JSON.stringify(clientId) +
+      ',"inkSeq":' +
+      inkSeq +
+      '}';
+    pushBodyRef.current = body;
     if (pushTimerRef.current != null) window.clearTimeout(pushTimerRef.current);
     pushTimerRef.current = window.setTimeout(() => {
       pushTimerRef.current = null;
@@ -62,24 +80,12 @@ export function useWhiteboardSync(boardState: WhiteboardState, persistence: Whit
         pushSendingRef.current = true;
         pushQueuedRef.current = false;
         const controller = new AbortController();
-        const killer = window.setTimeout(() => controller.abort(), 4000);
-        const pages = pagesRef.current;
-        const pagesJson = stringifyPages(pages);
-        pagesJsonRef.current = { pages, json: pagesJson };
-        const body =
-          '{"pages":' +
-          pagesJson +
-          ',"currentPageIndex":' +
-          currentPageIndexRef.current +
-          ',"clientId":' +
-          JSON.stringify(clientIdRef.current) +
-          ',"inkSeq":' +
-          inkSeqRef.current +
-          '}';
+        const killer = window.setTimeout(() => controller.abort(), 20000);
+        const payload = pushBodyRef.current;
         void fetch('/api/teacher-board', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body,
+          body: payload,
           signal: controller.signal,
         })
           .then(async (res) => {
@@ -244,6 +250,7 @@ export function useWhiteboardSync(boardState: WhiteboardState, persistence: Whit
             return;
           }
           if (data.board.revision <= revisionRef.current) return;
+          if (pushTimerRef.current != null || pushSendingRef.current || pushQueuedRef.current) return;
           applyRemoteBoard(data.board);
         } catch {
           /* ignore a dropped pull */
@@ -351,6 +358,7 @@ export function useWhiteboardSync(boardState: WhiteboardState, persistence: Whit
             return;
           }
           if (msg.revision <= revisionRef.current) return;
+          if (pushTimerRef.current != null || pushSendingRef.current || pushQueuedRef.current) return;
           if (Array.isArray(msg.pages) && msg.pages.length > 0) {
             applyRemoteBoard({
               pages: msg.pages,
