@@ -164,6 +164,7 @@ model Course {
   lessonNotes           LessonNote[]
   whiteboardAssignments WhiteboardAssignment[]
   whiteboard            CourseWhiteboard?
+  lessonRoom            CourseLessonRoom?
 
   @@index([teacherId])
   @@map("courses")
@@ -508,6 +509,18 @@ model CourseWhiteboard {
 
   @@index([courseId])
   @@map("course_whiteboards")
+}
+
+model CourseLessonRoom {
+  courseId      String   @id
+  meetUrl       String?  @db.VarChar(300)
+  meetSpaceName String?  @db.VarChar(200)
+  miroBoardId   String?  @db.VarChar(128)
+  updatedAt     DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("course_lesson_rooms")
 }
 
 model JournalEvent {

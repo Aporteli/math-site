@@ -16,11 +16,8 @@ import { DeleteConfirmModal } from './modals/DeleteConfirmModal';
 import { TeacherViewProblemModal } from './modals/TeacherViewProblemModal';
 import type { TeacherStudentsWorkspaceProps } from './types/teacher-workspace.types';
 
-const ClassroomRoomModal = dynamic(
-  () =>
-    import('@/components/lms/classroom/ClassroomRoomModal/components/ClassroomRoomModal').then(
-      (m) => m.ClassroomRoomModal,
-    ),
+const LessonRoom = dynamic(
+  () => import('@/components/lms/lesson-room/LessonRoom').then((m) => m.LessonRoom),
   {
     ssr: false,
     loading: () => (
@@ -108,14 +105,13 @@ export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
 
       {/* --- მოდალები --- */}
       {ws.activeVideoCallCourse && (
-        <ClassroomRoomModal
-          courseId={ws.activeVideoCallCourse.id}
-          courseTitle={ws.activeVideoCallCourse.title}
-          onClose={() => ws.setActiveVideoCallCourse(null)}
-          isTeacher={true}
-          enableSlashPrompts={true}
-          slashPromptsUserId={props.currentUserId}
-        />
+        <div className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen overflow-hidden">
+          <LessonRoom
+            courseId={ws.activeVideoCallCourse.id}
+            courseTitle={ws.activeVideoCallCourse.title}
+            onClose={() => ws.setActiveVideoCallCourse(null)}
+          />
+        </div>
       )}
 
       {ws.isAssignModalOpen && ws.activeStudent && (
