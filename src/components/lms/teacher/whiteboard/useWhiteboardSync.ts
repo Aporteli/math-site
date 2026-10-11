@@ -6,6 +6,7 @@ import { stringifyPages } from "./pageHistory";
 import type { CanvasElement } from "@/components/lms/classroom/KonvaCanvas/utils/types";
 import type { WhiteboardState } from "./useWhiteboardState";
 import type { WhiteboardPersistence } from "./useWhiteboardPersistence";
+import { reconcileBoard } from "@/components/lms/classroom/KonvaCanvas/utils/boardReconcile";
 
 /** ლაზერის safety timeout — თუ ამ დროში ახალი point არ მოვიდა, ავტომატურად ქრება */
 const LASER_SAFETY_TIMEOUT_MS = 2000;
@@ -132,7 +133,10 @@ export function useWhiteboardSync(
             }
             const data = (await res.json()) as { revision?: number };
             if (typeof data.revision === "number") {
-              revisionRef.current = Math.max(revisionRef.current, data.revision);
+              revisionRef.current = Math.max(
+                revisionRef.current,
+                data.revision,
+              );
             }
             scheduleLocalPagesSaveRef.current();
           })
@@ -328,33 +332,54 @@ export function useWhiteboardSync(
         revisionRef.current = board.revision;
         canvasRef.current?.renderRemoteInk(null);
         remoteInkRef.current = null;
-        const nextPages = board.pages;
+
+        const prevPages = pagesRef.current;
+
+        // ✅ KEY: reuse old element/page references where content is unchanged.
+        // Without this, JSON.parse gives every element a fresh reference,
+        // React.memo misses for ALL elements, and Konva re-renders the
+        // entire board on every remote update (the real "slowness").
+        const nextPages = reconcileBoard(prevPages, board.pages);
+
         const pageIndex = Math.min(
           Math.max(0, board.currentPageIndex || 0),
           nextPages.length - 1,
         );
-        const prevPages = pagesRef.current;
-        setPages(nextPages);
-        pagesRef.current = nextPages;
-        setCurrentPageIndex(pageIndex);
-        currentPageIndexRef.current = pageIndex;
 
-        // history: შევინარჩუნოთ უცვლელი გვერდების ისტორია, განვაახლოთ მხოლოდ შეცვლილი
-        for (let idx = 0; idx < nextPages.length; idx += 1) {
-          if (prevPages[idx] !== nextPages[idx]) {
-            historyMapRef.current.set(idx, {
-              states: [nextPages[idx] || []],
-              index: 0,
-            });
+        // If the whole board is reference-identical AND the page index
+        // didn't move, this is a no-op update — nothing to write.
+        if (
+          nextPages === prevPages &&
+          currentPageIndexRef.current === pageIndex
+        ) {
+          // fall through to the localStorage bookkeeping below
+        } else {
+          setPages(nextPages);
+          pagesRef.current = nextPages;
+          if (currentPageIndexRef.current !== pageIndex) {
+            setCurrentPageIndex(pageIndex);
+            currentPageIndexRef.current = pageIndex;
           }
+
+          // History: reset only pages whose reference actually changed.
+          for (let idx = 0; idx < nextPages.length; idx += 1) {
+            if (prevPages[idx] !== nextPages[idx]) {
+              historyMapRef.current.set(idx, {
+                states: [nextPages[idx] || []],
+                index: 0,
+              });
+            }
+          }
+          // Drop history entries for pages that no longer exist.
+          for (const key of Array.from(historyMapRef.current.keys())) {
+            if (key >= nextPages.length) historyMapRef.current.delete(key);
+          }
+          updateUndoRedoState();
         }
-        for (const key of Array.from(historyMapRef.current.keys())) {
-          if (key >= nextPages.length) historyMapRef.current.delete(key);
-        }
-        updateUndoRedoState();
       } finally {
         applyingRemoteRef.current = false;
       }
+
       if (remoteStoreTimerRef.current)
         window.clearTimeout(remoteStoreTimerRef.current);
       remoteStoreTimerRef.current = window.setTimeout(() => {
