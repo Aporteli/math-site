@@ -57,13 +57,6 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const userId = await teacherBoardUserId(req);
   if (!userId) return NextResponse.json({ ok: false }, { status: 401 });
-  console.log("[POST] userId from token =", JSON.stringify(userId));
-
-  const userById = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, email: true },
-  });
-  console.log("[POST] user found by id =", userById);
 
   let body: {
     type?: unknown;
@@ -77,18 +70,22 @@ export async function POST(req: Request) {
     strokeWidth?: unknown;
     inkSeq?: unknown;
     base?: unknown;
+    delta?: unknown;
   };
   try {
     body = (await req.json()) as typeof body;
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
+
   const clientId =
     typeof body.clientId === "string" ? body.clientId.slice(0, 64) : "";
   const inkSeq =
     typeof body.inkSeq === "number" && Number.isFinite(body.inkSeq)
       ? body.inkSeq
       : undefined;
+
+  // ---------- LASER ----------
   if (body.type === "laser") {
     const pageIndex =
       typeof body.pageIndex === "number" && Number.isFinite(body.pageIndex)
@@ -113,6 +110,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // ---------- INK ----------
   if (body.type === "ink") {
     const pageIndex =
       typeof body.pageIndex === "number" && Number.isFinite(body.pageIndex)
@@ -159,28 +157,83 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (!isPages(body.pages))
-    return NextResponse.json({ ok: false }, { status: 400 });
-
+  // ---------- BOARD: delta ან full ----------
   const safeIndex =
     typeof body.currentPageIndex === "number" &&
     Number.isFinite(body.currentPageIndex)
       ? Math.max(0, Math.floor(body.currentPageIndex))
       : 0;
 
+  let resolvedPages: unknown[][];
+
+  if (body.delta && typeof body.delta === "object") {
+    // ===== DELTA MODE =====
+    const deltaObj = body.delta as {
+      updates?: unknown;
+      totalPages?: unknown;
+    };
+    const rawUpdates = deltaObj.updates;
+    if (!Array.isArray(rawUpdates)) {
+      return NextResponse.json({ ok: false }, { status: 400 });
+    }
+
+    // base pages: ჯერ live memory, შემდეგ DB, ბოლოს fallback [[]]
+    let basePages: unknown[][];
+    const live = readLiveTeacherBoard(userId);
+    if (live && isPages(live.pages)) {
+      basePages = live.pages as unknown[][];
+    } else {
+      const record = await prisma.teacherBoard.findUnique({
+        where: { userId },
+        select: { pages: true },
+      });
+      basePages =
+        record && isPages(record.pages) ? (record.pages as unknown[][]) : [[]];
+    }
+
+    const merged = [...basePages];
+    for (const raw of rawUpdates) {
+      if (!raw || typeof raw !== "object") continue;
+      const idx = (raw as { idx?: unknown }).idx;
+      const elements = (raw as { elements?: unknown }).elements;
+      if (typeof idx !== "number" || !Number.isFinite(idx)) continue;
+      const safeIdx = Math.floor(idx);
+      if (safeIdx < 0 || safeIdx > 100000) continue;
+      if (!Array.isArray(elements)) continue;
+      merged[safeIdx] = elements;
+    }
+
+    if (
+      typeof deltaObj.totalPages === "number" &&
+      Number.isFinite(deltaObj.totalPages)
+    ) {
+      const total = Math.floor(deltaObj.totalPages);
+      if (total >= 0 && total <= 100000) merged.length = total;
+    }
+
+    resolvedPages = merged;
+  } else if (isPages(body.pages)) {
+    // ===== FULL MODE =====
+    resolvedPages = body.pages;
+  } else {
+    return NextResponse.json({ ok: false }, { status: 400 });
+  }
+
   const revision = publishLiveTeacherBoard({
     userId,
     clientId,
-    pages: body.pages,
+    pages: resolvedPages,
     currentPageIndex: safeIndex,
     inkSeq,
   });
+
   try {
-    await persistTeacherBoard(userId, body.pages, safeIndex, revision);
+    await persistTeacherBoard(userId, resolvedPages, safeIndex, revision);
   } catch (error) {
     console.error("Failed to save teacher board", error);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
+
   await broadcastTeacherBoard({
     kind: "board",
     userId,

@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useRef } from "react";
 import { PREFS_KEY } from "./constants";
 import { stringifyPages } from "./pageHistory";
+import { reconcileBoard } from "@/components/lms/classroom/KonvaCanvas/utils/boardReconcile";
 import type { CanvasElement } from "@/components/lms/classroom/KonvaCanvas/utils/types";
 import type { WhiteboardState } from "./useWhiteboardState";
 import type { WhiteboardPersistence } from "./useWhiteboardPersistence";
-import { reconcileBoard } from "@/components/lms/classroom/KonvaCanvas/utils/boardReconcile";
 
 /** ლაზერის safety timeout — თუ ამ დროში ახალი point არ მოვიდა, ავტომატურად ქრება */
 const LASER_SAFETY_TIMEOUT_MS = 2000;
@@ -14,6 +14,18 @@ const LASER_SAFETY_TIMEOUT_MS = 2000;
 const LASER_NULL_RETRY_COUNT = 3;
 /** retry-ებს შორის ინტერვალი */
 const LASER_NULL_RETRY_INTERVAL_MS = 100;
+/**
+ * თუ დაფის ამ პროცენტზე მეტი გვერდი შეიცვალა — სჯობს სრული snapshot გაიგზავნოს.
+ * დელტა მხოლოდ მაშინ არის მომგებიანი, როცა ცოტა გვერდი შეიცვალა.
+ */
+const DELTA_PAGE_THRESHOLD = 0.6;
+
+type DeltaUpdate = { idx: number; elements: CanvasElement[] };
+
+type DeltaPayload = {
+  updates: DeltaUpdate[];
+  totalPages: number;
+};
 
 export function useWhiteboardSync(
   boardState: WhiteboardState,
@@ -53,15 +65,16 @@ export function useWhiteboardSync(
 
   const pushBodyRef = useRef("");
 
-  // ✅ ლაზერის null-ის retry ტაიმერების ID-ები
+  /** ✅ ბოლოს წარმატებით გაგზავნილი გვერდების snapshot (reference-ით) */
+  const lastSentPagesRef = useRef<CanvasElement[][] | null>(null);
+  /** ✅ ბოლოს წარმატებით გაგზავნილი currentPageIndex */
+  const lastSentPageIndexRef = useRef<number>(-1);
+
   const laserNullTimersRef = useRef<number[]>([]);
-  // ✅ Receiver-ის safety timeout — ლაზერის დროული გაქრობისთვის
   const laserSafetyTimerRef = useRef<number | null>(null);
 
   const clearLaserNullTimers = useCallback(() => {
-    for (const id of laserNullTimersRef.current) {
-      window.clearTimeout(id);
-    }
+    for (const id of laserNullTimersRef.current) window.clearTimeout(id);
     laserNullTimersRef.current = [];
   }, []);
 
@@ -73,8 +86,114 @@ export function useWhiteboardSync(
   }, []);
 
   // ============================================================
-  // PUSH: board-ის სრული სნეპშოტის გაგზავნა (debounced)
+  // dirty pages-ის გამოთვლა (reference-ით)
   // ============================================================
+  const computeDelta = useCallback((): DeltaPayload | null => {
+    const pages = pagesRef.current;
+    const lastSent = lastSentPagesRef.current;
+    if (!lastSent || lastSent.length !== pages.length || pages.length <= 1) {
+      return null;
+    }
+    const updates: DeltaUpdate[] = [];
+    for (let i = 0; i < pages.length; i += 1) {
+      if (pages[i] !== lastSent[i]) updates.push({ idx: i, elements: pages[i] });
+    }
+    const dirtyRatio = updates.length / pages.length;
+    if (updates.length === 0) return null;
+    if (dirtyRatio >= DELTA_PAGE_THRESHOLD) return null;
+    return { updates, totalPages: pages.length };
+  }, []);
+
+  // ============================================================
+  // PUSH — delta ან full body-ის აწყობა
+  // ============================================================
+  const buildBody = useCallback((): string => {
+    const pages = pagesRef.current;
+    const pageIndex = currentPageIndexRef.current;
+    const clientId = clientIdRef.current;
+    const inkSeq = inkSeqRef.current;
+
+    const delta = computeDelta();
+
+    if (delta) {
+      return (
+        '{"delta":{"updates":' +
+        JSON.stringify(delta.updates) +
+        ',"totalPages":' +
+        delta.totalPages +
+        '},"currentPageIndex":' +
+        pageIndex +
+        ',"clientId":' +
+        JSON.stringify(clientId) +
+        ',"inkSeq":' +
+        inkSeq +
+        "}"
+      );
+    }
+
+    const pagesJson = stringifyPages(pages);
+    pagesJsonRef.current = { pages, json: pagesJson };
+    return (
+      '{"pages":' +
+      pagesJson +
+      ',"currentPageIndex":' +
+      pageIndex +
+      ',"clientId":' +
+      JSON.stringify(clientId) +
+      ',"inkSeq":' +
+      inkSeq +
+      "}"
+    );
+  }, [computeDelta]);
+
+  const doSend = useCallback(() => {
+    if (!isHydratedRef.current || applyingRemoteRef.current) return;
+    if (pushSendingRef.current) {
+      pushQueuedRef.current = true;
+      return;
+    }
+
+    const body = buildBody();
+    pushBodyRef.current = body;
+    pushSendingRef.current = true;
+    pushQueuedRef.current = false;
+
+    const pagesAtSend = pagesRef.current;
+    const pageIndexAtSend = currentPageIndexRef.current;
+
+    const controller = new AbortController();
+    const killer = window.setTimeout(() => controller.abort(), 20000);
+
+    void fetch("/api/teacher-board", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          if (res.status >= 500 && !pushQueuedRef.current) {
+            pushQueuedRef.current = true;
+          }
+          return;
+        }
+        const data = (await res.json()) as { revision?: number };
+        if (typeof data.revision === "number") {
+          revisionRef.current = Math.max(revisionRef.current, data.revision);
+        }
+        // ✅ baseline-ის განახლება მხოლოდ წარმატებული გაგზავნის შემდეგ
+        lastSentPagesRef.current = pagesAtSend;
+        lastSentPageIndexRef.current = pageIndexAtSend;
+        scheduleLocalPagesSaveRef.current();
+      })
+      .catch(() => {})
+      .finally(() => {
+        window.clearTimeout(killer);
+        pushSendingRef.current = false;
+        if (pushQueuedRef.current) doSend();
+      });
+  }, [buildBody]);
+
   const schedulePush = useCallback(() => {
     if (!isHydratedRef.current || applyingRemoteRef.current) return;
     editEpochRef.current += 1;
@@ -87,73 +206,17 @@ export function useWhiteboardSync(
       inkTimerRef.current = null;
     }
     inkAbortRef.current?.abort();
-    const pages = pagesRef.current;
-    const pagesJson = stringifyPages(pages);
-    pagesJsonRef.current = { pages, json: pagesJson };
-    const pageIndex = currentPageIndexRef.current;
-    const clientId = clientIdRef.current;
-    const inkSeq = inkSeqRef.current;
-    const body =
-      '{"pages":' +
-      pagesJson +
-      ',"currentPageIndex":' +
-      pageIndex +
-      ',"clientId":' +
-      JSON.stringify(clientId) +
-      ',"inkSeq":' +
-      inkSeq +
-      "}";
-    pushBodyRef.current = body;
+
     if (pushTimerRef.current != null) window.clearTimeout(pushTimerRef.current);
-    // ✅ 250ms debounce: სწრაფი commit, ნაკლები "ხტომა"
     pushTimerRef.current = window.setTimeout(() => {
       pushTimerRef.current = null;
-      const send = () => {
-        if (pushSendingRef.current) {
-          pushQueuedRef.current = true;
-          return;
-        }
-        pushSendingRef.current = true;
-        pushQueuedRef.current = false;
-        const controller = new AbortController();
-        const killer = window.setTimeout(() => controller.abort(), 20000);
-        const payload = pushBodyRef.current;
-        void fetch("/api/teacher-board", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: payload,
-          signal: controller.signal,
-        })
-          .then(async (res) => {
-            if (!res.ok) {
-              if (res.status >= 500 && !pushQueuedRef.current) {
-                pushQueuedRef.current = true;
-              }
-              return;
-            }
-            const data = (await res.json()) as { revision?: number };
-            if (typeof data.revision === "number") {
-              revisionRef.current = Math.max(
-                revisionRef.current,
-                data.revision,
-              );
-            }
-            scheduleLocalPagesSaveRef.current();
-          })
-          .catch(() => {})
-          .finally(() => {
-            window.clearTimeout(killer);
-            pushSendingRef.current = false;
-            if (pushQueuedRef.current) send();
-          });
-      };
-      send();
+      doSend();
     }, 250);
-  }, []);
+  }, [doSend]);
   schedulePushRef.current = schedulePush;
 
   // ============================================================
-  // pagehide: ბოლო ცვლილების გაგზავნა tab-ის დახურვისას
+  // pagehide — ბოლო ცვლილების flush
   // ============================================================
   useEffect(() => {
     const flush = () => {
@@ -168,27 +231,26 @@ export function useWhiteboardSync(
         pushTimerRef.current = null;
       }
       pushQueuedRef.current = false;
-      const payload = pushBodyRef.current;
-      if (!payload) return;
+
+      const body = buildBody();
       void fetch("/api/teacher-board", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: payload,
+        body,
         keepalive: true,
       }).catch(() => {});
     };
     window.addEventListener("pagehide", flush);
     return () => window.removeEventListener("pagehide", flush);
-  }, []);
+  }, [buildBody]);
 
   // ============================================================
-  // LIVE INK: ცოცხალი ხაზვის delta-ები (throttled)
+  // LIVE INK (უცვლელი)
   // ============================================================
   const handleLiveStroke = useCallback(
     (stroke: { points: number[]; color: string; width: number }) => {
       liveStrokeRef.current = stroke;
       if (inkTimerRef.current != null) return;
-      // ✅ 20ms throttle: უფრო გლუვი ცოცხალი ხაზვა მეორე მოწყობილობაზე
       inkTimerRef.current = window.setTimeout(() => {
         inkTimerRef.current = null;
         const send = () => {
@@ -230,9 +292,7 @@ export function useWhiteboardSync(
             .then((res) => {
               if (!res.ok) rewind();
             })
-            .catch(() => {
-              rewind();
-            })
+            .catch(() => rewind())
             .finally(() => {
               window.clearTimeout(killer);
               if (inkAbortRef.current !== controller) return;
@@ -264,7 +324,7 @@ export function useWhiteboardSync(
   );
 
   // ============================================================
-  // LASER: sender side
+  // LASER (უცვლელი)
   // ============================================================
   const sendLaserOnce = useCallback(
     (point: { x: number; y: number } | null) => {
@@ -285,14 +345,9 @@ export function useWhiteboardSync(
   const handleLaserMove = useCallback(
     (pos: { x: number; y: number } | null) => {
       const now = Date.now();
-      // throttle მხოლოდ point-ებზე (null-ს ვაგზავნით ყოველთვის)
       if (pos && now - lastLaserSentRef.current <= 35) return;
       lastLaserSentRef.current = now;
-
       sendLaserOnce(pos);
-
-      // ✅ null-ის შემთხვევაში — retry 3-ჯერ 100ms ინტერვალით
-      // რომ ერთი მაინც მიაღწიოს receiver-ს
       if (pos === null) {
         clearLaserNullTimers();
         for (let i = 1; i < LASER_NULL_RETRY_COUNT; i++) {
@@ -309,7 +364,6 @@ export function useWhiteboardSync(
     [sendLaserOnce, clearLaserNullTimers],
   );
 
-  // cleanup: unmount-ზე ყველა pending ტაიმერი გავასუფთავოთ
   useEffect(() => {
     return () => {
       clearLaserNullTimers();
@@ -318,7 +372,7 @@ export function useWhiteboardSync(
   }, [clearLaserNullTimers, clearLaserSafetyTimer]);
 
   // ============================================================
-  // APPLY REMOTE BOARD: remote board-ის ჩაწერა state-ში
+  // APPLY REMOTE BOARD
   // ============================================================
   const applyRemoteBoard = useCallback(
     (board: {
@@ -334,34 +388,22 @@ export function useWhiteboardSync(
         remoteInkRef.current = null;
 
         const prevPages = pagesRef.current;
-
-        // ✅ KEY: reuse old element/page references where content is unchanged.
-        // Without this, JSON.parse gives every element a fresh reference,
-        // React.memo misses for ALL elements, and Konva re-renders the
-        // entire board on every remote update (the real "slowness").
         const nextPages = reconcileBoard(prevPages, board.pages);
-
         const pageIndex = Math.min(
           Math.max(0, board.currentPageIndex || 0),
           nextPages.length - 1,
         );
 
-        // If the whole board is reference-identical AND the page index
-        // didn't move, this is a no-op update — nothing to write.
         if (
-          nextPages === prevPages &&
-          currentPageIndexRef.current === pageIndex
+          nextPages !== prevPages ||
+          currentPageIndexRef.current !== pageIndex
         ) {
-          // fall through to the localStorage bookkeeping below
-        } else {
           setPages(nextPages);
           pagesRef.current = nextPages;
           if (currentPageIndexRef.current !== pageIndex) {
             setCurrentPageIndex(pageIndex);
             currentPageIndexRef.current = pageIndex;
           }
-
-          // History: reset only pages whose reference actually changed.
           for (let idx = 0; idx < nextPages.length; idx += 1) {
             if (prevPages[idx] !== nextPages[idx]) {
               historyMapRef.current.set(idx, {
@@ -370,7 +412,6 @@ export function useWhiteboardSync(
               });
             }
           }
-          // Drop history entries for pages that no longer exist.
           for (const key of Array.from(historyMapRef.current.keys())) {
             if (key >= nextPages.length) historyMapRef.current.delete(key);
           }
@@ -379,7 +420,6 @@ export function useWhiteboardSync(
       } finally {
         applyingRemoteRef.current = false;
       }
-
       if (remoteStoreTimerRef.current)
         window.clearTimeout(remoteStoreTimerRef.current);
       remoteStoreTimerRef.current = window.setTimeout(() => {
@@ -397,7 +437,7 @@ export function useWhiteboardSync(
   );
 
   // ============================================================
-  // SSE + polling fallback
+  // SSE + polling
   // ============================================================
   useEffect(() => {
     let cancelled = false;
@@ -431,7 +471,7 @@ export function useWhiteboardSync(
             return;
           applyRemoteBoard(data.board);
         } catch {
-          /* ignore a dropped pull */
+          /* ignore */
         } finally {
           pullTask = null;
         }
@@ -500,7 +540,6 @@ export function useWhiteboardSync(
           }
           if (msg.type === "ping") return;
 
-          // ---------- REMOTE INK ----------
           if (msg.type === "ink") {
             if (
               typeof msg.inkSeq === "number" &&
@@ -542,7 +581,6 @@ export function useWhiteboardSync(
             return;
           }
 
-          // ---------- REMOTE LASER ----------
           if (msg.type === "laser") {
             if (msg.clientId && msg.clientId === clientIdRef.current) return;
             if (
@@ -556,10 +594,7 @@ export function useWhiteboardSync(
               typeof msg.point.y === "number"
                 ? { x: msg.point.x, y: msg.point.y }
                 : null;
-
             canvasRef.current?.renderRemoteLaser(point);
-
-            // ✅ safety: თუ 2 წამში ახალი point არ მოვიდა — ავტომატურად fade
             if (point) {
               clearLaserSafetyTimer();
               laserSafetyTimerRef.current = window.setTimeout(() => {
@@ -567,13 +602,11 @@ export function useWhiteboardSync(
                 canvasRef.current?.renderRemoteLaser(null);
               }, LASER_SAFETY_TIMEOUT_MS);
             } else {
-              // null მოვიდა — safety timer აღარ გვჭირდება
               clearLaserSafetyTimer();
             }
             return;
           }
 
-          // ---------- REMOTE BOARD ----------
           if (typeof msg.revision !== "number") return;
           if (msg.clientId && msg.clientId === clientIdRef.current) {
             revisionRef.current = Math.max(revisionRef.current, msg.revision);
@@ -612,12 +645,10 @@ export function useWhiteboardSync(
       open();
     });
 
-    // polling მხოლოდ fallback-ად (SSE მუშაობს → 30 წმ საკმარისია)
     const pollTimer = window.setInterval(() => {
       if (!cancelled) void pull();
     }, 30000);
 
-    // tab-ზე დაბრუნებისას — დაუყოვნებლივ pull
     const onVisibility = () => {
       if (cancelled) return;
       if (document.visibilityState === "visible") void pull();
