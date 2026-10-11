@@ -252,14 +252,13 @@ async function persistTeacherBoardSmart(
   currentPageIndex: number,
   revision: number,
 ) {
-  // ვნახოთ, არსებობს თუ არა ჩანაწერი
   const existing = await prisma.teacherBoard.findUnique({
     where: { userId },
     select: { pages: true },
   });
 
+  // CREATE — სრული ჩაწერა
   if (!existing || !Array.isArray(existing.pages)) {
-    // CREATE — სრული ჩაწერა
     await prisma.teacherBoard.create({
       data: {
         userId,
@@ -273,7 +272,7 @@ async function persistTeacherBoardSmart(
 
   const existingPages = existing.pages as unknown[][];
 
-  // თუ delta არ არის, ან გვერდების რაოდენობა შეიცვალა — სრული update
+  // FULL — თუ delta არ არის ან გვერდების რაოდენობა შეიცვალა
   if (!delta || delta.updates.length === 0 || existingPages.length !== resolvedPages.length) {
     await prisma.teacherBoard.update({
       where: { userId },
@@ -286,7 +285,7 @@ async function persistTeacherBoardSmart(
     return;
   }
 
-  // ✅ DELTA WRITE — მხოლოდ dirty გვერდები jsonb_set-ით
+  // DELTA WRITE — ცალკეული jsonb_set გამოძახებები ტრანზაქციაში
   const validUpdates = delta.updates.filter(
     (u) =>
       Number.isInteger(u.idx) &&
@@ -294,46 +293,46 @@ async function persistTeacherBoardSmart(
       u.idx < existingPages.length,
   );
 
-  if (validUpdates.length === 0) {
-    await prisma.teacherBoard.update({
-      where: { userId },
-      data: {
-        currentPageIndex,
-        revision: BigInt(revision),
-      },
-    });
-    return;
-  }
-
-  // jsonb_set-ის ჩადგმული გამოსახულება: jsonb_set(jsonb_set(pages, ARRAY[$1]::text[], $2::jsonb), ARRAY[$3]::text[], $4::jsonb)
-  let expr = 'pages';
-  const args: unknown[] = [];
-  for (const u of validUpdates) {
-    const pathIdx = args.length + 1;
-    const valIdx = args.length + 2;
-    expr = `jsonb_set(${expr}, ARRAY[$${pathIdx}]::text[], $${valIdx}::jsonb)`;
-    args.push(String(u.idx));
-    args.push(JSON.stringify(u.elements));
-  }
-
-  const cpIdx = args.length + 1;
-  const revIdx = args.length + 2;
-  const uidIdx = args.length + 3;
-  args.push(currentPageIndex, BigInt(revision), userId);
-
   try {
-    await prisma.$executeRawUnsafe(
-      `UPDATE "TeacherBoard"
-       SET pages = ${expr},
-           "currentPageIndex" = $${cpIdx},
-           revision = $${revIdx},
-           "updatedAt" = NOW()
-       WHERE "userId" = $${uidIdx}`,
-      ...args,
+    if (validUpdates.length === 0) {
+      await prisma.teacherBoard.update({
+        where: { userId },
+        data: { currentPageIndex, revision: BigInt(revision) },
+      });
+      return;
+    }
+
+    // ✅ თითოეული dirty გვერდი ცალკე UPDATE-ით, ერთ ტრანზაქციაში
+    const operations = validUpdates.map((u) =>
+      prisma.$executeRawUnsafe(
+        `UPDATE "TeacherBoard"
+         SET pages = jsonb_set(pages, ARRAY[$1]::text[], $2::jsonb)
+         WHERE "userId" = $3`,
+        String(u.idx),
+        JSON.stringify(u.elements),
+        userId,
+      ),
     );
+
+    // currentPageIndex + revision განახლება იმავე ტრანზაქციაში
+    operations.push(
+      prisma.$executeRawUnsafe(
+        `UPDATE "TeacherBoard"
+         SET "currentPageIndex" = $1, revision = $2
+         WHERE "userId" = $3`,
+        currentPageIndex,
+        revision,          // ✅ number, არა BigInt
+        userId,
+      ),
+    );
+
+    await prisma.$transaction(operations);
   } catch (error) {
-    // ✅ fallback — თუ jsonb_set ვერ შესრულდა, სრული update
-    console.warn('[teacher-board] jsonb_set failed, falling back to full write', error);
+    console.warn(
+      '[teacher-board] jsonb_set failed, falling back to full write',
+      error instanceof Error ? error.message : error,
+    );
+    // ✅ fallback — სრული update Prisma-ს სტანდარტული მეთოდით
     await prisma.teacherBoard.update({
       where: { userId },
       data: {
