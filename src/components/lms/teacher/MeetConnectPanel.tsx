@@ -39,10 +39,7 @@ export function MeetConnectPanel({
     <section className="mb-4 rounded-box border border-hairline bg-surface px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-sm font-bold">Google Meet</h2>
-          <p className="text-xs text-muted">
-            {status}. შეხვედრის Google ანგარიში შეიძლება განსხვავდებოდეს შესვლის ელფოსტისგან.
-          </p>
+          <h2 className="text-sm font-bold text-brass">Google Meet . <span className="text-ink/60 text-[12px]">{status}</span></h2>
         </div>
         {unavailable ? null : (
           <div className="flex flex-wrap gap-2">
@@ -69,11 +66,6 @@ export function MeetConnectPanel({
           </div>
         )}
       </div>
-      {notice ? (
-        <p role="status" className="mt-2 text-xs font-bold text-ink">
-          {NOTICES[notice]}
-        </p>
-      ) : null}
       {!configured && !unavailable && notice !== 'unconfigured' ? (
         <p className="mt-2 text-xs text-muted">სერვერზე Google Meet-ის დაკავშირება ჯერ არ არის ჩართული.</p>
       ) : null}

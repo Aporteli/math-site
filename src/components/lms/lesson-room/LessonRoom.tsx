@@ -172,7 +172,6 @@ export function LessonRoom({ courseId, courseTitle, onClose }: LessonRoomProps) 
               />
             ) : (
               <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted">
-                Miro დაფა ჯერ არ არის დაკავშირებული. დაფა ჩანს ამ გვერდზე მას შემდეგ, რაც მასწავლებელი შეინახავს ბმულს.
               </div>
             )}
           </section>

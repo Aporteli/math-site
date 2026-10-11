@@ -1,7 +1,6 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { Loader2, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { useTeacherStudentsWorkspace } from './hooks/useTeacherStudentsWorkspace';
 import { PageHero } from '@/components/ui/PageHero';
 import { TeacherClassesSidebar } from './components/TeacherClassesSidebar';
@@ -15,18 +14,6 @@ import { PreviewMaterialModal } from './modals/PreviewMaterialModal';
 import { DeleteConfirmModal } from './modals/DeleteConfirmModal';
 import { TeacherViewProblemModal } from './modals/TeacherViewProblemModal';
 import type { TeacherStudentsWorkspaceProps } from './types/teacher-workspace.types';
-
-const LessonRoom = dynamic(
-  () => import('@/components/lms/lesson-room/LessonRoom').then((m) => m.LessonRoom),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <Loader2 className="size-8 animate-spin text-navy" />
-      </div>
-    ),
-  },
-);
 
 export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
   const ws = useTeacherStudentsWorkspace(props);
@@ -44,6 +31,8 @@ export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
             cardsCount={props.availableSetProblems.length}
             canSendCard={Boolean(ws.activeStudent)}
             onStartClassCall={ws.handleStartClassCall}
+            meetPending={ws.meetPending}
+            meetMessage={ws.meetMessage}
             onOpenAssignModal={() => ws.setIsAssignModalOpen(true)}
           />
         }
@@ -102,17 +91,6 @@ export function TeacherStudentsWorkspace(props: TeacherStudentsWorkspaceProps) {
           />
         </section>
       </div>
-
-      {/* --- მოდალები --- */}
-      {ws.activeVideoCallCourse && (
-        <div className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen overflow-hidden">
-          <LessonRoom
-            courseId={ws.activeVideoCallCourse.id}
-            courseTitle={ws.activeVideoCallCourse.title}
-            onClose={() => ws.setActiveVideoCallCourse(null)}
-          />
-        </div>
-      )}
 
       {ws.isAssignModalOpen && ws.activeStudent && (
         <AssignProblemModal

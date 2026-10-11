@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createLessonMeetAction, getLessonRoomAction } from '@/lib/actions/lesson-room';
 import type { StudentAssignment } from '../types/teacher-workspace.types';
 
 export function useTeacherWorkspaceModals(deletingAssignmentId: string | null) {
@@ -18,15 +19,11 @@ export function useTeacherWorkspaceModals(deletingAssignmentId: string | null) {
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isMaterialModalOpen, setIsMaterialModalOpen] = useState(false);
-  const [activeVideoCallCourse, setActiveVideoCallCourse] = useState<{ id: string; title: string } | null>(null);
+  const [meetPending, setMeetPending] = useState(false);
+  const [meetMessage, setMeetMessage] = useState<string | null>(null);
 
   const isAnyModalOpen = Boolean(
-    deletingAssignmentId ||
-    activeAssignmentModal ||
-    previewMaterialModal ||
-    isAssignModalOpen ||
-    isMaterialModalOpen ||
-    activeVideoCallCourse,
+    deletingAssignmentId || activeAssignmentModal || previewMaterialModal || isAssignModalOpen || isMaterialModalOpen,
   );
 
   useEffect(() => {
@@ -39,14 +36,52 @@ export function useTeacherWorkspaceModals(deletingAssignmentId: string | null) {
     }
   }, [isAnyModalOpen]);
 
-  const handleStartClassCall = (activeCourseId: string | 'all', courses: { id: string; title: string }[]) => {
-    if (activeCourseId !== 'all') {
-      const current = courses.find((c) => c.id === activeCourseId);
-      if (current) setActiveVideoCallCourse(current);
-    } else if (courses.length > 0) {
-      setActiveVideoCallCourse(courses[0]);
-    } else {
-      alert('ვიდეო გაკვეთილის დასაწყებად საჭიროა მინიმუმ ერთი აქტიური კლასი.');
+  const handleStartClassCall = async (activeCourseId: string | 'all', courses: { id: string; title: string }[]) => {
+    setMeetMessage(null);
+    const course = activeCourseId !== 'all' ? courses.find((item) => item.id === activeCourseId) : courses[0];
+    if (!course) {
+      setMeetMessage('ვიდეო გაკვეთილის დასაწყებად საჭიროა მინიმუმ ერთი აქტიური კლასი.');
+      return;
+    }
+
+    const tab = window.open('', '_blank');
+    if (!tab) {
+      setMeetMessage('ბრაუზერმა ახალი ფანჯრის გახსნა დაბლოკა.');
+      return;
+    }
+
+    setMeetPending(true);
+    try {
+      const loaded = await getLessonRoomAction(course.id);
+      if (!loaded.ok) {
+        tab.close();
+        setMeetMessage(loaded.error);
+        return;
+      }
+
+      let meetUrl = loaded.room.meetUrl;
+      if (!meetUrl) {
+        const created = await createLessonMeetAction(course.id);
+        if (!created.ok) {
+          tab.close();
+          setMeetMessage(created.error);
+          return;
+        }
+        meetUrl = created.room.meetUrl;
+      }
+      if (!meetUrl) {
+        tab.close();
+        setMeetMessage('ამ ჯგუფს Meet-ის ბმული ჯერ არ აქვს.');
+        return;
+      }
+
+      tab.opener = null;
+      tab.location.href = meetUrl;
+    } catch {
+      tab.close();
+      setMeetMessage('Meet-ის ბმულის გახსნა ვერ მოხერხდა.');
+    } finally {
+      setMeetPending(false);
     }
   };
 
@@ -59,8 +94,8 @@ export function useTeacherWorkspaceModals(deletingAssignmentId: string | null) {
     setIsAssignModalOpen,
     isMaterialModalOpen,
     setIsMaterialModalOpen,
-    activeVideoCallCourse,
-    setActiveVideoCallCourse,
+    meetPending,
+    meetMessage,
     handleStartClassCall,
   };
 }
