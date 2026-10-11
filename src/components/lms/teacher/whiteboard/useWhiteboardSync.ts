@@ -43,6 +43,8 @@ export function useWhiteboardSync(
     updateUndoRedoState,
   } = { ...boardState, ...persistence };
   const pushBodyRef = useRef("");
+  // ✅ ლაზერის retry timeout-ის ID — memory leak-ის თავიდან ასაცილებლად
+  const laserRetryTimerRef = useRef<number | null>(null);
 
   const schedulePush = useCallback(() => {
     if (!isHydratedRef.current || applyingRemoteRef.current) return;
@@ -74,6 +76,7 @@ export function useWhiteboardSync(
       "}";
     pushBodyRef.current = body;
     if (pushTimerRef.current != null) window.clearTimeout(pushTimerRef.current);
+    // ✅ 400ms → 250ms: უფრო სწრაფად ჩნდება committed stroke
     pushTimerRef.current = window.setTimeout(() => {
       pushTimerRef.current = null;
       const send = () => {
@@ -116,7 +119,7 @@ export function useWhiteboardSync(
           });
       };
       send();
-    }, 400);
+    }, 250);
   }, []);
   schedulePushRef.current = schedulePush;
 
@@ -150,6 +153,7 @@ export function useWhiteboardSync(
     (stroke: { points: number[]; color: string; width: number }) => {
       liveStrokeRef.current = stroke;
       if (inkTimerRef.current != null) return;
+      // ✅ 30ms → 20ms: უფრო გლუვი ცოცხალი ხაზვა მეორე მოწყობილობაზე
       inkTimerRef.current = window.setTimeout(() => {
         inkTimerRef.current = null;
         const send = () => {
@@ -214,34 +218,69 @@ export function useWhiteboardSync(
                 inkTimerRef.current = window.setTimeout(() => {
                   inkTimerRef.current = null;
                   send();
-                }, 30);
+                }, 20);
               }
             });
         };
         send();
-      }, 30);
+      }, 20);
     },
     [],
   );
 
+  /**
+   * ლაზერის გაგზავნა.
+   *
+   * 🎯 მთავარი fix: როცა `pos === null` (pointer up), null-ს ვაგზავნით **ორჯერ**
+   * 100ms ინტერვალით. თუ პირველი მესიჯი დაიკარგა (ქსელის ბლიპი, SSE race),
+   * მეორე მაინც მივა და მეორე მოწყობილობაზე ლაზერი გაქრება.
+   *
+   * აქამდე მხოლოდ ერთხელ იგზავნებოდა და თუ დაიკარგა — ლაზერი სამუდამოდ რჩებოდა.
+   */
   const handleLaserMove = useCallback(
     (pos: { x: number; y: number } | null) => {
       const now = Date.now();
       if (pos && now - lastLaserSentRef.current <= 35) return;
       lastLaserSentRef.current = now;
-      void fetch("/api/teacher-board", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "laser",
-          point: pos,
-          pageIndex: currentPageIndexRef.current,
-          clientId: clientIdRef.current,
-        }),
-      }).catch(() => {});
+
+      const sendLaser = (point: { x: number; y: number } | null) => {
+        void fetch("/api/teacher-board", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "laser",
+            point,
+            pageIndex: currentPageIndexRef.current,
+            clientId: clientIdRef.current,
+          }),
+        }).catch(() => {});
+      };
+
+      sendLaser(pos);
+
+      // ✅ null-ის შემთხვევაში — დამატებითი retry 100ms-ში
+      if (pos === null) {
+        if (laserRetryTimerRef.current != null) {
+          window.clearTimeout(laserRetryTimerRef.current);
+        }
+        laserRetryTimerRef.current = window.setTimeout(() => {
+          laserRetryTimerRef.current = null;
+          sendLaser(null);
+        }, 100);
+      }
     },
     [],
   );
+
+  // ✅ cleanup: unmount-ზე pending retry ტაიმერი გავასუფთავოთ
+  useEffect(() => {
+    return () => {
+      if (laserRetryTimerRef.current != null) {
+        window.clearTimeout(laserRetryTimerRef.current);
+        laserRetryTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const applyRemoteBoard = useCallback(
     (board: {
@@ -275,7 +314,6 @@ export function useWhiteboardSync(
             });
           }
         }
-        // წავშალოთ history entries გვერდებისთვის, რომლებიც აღარ არსებობს
         for (const key of Array.from(historyMapRef.current.keys())) {
           if (key >= nextPages.length) historyMapRef.current.delete(key);
         }
@@ -512,6 +550,10 @@ export function useWhiteboardSync(
       window.clearTimeout(errorPull);
       document.removeEventListener("visibilitychange", onVisibility);
       source?.close();
+      // ✅ cleanup: unmount-ზე გავასუფთავოთ remote ink/laser overlays
+      canvasRef.current?.renderRemoteInk(null);
+      canvasRef.current?.renderRemoteLaser(null);
+      remoteInkRef.current = null;
     };
   }, [applyRemoteBoard]);
   return { schedulePush, handleLiveStroke, handleLaserMove, applyRemoteBoard };
