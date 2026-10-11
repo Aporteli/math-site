@@ -30,35 +30,30 @@ export const elementJsonCache = new WeakMap<CanvasElement, string>();
  */
 const pageJsonCache = new WeakMap<CanvasElement[], string>();
 
+export function stringifyElementsList(elements: CanvasElement[]): string {
+  const cachedPage = pageJsonCache.get(elements);
+  if (cachedPage !== undefined) return cachedPage;
+
+  const parts = new Array<string>(elements.length);
+  for (let i = 0; i < elements.length; i += 1) {
+    const el = elements[i];
+    let elJson = elementJsonCache.get(el);
+    if (elJson === undefined) {
+      elJson = JSON.stringify(el) ?? 'null';
+      elementJsonCache.set(el, elJson);
+    }
+    parts[i] = elJson;
+  }
+  const pageJson = `[${parts.join(',')}]`;
+  pageJsonCache.set(elements, pageJson);
+  return pageJson;
+}
+
 export function stringifyPages(pages: CanvasElement[][]): string {
   const pageParts = new Array<string>(pages.length);
   for (let p = 0; p < pages.length; p += 1) {
     const page = pages[p];
-    if (!page) {
-      pageParts[p] = '[]';
-      continue;
-    }
-
-    // ✅ per-page cache: თუ გვერდი არ შეცვლილა — პირდაპირ დაბრუნდეს
-    const cachedPage = pageJsonCache.get(page);
-    if (cachedPage !== undefined) {
-      pageParts[p] = cachedPage;
-      continue;
-    }
-
-    const parts = new Array<string>(page.length);
-    for (let i = 0; i < page.length; i += 1) {
-      const el = page[i];
-      let elJson = elementJsonCache.get(el);
-      if (elJson === undefined) {
-        elJson = JSON.stringify(el) ?? 'null';
-        elementJsonCache.set(el, elJson);
-      }
-      parts[i] = elJson;
-    }
-    const pageJson = `[${parts.join(',')}]`;
-    pageJsonCache.set(page, pageJson);
-    pageParts[p] = pageJson;
+    pageParts[p] = page ? stringifyElementsList(page) : '[]';
   }
   return `[${pageParts.join(',')}]`;
 }

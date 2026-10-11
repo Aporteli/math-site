@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
-import { PREFS_KEY, STORAGE_KEY_PAGES } from './constants';
-import { stringifyPages } from './pageHistory';
+import { useCallback, useEffect, useRef } from 'react';
+import { PAGE_COUNT_KEY, PREFS_KEY, STORAGE_KEY_PAGES, pageStorageKey } from './constants';
+import { stringifyElementsList } from './pageHistory';
+import type { CanvasElement } from '@/components/lms/classroom/KonvaCanvas/utils/types';
 import { isStylusButtonAction } from './stylusKeys';
 import type { StylusButtonAction, ToolId } from './types';
 import type { WhiteboardState } from './useWhiteboardState';
@@ -38,7 +39,6 @@ export function useWhiteboardPersistence(boardState: WhiteboardState) {
     setCanRedo,
     isHydratedRef,
     scheduleLocalPagesSaveRef,
-    pagesJsonRef,
     localPagesTimerRef,
     pagesRef,
     currentPageIndexRef,
@@ -46,6 +46,7 @@ export function useWhiteboardPersistence(boardState: WhiteboardState) {
     previousToolRef,
     isTemporaryEraserRef,
   } = boardState;
+  const storedPagesRef = useRef<CanvasElement[][] | null>(null);
   useEffect(() => {
     try {
       const prefsRaw = localStorage.getItem(PREFS_KEY);
@@ -64,16 +65,30 @@ export function useWhiteboardPersistence(boardState: WhiteboardState) {
         if (typeof p.penSmoothEnabled === 'boolean') setPenSmoothEnabled(p.penSmoothEnabled);
         if (typeof p.penSmoothIntensity === 'number') setPenSmoothIntensity(p.penSmoothIntensity);
       }
-      const pagesRaw = localStorage.getItem(STORAGE_KEY_PAGES);
-      if (pagesRaw) {
-        const parsed = JSON.parse(pagesRaw);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setPages(parsed);
-          pagesRef.current = parsed;
-          parsed.forEach((p, idx) => {
-            historyMapRef.current.set(idx, { states: [p || []], index: 0 });
-          });
+      const countRaw = localStorage.getItem(PAGE_COUNT_KEY);
+      const count = Number(countRaw);
+      let parsed: CanvasElement[][] | null = null;
+      if (Number.isInteger(count) && count > 0) {
+        parsed = [];
+        for (let i = 0; i < count; i += 1) {
+          const raw = localStorage.getItem(pageStorageKey(i));
+          const page = raw ? JSON.parse(raw) : [];
+          parsed.push(Array.isArray(page) ? page : []);
         }
+      } else {
+        const pagesRaw = localStorage.getItem(STORAGE_KEY_PAGES);
+        if (pagesRaw) {
+          const legacy = JSON.parse(pagesRaw);
+          if (Array.isArray(legacy) && legacy.length > 0) parsed = legacy;
+        }
+      }
+      if (parsed && parsed.length > 0) {
+        setPages(parsed);
+        pagesRef.current = parsed;
+        storedPagesRef.current = parsed;
+        parsed.forEach((p, idx) => {
+          historyMapRef.current.set(idx, { states: [p || []], index: 0 });
+        });
       }
     } catch (e) {
       console.error(e);
@@ -149,10 +164,17 @@ export function useWhiteboardPersistence(boardState: WhiteboardState) {
     if (typeof window === 'undefined' || !isHydratedRef.current) return;
     try {
       const pages = pagesRef.current;
-      const cached = pagesJsonRef.current;
-      const json = cached && cached.pages === pages ? cached.json : stringifyPages(pages);
-      if (!cached || cached.pages !== pages) pagesJsonRef.current = { pages, json };
-      localStorage.setItem(STORAGE_KEY_PAGES, json);
+      const prev = storedPagesRef.current;
+      const prevCount = prev?.length ?? Number(localStorage.getItem(PAGE_COUNT_KEY) || 0);
+      for (let i = 0; i < pages.length; i += 1) {
+        if (prev && pages[i] === prev[i]) continue;
+        localStorage.setItem(pageStorageKey(i), stringifyElementsList(pages[i] || []));
+      }
+      for (let i = pages.length; i < prevCount; i += 1) {
+        localStorage.removeItem(pageStorageKey(i));
+      }
+      localStorage.setItem(PAGE_COUNT_KEY, String(pages.length));
+      storedPagesRef.current = pages;
     } catch {}
   }, []);
 

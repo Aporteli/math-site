@@ -4,6 +4,8 @@ import type { ToolId } from './types';
 export const BOARD_WIDTH = 1920;
 export const BOARD_HEIGHT = 1080;
 export const STORAGE_KEY_PAGES = 'teacher_whiteboard_permanent_pages_v7';
+export const PAGE_COUNT_KEY = 'teacher_whiteboard_permanent_page_count_v8';
+export const pageStorageKey = (index: number) => `teacher_whiteboard_permanent_page_v8_${index}`;
 export const PREFS_KEY = 'teacher_whiteboard_permanent_prefs_v7';
 
 export const DEFAULT_COLOR = '#1e293b';

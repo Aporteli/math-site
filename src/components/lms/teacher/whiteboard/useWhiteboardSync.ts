@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { PREFS_KEY } from "./constants";
-import { stringifyPages } from "./pageHistory";
+import { stringifyElementsList, stringifyPages } from "./pageHistory";
 import { reconcileBoard } from "@/components/lms/classroom/KonvaCanvas/utils/boardReconcile";
 import type { CanvasElement } from "@/components/lms/classroom/KonvaCanvas/utils/types";
 import type { WhiteboardState } from "./useWhiteboardState";
@@ -96,7 +96,7 @@ export function useWhiteboardSync(
   const computeDelta = useCallback((): DeltaPayload | null => {
     const pages = pagesRef.current;
     const lastSent = lastSentPagesRef.current;
-    if (!lastSent || lastSent.length !== pages.length || pages.length <= 1) {
+    if (!lastSent || lastSent.length !== pages.length) {
       return null;
     }
     const updates: DeltaUpdate[] = [];
@@ -122,10 +122,20 @@ export function useWhiteboardSync(
     const delta = computeDelta();
 
     if (delta) {
+      const updates = delta.updates
+        .map(
+          (update) =>
+            '{"idx":' +
+            update.idx +
+            ',"elements":' +
+            stringifyElementsList(update.elements) +
+            "}",
+        )
+        .join(",");
       return (
-        '{"delta":{"updates":' +
-        JSON.stringify(delta.updates) +
-        ',"totalPages":' +
+        '{"delta":{"updates":[' +
+        updates +
+        '],"totalPages":' +
         delta.totalPages +
         '},"currentPageIndex":' +
         pageIndex +

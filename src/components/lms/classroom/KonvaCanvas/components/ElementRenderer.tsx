@@ -3,6 +3,7 @@ import { Line, Circle, Rect, Arrow, Star, Text, Group } from 'react-konva';
 import type { CanvasElement } from '../utils/types';
 import { adaptStrokeForTheme } from '../utils/theme';
 import { CanvasImageElement } from './CanvasImageElement';
+import { CachedInk } from './CachedInk';
 
 interface ElementRendererProps {
   elements: CanvasElement[];
@@ -83,7 +84,8 @@ const CanvasElementShape = memo(function CanvasElementShape({
               tension={0.4}
               lineCap="round"
               lineJoin="round"
-              hitStrokeWidth={Math.max(28, el.strokeWidth * 3)}
+              hitStrokeWidth={activeTool === 'select' ? Math.max(28, el.strokeWidth * 3) : 0}
+              listening={activeTool === 'select'}
               perfectDrawEnabled={false}
               draggable={activeTool === 'select'}
               onClick={() => onElementClick(el)}
@@ -401,19 +403,35 @@ export function ElementRenderer({
 }: ElementRendererProps) {
   const handlersRef = useRef<ElementHandlers>({ onElementClick, onDragStart, onDragMove, onDragEnd });
   handlersRef.current = { onElementClick, onDragStart, onDragMove, onDragEnd };
+  const cacheInk = activeTool !== 'select' && activeTool !== 'eraser';
+  const ink: CanvasElement[] = [];
+  const rest: CanvasElement[] = [];
+  if (cacheInk) {
+    for (const el of elements) {
+      if (el.type === 'freedraw') ink.push(el);
+      else rest.push(el);
+    }
+  }
+  const shapes = cacheInk ? rest : elements;
+  const shapeNode = (el: CanvasElement) => (
+    <CanvasElementShape
+      key={el.id}
+      el={el}
+      activeTool={activeTool}
+      isDark={isDark}
+      strokeWidth={strokeWidth}
+      editingTextId={editingTextId}
+      handlersRef={handlersRef}
+    />
+  );
   return (
     <>
-      {elements.map((el) => (
-        <CanvasElementShape
-          key={el.id}
-          el={el}
-          activeTool={activeTool}
-          isDark={isDark}
-          strokeWidth={strokeWidth}
-          editingTextId={editingTextId}
-          handlersRef={handlersRef}
-        />
-      ))}
+      {ink.length > 0 ? (
+        <CachedInk enabled elements={elements} isDark={isDark}>
+          {ink.map(shapeNode)}
+        </CachedInk>
+      ) : null}
+      {shapes.map(shapeNode)}
     </>
   );
 }
