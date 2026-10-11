@@ -108,6 +108,29 @@ export function useWhiteboardSync(boardState: WhiteboardState, persistence: Whit
   }, []);
   schedulePushRef.current = schedulePush;
 
+  useEffect(() => {
+    const flush = () => {
+      if (!isHydratedRef.current) return;
+      const pending = pushTimerRef.current != null || pushQueuedRef.current;
+      if (!pending) return;
+      if (pushTimerRef.current != null) {
+        window.clearTimeout(pushTimerRef.current);
+        pushTimerRef.current = null;
+      }
+      pushQueuedRef.current = false;
+      const payload = pushBodyRef.current;
+      if (!payload) return;
+      void fetch('/api/teacher-board', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {});
+    };
+    window.addEventListener('pagehide', flush);
+    return () => window.removeEventListener('pagehide', flush);
+  }, []);
+
   const handleLiveStroke = useCallback((stroke: { points: number[]; color: string; width: number }) => {
     liveStrokeRef.current = stroke;
     if (inkTimerRef.current != null) return;

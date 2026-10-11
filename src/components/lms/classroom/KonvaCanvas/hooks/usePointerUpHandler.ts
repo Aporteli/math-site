@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import type { PointerHandlerContext } from '../utils/usePointerHandlers.types';
 import { stylusUpPhase } from '../utils/pointer-up/stylusUpPhase';
 import { releasePointerOwnership } from '../utils/pointer-up/releasePointerOwnership';
@@ -35,7 +35,7 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
     cancelHoldToSnap,
   } = ctx;
 
-  return useCallback(
+  const onPointerUp = useCallback(
     (e: any) => {
       const evt = e.evt as PointerEvent;
 
@@ -139,4 +139,21 @@ export function usePointerUpHandler(ctx: PointerHandlerContext) {
       onElementsChange,
     ],
   );
+
+  // The stage misses pointerup when the pen is released outside the canvas.
+  // Those strokes stayed on the preview layer and were never posted.
+  useEffect(() => {
+    const finish = (evt: PointerEvent) => {
+      if (!isDrawing.current) return;
+      onPointerUp({ evt });
+    };
+    window.addEventListener('pointerup', finish);
+    window.addEventListener('pointercancel', finish);
+    return () => {
+      window.removeEventListener('pointerup', finish);
+      window.removeEventListener('pointercancel', finish);
+    };
+  }, [isDrawing, onPointerUp]);
+
+  return onPointerUp;
 }

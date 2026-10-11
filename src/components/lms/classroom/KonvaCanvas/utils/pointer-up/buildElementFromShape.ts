@@ -26,7 +26,9 @@ export function buildElementFromShape({
     activeTool === 'triangle' ||
     activeTool === 'diamond'
   ) {
-    const rawPoints: number[] = shape.points();
+    // Konva returns its internal array. Copy it so destroying the preview
+    // stroke cannot wipe the points that get stored in the database.
+    const rawPoints: number[] = shape.points().slice();
     const points =
       activeTool === 'pen' && penSmoothIntensity > 0
         ? smoothPenPoints(rawPoints, penSmoothIntensity)

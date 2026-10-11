@@ -134,19 +134,27 @@ export async function POST(req: Request) {
     currentPageIndex: safeIndex,
     inkSeq,
   });
-  await persistTeacherBoard(userId);
+  try {
+    await persistTeacherBoard(userId, body.pages, safeIndex, revision);
+  } catch (error) {
+    console.error('Failed to save teacher board', error);
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
   await broadcastTeacherBoard({ kind: 'board', userId, clientId, revision, inkSeq }).catch(() => undefined);
 
   return NextResponse.json({ ok: true, revision });
 }
 
-async function persistTeacherBoard(userId: string) {
-  const live = readLiveTeacherBoard(userId);
-  if (!live || !isPages(live.pages)) return;
-  const pages = live.pages as Prisma.InputJsonValue;
+async function persistTeacherBoard(
+  userId: string,
+  pages: unknown[][],
+  currentPageIndex: number,
+  revision: number,
+) {
+  const stored = pages as Prisma.InputJsonValue;
   await prisma.teacherBoard.upsert({
     where: { userId },
-    create: { userId, pages, currentPageIndex: live.currentPageIndex, revision: BigInt(live.revision) },
-    update: { pages, currentPageIndex: live.currentPageIndex, revision: BigInt(live.revision) },
+    create: { userId, pages: stored, currentPageIndex, revision: BigInt(revision) },
+    update: { pages: stored, currentPageIndex, revision: BigInt(revision) },
   });
 }

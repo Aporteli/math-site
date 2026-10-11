@@ -116,14 +116,18 @@ export function publishLiveTeacherBoard(input: {
   }
   const live = { revision, pages: input.pages, currentPageIndex: input.currentPageIndex };
   bus.latest.set(input.userId, live);
-  dispatch({
-    userId: input.userId,
-    clientId: input.clientId,
-    revision,
-    pages: input.pages,
-    currentPageIndex: input.currentPageIndex,
-    inkSeq: input.inkSeq,
-  });
+  try {
+    dispatch({
+      userId: input.userId,
+      clientId: input.clientId,
+      revision,
+      pages: input.pages,
+      currentPageIndex: input.currentPageIndex,
+      inkSeq: input.inkSeq,
+    });
+  } catch {
+    // A live subscriber must not stop the board from being stored.
+  }
   return revision;
 }
 
