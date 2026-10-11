@@ -42,11 +42,7 @@ export function useWhiteboardSync(
     historyMapRef,
     updateUndoRedoState,
   } = { ...boardState, ...persistence };
-<<<<<<< Updated upstream
-  const pushBodyRef = useRef('');
-=======
   const pushBodyRef = useRef("");
->>>>>>> Stashed changes
 
   const schedulePush = useCallback(() => {
     if (!isHydratedRef.current || applyingRemoteRef.current) return;
@@ -98,13 +94,6 @@ export function useWhiteboardSync(
         })
           .then(async (res) => {
             if (!res.ok) {
-<<<<<<< Updated upstream
-              // ✅ შეცდომის ხილვადობა — ადრე ჩუმად იყო
-              const text = await res.text().catch(() => '');
-              console.error('[teacher-board] push failed', res.status, text);
-              // თუ 5xx — სცადე ხელახლა ერთხელ
-=======
->>>>>>> Stashed changes
               if (res.status >= 500 && !pushQueuedRef.current) {
                 pushQueuedRef.current = true;
               }
@@ -119,10 +108,7 @@ export function useWhiteboardSync(
             }
             scheduleLocalPagesSaveRef.current();
           })
-          .catch((err) => {
-            // ✅ network error-იც ხილვადია
-            console.error('[teacher-board] push network error', err);
-          })
+          .catch(() => {})
           .finally(() => {
             window.clearTimeout(killer);
             pushSendingRef.current = false;
@@ -137,16 +123,10 @@ export function useWhiteboardSync(
   useEffect(() => {
     const flush = () => {
       if (!isHydratedRef.current) return;
-<<<<<<< Updated upstream
-      // ✅ in-flight push-იც ჩაითვალოს pending-ად
-      const pending =
-        pushTimerRef.current != null || pushQueuedRef.current || pushSendingRef.current;
-=======
       const pending =
         pushTimerRef.current != null ||
         pushQueuedRef.current ||
         pushSendingRef.current;
->>>>>>> Stashed changes
       if (!pending) return;
       if (pushTimerRef.current != null) {
         window.clearTimeout(pushTimerRef.current);
@@ -160,75 +140,12 @@ export function useWhiteboardSync(
         headers: { "Content-Type": "application/json" },
         body: payload,
         keepalive: true,
-      }).catch((err) => {
-        console.error('[teacher-board] flush failed', err);
-      });
+      }).catch(() => {});
     };
     window.addEventListener("pagehide", flush);
     return () => window.removeEventListener("pagehide", flush);
   }, []);
 
-<<<<<<< Updated upstream
-  const handleLiveStroke = useCallback((stroke: { points: number[]; color: string; width: number }) => {
-    liveStrokeRef.current = stroke;
-    if (inkTimerRef.current != null) return;
-    inkTimerRef.current = window.setTimeout(() => {
-      inkTimerRef.current = null;
-      const send = () => {
-        const current = liveStrokeRef.current;
-        if (!current || current.points.length < 4) return;
-        const base = Math.min(inkSentCountRef.current, current.points.length);
-        if (current.points.length - base < 2) return;
-        if (inkSendingRef.current) {
-          inkQueuedRef.current = true;
-          return;
-        }
-        const points = current.points.slice(base);
-        const seq = inkSeqRef.current;
-        inkSendingRef.current = true;
-        inkQueuedRef.current = false;
-        inkSentCountRef.current = base + points.length;
-        const controller = new AbortController();
-        inkAbortRef.current = controller;
-        const killer = window.setTimeout(() => controller.abort(), 2500);
-        const rewind = () => {
-          if (inkSeqRef.current !== seq) return;
-          if (inkSentCountRef.current > base) inkSentCountRef.current = base;
-        };
-        void fetch('/api/teacher-board', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
-          body: JSON.stringify({
-            type: 'ink',
-            points,
-            base,
-            stroke: current.color,
-            strokeWidth: current.width,
-            pageIndex: currentPageIndexRef.current,
-            clientId: clientIdRef.current,
-            inkSeq: seq,
-          }),
-        })
-          .then((res) => {
-            if (!res.ok) {
-              console.error('[teacher-board] ink push failed', res.status);
-              rewind();
-            }
-          })
-          .catch((err) => {
-            // AbortError ნორმალურია (debounce-ის დროს)
-            if ((err as { name?: string })?.name !== 'AbortError') {
-              console.error('[teacher-board] ink network error', err);
-            }
-            rewind();
-          })
-          .finally(() => {
-            window.clearTimeout(killer);
-            if (inkAbortRef.current !== controller) return;
-            inkAbortRef.current = null;
-            inkSendingRef.current = false;
-=======
   const handleLiveStroke = useCallback(
     (stroke: { points: number[]; color: string; width: number }) => {
       liveStrokeRef.current = stroke;
@@ -253,7 +170,6 @@ export function useWhiteboardSync(
           inkAbortRef.current = controller;
           const killer = window.setTimeout(() => controller.abort(), 2500);
           const rewind = () => {
->>>>>>> Stashed changes
             if (inkSeqRef.current !== seq) return;
             if (inkSentCountRef.current > base) inkSentCountRef.current = base;
           };
@@ -308,28 +224,6 @@ export function useWhiteboardSync(
     [],
   );
 
-<<<<<<< Updated upstream
-  const handleLaserMove = useCallback((pos: { x: number; y: number } | null) => {
-    const now = Date.now();
-    if (pos && now - lastLaserSentRef.current <= 35) return;
-    lastLaserSentRef.current = now;
-    void fetch('/api/teacher-board', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'laser',
-        point: pos,
-        pageIndex: currentPageIndexRef.current,
-        clientId: clientIdRef.current,
-      }),
-    }).catch((err) => {
-      // laser network error ხმაურიანია — მხოლოდ debug-ისთვის
-      if ((err as { name?: string })?.name !== 'AbortError') {
-        console.warn('[teacher-board] laser network error', err);
-      }
-    });
-  }, []);
-=======
   const handleLaserMove = useCallback(
     (pos: { x: number; y: number } | null) => {
       const now = Date.now();
@@ -348,7 +242,6 @@ export function useWhiteboardSync(
     },
     [],
   );
->>>>>>> Stashed changes
 
   const applyRemoteBoard = useCallback(
     (board: {
@@ -363,32 +256,15 @@ export function useWhiteboardSync(
         canvasRef.current?.renderRemoteInk(null);
         remoteInkRef.current = null;
         const nextPages = board.pages;
-<<<<<<< Updated upstream
-        const pageIndex = Math.min(Math.max(0, board.currentPageIndex || 0), nextPages.length - 1);
-=======
         const pageIndex = Math.min(
           Math.max(0, board.currentPageIndex || 0),
           nextPages.length - 1,
         );
         const prevPages = pagesRef.current;
->>>>>>> Stashed changes
         setPages(nextPages);
         pagesRef.current = nextPages;
         setCurrentPageIndex(pageIndex);
         currentPageIndexRef.current = pageIndex;
-<<<<<<< Updated upstream
-        historyMapRef.current = new Map(
-          nextPages.map((page, idx) => [idx, { states: [page || []], index: 0 }]),
-        );
-        updateUndoRedoState();
-      } catch (err) {
-        console.error('[teacher-board] applyRemoteBoard failed', err);
-      } finally {
-        // ✅ applyingRemoteRef აღარ "ჩარჩება" true-ზე
-        applyingRemoteRef.current = false;
-      }
-      if (remoteStoreTimerRef.current) window.clearTimeout(remoteStoreTimerRef.current);
-=======
 
         // history: შევინარჩუნოთ უცვლელი გვერდების ისტორია, განვაახლოთ მხოლოდ შეცვლილი
         for (let idx = 0; idx < nextPages.length; idx += 1) {
@@ -409,7 +285,6 @@ export function useWhiteboardSync(
       }
       if (remoteStoreTimerRef.current)
         window.clearTimeout(remoteStoreTimerRef.current);
->>>>>>> Stashed changes
       remoteStoreTimerRef.current = window.setTimeout(() => {
         remoteStoreTimerRef.current = null;
         scheduleLocalPagesSaveRef.current();
@@ -426,8 +301,6 @@ export function useWhiteboardSync(
 
   useEffect(() => {
     let cancelled = false;
-    // ✅ null board-ის შემთხვევაში უსასრულო push-ციკლის თავიდან ასაცილებლად
-    let nullBoardPushCount = 0;
 
     let pullTask: Promise<void> | null = null;
     const pull = () => {
@@ -435,16 +308,8 @@ export function useWhiteboardSync(
       pullTask = (async () => {
         try {
           const epoch = editEpochRef.current;
-<<<<<<< Updated upstream
-          const res = await fetch('/api/teacher-board', { cache: 'no-store' });
-          if (!res.ok || cancelled) {
-            if (!res.ok) console.error('[teacher-board] pull failed', res.status);
-            return;
-          }
-=======
           const res = await fetch("/api/teacher-board", { cache: "no-store" });
           if (!res.ok || cancelled) return;
->>>>>>> Stashed changes
           const data = (await res.json()) as {
             board: {
               pages: CanvasElement[][];
@@ -454,14 +319,9 @@ export function useWhiteboardSync(
           };
           if (cancelled || editEpochRef.current !== epoch) return;
           if (!data.board) {
-            // ✅ შეზღუდე ცდების რაოდენობა
-            if (nullBoardPushCount < 3) {
-              nullBoardPushCount += 1;
-              schedulePushRef.current();
-            }
+            schedulePushRef.current();
             return;
           }
-          nullBoardPushCount = 0;
           if (data.board.revision <= revisionRef.current) return;
           if (
             pushTimerRef.current != null ||
@@ -470,8 +330,8 @@ export function useWhiteboardSync(
           )
             return;
           applyRemoteBoard(data.board);
-        } catch (err) {
-          console.warn('[teacher-board] pull error', err);
+        } catch {
+          /* ignore a dropped pull */
         } finally {
           pullTask = null;
         }
@@ -554,14 +414,6 @@ export function useWhiteboardSync(
               remoteInkRef.current = null;
               return;
             }
-<<<<<<< Updated upstream
-            const delta = Array.isArray(msg.points) ? msg.points.filter((n) => typeof n === 'number') : [];
-            const base =
-              typeof msg.base === 'number' && Number.isFinite(msg.base)
-                ? Math.max(0, Math.floor(msg.base))
-                : 0;
-            const seq = typeof msg.inkSeq === 'number' ? msg.inkSeq : -1;
-=======
             const delta = Array.isArray(msg.points)
               ? msg.points.filter((n) => typeof n === "number")
               : [];
@@ -570,7 +422,6 @@ export function useWhiteboardSync(
                 ? Math.max(0, Math.floor(msg.base))
                 : 0;
             const seq = typeof msg.inkSeq === "number" ? msg.inkSeq : -1;
->>>>>>> Stashed changes
             const prev = remoteInkRef.current;
             const points =
               prev && prev.seq === seq && base > 0 && base <= prev.points.length
@@ -628,8 +479,8 @@ export function useWhiteboardSync(
             return;
           }
           void pull();
-        } catch (err) {
-          console.warn('[teacher-board] malformed SSE event', err);
+        } catch {
+          /* ignore malformed event */
         }
       };
     };
@@ -663,7 +514,6 @@ export function useWhiteboardSync(
       source?.close();
     };
   }, [applyRemoteBoard]);
-
   return { schedulePush, handleLiveStroke, handleLaserMove, applyRemoteBoard };
 }
 
