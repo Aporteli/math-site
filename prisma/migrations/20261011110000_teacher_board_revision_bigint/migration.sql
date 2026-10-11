@@ -1,0 +1,1 @@
+ALTER TABLE "teacher_boards" ALTER COLUMN "revision" SET DATA TYPE BIGINT;

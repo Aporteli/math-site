@@ -38,6 +38,11 @@ const globalBus = globalThis as typeof globalThis & { __teacherBoardBus?: Bus };
 
 const BOARD_POLL_MS = 2000;
 
+export function boardRevision(value: number | bigint | null | undefined) {
+  if (typeof value === 'bigint') return Number(value);
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
 function getBus(): Bus {
   if (!globalBus.__teacherBoardBus) {
     globalBus.__teacherBoardBus = {
@@ -178,8 +183,9 @@ async function pollStoredBoards() {
     });
     const changed: string[] = [];
     for (const row of heads) {
+      const revision = boardRevision(row.revision);
       const previous = bus.dbRevision.get(row.userId);
-      if (previous === row.revision) continue;
+      if (previous === revision) continue;
       changed.push(row.userId);
     }
     if (changed.length === 0) return;
@@ -189,11 +195,12 @@ async function pollStoredBoards() {
       select: { userId: true, revision: true, pages: true, currentPageIndex: true },
     });
     for (const board of boards) {
-      bus.dbRevision.set(board.userId, board.revision);
+      const revision = boardRevision(board.revision);
+      bus.dbRevision.set(board.userId, revision);
       dispatch({
         userId: board.userId,
         clientId: '',
-        revision: board.revision,
+        revision,
         pages: board.pages,
         currentPageIndex: board.currentPageIndex,
       });

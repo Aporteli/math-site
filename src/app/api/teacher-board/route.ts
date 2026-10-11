@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { teacherBoardUserId } from '@/lib/teacher-board/actor';
 import {
+  boardRevision,
   publishLiveTeacherBoard,
   publishTeacherBoardInk,
   publishTeacherBoardLaser,
@@ -37,7 +38,7 @@ export async function GET(req: Request) {
     board: {
       pages: record.pages,
       currentPageIndex: record.currentPageIndex,
-      revision: record.revision,
+      revision: boardRevision(record.revision),
     },
   });
 }
@@ -135,8 +136,8 @@ function schedulePersist(userId: string) {
       void prisma.teacherBoard
         .upsert({
           where: { userId },
-          create: { userId, pages, currentPageIndex: live.currentPageIndex, revision: live.revision },
-          update: { pages, currentPageIndex: live.currentPageIndex, revision: live.revision },
+          create: { userId, pages, currentPageIndex: live.currentPageIndex, revision: BigInt(live.revision) },
+          update: { pages, currentPageIndex: live.currentPageIndex, revision: BigInt(live.revision) },
         })
         .catch(() => {});
     }, 400),
