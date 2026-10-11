@@ -56,6 +56,7 @@ export function WhiteboardViewport({ model, copy }: { model: TeacherWhiteboardMo
             reader.readAsDataURL(file);
           }
         }}>
+          
         <KonvaCanvas
           ref={canvasRef}
           elements={pages[currentPageIndex] || []}
