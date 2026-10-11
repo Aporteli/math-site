@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { teacherBoardUserId } from '@/lib/teacher-board/actor';
 import {
   boardRevision,
+  broadcastTeacherBoard,
   publishLiveTeacherBoard,
   publishTeacherBoardInk,
   publishTeacherBoardLaser,
@@ -22,25 +23,30 @@ export async function GET(req: Request) {
   if (!userId) return NextResponse.json({ board: null }, { status: 401 });
 
   const live = readLiveTeacherBoard(userId);
-  if (live && isPages(live.pages)) {
-    return NextResponse.json({
-      board: { pages: live.pages, currentPageIndex: live.currentPageIndex, revision: live.revision },
-    });
-  }
-
   const record = await prisma.teacherBoard.findUnique({
     where: { userId },
     select: { pages: true, currentPageIndex: true, revision: true },
   });
-  if (!record || !isPages(record.pages)) return NextResponse.json({ board: null });
+  const liveRev = live && isPages(live.pages) ? live.revision : 0;
+  const dbRev = record && isPages(record.pages) ? boardRevision(record.revision) : 0;
 
-  return NextResponse.json({
-    board: {
-      pages: record.pages,
-      currentPageIndex: record.currentPageIndex,
-      revision: boardRevision(record.revision),
-    },
-  });
+  if (live && isPages(live.pages) && liveRev >= dbRev && liveRev > 0) {
+    return NextResponse.json({
+      board: { pages: live.pages, currentPageIndex: live.currentPageIndex, revision: liveRev },
+    });
+  }
+
+  if (record && isPages(record.pages)) {
+    return NextResponse.json({
+      board: {
+        pages: record.pages,
+        currentPageIndex: record.currentPageIndex,
+        revision: dbRev,
+      },
+    });
+  }
+
+  return NextResponse.json({ board: null });
 }
 
 export async function POST(req: Request) {
@@ -81,6 +87,7 @@ export async function POST(req: Request) {
         ? { x: (raw as { x: number }).x, y: (raw as { y: number }).y }
         : null;
     publishTeacherBoardLaser({ userId, clientId, point, pageIndex });
+    void broadcastTeacherBoard({ kind: 'laser', userId, clientId, point, pageIndex }).catch(() => undefined);
     return NextResponse.json({ ok: true });
   }
 
@@ -100,6 +107,17 @@ export async function POST(req: Request) {
     const base =
       typeof body.base === 'number' && Number.isFinite(body.base) ? Math.max(0, Math.floor(body.base)) : 0;
     publishTeacherBoardInk({ userId, clientId, pageIndex, points, stroke, strokeWidth, inkSeq, base });
+    void broadcastTeacherBoard({
+      kind: 'ink',
+      userId,
+      clientId,
+      pageIndex,
+      points,
+      stroke,
+      strokeWidth,
+      inkSeq,
+      base,
+    }).catch(() => undefined);
     return NextResponse.json({ ok: true });
   }
 
@@ -116,30 +134,19 @@ export async function POST(req: Request) {
     currentPageIndex: safeIndex,
     inkSeq,
   });
-  schedulePersist(userId);
+  await persistTeacherBoard(userId);
+  await broadcastTeacherBoard({ kind: 'board', userId, clientId, revision, inkSeq }).catch(() => undefined);
 
   return NextResponse.json({ ok: true, revision });
 }
 
-const persistTimers = new Map<string, ReturnType<typeof setTimeout>>();
-
-function schedulePersist(userId: string) {
-  const existing = persistTimers.get(userId);
-  if (existing) clearTimeout(existing);
-  persistTimers.set(
-    userId,
-    setTimeout(() => {
-      persistTimers.delete(userId);
-      const live = readLiveTeacherBoard(userId);
-      if (!live || !isPages(live.pages)) return;
-      const pages = live.pages as Prisma.InputJsonValue;
-      void prisma.teacherBoard
-        .upsert({
-          where: { userId },
-          create: { userId, pages, currentPageIndex: live.currentPageIndex, revision: BigInt(live.revision) },
-          update: { pages, currentPageIndex: live.currentPageIndex, revision: BigInt(live.revision) },
-        })
-        .catch(() => {});
-    }, 400),
-  );
+async function persistTeacherBoard(userId: string) {
+  const live = readLiveTeacherBoard(userId);
+  if (!live || !isPages(live.pages)) return;
+  const pages = live.pages as Prisma.InputJsonValue;
+  await prisma.teacherBoard.upsert({
+    where: { userId },
+    create: { userId, pages, currentPageIndex: live.currentPageIndex, revision: BigInt(live.revision) },
+    update: { pages, currentPageIndex: live.currentPageIndex, revision: BigInt(live.revision) },
+  });
 }

@@ -373,9 +373,13 @@ export function useWhiteboardSync(boardState: WhiteboardState, persistence: Whit
       source?.close();
       open();
     });
+    const pollTimer = window.setInterval(() => {
+      if (!cancelled) void pull();
+    }, 1000);
 
     return () => {
       cancelled = true;
+      window.clearInterval(pollTimer);
       window.clearTimeout(watchdog);
       window.clearTimeout(errorPull);
       source?.close();

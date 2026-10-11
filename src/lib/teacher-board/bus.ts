@@ -1,3 +1,4 @@
+import { Client } from 'pg';
 import { prisma } from '@/lib/prisma';
 
 export type TeacherBoardEvent = {
@@ -31,7 +32,25 @@ type Bus = {
   dbRevision: Map<string, number>;
   poll: ReturnType<typeof setInterval> | null;
   polling: boolean;
+  instanceId: string;
+  listenStarted: boolean;
+  listenClient: Client | null;
   client?: { end: () => Promise<void> } | null;
+};
+
+type BoardNotice = {
+  origin?: string;
+  kind?: 'board' | 'ink' | 'laser';
+  userId?: string;
+  revision?: number;
+  clientId?: string;
+  pageIndex?: number;
+  points?: number[];
+  stroke?: string;
+  strokeWidth?: number;
+  inkSeq?: number;
+  base?: number;
+  point?: { x: number; y: number } | null;
 };
 
 const globalBus = globalThis as typeof globalThis & { __teacherBoardBus?: Bus };
@@ -52,6 +71,9 @@ function getBus(): Bus {
       dbRevision: new Map(),
       poll: null,
       polling: false,
+      instanceId: crypto.randomUUID(),
+      listenStarted: false,
+      listenClient: null,
     };
   }
   const bus = globalBus.__teacherBoardBus;
@@ -60,6 +82,9 @@ function getBus(): Bus {
   if (!bus.dbRevision) bus.dbRevision = new Map();
   if (bus.poll === undefined) bus.poll = null;
   if (bus.polling === undefined) bus.polling = false;
+  if (!bus.instanceId) bus.instanceId = crypto.randomUUID();
+  if (bus.listenStarted === undefined) bus.listenStarted = false;
+  if (bus.listenClient === undefined) bus.listenClient = null;
   if (bus.client) {
     const leftover = bus.client;
     bus.client = null;
@@ -224,8 +249,122 @@ function ensurePoll() {
   bus.poll = timer;
 }
 
+const NOTIFY_LIMIT = 7000;
+
+export async function broadcastTeacherBoard(notice: Record<string, unknown>) {
+  const payload = JSON.stringify({ ...notice, origin: getBus().instanceId });
+  if (payload.length > NOTIFY_LIMIT) return;
+  await prisma.$queryRaw`SELECT pg_notify('teacher_board', ${payload})`;
+}
+
+function createListenClient() {
+  const url = process.env.DATABASE_URL;
+  const ca = process.env.DATABASE_CA;
+  if (!url || !ca) return null;
+  return new Client({
+    connectionString: url,
+    ssl: { ca, rejectUnauthorized: true },
+  });
+}
+
+async function deliverBoardNotice(raw: string) {
+  let notice: BoardNotice;
+  try {
+    notice = JSON.parse(raw) as BoardNotice;
+  } catch {
+    return;
+  }
+  if (!notice.userId || notice.origin === getBus().instanceId) return;
+  if (!getBus().handlers.has(notice.userId)) return;
+
+  if (notice.kind === 'board') {
+    const record = await prisma.teacherBoard.findUnique({
+      where: { userId: notice.userId },
+      select: { pages: true, currentPageIndex: true, revision: true },
+    });
+    if (!record || !Array.isArray(record.pages)) return;
+    const revision = boardRevision(record.revision);
+    getBus().latest.set(notice.userId, {
+      revision,
+      pages: record.pages,
+      currentPageIndex: record.currentPageIndex,
+    });
+    getBus().dbRevision.set(notice.userId, revision);
+    dispatch({
+      userId: notice.userId,
+      clientId: notice.clientId ?? '',
+      revision,
+      pages: record.pages,
+      currentPageIndex: record.currentPageIndex,
+      inkSeq: notice.inkSeq,
+    });
+    return;
+  }
+
+  if (notice.kind === 'ink') {
+    const points = Array.isArray(notice.points) ? notice.points.filter((n) => typeof n === 'number') : [];
+    dispatch({
+      userId: notice.userId,
+      clientId: notice.clientId ?? '',
+      revision: 0,
+      type: 'ink',
+      pageIndex: notice.pageIndex,
+      points,
+      stroke: notice.stroke,
+      strokeWidth: notice.strokeWidth,
+      inkSeq: notice.inkSeq,
+      base: notice.base,
+    });
+    return;
+  }
+
+  if (notice.kind === 'laser') {
+    dispatch({
+      userId: notice.userId,
+      clientId: notice.clientId ?? '',
+      revision: 0,
+      type: 'laser',
+      point: notice.point ?? null,
+      pageIndex: notice.pageIndex,
+    });
+  }
+}
+
+async function connectListen() {
+  const bus = getBus();
+  if (bus.listenClient) return;
+  const client = createListenClient();
+  if (!client) return;
+  bus.listenClient = client;
+  client.on('notification', (message) => {
+    if (message.channel !== 'teacher_board' || !message.payload) return;
+    void deliverBoardNotice(message.payload);
+  });
+  client.on('error', () => {
+    if (getBus().listenClient === client) getBus().listenClient = null;
+    void client.end().catch(() => undefined);
+    setTimeout(() => void connectListen(), 1000);
+  });
+  try {
+    await client.connect();
+    await client.query('LISTEN teacher_board');
+  } catch {
+    if (getBus().listenClient === client) getBus().listenClient = null;
+    void client.end().catch(() => undefined);
+    setTimeout(() => void connectListen(), 1000);
+  }
+}
+
+function ensureListen() {
+  const bus = getBus();
+  if (bus.listenStarted) return;
+  bus.listenStarted = true;
+  void connectListen();
+}
+
 export function subscribeTeacherBoard(userId: string, handler: Handler) {
   const bus = getBus();
+  ensureListen();
   let set = bus.handlers.get(userId);
   if (!set) {
     set = new Set();
