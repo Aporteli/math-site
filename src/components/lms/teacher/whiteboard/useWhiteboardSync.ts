@@ -96,7 +96,8 @@ export function useWhiteboardSync(
     }
     const updates: DeltaUpdate[] = [];
     for (let i = 0; i < pages.length; i += 1) {
-      if (pages[i] !== lastSent[i]) updates.push({ idx: i, elements: pages[i] });
+      if (pages[i] !== lastSent[i])
+        updates.push({ idx: i, elements: pages[i] });
     }
     const dirtyRatio = updates.length / pages.length;
     if (updates.length === 0) return null;
@@ -376,11 +377,44 @@ export function useWhiteboardSync(
   // ============================================================
   const applyRemoteBoard = useCallback(
     (board: {
-      pages: CanvasElement[][];
+      pages?: CanvasElement[][];
+      delta?: {
+        updates: Array<{ idx: number; elements: CanvasElement[] }>;
+        totalPages: number;
+      };
       currentPageIndex: number;
       revision: number;
     }) => {
-      if (!Array.isArray(board.pages) || board.pages.length === 0) return;
+      // ✅ resolve full pages from either pages or delta+current
+      let nextPagesFull: CanvasElement[][];
+      if (Array.isArray(board.pages) && board.pages.length > 0) {
+        nextPagesFull = board.pages;
+      } else if (board.delta) {
+        const current = pagesRef.current;
+        if (current.length === 0) return; // no base state → skip (SSE handler will pull)
+        const merged = [...current];
+        for (const u of board.delta.updates) {
+          if (
+            Number.isInteger(u.idx) &&
+            u.idx >= 0 &&
+            u.idx < merged.length &&
+            Array.isArray(u.elements)
+          ) {
+            merged[u.idx] = u.elements;
+          }
+        }
+        if (
+          typeof board.delta.totalPages === "number" &&
+          Number.isFinite(board.delta.totalPages)
+        ) {
+          const total = Math.max(0, Math.floor(board.delta.totalPages));
+          merged.length = total;
+        }
+        nextPagesFull = merged;
+      } else {
+        return;
+      }
+
       applyingRemoteRef.current = true;
       try {
         revisionRef.current = board.revision;
@@ -388,7 +422,7 @@ export function useWhiteboardSync(
         remoteInkRef.current = null;
 
         const prevPages = pagesRef.current;
-        const nextPages = reconcileBoard(prevPages, board.pages);
+        const nextPages = reconcileBoard(prevPages, nextPagesFull);
         const pageIndex = Math.min(
           Math.max(0, board.currentPageIndex || 0),
           nextPages.length - 1,
@@ -420,6 +454,7 @@ export function useWhiteboardSync(
       } finally {
         applyingRemoteRef.current = false;
       }
+
       if (remoteStoreTimerRef.current)
         window.clearTimeout(remoteStoreTimerRef.current);
       remoteStoreTimerRef.current = window.setTimeout(() => {
@@ -522,6 +557,10 @@ export function useWhiteboardSync(
             revision?: number;
             clientId?: string;
             pages?: CanvasElement[][];
+            delta?: {
+              updates: Array<{ idx: number; elements: CanvasElement[] }>;
+              totalPages: number;
+            };
             currentPageIndex?: number;
             type?: "laser" | "ink" | "ping";
             point?: { x: number; y: number } | null;
@@ -619,6 +658,25 @@ export function useWhiteboardSync(
             pushQueuedRef.current
           )
             return;
+
+          // ✅ delta — receiver-ზე
+          if (
+            msg.delta &&
+            Array.isArray(msg.delta.updates) &&
+            typeof msg.revision === "number"
+          ) {
+            applyRemoteBoard({
+              delta: msg.delta,
+              currentPageIndex:
+                typeof msg.currentPageIndex === "number"
+                  ? msg.currentPageIndex
+                  : currentPageIndexRef.current,
+              revision: msg.revision,
+            });
+            return;
+          }
+
+          // full pages
           if (Array.isArray(msg.pages) && msg.pages.length > 0) {
             applyRemoteBoard({
               pages: msg.pages,
