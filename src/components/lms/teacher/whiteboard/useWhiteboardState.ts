@@ -82,7 +82,7 @@ export function useWhiteboardState() {
   const inkTimerRef = useRef<number | null>(null);
   const inkSendingRef = useRef(false);
   const inkQueuedRef = useRef(false);
-  const inkAbortRef = useRef<AbortController | null>(null);
+  const inkAbortRef = useRef<object | null>(null);
   const inkSeqRef = useRef(0);
   const inkSentCountRef = useRef(0);
   const remoteInkRef = useRef<{ seq: number; points: number[] } | null>(null);

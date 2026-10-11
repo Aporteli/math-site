@@ -305,7 +305,7 @@ async function persistTeacherBoardSmart(
     // ✅ თითოეული dirty გვერდი ცალკე UPDATE-ით, ერთ ტრანზაქციაში
     const operations = validUpdates.map((u) =>
       prisma.$executeRawUnsafe(
-        `UPDATE "TeacherBoard"
+        `UPDATE "teacher_boards"
          SET pages = jsonb_set(pages, ARRAY[$1]::text[], $2::jsonb)
          WHERE "userId" = $3`,
         String(u.idx),
@@ -317,11 +317,11 @@ async function persistTeacherBoardSmart(
     // currentPageIndex + revision განახლება იმავე ტრანზაქციაში
     operations.push(
       prisma.$executeRawUnsafe(
-        `UPDATE "TeacherBoard"
-         SET "currentPageIndex" = $1, revision = $2
+        `UPDATE "teacher_boards"
+         SET "currentPageIndex" = $1, revision = $2::bigint, "updatedAt" = CURRENT_TIMESTAMP
          WHERE "userId" = $3`,
         currentPageIndex,
-        revision,          // ✅ number, არა BigInt
+        String(revision),
         userId,
       ),
     );

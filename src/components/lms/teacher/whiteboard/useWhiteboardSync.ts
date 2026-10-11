@@ -206,7 +206,10 @@ export function useWhiteboardSync(
       window.clearTimeout(inkTimerRef.current);
       inkTimerRef.current = null;
     }
-    inkAbortRef.current?.abort();
+    // Drop the in-flight ink request without aborting it. Aborting shows up
+    // as a failed POST in DevTools, and the stroke is saved by the board push.
+    inkAbortRef.current = null;
+    inkSendingRef.current = false;
 
     if (pushTimerRef.current != null) window.clearTimeout(pushTimerRef.current);
     pushTimerRef.current = window.setTimeout(() => {
@@ -246,7 +249,7 @@ export function useWhiteboardSync(
   }, [buildBody]);
 
   // ============================================================
-  // LIVE INK (უცვლელი)
+  // LIVE INK
   // ============================================================
   const handleLiveStroke = useCallback(
     (stroke: { points: number[]; color: string; width: number }) => {
@@ -268,17 +271,46 @@ export function useWhiteboardSync(
           inkSendingRef.current = true;
           inkQueuedRef.current = false;
           inkSentCountRef.current = base + points.length;
-          const controller = new AbortController();
-          inkAbortRef.current = controller;
-          const killer = window.setTimeout(() => controller.abort(), 2500);
+          const ticket = {};
+          inkAbortRef.current = ticket;
           const rewind = () => {
             if (inkSeqRef.current !== seq) return;
             if (inkSentCountRef.current > base) inkSentCountRef.current = base;
           };
+          let finished = false;
+          let killer = 0;
+          const finish = (failed: boolean) => {
+            if (finished) return;
+            finished = true;
+            window.clearTimeout(killer);
+            if (failed) rewind();
+            if (inkAbortRef.current !== ticket) return;
+            inkAbortRef.current = null;
+            inkSendingRef.current = false;
+            if (inkSeqRef.current !== seq) return;
+            if (inkQueuedRef.current) {
+              inkQueuedRef.current = false;
+              send();
+              return;
+            }
+            const pending = liveStrokeRef.current;
+            if (
+              pending &&
+              pending.points.length - inkSentCountRef.current >= 2 &&
+              inkTimerRef.current == null
+            ) {
+              inkTimerRef.current = window.setTimeout(() => {
+                inkTimerRef.current = null;
+                send();
+              }, 20);
+            }
+          };
+          // Unblock the next chunk if the server is slow, but let this POST
+          // finish. Aborting it is what shows a red canceled request.
+          killer = window.setTimeout(() => finish(true), 2500);
           void fetch("/api/teacher-board", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            signal: controller.signal,
             body: JSON.stringify({
               type: "ink",
               points,
@@ -290,33 +322,8 @@ export function useWhiteboardSync(
               inkSeq: seq,
             }),
           })
-            .then((res) => {
-              if (!res.ok) rewind();
-            })
-            .catch(() => rewind())
-            .finally(() => {
-              window.clearTimeout(killer);
-              if (inkAbortRef.current !== controller) return;
-              inkAbortRef.current = null;
-              inkSendingRef.current = false;
-              if (inkSeqRef.current !== seq) return;
-              if (inkQueuedRef.current) {
-                inkQueuedRef.current = false;
-                send();
-                return;
-              }
-              const pending = liveStrokeRef.current;
-              if (
-                pending &&
-                pending.points.length - inkSentCountRef.current >= 2 &&
-                inkTimerRef.current == null
-              ) {
-                inkTimerRef.current = window.setTimeout(() => {
-                  inkTimerRef.current = null;
-                  send();
-                }, 20);
-              }
-            });
+            .then((res) => finish(!res.ok))
+            .catch(() => finish(true));
         };
         send();
       }, 20);

@@ -40,6 +40,7 @@ type Bus = {
   polling: boolean;
   instanceId: string;
   listenStarted: boolean;
+  listenReady: boolean;
   listenClient: Client | null;
   client?: { end: () => Promise<void> } | null;
 };
@@ -83,6 +84,7 @@ function getBus(): Bus {
       polling: false,
       instanceId: crypto.randomUUID(),
       listenStarted: false,
+      listenReady: false,
       listenClient: null,
     };
   }
@@ -94,6 +96,7 @@ function getBus(): Bus {
   if (bus.polling === undefined) bus.polling = false;
   if (!bus.instanceId) bus.instanceId = crypto.randomUUID();
   if (bus.listenStarted === undefined) bus.listenStarted = false;
+  if (bus.listenReady === undefined) bus.listenReady = false;
   if (bus.listenClient === undefined) bus.listenClient = null;
   if (bus.client) {
     const leftover = bus.client;
@@ -287,6 +290,17 @@ export async function broadcastTeacherBoard(notice: Record<string, unknown>) {
     payload = JSON.stringify({ ...minimal, needsFetch: true });
     if (payload.length > NOTIFY_LIMIT) return;
   }
+  const bus = getBus();
+  // Live ink fires many times a second. The app pool only has two connections,
+  // so notify on the long-lived listen socket and leave the pool for saves.
+  if (bus.listenReady && bus.listenClient) {
+    try {
+      await bus.listenClient.query('SELECT pg_notify($1, $2)', ['teacher_board', payload]);
+      return;
+    } catch {
+      /* Fall through to the pool if the listen socket dropped. */
+    }
+  }
   await prisma.$queryRaw`SELECT pg_notify('teacher_board', ${payload})`;
 }
 
@@ -425,20 +439,31 @@ async function connectListen() {
   const client = createListenClient();
   if (!client) return;
   bus.listenClient = client;
+  bus.listenReady = false;
   client.on('notification', (message) => {
     if (message.channel !== 'teacher_board' || !message.payload) return;
     void deliverBoardNotice(message.payload);
   });
   client.on('error', () => {
-    if (getBus().listenClient === client) getBus().listenClient = null;
+    const current = getBus();
+    if (current.listenClient === client) {
+      current.listenClient = null;
+      current.listenReady = false;
+    }
     void client.end().catch(() => undefined);
     setTimeout(() => void connectListen(), 1000);
   });
   try {
     await client.connect();
     await client.query('LISTEN teacher_board');
+    const current = getBus();
+    if (current.listenClient === client) current.listenReady = true;
   } catch {
-    if (getBus().listenClient === client) getBus().listenClient = null;
+    const current = getBus();
+    if (current.listenClient === client) {
+      current.listenClient = null;
+      current.listenReady = false;
+    }
     void client.end().catch(() => undefined);
     setTimeout(() => void connectListen(), 1000);
   }
