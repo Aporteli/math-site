@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import type { Prisma } from '@prisma/client';
-import { prisma } from '@/lib/prisma';
-import { teacherBoardUserId } from '@/lib/teacher-board/actor';
+import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import { teacherBoardUserId } from "@/lib/teacher-board/actor";
 import {
   boardRevision,
   broadcastTeacherBoard,
@@ -9,10 +9,10 @@ import {
   publishTeacherBoardInk,
   publishTeacherBoardLaser,
   readLiveTeacherBoard,
-} from '@/lib/teacher-board/bus';
+} from "@/lib/teacher-board/bus";
 
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function isPages(value: unknown): value is unknown[][] {
   return Array.isArray(value) && value.every((page) => Array.isArray(page));
@@ -28,11 +28,16 @@ export async function GET(req: Request) {
     select: { pages: true, currentPageIndex: true, revision: true },
   });
   const liveRev = live && isPages(live.pages) ? live.revision : 0;
-  const dbRev = record && isPages(record.pages) ? boardRevision(record.revision) : 0;
+  const dbRev =
+    record && isPages(record.pages) ? boardRevision(record.revision) : 0;
 
   if (live && isPages(live.pages) && liveRev >= dbRev && liveRev > 0) {
     return NextResponse.json({
-      board: { pages: live.pages, currentPageIndex: live.currentPageIndex, revision: liveRev },
+      board: {
+        pages: live.pages,
+        currentPageIndex: live.currentPageIndex,
+        revision: liveRev,
+      },
     });
   }
 
@@ -52,6 +57,13 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const userId = await teacherBoardUserId(req);
   if (!userId) return NextResponse.json({ ok: false }, { status: 401 });
+  console.log("[POST] userId from token =", JSON.stringify(userId));
+
+  const userById = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true },
+  });
+  console.log("[POST] user found by id =", userById);
 
   let body: {
     type?: unknown;
@@ -71,44 +83,70 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
-  const clientId = typeof body.clientId === 'string' ? body.clientId.slice(0, 64) : '';
-  const inkSeq = typeof body.inkSeq === 'number' && Number.isFinite(body.inkSeq) ? body.inkSeq : undefined;
-  if (body.type === 'laser') {
+  const clientId =
+    typeof body.clientId === "string" ? body.clientId.slice(0, 64) : "";
+  const inkSeq =
+    typeof body.inkSeq === "number" && Number.isFinite(body.inkSeq)
+      ? body.inkSeq
+      : undefined;
+  if (body.type === "laser") {
     const pageIndex =
-      typeof body.pageIndex === 'number' && Number.isFinite(body.pageIndex)
+      typeof body.pageIndex === "number" && Number.isFinite(body.pageIndex)
         ? Math.max(0, Math.floor(body.pageIndex))
         : 0;
     const raw = body.point;
     const point =
       raw &&
-      typeof raw === 'object' &&
-      typeof (raw as { x?: unknown }).x === 'number' &&
-      typeof (raw as { y?: unknown }).y === 'number'
+      typeof raw === "object" &&
+      typeof (raw as { x?: unknown }).x === "number" &&
+      typeof (raw as { y?: unknown }).y === "number"
         ? { x: (raw as { x: number }).x, y: (raw as { y: number }).y }
         : null;
     publishTeacherBoardLaser({ userId, clientId, point, pageIndex });
-    void broadcastTeacherBoard({ kind: 'laser', userId, clientId, point, pageIndex }).catch(() => undefined);
+    void broadcastTeacherBoard({
+      kind: "laser",
+      userId,
+      clientId,
+      point,
+      pageIndex,
+    }).catch(() => undefined);
     return NextResponse.json({ ok: true });
   }
 
-  if (body.type === 'ink') {
+  if (body.type === "ink") {
     const pageIndex =
-      typeof body.pageIndex === 'number' && Number.isFinite(body.pageIndex)
+      typeof body.pageIndex === "number" && Number.isFinite(body.pageIndex)
         ? Math.max(0, Math.floor(body.pageIndex))
         : 0;
     const points = Array.isArray(body.points)
-      ? body.points.filter((n): n is number => typeof n === 'number' && Number.isFinite(n)).slice(0, 20000)
+      ? body.points
+          .filter(
+            (n): n is number => typeof n === "number" && Number.isFinite(n),
+          )
+          .slice(0, 20000)
       : [];
-    const stroke = typeof body.stroke === 'string' ? body.stroke.slice(0, 32) : '#111111';
+    const stroke =
+      typeof body.stroke === "string" ? body.stroke.slice(0, 32) : "#111111";
     const strokeWidth =
-      typeof body.strokeWidth === 'number' && Number.isFinite(body.strokeWidth)
+      typeof body.strokeWidth === "number" && Number.isFinite(body.strokeWidth)
         ? Math.min(64, Math.max(0.5, body.strokeWidth))
         : 2;
     const base =
-      typeof body.base === 'number' && Number.isFinite(body.base) ? Math.max(0, Math.floor(body.base)) : 0;
-    publishTeacherBoardInk({ userId, clientId, pageIndex, points, stroke, strokeWidth, inkSeq, base });
+      typeof body.base === "number" && Number.isFinite(body.base)
+        ? Math.max(0, Math.floor(body.base))
+        : 0;
+    publishTeacherBoardInk({
+      userId,
+      clientId,
+      pageIndex,
+      points,
+      stroke,
+      strokeWidth,
+      inkSeq,
+      base,
+    });
     void broadcastTeacherBoard({
-      kind: 'ink',
+      kind: "ink",
       userId,
       clientId,
       pageIndex,
@@ -121,11 +159,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (!isPages(body.pages)) return NextResponse.json({ ok: false }, { status: 400 });
+  if (!isPages(body.pages))
+    return NextResponse.json({ ok: false }, { status: 400 });
 
-  const safeIndex = typeof body.currentPageIndex === 'number' && Number.isFinite(body.currentPageIndex)
-    ? Math.max(0, Math.floor(body.currentPageIndex))
-    : 0;
+  const safeIndex =
+    typeof body.currentPageIndex === "number" &&
+    Number.isFinite(body.currentPageIndex)
+      ? Math.max(0, Math.floor(body.currentPageIndex))
+      : 0;
 
   const revision = publishLiveTeacherBoard({
     userId,
@@ -137,10 +178,16 @@ export async function POST(req: Request) {
   try {
     await persistTeacherBoard(userId, body.pages, safeIndex, revision);
   } catch (error) {
-    console.error('Failed to save teacher board', error);
+    console.error("Failed to save teacher board", error);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
-  await broadcastTeacherBoard({ kind: 'board', userId, clientId, revision, inkSeq }).catch(() => undefined);
+  await broadcastTeacherBoard({
+    kind: "board",
+    userId,
+    clientId,
+    revision,
+    inkSeq,
+  }).catch(() => undefined);
 
   return NextResponse.json({ ok: true, revision });
 }
@@ -154,7 +201,12 @@ async function persistTeacherBoard(
   const stored = pages as Prisma.InputJsonValue;
   await prisma.teacherBoard.upsert({
     where: { userId },
-    create: { userId, pages: stored, currentPageIndex, revision: BigInt(revision) },
+    create: {
+      userId,
+      pages: stored,
+      currentPageIndex,
+      revision: BigInt(revision),
+    },
     update: { pages: stored, currentPageIndex, revision: BigInt(revision) },
   });
 }
