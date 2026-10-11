@@ -10,6 +10,10 @@ export function meetApiConfigured(): boolean {
   );
 }
 
+export function meetClientConfigured(): boolean {
+  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+}
+
 export function miroApiConfigured(): boolean {
   return Boolean(process.env.MIRO_ACCESS_TOKEN);
 }
@@ -37,8 +41,9 @@ async function readError(response: Response): Promise<string> {
   return publicError(response.status, body);
 }
 
-async function meetAccessToken(): Promise<{ ok: true; token: string } | { ok: false; error: string }> {
-  const refreshToken = process.env.GOOGLE_MEET_REFRESH_TOKEN;
+async function meetAccessToken(
+  refreshToken: string,
+): Promise<{ ok: true; token: string } | { ok: false; error: string }> {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   if (!refreshToken || !clientId || !clientSecret) {
@@ -66,10 +71,10 @@ async function meetAccessToken(): Promise<{ ok: true; token: string } | { ok: fa
   return { ok: true, token: payload.access_token };
 }
 
-export async function createMeetSpace(): Promise<
-  { ok: true; meetUrl: string; meetSpaceName: string } | { ok: false; error: string }
-> {
-  const access = await meetAccessToken();
+export async function createMeetSpace(
+  refreshToken: string,
+): Promise<{ ok: true; meetUrl: string; meetSpaceName: string } | { ok: false; error: string }> {
+  const access = await meetAccessToken(refreshToken);
   if (!access.ok) return access;
 
   const response = await fetch('https://meet.googleapis.com/v2/spaces', {

@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
-import { prisma } from '@/lib/prisma';
-import { requireRole } from '@/lib/auth/session';
-import type { Locale } from '@/i18n/config';
+import { MeetConnectPanel } from '@/components/lms/teacher/MeetConnectPanel';
 import { TeacherStudentsWorkspace } from '@/components/lms/teacher/students-workspace/TeacherStudentsWorkspace';
+import type { Locale } from '@/i18n/config';
+import { requireRole } from '@/lib/auth/session';
+import { meetConnectConfigured, parseMeetNotice } from '@/lib/lesson-room/meet-connect';
+import { readMeetConnection } from '@/lib/lesson-room/meet-connect-flow';
+import { prisma } from '@/lib/prisma';
+
 type PageProps = {
   params: Promise<{ locale: Locale }>;
+  searchParams: Promise<{ meet?: string | string[] }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -14,9 +19,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function TeacherStudentsPage({ params }: PageProps) {
+export default async function TeacherStudentsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
+  const { meet } = await searchParams;
   const session = await requireRole(locale, ['TEACHER', 'ADMIN']);
+  const meetConnection = await readMeetConnection(session.user.id);
 
   const teacherCourses = await prisma.course.findMany({
     where: {
@@ -142,6 +149,12 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-[2000px]">
+      <MeetConnectPanel
+        locale={locale}
+        connection={meetConnection}
+        notice={parseMeetNotice(meet)}
+        configured={meetConnectConfigured()}
+      />
       <TeacherStudentsWorkspace
         initialStudents={studentsList}
         courses={coursesSimple}

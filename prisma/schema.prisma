@@ -120,6 +120,8 @@ model User {
   whiteboardsAsTeacher WhiteboardAssignment[] @relation("WhiteboardTeacher")
   journalEvents        JournalEvent[]
   teacherBoard         TeacherBoard?
+  teacherMeetCredential TeacherMeetCredential?
+  teacherMeetConnectState TeacherMeetConnectState?
 
   paymentsMade         Payment[] @relation("StudentPayments")
   paymentsRecorded     Payment[] @relation("PaymentRecorder")
@@ -495,6 +497,33 @@ model TeacherBoard {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("teacher_boards")
+}
+
+model TeacherMeetCredential {
+  userId          String   @id
+  refreshTokenEnc String   @db.Text
+  googleSubject   String?  @db.VarChar(255)
+  googleEmail     String?  @db.VarChar(320)
+  scope           String   @db.VarChar(500)
+  connectedAt     DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("teacher_meet_credentials")
+}
+
+model TeacherMeetConnectState {
+  userId    String   @id
+  stateHash String   @unique
+  locale    String   @db.VarChar(8)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@map("teacher_meet_connect_states")
 }
 
 model CourseWhiteboard {

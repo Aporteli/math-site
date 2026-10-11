@@ -65,6 +65,9 @@ function hasCurrentDelegates(client: PrismaClient | undefined) {
   const lessonRoom = (client as { courseLessonRoom?: { findUnique?: unknown } }).courseLessonRoom;
   if (typeof lessonRoom?.findUnique !== 'function') return false;
 
+  const meetCredential = (client as { teacherMeetCredential?: { findUnique?: unknown } }).teacherMeetCredential;
+  if (typeof meetCredential?.findUnique !== 'function') return false;
+
   const dmmf = (
     client as {
       _runtimeDataModel?: {
