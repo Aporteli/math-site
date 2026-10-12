@@ -6,8 +6,6 @@ interface TeacherStudentsHeroAsideProps {
   studentsCount: number;
   cardsCount: number;
   canSendCard: boolean;
-  meetPending: boolean;
-  meetMessage: string | null;
   onStartClassCall: () => void;
   onOpenAssignModal: () => void;
 }
@@ -16,8 +14,6 @@ export function TeacherStudentsHeroAside({
   studentsCount,
   cardsCount,
   canSendCard,
-  meetPending,
-  meetMessage,
   onStartClassCall,
   onOpenAssignModal,
 }: TeacherStudentsHeroAsideProps) {
@@ -38,8 +34,7 @@ export function TeacherStudentsHeroAside({
         <button
           type="button"
           onClick={onStartClassCall}
-          disabled={meetPending}
-          className="inline-flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-box bg-[#465D73] px-3 py-3 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98] disabled:cursor-wait disabled:opacity-70">
+          className="inline-flex min-w-0 cursor-pointer items-center justify-center gap-2 rounded-box bg-[#465D73] px-3 py-3 text-sm font-bold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_5px_rgba(70,93,115,0.2)] transition-all duration-200 hover:bg-[#526C85] hover:shadow-[0_4px_12px_rgba(70,93,115,0.27)] active:scale-[0.98]">
           <Video className="size-4 shrink-0" />
           <span className="truncate">გაკვეთილი</span>
         </button>
@@ -54,11 +49,6 @@ export function TeacherStudentsHeroAside({
           <span className="truncate">ბარათი</span>
         </button>
       </div>
-      {meetMessage ? (
-        <p role="alert" className="text-xs font-bold text-red-700">
-          {meetMessage}
-        </p>
-      ) : null}
     </div>
   );
 }
