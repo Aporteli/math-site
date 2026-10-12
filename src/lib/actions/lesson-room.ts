@@ -163,7 +163,10 @@ async function persistMeetIfAbsent(
   }
 }
 
-export async function createLessonMeetAction(courseId: string): Promise<ActionResult> {
+export async function createLessonMeetAction(
+  courseId: string,
+  options?: { replace?: boolean },
+): Promise<ActionResult> {
   try {
     const access = await resolveAccess(courseId);
     const teacherId = access.teacherId;
@@ -171,8 +174,11 @@ export async function createLessonMeetAction(courseId: string): Promise<ActionRe
       return { ok: false, error: 'Meet-ის შექმნა მხოლოდ მასწავლებელს შეუძლია.' };
     }
 
-    const existing = await savedMeetRoom(courseId, access);
-    if (existing) return { ok: true, room: existing };
+    const replace = options?.replace === true;
+    if (!replace) {
+      const existing = await savedMeetRoom(courseId, access);
+      if (existing) return { ok: true, room: existing };
+    }
 
     const credential = await prisma.teacherMeetCredential.findUnique({
       where: { userId: teacherId },
@@ -191,7 +197,19 @@ export async function createLessonMeetAction(courseId: string): Promise<ActionRe
     const created = await createMeetSpace(refreshToken);
     if (!created.ok) return { ok: false, error: created.error };
 
-    await persistMeetIfAbsent(courseId, created);
+    if (replace) {
+      await prisma.courseLessonRoom.upsert({
+        where: { courseId },
+        update: { meetUrl: created.meetUrl, meetSpaceName: created.meetSpaceName },
+        create: {
+          courseId,
+          meetUrl: created.meetUrl,
+          meetSpaceName: created.meetSpaceName,
+        },
+      });
+    } else {
+      await persistMeetIfAbsent(courseId, created);
+    }
     const room = await savedMeetRoom(courseId, access);
     if (!room) return { ok: false, error: 'Google Meet-ის შექმნა ვერ მოხერხდა.' };
     return { ok: true, room };

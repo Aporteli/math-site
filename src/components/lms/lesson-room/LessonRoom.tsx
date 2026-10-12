@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2, Video, X } from 'lucide-react';
 import {
   createLessonMeetAction,
@@ -24,6 +24,7 @@ export function LessonRoom({ courseId, courseTitle, onClose }: LessonRoomProps) 
   const [pending, setPending] = useState(false);
   const [meetDraft, setMeetDraft] = useState('');
   const [miroDraft, setMiroDraft] = useState('');
+  const replaceInFlight = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,6 +140,21 @@ export function LessonRoom({ courseId, courseTitle, onClose }: LessonRoomProps) 
                   className="rounded-box border border-hairline px-3 py-2 text-sm font-bold disabled:opacity-50">
                   Meet-ის შექმნა
                 </button>
+                {room.meetUrl && room.meetApiReady ? (
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => {
+                      if (replaceInFlight.current) return;
+                      replaceInFlight.current = true;
+                      void run(() => createLessonMeetAction(courseId, { replace: true })).finally(() => {
+                        replaceInFlight.current = false;
+                      });
+                    }}
+                    className="rounded-box border border-hairline px-3 py-2 text-sm font-bold disabled:opacity-50">
+                    ახალი Meet-ის შექმნა
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   disabled={pending || !room.miroApiReady}
