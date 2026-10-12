@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Video, X } from 'lucide-react';
+import { Loader2, TriangleAlert, Video, X } from 'lucide-react';
 import {
   createLessonMeetAction,
   createLessonMiroAction,
@@ -86,6 +86,11 @@ export function LessonRoom({ courseId, courseTitle, onClose }: LessonRoomProps) 
               <p className="text-xs text-muted">
                 Meet იხსნება ახალ ფანჯარაში. Google არ იძლევა შეხვედრის ჩასმას ამ გვერდზე.
               </p>
+              {room?.meetUrl ? (
+                <p className="mt-1 text-sm font-bold text-ink">ამ ჯგუფისთვის Meet-ის ბმული უკვე შექმნილია</p>
+              ) : room ? (
+                <p className="mt-1 text-sm font-bold text-muted">ამ ჯგუფისთვის Meet-ის ბმული ჯერ არ შექმნილა</p>
+              ) : null}
             </div>
             {room?.meetUrl ? (
               <a
@@ -96,9 +101,7 @@ export function LessonRoom({ courseId, courseTitle, onClose }: LessonRoomProps) 
                 <Video className="size-4" />
                 Meet-ში შესვლა
               </a>
-            ) : (
-              <p className="text-sm text-muted">Meet-ის ბმული ჯერ არ არის.</p>
-            )}
+            ) : null}
           </section>
 
           {room?.canWrite ? (
@@ -154,6 +157,12 @@ export function LessonRoom({ courseId, courseTitle, onClose }: LessonRoomProps) 
                     className="rounded-box border border-hairline px-3 py-2 text-sm font-bold disabled:opacity-50">
                     ახალი Meet-ის შექმნა
                   </button>
+                ) : null}
+                {room.meetUrl && room.meetApiReady ? (
+                  <p className="flex w-full items-start gap-1.5 text-xs font-bold text-red-700">
+                    <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+                    ახალი Meet-ის შექმნა შენახულ ბმულს ჩაანაცვლებს. მოსწავლეებმა ახალი ბმული უნდა გამოიყენონ.
+                  </p>
                 ) : null}
                 <button
                   type="button"
