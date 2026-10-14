@@ -5,7 +5,7 @@ import type { VirtualScheduleEvent } from '@/lib/actions/journal-schedule';
 import { COLOR_DOT, WEEKDAY_LABELS } from '../constants';
 import { isSameDay } from '../journal-time';
 import type { EventClickHandler, JournalEvent, OpenVirtualHandler } from '../types';
-import { virtualChipClass, virtualStudentsLabel, virtualTitle } from '../virtual-labels';
+import { virtualChipClass, virtualTitle } from '../virtual-labels';
 
 interface ScheduleViewProps {
   eventsByDate: Record<string, JournalEvent[]>;
@@ -87,7 +87,14 @@ export function ScheduleView({
                       className={`flex items-center gap-4 p-3 rounded-box cursor-pointer transition-colors hover:brightness-105 ${virtualChipClass(v.source)}`}>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h4 className="text-xs font-semibold truncate">{virtualTitle(v)}</h4>
+                          <h4
+                            className={`text-xs font-semibold truncate ${
+                              v.source === 'individual' && (v.skippedStudentIds ?? []).includes(v.students[0]?.id ?? '')
+                              ? 'rounded-box bg-red-600 px-0.5 text-white'
+                              : ''
+                            }`}>
+                            {virtualTitle(v)}
+                          </h4>
                           {v.students.length > 1 ? (
                             <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] opacity-80 shrink-0">
                               <Users className="size-3" />
@@ -96,8 +103,20 @@ export function ScheduleView({
                           ) : null}
                         </div>
                         {v.source !== 'individual' ? (
-                          <p className="mt-1 truncate text-[11px] opacity-80 font-medium">{virtualStudentsLabel(v)}</p>
+                          <p className="mt-1 truncate text-[11px] font-medium">
+                            {v.students.map((s, i) => (
+                              <span
+                                key={s.id}
+                                className={
+                                  (v.skippedStudentIds ?? []).includes(s.id) ? 'rounded-box bg-red-600 px-0.5 text-white' : 'opacity-80'
+                                }>
+                                {s.name}
+                                {i < v.students.length - 1 ? ', ' : ''}
+                              </span>
+                            ))}
+                          </p>
                         ) : null}
+                        {v.comment ? <p className="mt-1 truncate text-[11px] opacity-80">{v.comment}</p> : null}
                         <div className="flex gap-3 mt-1 text-[11px] opacity-75 font-medium">
                           <span className="flex items-center gap-1 tabular-nums">
                             <Clock className="size-3" /> {v.startTime} - {v.endTime}

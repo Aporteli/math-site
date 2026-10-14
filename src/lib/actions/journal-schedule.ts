@@ -19,6 +19,8 @@ export interface VirtualScheduleEvent {
   dayOfWeek: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   startTime: string;
   endTime: string;
+  skippedStudentIds?: string[];
+  comment?: string;
 }
 
 function sortStudents(students: VirtualScheduleStudent[]): VirtualScheduleStudent[] {

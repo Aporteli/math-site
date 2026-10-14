@@ -1,3 +1,4 @@
+import type { JournalLessonMark } from '@/lib/actions/journal-lesson-marks';
 import type { VirtualScheduleEvent } from '@/lib/actions/journal-schedule';
 import { MONTH_LABELS } from './constants';
 import { isEventOnDay, toDateKey } from './journal-time';
@@ -104,21 +105,26 @@ export function buildVirtualByDate(
   weekGrid: CalendarCell[],
   currentDate: Date,
   today: Date,
-  todayKey: string,
+  marks: Record<string, JournalLessonMark>,
 ): Record<string, VirtualScheduleEvent[]> {
   const map: Record<string, VirtualScheduleEvent[]> = {};
   const targetDates = targetDatesForView(view, monthGrid, weekGrid, currentDate, today);
 
   for (const d of targetDates) {
     const dKey = toDateKey(d);
-
-    /* წარსულ დღეებში არ ვაჩვენებთ */
-    if (dKey < todayKey) continue;
-
     const jsDay = d.getDay();
     const dow = jsDay === 0 ? 7 : jsDay;
 
-    const matches = virtualEvents.filter((s) => s.dayOfWeek === dow);
+    const matches = virtualEvents
+      .filter((s) => s.dayOfWeek === dow)
+      .map((s) => {
+        const mark = marks[`${s.id}|${dKey}`];
+        return {
+          ...s,
+          skippedStudentIds: mark?.skippedStudentIds ?? [],
+          comment: mark?.comment ?? '',
+        };
+      });
     if (matches.length > 0) {
       matches.sort((a, b) => a.startTime.localeCompare(b.startTime));
       map[dKey] = matches;

@@ -13,7 +13,7 @@ import type {
   OpenCreateHandler,
   OpenVirtualHandler,
 } from '../types';
-import { virtualChipClass, virtualStudentsLabel, virtualTitle, virtualTooltip } from '../virtual-labels';
+import { virtualChipClass, virtualTitle, virtualTooltip } from '../virtual-labels';
 
 interface HourlyColumnProps {
   date: Date;
@@ -88,14 +88,21 @@ export function HourlyColumn({
           <div
             key={v.id}
             style={{ top: `${top}px`, height: `${height}px` }}
-            title={virtualTooltip(v)}
+            title={[virtualTooltip(v), v.comment].filter(Boolean).join(' — ')}
             onClick={(e) => {
               e.stopPropagation();
               onOpenVirtual(e.currentTarget, v, dateKey);
             }}
             className={`absolute inset-x-1 z-[5] overflow-hidden rounded-box p-1.5 text-xs leading-tight cursor-pointer active:scale-[0.98] ${virtualChipClass(v.source)}`}>
             <div className="flex items-center gap-1 font-semibold">
-              <span className="truncate text-[12px]">{virtualTitle(v)}</span>
+              <span
+                className={`truncate text-[12px] ${
+                  v.source === 'individual' && (v.skippedStudentIds ?? []).includes(v.students[0]?.id ?? '')
+                  ? 'rounded-box bg-red-600 px-0.5 text-white'
+                  : ''
+                }`}>
+                {virtualTitle(v)}
+              </span>
               {v.students.length > 1 ? (
                 <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] opacity-80 shrink-0">
                   <Users className="size-3" />
@@ -107,8 +114,18 @@ export function HourlyColumn({
               {v.startTime} – {v.endTime}
             </div>
             {v.source !== 'individual' ? (
-              <div className="text-[10px] opacity-70 font-normal truncate mt-0.5">{virtualStudentsLabel(v)}</div>
+              <div className="text-[10px] font-normal truncate mt-0.5">
+                {v.students.map((s, i) => (
+                  <span
+                    key={s.id}
+                    className={(v.skippedStudentIds ?? []).includes(s.id) ? 'rounded-box bg-red-600 px-0.5 text-white' : 'opacity-70'}>
+                    {s.name}
+                    {i < v.students.length - 1 ? ', ' : ''}
+                  </span>
+                ))}
+              </div>
             ) : null}
+            {v.comment ? <div className="mt-0.5 truncate text-[10px] font-normal opacity-80">{v.comment}</div> : null}
           </div>
         );
       })}

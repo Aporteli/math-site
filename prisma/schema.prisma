@@ -119,6 +119,7 @@ model User {
   whiteboardsAsStudent WhiteboardAssignment[] @relation("WhiteboardStudent")
   whiteboardsAsTeacher WhiteboardAssignment[] @relation("WhiteboardTeacher")
   journalEvents        JournalEvent[]
+  journalLessonMarks   JournalLessonMark[]
   teacherBoard         TeacherBoard?
   teacherMeetCredential TeacherMeetCredential?
   teacherMeetConnectState TeacherMeetConnectState?
@@ -575,6 +576,22 @@ model JournalEvent {
 
   @@index([userId, date])
   @@map("journal_events")
+}
+
+model JournalLessonMark {
+  id                String   @id @default(cuid())
+  teacherId         String
+  eventId           String
+  date              String
+  skippedStudentIds String[] @default([])
+  comment           String   @default("")
+  updatedAt         DateTime @updatedAt
+
+  teacher User @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, eventId, date])
+  @@index([teacherId])
+  @@map("journal_lesson_marks")
 }
 
 model HomeGroup {

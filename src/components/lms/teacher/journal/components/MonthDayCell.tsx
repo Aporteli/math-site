@@ -81,7 +81,22 @@ export function MonthDayCell({
             }}
             className={`relative truncate rounded-box px-1.5 py-0.5 text-[10px] font-medium leading-tight shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-[0.98] ${virtualChipClass(v.source)}`}>
             <span className="opacity-70 font-normal tabular-nums shrink-0">{v.startTime}</span>
-            <span className="truncate">{virtualTitle(v)}</span>
+            <span
+              className={`truncate ${
+                v.source === 'individual' && (v.skippedStudentIds ?? []).includes(v.students[0]?.id ?? '')
+                ? 'truncate rounded-box bg-red-600 px-0.5 text-white'
+                  : ''
+              }`}>
+              {virtualTitle(v)}
+            </span>
+            {v.source !== 'individual' && (v.skippedStudentIds ?? []).length > 0 ? (
+              <span className="truncate font-semibold text-red-700">
+                {v.students
+                  .filter((s) => (v.skippedStudentIds ?? []).includes(s.id))
+                  .map((s) => s.name)
+                  .join(', ')}
+              </span>
+            ) : null}
             {v.students.length > 1 ? (
               <span className="ml-auto inline-flex items-center gap-0.5 text-[10px] opacity-80 shrink-0">
                 <Users className="size-2.5" />

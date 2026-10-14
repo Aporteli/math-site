@@ -1,7 +1,8 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import type { VirtualScheduleEvent } from '@/lib/actions/journal-schedule';
-import { MONTH_LABELS, WEEKDAY_LABELS } from '../constants';
+import { HOUR_HEIGHT, MONTH_LABELS, WEEKDAY_LABELS } from '../constants';
 import { isSameDay, toDateKey } from '../journal-time';
 import type {
   DragPreview,
@@ -43,9 +44,23 @@ export function DayView({
   onEventClick,
 }: DayViewProps) {
   const dateKey = toDateKey(currentDate);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const minutes = today.getHours() * 60 + today.getMinutes();
+    const lineTop = 56 + (minutes / 60) * HOUR_HEIGHT;
+    const align = () => {
+      el.scrollTop = Math.max(0, lineTop - el.clientHeight / 2);
+    };
+    align();
+    const id = requestAnimationFrame(align);
+    return () => cancelAnimationFrame(id);
+  }, [today]);
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar relative">
+    <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto thin-scrollbar relative">
       <div className="grid grid-cols-[3.5rem_1fr] min-w-full">
         <div className="sticky top-0 z-30 bg-paper/95 backdrop-blur-xs border-b border-r border-hairline h-14" />
         <div className="sticky top-0 z-30 bg-paper/95 backdrop-blur-xs py-2.5 px-4 flex items-center gap-3 border-b border-hairline h-14">

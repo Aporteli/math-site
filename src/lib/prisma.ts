@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
-const PRISMA_GENERATION = 'livekit-diagnostics-v1';
+const PRISMA_GENERATION = 'journal-lesson-marks-v1';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -67,6 +67,9 @@ function hasCurrentDelegates(client: PrismaClient | undefined) {
 
   const meetCredential = (client as { teacherMeetCredential?: { findUnique?: unknown } }).teacherMeetCredential;
   if (typeof meetCredential?.findUnique !== 'function') return false;
+
+  const lessonMark = (client as { journalLessonMark?: { findMany?: unknown } }).journalLessonMark;
+  if (typeof lessonMark?.findMany !== 'function') return false;
 
   const dmmf = (
     client as {

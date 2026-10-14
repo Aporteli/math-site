@@ -16,7 +16,8 @@ import { useJournalPopover } from './hooks/useJournalPopover';
 
 export function TeacherJournalWorkspace() {
   const { toggleSidebarDrawer } = useDashboardFrame();
-  const { events, setEvents, virtualEvents, participantGroups, participantsLoading } = useJournalData();
+  const { events, setEvents, virtualEvents, marks, saveLessonMark, participantGroups, participantsLoading } =
+    useJournalData();
   const {
     currentDate,
     view,
@@ -32,7 +33,7 @@ export function TeacherJournalWorkspace() {
     goToNext,
     goToToday,
     headerTitle,
-  } = useJournalCalendar(events, virtualEvents);
+  } = useJournalCalendar(events, virtualEvents, marks);
   const { dragPreview, didDragRef, handleEventPointerDown, handleEventPointerMove, handleEventPointerUp } =
     useJournalDrag(events, setEvents);
   const {
@@ -135,7 +136,7 @@ export function TeacherJournalWorkspace() {
         />
       )}
 
-      <VirtualLessonPopup virtualPopup={virtualPopup} setVirtualPopup={setVirtualPopup} />
+      <VirtualLessonPopup virtualPopup={virtualPopup} setVirtualPopup={setVirtualPopup} onSaveMark={saveLessonMark} />
       <EventPopover
         popover={popover}
         draft={draft}

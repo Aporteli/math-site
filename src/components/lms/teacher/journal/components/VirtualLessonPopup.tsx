@@ -10,10 +10,21 @@ import { virtualTitle } from '../virtual-labels';
 interface VirtualLessonPopupProps {
   virtualPopup: VirtualPopupState | null;
   setVirtualPopup: Dispatch<SetStateAction<VirtualPopupState | null>>;
+  onSaveMark: (eventId: string, dateKey: string, skippedStudentIds: string[], comment: string) => void;
 }
 
-export function VirtualLessonPopup({ virtualPopup, setVirtualPopup }: VirtualLessonPopupProps) {
+export function VirtualLessonPopup({ virtualPopup, setVirtualPopup, onSaveMark }: VirtualLessonPopupProps) {
   if (!virtualPopup) return null;
+
+  const skipped = virtualPopup.event.skippedStudentIds ?? [];
+  const comment = virtualPopup.event.comment ?? '';
+
+  function save(nextSkipped: string[], nextComment: string) {
+    setVirtualPopup((prev) =>
+      prev ? { ...prev, event: { ...prev.event, skippedStudentIds: nextSkipped, comment: nextComment } } : null,
+    );
+    onSaveMark(virtualPopup!.event.id, virtualPopup!.dateKey, nextSkipped, nextComment);
+  }
 
   return (
     <>
@@ -61,13 +72,35 @@ export function VirtualLessonPopup({ virtualPopup, setVirtualPopup }: VirtualLes
             <Users className="mt-0.5 size-3.5 shrink-0 text-brass-strong" />
             <div className="min-w-0 flex-1 space-y-1">
               <p className="text-[11px] font-bold text-muted">მოსწავლეები ({virtualPopup.event.students.length})</p>
-              {virtualPopup.event.students.map((s) => (
-                <p key={s.id} className="truncate text-xs font-medium text-ink">
-                  {s.name}
-                </p>
-              ))}
+              {virtualPopup.event.students.map((s) => {
+                const isSkipped = skipped.includes(s.id);
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => {
+                      const next = isSkipped ? skipped.filter((id) => id !== s.id) : [...skipped, s.id];
+                      save(next, comment);
+                    }}
+                    className={`block w-full cursor-pointer truncate text-left text-xs font-medium ${
+                      isSkipped ? 'text-ink' : 'text-ink'
+                    }`}>
+                    <span className={isSkipped ? 'rounded-box bg-red-600 px-0.5 text-white' : undefined}>{s.name}</span>
+                    </button>
+                );
+              })}
             </div>
           </div>
+          <textarea
+            value={comment}
+            rows={2}
+            placeholder="კომენტარი"
+            onChange={(e) =>
+              setVirtualPopup((prev) => (prev ? { ...prev, event: { ...prev.event, comment: e.target.value } } : null))
+            }
+            onBlur={(e) => save(skipped, e.target.value)}
+            className="w-full resize-none rounded-box border border-hairline bg-main px-2 py-1.5 text-xs text-ink outline-none"
+          />
         </div>
       </div>
     </>

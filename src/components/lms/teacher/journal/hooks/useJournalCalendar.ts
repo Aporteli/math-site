@@ -1,18 +1,21 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import type { JournalLessonMark } from '@/lib/actions/journal-lesson-marks';
 import type { VirtualScheduleEvent } from '@/lib/actions/journal-schedule';
 import { buildEventsByDate, buildHeaderTitle, buildMonthGrid, buildVirtualByDate, buildWeekGrid } from '../journal-calendar';
-import { toDateKey } from '../journal-time';
 import type { JournalEvent, ViewMode } from '../types';
 
-export function useJournalCalendar(events: JournalEvent[], virtualEvents: VirtualScheduleEvent[]) {
+export function useJournalCalendar(
+  events: JournalEvent[],
+  virtualEvents: VirtualScheduleEvent[],
+  marks: Record<string, JournalLessonMark>,
+) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [view, setView] = useState<ViewMode>('week');
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
 
   const today = useMemo(() => new Date(), []);
-  const todayKey = useMemo(() => toDateKey(today), [today]);
 
   const monthGrid = useMemo(() => buildMonthGrid(currentDate), [currentDate]);
   const weekGrid = useMemo(() => buildWeekGrid(currentDate), [currentDate]);
@@ -23,8 +26,8 @@ export function useJournalCalendar(events: JournalEvent[], virtualEvents: Virtua
   );
 
   const virtualByDate = useMemo(
-    () => buildVirtualByDate(virtualEvents, view, monthGrid, weekGrid, currentDate, today, todayKey),
-    [virtualEvents, view, monthGrid, weekGrid, currentDate, today, todayKey],
+    () => buildVirtualByDate(virtualEvents, view, monthGrid, weekGrid, currentDate, today, marks),
+    [virtualEvents, view, monthGrid, weekGrid, currentDate, today, marks],
   );
 
   function goToPrev() {
