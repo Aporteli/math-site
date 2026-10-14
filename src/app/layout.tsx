@@ -1,5 +1,6 @@
 import type { Viewport } from 'next';
 import './globals.css';
+import { ThemeInitScript, ThemeSync } from '@/components/layout/ThemeToggle';
 import { Noto_Sans_Georgian } from 'next/font/google';
 
 const notoGeorgian = Noto_Sans_Georgian({
@@ -24,7 +25,11 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${notoGeorgian.variable} ${notoGeorgian.className}`}
     >
+      <head>
+        <ThemeInitScript />
+      </head>
       <body className="flex min-h-screen flex-col bg-paper font-sans text-ink">
+        <ThemeSync />
         {children}
       </body>
     </html>

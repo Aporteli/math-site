@@ -1,32 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import {
+  applyTheme,
+  getAppliedTheme,
+  resolveTheme,
+  subscribeTheme,
+  themeInitScript,
+  type Theme,
+} from "@/components/layout/theme";
 
-const STORAGE_KEY = "theme";
-
-type Theme = "light" | "dark";
-
-function resolveInitialTheme(): Theme {
-  if (typeof window === "undefined") return "light";
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "light" || stored === "dark") return stored;
-  } catch {
-    // Ignore storage errors (private mode, disabled cookies).
-  }
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+/**
+ * Server render emits an executable script so the browser applies the theme
+ * while parsing <head>. The client render uses text/plain so React does not
+ * try to execute the script again during hydration.
+ */
+export function ThemeInitScript() {
+  return (
+    <script
+      type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: themeInitScript }}
+    />
+  );
 }
 
-function applyTheme(theme: Theme) {
-  document.documentElement.classList.toggle("dark", theme === "dark");
-  try {
-    localStorage.setItem(STORAGE_KEY, theme);
-  } catch {
-    // Ignore storage errors.
-  }
+/** Re-applies the theme after dev Strict Mode resets <html> to its JSX classes. */
+export function ThemeSync() {
+  useLayoutEffect(() => {
+    applyTheme(resolveTheme());
+  }, []);
+  return null;
 }
 
 export function ThemeToggle({
@@ -38,16 +43,15 @@ export function ThemeToggle({
 }) {
   const [theme, setTheme] = useState<Theme>("light");
 
-  useEffect(() => {
-    const initial = resolveInitialTheme();
-    setTheme(initial);
-    applyTheme(initial);
+  useLayoutEffect(() => {
+    const sync = () => setTheme(getAppliedTheme());
+    const unsubscribe = subscribeTheme(sync);
+    applyTheme(resolveTheme());
+    return unsubscribe;
   }, []);
 
   function toggle() {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    applyTheme(next);
+    applyTheme(getAppliedTheme() === "dark" ? "light" : "dark");
   }
 
   const isDark = theme === "dark";

@@ -305,7 +305,27 @@ body {
 }
 
 html {
-  background-color: var(--color-paper);
+  background-color: #fafafa;
+  color-scheme: light;
+}
+
+html.dark {
+  background-color: #161512;
+  color-scheme: dark;
+}
+
+/* Snap field fill and text when the theme class changes.
+   Border, outline, shadow, and opacity still animate for focus, hover, disabled, and validation. */
+input.transition,
+input.transition-colors,
+input.transition-all,
+textarea.transition,
+textarea.transition-colors,
+textarea.transition-all,
+select.transition,
+select.transition-colors,
+select.transition-all {
+  transition-property: border-color, outline-color, box-shadow, opacity;
 }
 
 /* Flip white card surfaces to the dark surface in dark mode. */
