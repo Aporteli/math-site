@@ -304,14 +304,49 @@ body {
   display: none; /* Chrome, Safari and Opera */
 }
 
+@property --theme-swap {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+@keyframes theme-swap-light {
+  from {
+    --theme-swap: 1;
+  }
+  to {
+    --theme-swap: 0;
+  }
+}
+
+@keyframes theme-swap-dark {
+  from {
+    --theme-swap: 1;
+  }
+  to {
+    --theme-swap: 0;
+  }
+}
+
 html {
   background-color: #fafafa;
   color-scheme: light;
+  animation: theme-swap-light 50ms step-end;
 }
 
 html.dark {
   background-color: #161512;
   color-scheme: dark;
+  animation: theme-swap-dark 50ms step-end;
+}
+
+/* While the theme class is switching, color-related transitions are instant.
+   After 50ms, hover, focus, active, disabled, and validation transitions run as usual. */
+.transition,
+.transition-colors,
+.transition-all,
+.transition-shadow {
+  transition-duration: calc(var(--tw-duration, 0.15s) * (1 - var(--theme-swap))) !important;
 }
 
 /* Snap field fill and text when the theme class changes.
