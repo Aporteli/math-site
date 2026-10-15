@@ -140,7 +140,11 @@ export async function POST(req: Request) {
     console.error('Failed to save teacher board', error);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
-  await broadcastTeacherBoard({ kind: 'board', userId, clientId, revision, inkSeq }).catch(() => undefined);
+  // Fire pg_notify without blocking the response. Same-instance SSE subscribers
+  // already received the update through publishLiveTeacherBoard (synchronous,
+  // in-memory dispatch above). The notify is only needed for cross-instance
+  // delivery, which is best-effort anyway.
+  void broadcastTeacherBoard({ kind: 'board', userId, clientId, revision, inkSeq }).catch(() => undefined);
 
   return NextResponse.json({ ok: true, revision });
 }

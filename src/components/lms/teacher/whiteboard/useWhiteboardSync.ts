@@ -288,6 +288,11 @@ export function useWhiteboardSync(boardState: WhiteboardState, persistence: Whit
     let watchdog = 0;
     let errorPull = 0;
     let streamGeneration = 0;
+    // Timestamp of the last SSE message (including server pings every 5 s).
+    // Used to skip the fallback poll while the stream is healthy — avoids
+    // hammering the DB connection pool unnecessarily, especially when multiple
+    // dashboard tabs are open at the same time.
+    let lastSseActivityAt = 0;
 
     const armWatchdog = () => {
       window.clearTimeout(watchdog);
@@ -318,6 +323,7 @@ export function useWhiteboardSync(boardState: WhiteboardState, persistence: Whit
       };
       next.onmessage = (ev) => {
         armWatchdog();
+        lastSseActivityAt = Date.now();
         if (ev.lastEventId.startsWith('r')) {
           const rev = Number(ev.lastEventId.slice(1));
           if (Number.isFinite(rev) && rev <= revisionRef.current) return;
@@ -405,8 +411,13 @@ export function useWhiteboardSync(boardState: WhiteboardState, persistence: Whit
       open();
     });
     const pollTimer = window.setInterval(() => {
-      if (!cancelled) void pull();
-    }, 1000);
+      // Only poll when the SSE stream has been silent for more than 8 s.
+      // The server heartbeats every 5 s, so a healthy connection keeps
+      // lastSseActivityAt fresh and this branch never runs. This prevents
+      // multiple open dashboard tabs from each firing a DB read every second
+      // and saturating the connection pool.
+      if (!cancelled && Date.now() - lastSseActivityAt > 8000) void pull();
+    }, 10000);
 
     return () => {
       cancelled = true;
