@@ -25,7 +25,8 @@ function createPrismaClient(): PrismaClient {
 
   const pool = new Pool({
     connectionString: url,
-    max: 2,
+    max: 5,          // Aiven free plan allows 20 connections; 5 here leaves room for
+    // the dedicated pg LISTEN client and for other potential server instances.
     idleTimeoutMillis: 5000,
     connectionTimeoutMillis: 5000,
     ssl: {
