@@ -14,6 +14,7 @@ import {
   whiteboardMessageMeta,
 } from '@/lib/livekit/diagnostics/whiteboard-message';
 import { chunkPayloadDetailed } from '../utils/chunk';
+import { noteSenderDeltaPublished } from '../../KonvaCanvas/diagnostics/mainLayerDrawProbe';
 
 const CONTENT_TYPES = new Set(['WHITEBOARD_DELTA', 'WHITEBOARD_FULL_SYNC', 'WHITEBOARD_PAGE_COUNT']);
 
@@ -90,6 +91,7 @@ export function usePublishDataSafe(room: Room | null): PublishDataSafe {
 
     const stamped = stampWhiteboardPayload(raw);
     const meta = whiteboardMessageMeta(stamped);
+    if (type === 'WHITEBOARD_DELTA' && meta.messageId) noteSenderDeltaPublished(meta.messageId);
     const traced = Boolean(meta.messageId) && shouldTraceWhiteboard(type);
     const ack = type === 'WHITEBOARD_ACK' && Boolean(meta.messageId);
 

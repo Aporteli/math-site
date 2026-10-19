@@ -12,6 +12,7 @@ import { beginWhiteboardFullSync, fullSyncKind, invalidateWhiteboardFullSync } f
 import { diffPageElements } from '../utils/whiteboard-delta';
 import { enqueueFreshFullSync } from '../utils/enqueue-fresh-sync';
 import type { PublishDataSafe } from './usePublishDataSafe';
+import { cancelSenderDeltaQueue, noteSenderDeltaQueueStart } from '../../KonvaCanvas/diagnostics/mainLayerDrawProbe';
 
 interface Options {
   courseId: string;
@@ -264,6 +265,7 @@ export function useWhiteboardState({ courseId, isTeacher, canDraw = false, room,
   const scheduleFlush = useCallback(() => {
     if (!canEditRef.current) return;
     dirtyRef.current = true;
+    noteSenderDeltaQueueStart();
     flushRef.current();
   }, []);
 
@@ -271,6 +273,7 @@ export function useWhiteboardState({ courseId, isTeacher, canDraw = false, room,
     if (flushingRef.current) return;
     flushingRef.current = true;
     void (async () => {
+      let publishedDelta = false;
       try {
         while (dirtyRef.current || fullSyncPendingRef.current) {
           await publishRef.current.whenContentIdle();
@@ -331,6 +334,7 @@ export function useWhiteboardState({ courseId, isTeacher, canDraw = false, room,
             }
             const destinations = getSyncDestinationsRef.current?.(pageIndex);
             if (destinations && destinations.length === 0) continue;
+            publishedDelta = true;
             const result = await publishRef.current(
               {
                 type: 'WHITEBOARD_DELTA',
@@ -357,7 +361,9 @@ export function useWhiteboardState({ courseId, isTeacher, canDraw = false, room,
         }
       } finally {
         flushingRef.current = false;
-        if (dirtyRef.current || fullSyncPendingRef.current) flushRef.current();
+        const again = dirtyRef.current || fullSyncPendingRef.current;
+        if (!publishedDelta && !again) cancelSenderDeltaQueue();
+        if (again) flushRef.current();
       }
     })();
   };

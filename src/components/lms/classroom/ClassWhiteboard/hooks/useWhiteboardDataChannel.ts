@@ -11,6 +11,7 @@ import { adaptElementsForTheme } from '../utils/theme';
 import type { BoardView, HistoryMap } from '../utils/types';
 import { beginWhiteboardFullSync, fullSyncKind, type BoardAssignmentMap } from '@/lib/livekit/board-assignment';
 import { applyPageDelta } from '../utils/whiteboard-delta';
+import { noteReceiverDelta } from '../../KonvaCanvas/diagnostics/mainLayerDrawProbe';
 import { enqueueFreshFullSync } from '../utils/enqueue-fresh-sync';
 import type { PublishDataSafe } from './usePublishDataSafe';
 import { noteWhiteboard, whiteboardPayloadType } from '@/lib/livekit/diagnostics/whiteboard-trace';
@@ -471,12 +472,13 @@ export function useWhiteboardDataChannel(opts: Options) {
           return;
         }
 
-        const commitRemotePage = (pageIndex: number, elements: CanvasElement[], adapt = true) => {
+        const commitRemotePage = (pageIndex: number, elements: CanvasElement[], adapt = true, remoteMessageId?: string | null) => {
           const adaptedElements = adapt ? adaptElementsForTheme(elements, isDark) : elements;
           const updated = [...pagesRef.current];
           while (updated.length <= pageIndex) updated.push([]);
           updated[pageIndex] = adaptedElements;
           setPages(updated);
+          if (remoteMessageId) noteReceiverDelta(remoteMessageId, adaptedElements);
           pagesRef.current = updated;
           isRemoteUpdateRef.current = false;
           if (isTeacher || canDrawRef.current) {
@@ -517,7 +519,7 @@ export function useWhiteboardDataChannel(opts: Options) {
             updated: themeIncoming(data.updated),
             deleted: data.deleted,
           });
-          commitRemotePage(pageIndex, merged, false);
+          commitRemotePage(pageIndex, merged, false, messageId);
           rememberApplied();
           adoptRemotePageRef.current?.(pageIndex, current);
           return;

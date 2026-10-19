@@ -248,7 +248,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   useCopySelectedImage(disabled, selectedImage);
   useDrawLayerCleanup(drawLayerRef as RefObject<Konva.Layer>, isDrawing, elements);
   useWhiteboardPaintNote(elements, stageRef);
-  useMainLayerDrawProbe(mainLayerRef);
+  useMainLayerDrawProbe(mainLayerRef, elements);
   useGlobalPointerHandlers({
     syncStylusButtonsFromEvent,
     commitErase,
