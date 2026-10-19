@@ -32,6 +32,7 @@ import { useCropSelection } from './hooks/useCropSelection';
 import { useConnectedGroupDrag } from './hooks/useConnectedGroupDrag';
 import { useCopySelectedImage } from './hooks/useCopySelectedImage';
 import { useWhiteboardPaintNote } from './hooks/useWhiteboardPaintNote';
+import { useMainLayerDrawProbe } from './hooks/useMainLayerDrawProbe';
 import { useImageToolbarPosition } from './hooks/useImageToolbarPosition';
 import { useDeleteButtonPosition } from './hooks/useDeleteButtonPosition';
 
@@ -247,6 +248,7 @@ const KonvaCanvas = forwardRef<KonvaCanvasHandle, KonvaCanvasProps>(function Kon
   useCopySelectedImage(disabled, selectedImage);
   useDrawLayerCleanup(drawLayerRef as RefObject<Konva.Layer>, isDrawing, elements);
   useWhiteboardPaintNote(elements, stageRef);
+  useMainLayerDrawProbe(mainLayerRef);
   useGlobalPointerHandlers({
     syncStylusButtonsFromEvent,
     commitErase,
