@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { requireRole } from '@/lib/auth/session';
 import type { Locale } from '@/i18n/config';
-import { TeacherStudentsWorkspace } from '@/components/lms/teacher/students-workspace/TeacherStudentsWorkspace';
 type PageProps = {
   params: Promise<{ locale: Locale }>;
 };
@@ -142,12 +141,7 @@ export default async function TeacherStudentsPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-[2000px]">
-      <TeacherStudentsWorkspace
-        initialStudents={studentsList}
-        courses={coursesSimple}
-        availableSetProblems={availableSetProblems}
-        currentUserId={session.user.id}
-      />
+      
     </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { BookOpen, CheckCircle2, Clock } from 'lucide-react';
 import type { StudentCourse } from '@/lib/actions/students';
-import { StudentCourseVideoCallButton } from '@/components/lms/classroom/StudentCourseVideoCallButton';
 
 interface StudentAssignmentsHeroAsideProps {
   todayAssignmentsCount: number;
@@ -40,18 +39,6 @@ export function StudentAssignmentsHeroAside({
         </div>
       </div>
 
-      {courses.length > 0 ? (
-        <div className="flex flex-col gap-2">
-          {courses.map((course) => (
-            <StudentCourseVideoCallButton
-              key={course.id}
-              courseId={course.id}
-              courseTitle={course.title}
-              label="ვიდეო გაკვეთილი"
-            />
-          ))}
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { TeacherWhiteboard } from "@/components/lms/teacher/whiteboard/TeacherWhiteboard";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 
@@ -20,5 +19,5 @@ export default async function TeacherWhiteboardPage({ params }: PageProps) {
 
   const dict = getDictionary(locale);
 
-  return <TeacherWhiteboard copy={dict.dashboard.teacher.whiteboard} />;
+  return ;
 }
