@@ -188,11 +188,47 @@ export function publishTeacherBoard(event: TeacherBoardEvent) {
   dispatch(event);
 }
 
+const endedListenClients = new WeakSet<Client>();
+
+function endListenClient(client: Client) {
+  if (endedListenClients.has(client)) return;
+  endedListenClients.add(client);
+  void client.end().catch(() => undefined);
+}
+
+function scheduleListenReconnect() {
+  setTimeout(() => {
+    const bus = getBus();
+    if (subscriberCount(bus) === 0) {
+      bus.listenStarted = false;
+      return;
+    }
+    void connectListen();
+  }, 1000);
+}
+
+function listenClientStillCurrent(client: Client) {
+  const bus = getBus();
+  if (bus.listenClient === client && subscriberCount(bus) > 0) return true;
+  if (bus.listenClient === client) {
+    bus.listenClient = null;
+    bus.listenStarted = false;
+  }
+  endListenClient(client);
+  return false;
+}
+
 function stopPollIfIdle() {
   const bus = getBus();
-  if (subscriberCount(bus) > 0 || !bus.poll) return;
-  clearInterval(bus.poll);
-  bus.poll = null;
+  if (subscriberCount(bus) > 0) return;
+  if (bus.poll) {
+    clearInterval(bus.poll);
+    bus.poll = null;
+  }
+  const client = bus.listenClient;
+  bus.listenClient = null;
+  bus.listenStarted = false;
+  if (client) endListenClient(client);
 }
 
 async function pollStoredBoards() {
@@ -336,6 +372,10 @@ async function deliverBoardNotice(raw: string) {
 
 async function connectListen() {
   const bus = getBus();
+  if (subscriberCount(bus) === 0) {
+    bus.listenStarted = false;
+    return;
+  }
   if (bus.listenClient) return;
   const client = createListenClient();
   if (!client) return;
@@ -345,17 +385,31 @@ async function connectListen() {
     void deliverBoardNotice(message.payload);
   });
   client.on('error', () => {
-    if (getBus().listenClient === client) getBus().listenClient = null;
-    void client.end().catch(() => undefined);
-    setTimeout(() => void connectListen(), 1000);
+    const current = getBus();
+    if (current.listenClient !== client) return;
+    current.listenClient = null;
+    endListenClient(client);
+    if (subscriberCount(current) === 0) {
+      current.listenStarted = false;
+      return;
+    }
+    scheduleListenReconnect();
   });
   try {
     await client.connect();
+    if (!listenClientStillCurrent(client)) return;
     await client.query('LISTEN teacher_board');
+    if (!listenClientStillCurrent(client)) return;
   } catch {
-    if (getBus().listenClient === client) getBus().listenClient = null;
-    void client.end().catch(() => undefined);
-    setTimeout(() => void connectListen(), 1000);
+    const current = getBus();
+    if (current.listenClient !== client) return;
+    current.listenClient = null;
+    endListenClient(client);
+    if (subscriberCount(current) === 0) {
+      current.listenStarted = false;
+      return;
+    }
+    scheduleListenReconnect();
   }
 }
 

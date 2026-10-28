@@ -64,6 +64,15 @@ function finiteTime(value: unknown): number | undefined {
   return Math.round(value);
 }
 
+function elementIds(elements: readonly { id?: unknown }[] | undefined): string[] {
+  if (!Array.isArray(elements)) return [];
+  const ids: string[] = [];
+  for (const element of elements) {
+    if (element && typeof element.id === 'string') ids.push(element.id);
+  }
+  return ids;
+}
+
 function packetElements(packet: WhiteboardPacket): number | null {
   if (packet.type === 'WHITEBOARD_DELTA') {
     return (packet.added?.length ?? 0) + (packet.updated?.length ?? 0) + (packet.deleted?.length ?? 0);
@@ -478,6 +487,13 @@ export function useWhiteboardDataChannel(opts: Options) {
           while (updated.length <= pageIndex) updated.push([]);
           updated[pageIndex] = adaptedElements;
           setPages(updated);
+          if (data.type === 'WHITEBOARD_DELTA') {
+            console.info('[WB-DIAG-STATE]', {
+              t: performance.now(),
+              messageId: remoteMessageId ?? null,
+              added: elementIds(data.added),
+            });
+          }
           if (remoteMessageId) noteReceiverDelta(remoteMessageId, adaptedElements);
           pagesRef.current = updated;
           isRemoteUpdateRef.current = false;
@@ -495,6 +511,12 @@ export function useWhiteboardDataChannel(opts: Options) {
         };
 
         if (data.type === 'WHITEBOARD_DELTA') {
+          console.info('[WB-DIAG-RECEIVE]', {
+            t: performance.now(),
+            receivedAt,
+            messageId,
+            added: elementIds(data.added),
+          });
           if (!gateContent()) return;
           const pageIndex = typeof data.pageIndex === 'number' ? data.pageIndex : 0;
           const hasChange =

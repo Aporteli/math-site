@@ -49,6 +49,17 @@ function messageIdOf(payload: object): string | null {
   return typeof messageId === 'string' && messageId.startsWith('wb_') ? messageId.slice(0, 40) : null;
 }
 
+function addedElementIds(payload: object): string[] {
+  if (!('added' in payload) || !Array.isArray(payload.added)) return [];
+  const ids: string[] = [];
+  for (const element of payload.added) {
+    if (!element || typeof element !== 'object' || !('id' in element)) continue;
+    const id = element.id;
+    if (typeof id === 'string') ids.push(id);
+  }
+  return ids;
+}
+
 export function usePublishDataSafe(room: Room | null): PublishDataSafe {
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -110,6 +121,15 @@ export function usePublishDataSafe(room: Room | null): PublishDataSafe {
       const chunked = chunkPayloadDetailed(bytes);
       chunkCount = chunked.chunks.length;
       if (chunked.transferId !== null) transferId = chunked.transferId;
+
+      if (type === 'WHITEBOARD_DELTA') {
+        console.info('[WB-DIAG-SEND]', {
+          t: performance.now(),
+          messageId: meta.messageId,
+          type,
+          added: addedElementIds(stamped),
+        });
+      }
 
       for (let index = 0; index < chunked.chunks.length; index += 1) {
         const chunk = chunked.chunks[index];
