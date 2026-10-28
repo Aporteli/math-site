@@ -152,6 +152,7 @@ export function TriangleSvg({ solution }: Props) {
         </text>
         <text
           x={Cx}
+          
           y={Cy + 24}
           fontSize="12"
           fill="#dc2626"
