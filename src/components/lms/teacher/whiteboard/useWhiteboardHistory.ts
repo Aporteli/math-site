@@ -16,6 +16,7 @@ export function useWhiteboardHistory(boardState: WhiteboardState, persistence: W
     scheduleLocalPagesSaveRef,
     pagesRef,
     currentPageIndexRef,
+    inkSeqRef,
     historyMapRef,
     savePreferencesImmediately,
     updateUndoRedoState,
@@ -24,12 +25,22 @@ export function useWhiteboardHistory(boardState: WhiteboardState, persistence: W
   const handleElementsChange = useCallback(
     (next: CanvasElement[], options?: { commitHistory?: boolean; publish?: boolean }) => {
       const pIndex = currentPageIndexRef.current;
+      const previous = pagesRef.current[pIndex] ?? [];
+      const previousIds = new Set(previous.map((el) => el.id));
+      const addedIds = next.flatMap((el) => (previousIds.has(el.id) ? [] : [el.id]));
       const updated = [...pagesRef.current];
       updated[pIndex] = next;
       setPages(updated);
       pagesRef.current = updated;
 
-      if (options?.publish !== false) schedulePushRef.current();
+      if (options?.publish !== false) {
+        schedulePushRef.current();
+        console.log('[TB-DIAG-COMMIT]', {
+          t: performance.now(),
+          id: addedIds,
+          inkSeq: inkSeqRef.current,
+        });
+      }
 
       if (options?.commitHistory !== false) {
         let hist = historyMapRef.current.get(pIndex);

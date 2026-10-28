@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   let heartbeat: ReturnType<typeof setInterval> | undefined;
   let retry: ReturnType<typeof setTimeout> | undefined;
   let closed = false;
-  let pendingBoard: string | null = null;
+  const pendingBoards: { chunk: string; full: boolean }[] = [];
   let pendingLive: string | null = null;
   let controller: ReadableStreamDefaultController<Uint8Array>;
 
@@ -59,12 +59,12 @@ export async function GET(req: Request) {
 
   const flush = () => {
     if (closed) return;
-    if (pendingBoard != null) {
-      if (!tryEnqueue(pendingBoard)) {
+    while (pendingBoards.length > 0) {
+      if (!tryEnqueue(pendingBoards[0].chunk)) {
         armRetry();
         return;
       }
-      pendingBoard = null;
+      pendingBoards.shift();
     }
     if (pendingLive != null) {
       if (!tryEnqueue(pendingLive)) {
@@ -82,13 +82,20 @@ export async function GET(req: Request) {
       unsubscribe = subscribeTeacherBoard(userId, (event: TeacherBoardEvent) => {
         const own = subscriberClientId.length > 0 && event.clientId === subscriberClientId;
         if (own && (event.type === 'ink' || event.type === 'laser')) return;
-        if (own && !event.type && typeof event.revision === 'number' && event.revision > lastOwnRevision) {
+        if (
+          own &&
+          event.type !== 'ink' &&
+          event.type !== 'laser' &&
+          typeof event.revision === 'number' &&
+          event.revision > lastOwnRevision
+        ) {
           lastOwnRevision = event.revision;
         }
 
         const echo =
-          !event.type &&
-          subscriberClientId.length > 0 &&
+          own &&
+          event.type !== 'ink' &&
+          event.type !== 'laser' &&
           typeof event.revision === 'number' &&
           event.revision > 0 &&
           event.revision <= lastOwnRevision;
@@ -98,9 +105,11 @@ export async function GET(req: Request) {
             ? `i${event.inkSeq ?? 0}`
             : event.type === 'laser'
               ? 'l'
-              : typeof event.revision === 'number'
-                ? `r${event.revision}`
-                : 'b';
+              : event.type === 'delta'
+                ? `d${event.revision ?? 0}`
+                : typeof event.revision === 'number'
+                  ? `r${event.revision}`
+                  : 'b';
         const chunk = frame(
           echo
             ? {
@@ -122,18 +131,25 @@ export async function GET(req: Request) {
                 strokeWidth: event.strokeWidth,
                 inkSeq: event.inkSeq,
                 base: event.base,
+                pageCount: event.pageCount,
+                changes: event.changes,
               },
           eventId,
         );
         if (event.type === 'laser' || event.type === 'ink') pendingLive = chunk;
-        else {
-          pendingBoard = chunk;
+        else if (event.type === 'delta') {
+          pendingBoards.push({ chunk, full: false });
+          pendingLive = null;
+        } else {
+          const last = pendingBoards[pendingBoards.length - 1];
+          if (last?.full) pendingBoards[pendingBoards.length - 1] = { chunk, full: true };
+          else pendingBoards.push({ chunk, full: true });
           pendingLive = null;
         }
         flush();
       });
       heartbeat = setInterval(() => {
-        if (pendingBoard == null && pendingLive == null) pendingLive = frame({ type: 'ping' }, 'p');
+        if (pendingBoards.length === 0 && pendingLive == null) pendingLive = frame({ type: 'ping' }, 'p');
         flush();
       }, 5000);
     },

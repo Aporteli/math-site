@@ -1,5 +1,8 @@
 import { Client } from 'pg';
 import { prisma } from '@/lib/prisma';
+import { applyBoardDelta, type BoardChange } from '@/lib/teacher-board/delta';
+
+export type TeacherBoardPageChange = BoardChange<{ id: string; type: string }>;
 
 export type TeacherBoardEvent = {
   userId: string;
@@ -7,7 +10,7 @@ export type TeacherBoardEvent = {
   clientId: string;
   pages?: unknown;
   currentPageIndex?: number;
-  type?: 'laser' | 'ink';
+  type?: 'laser' | 'ink' | 'delta';
   point?: { x: number; y: number } | null;
   pageIndex?: number;
   points?: number[];
@@ -15,6 +18,8 @@ export type TeacherBoardEvent = {
   strokeWidth?: number;
   inkSeq?: number;
   base?: number;
+  pageCount?: number;
+  changes?: TeacherBoardPageChange[];
 };
 
 type Handler = (event: TeacherBoardEvent) => void;
@@ -30,6 +35,7 @@ type Bus = {
   latest: Map<string, LiveBoard>;
   inkFloor: Map<string, number>;
   dbRevision: Map<string, number>;
+  writeTail: Map<string, Promise<unknown>>;
   poll: ReturnType<typeof setInterval> | null;
   polling: boolean;
   instanceId: string;
@@ -51,6 +57,9 @@ type BoardNotice = {
   inkSeq?: number;
   base?: number;
   point?: { x: number; y: number } | null;
+  pageCount?: number;
+  currentPageIndex?: number;
+  changes?: TeacherBoardPageChange[];
 };
 
 const globalBus = globalThis as typeof globalThis & { __teacherBoardBus?: Bus };
@@ -69,6 +78,7 @@ function getBus(): Bus {
       latest: new Map(),
       inkFloor: new Map(),
       dbRevision: new Map(),
+      writeTail: new Map(),
       poll: null,
       polling: false,
       instanceId: crypto.randomUUID(),
@@ -80,6 +90,7 @@ function getBus(): Bus {
   if (!bus.latest) bus.latest = new Map();
   if (!bus.inkFloor) bus.inkFloor = new Map();
   if (!bus.dbRevision) bus.dbRevision = new Map();
+  if (!bus.writeTail) bus.writeTail = new Map();
   if (bus.poll === undefined) bus.poll = null;
   if (bus.polling === undefined) bus.polling = false;
   if (!bus.instanceId) bus.instanceId = crypto.randomUUID();
@@ -99,6 +110,36 @@ function subscriberCount(bus: Bus) {
   return count;
 }
 
+function takeRevision(userId: string, inkSeq?: number) {
+  const bus = getBus();
+  const prev = bus.latest.get(userId)?.revision ?? 0;
+  let revision = Date.now();
+  if (revision <= prev) revision = prev + 1;
+  if (typeof inkSeq === 'number') {
+    const floor = bus.inkFloor.get(userId) ?? 0;
+    if (inkSeq > floor) bus.inkFloor.set(userId, inkSeq);
+  }
+  return revision;
+}
+
+export function withTeacherBoardLock<T>(userId: string, task: () => Promise<T>): Promise<T> {
+  const bus = getBus();
+  const previous = bus.writeTail.get(userId) ?? Promise.resolve();
+  const run = previous.then(task, task);
+  bus.writeTail.set(
+    userId,
+    run.then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+  return run;
+}
+
+export function noteTeacherBoardStored(userId: string, revision: number) {
+  getBus().dbRevision.set(userId, revision);
+}
+
 export function publishLiveTeacherBoard(input: {
   userId: string;
   clientId: string;
@@ -106,16 +147,9 @@ export function publishLiveTeacherBoard(input: {
   currentPageIndex: number;
   inkSeq?: number;
 }) {
-  const bus = getBus();
-  const prev = bus.latest.get(input.userId)?.revision ?? 0;
-  let revision = Date.now();
-  if (revision <= prev) revision = prev + 1;
-  if (typeof input.inkSeq === 'number') {
-    const floor = bus.inkFloor.get(input.userId) ?? 0;
-    if (input.inkSeq > floor) bus.inkFloor.set(input.userId, input.inkSeq);
-  }
+  const revision = takeRevision(input.userId, input.inkSeq);
   const live = { revision, pages: input.pages, currentPageIndex: input.currentPageIndex };
-  bus.latest.set(input.userId, live);
+  getBus().latest.set(input.userId, live);
   try {
     dispatch({
       userId: input.userId,
@@ -124,6 +158,38 @@ export function publishLiveTeacherBoard(input: {
       pages: input.pages,
       currentPageIndex: input.currentPageIndex,
       inkSeq: input.inkSeq,
+    });
+  } catch {
+    // A live subscriber must not stop the board from being stored.
+  }
+  return revision;
+}
+
+export function publishTeacherBoardDelta(input: {
+  userId: string;
+  clientId: string;
+  pages: unknown;
+  currentPageIndex: number;
+  inkSeq?: number;
+  pageCount: number;
+  changes: TeacherBoardPageChange[];
+}) {
+  const revision = takeRevision(input.userId, input.inkSeq);
+  getBus().latest.set(input.userId, {
+    revision,
+    pages: input.pages,
+    currentPageIndex: input.currentPageIndex,
+  });
+  try {
+    dispatch({
+      userId: input.userId,
+      clientId: input.clientId,
+      revision,
+      currentPageIndex: input.currentPageIndex,
+      inkSeq: input.inkSeq,
+      type: 'delta',
+      pageCount: input.pageCount,
+      changes: input.changes,
     });
   } catch {
     // A live subscriber must not stop the board from being stored.
@@ -251,6 +317,11 @@ async function pollStoredBoards() {
       const revision = boardRevision(row.revision);
       const previous = bus.dbRevision.get(row.userId);
       if (previous === revision) continue;
+      const live = bus.latest.get(row.userId);
+      if (live && live.revision >= revision) {
+        bus.dbRevision.set(row.userId, revision);
+        continue;
+      }
       changed.push(row.userId);
     }
     if (changed.length === 0) return;
@@ -316,6 +387,48 @@ async function deliverBoardNotice(raw: string) {
   }
   if (!notice.userId || notice.origin === getBus().instanceId) return;
   if (!getBus().handlers.has(notice.userId)) return;
+
+  if (notice.kind === 'delta') {
+    const revision = typeof notice.revision === 'number' && Number.isFinite(notice.revision) ? notice.revision : 0;
+    const record = await prisma.teacherBoard.findUnique({
+      where: { userId: notice.userId },
+      select: { pages: true, currentPageIndex: true, revision: true },
+    });
+    const bus = getBus();
+    const dbRevision = record ? boardRevision(record.revision) : 0;
+    const storedPages = record && Array.isArray(record.pages) ? record.pages : bus.latest.get(notice.userId)?.pages;
+    const pageCount = typeof notice.pageCount === 'number' ? notice.pageCount : 0;
+    const changes = Array.isArray(notice.changes) ? notice.changes : [];
+    let pages = storedPages;
+    if (
+      dbRevision < revision &&
+      Array.isArray(pages) &&
+      pages.every((page) => Array.isArray(page)) &&
+      pageCount > 0
+    ) {
+      pages = applyBoardDelta(pages as { id: string }[][], { pageCount, changes });
+    }
+    if (Array.isArray(pages)) {
+      const currentPageIndex =
+        typeof notice.currentPageIndex === 'number'
+          ? notice.currentPageIndex
+          : (record?.currentPageIndex ?? 0);
+      const liveRevision = Math.max(revision, dbRevision);
+      bus.latest.set(notice.userId, { revision: liveRevision, pages, currentPageIndex });
+      bus.dbRevision.set(notice.userId, liveRevision);
+    }
+    dispatch({
+      userId: notice.userId,
+      clientId: notice.clientId ?? '',
+      revision,
+      type: 'delta',
+      currentPageIndex: notice.currentPageIndex,
+      pageCount: notice.pageCount,
+      changes,
+      inkSeq: notice.inkSeq,
+    });
+    return;
+  }
 
   if (notice.kind === 'board') {
     const record = await prisma.teacherBoard.findUnique({

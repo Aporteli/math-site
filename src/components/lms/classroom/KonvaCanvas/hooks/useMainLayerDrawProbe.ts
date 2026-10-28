@@ -10,12 +10,21 @@ import {
 } from '../diagnostics/mainLayerDrawProbe';
 
 /** Registers the layer after commit. Measurement starts only from the console. */
-export function useMainLayerDrawProbe(mainLayerRef: RefObject<Konva.Layer | null>, elements: readonly unknown[]): void {
+export function useMainLayerDrawProbe(
+  mainLayerRef: RefObject<Konva.Layer | null>,
+  elements: readonly unknown[],
+  diagLayout = false,
+): void {
   const releaseRef = useRef<(() => void) | null>(null);
   const registeredRef = useRef<Konva.Layer | null>(null);
   const generationRef = useRef<symbol | null>(null);
+  const elementsRef = useRef(elements);
   useLayoutEffect(() => {
     publishMainLayerDrawProbe();
+    if (diagLayout && elementsRef.current !== elements) {
+      elementsRef.current = elements;
+      console.log('[TB-DIAG-LAYOUT]', { t: performance.now(), elementCount: elements.length });
+    }
     if (mainLayerRef.current) noteReceiverElementsSeen(elements);
     const layer = mainLayerRef.current;
     if (layer === registeredRef.current && generationRef.current === probeGeneration) return;
