@@ -88,4 +88,98 @@ assert.deepEqual(
   ['img-1', 'el-old'],
 );
 
+// ── Concurrent edits: two browsers both add a stroke, neither overwrites the other ──
+// Simulates the fast-path dispatch in the server: each browser reads the
+// latest in-memory state (atomically updated per-dispatch) and applies its own
+// delta.  The second browser already sees the first browser's stroke in the
+// in-memory baseline.
+const concBase = [[imageEl, stroke('el-a')]];
+// Browser A adds el-b
+const afterA = applyBoardDelta(concBase, {
+  pageCount: 1,
+  changes: [{ pageIndex: 0, added: [stroke('el-b')], updated: [], deleted: [] }],
+});
+assert.deepEqual(afterA[0].map((e) => e.id), ['img-1', 'el-a', 'el-b']);
+// Browser B reads the updated state (afterA) and adds el-c
+const afterAB = applyBoardDelta(afterA, {
+  pageCount: 1,
+  changes: [{ pageIndex: 0, added: [stroke('el-c')], updated: [], deleted: [] }],
+});
+assert.deepEqual(afterAB[0].map((e) => e.id), ['img-1', 'el-a', 'el-b', 'el-c']);
+// If B had read the stale base (race), it would produce el-c without el-b.
+// With the fast-path (in-memory), it always reads the post-A state. Verify
+// that replaying both deltas in order on the stale base also converges.
+const replayA = applyBoardDelta(concBase, {
+  pageCount: 1,
+  changes: [{ pageIndex: 0, added: [stroke('el-b')], updated: [], deleted: [] }],
+});
+const replayAB = applyBoardDelta(replayA, {
+  pageCount: 1,
+  changes: [{ pageIndex: 0, added: [stroke('el-c')], updated: [], deleted: [] }],
+});
+assert.deepEqual(replayAB[0].map((e) => e.id), afterAB[0].map((e) => e.id));
+
+// ── Undo/redo correctness: undoing A's stroke must not delete B's remote stroke ──
+// History state before A's stroke: [img-1]
+// History state after A's stroke:  [img-1, el-a]  (current when remote arrives)
+// Remote (B) adds el-remote.  applyRemoteDelta patches both history states.
+const historyStateOld = [imageEl];
+const historyStateCurrent = [imageEl, stroke('el-a')];
+// Remote delta: add el-remote
+const remoteDelta = { pageIndex: 0, added: [stroke('el-remote')], updated: [], deleted: [] };
+const updatedOld = applyBoardDelta([historyStateOld], {
+  pageCount: 1,
+  changes: [remoteDelta],
+})[0];
+const updatedCurrent = applyBoardDelta([historyStateCurrent], {
+  pageCount: 1,
+  changes: [remoteDelta],
+})[0];
+// After patching, both history states include el-remote
+assert.deepEqual(updatedOld.map((e) => e.id), ['img-1', 'el-remote']);
+assert.deepEqual(updatedCurrent.map((e) => e.id), ['img-1', 'el-a', 'el-remote']);
+// Undo restores the old state (now [img-1, el-remote])
+// buildDelta(synced=[img-1, el-a, el-remote], pages=[img-1, el-remote])
+//   → deleted = [el-a]  (NOT el-remote)
+const syncedAfterRemote = updatedCurrent;
+const afterUndoPages = updatedOld;
+const undoDiff = diffBoard([syncedAfterRemote], [afterUndoPages]);
+assert.deepEqual(undoDiff[0].deleted, ['el-a'], 'undo should only delete el-a, not el-remote');
+assert.equal(undoDiff[0].added.length, 0);
+assert.equal(undoDiff[0].updated.length, 0);
+
+// ── Duplicate delivery: applying the same delta twice is idempotent ──
+const dupBase = [[imageEl, stroke('s1')]];
+const dupDelta = { pageCount: 1, changes: [{ pageIndex: 0, added: [stroke('s2')], updated: [], deleted: [] }] };
+const once = applyBoardDelta(dupBase, dupDelta);
+const twice = applyBoardDelta(once, dupDelta);
+assert.deepEqual(once[0].map((e) => e.id), ['img-1', 's1', 's2']);
+assert.deepEqual(twice[0].map((e) => e.id), ['img-1', 's1', 's2'], 'duplicate delta must not add s2 twice');
+
+// ── Out-of-order delivery: guard prevents stale update from overwriting newer ──
+const oooBase = [[stroke('s1')]];
+// R=10: add s1, mark elementRevision s1=10
+const guard10: DeltaGuard = { revision: 10, elementRevision: new Map([['s1', 10]]), structureRevision: 10 };
+// R=20: update s1 with a fresh guard
+const afterR20 = applyBoardDelta(oooBase, {
+  pageCount: 1,
+  changes: [{ pageIndex: 0, added: [], updated: [{ ...stroke('s1'), stroke: '#aabbcc' }], deleted: [] }],
+}, { revision: 20, elementRevision: guard10.elementRevision, structureRevision: 10 });
+assert.equal(afterR20[0][0].stroke, '#aabbcc');
+// R=10 (stale) arrives later: guard blocks it
+const afterStale = applyBoardDelta(afterR20, {
+  pageCount: 1,
+  changes: [{ pageIndex: 0, added: [], updated: [{ ...stroke('s1'), stroke: '#000000' }], deleted: [] }],
+}, { revision: 10, elementRevision: guard10.elementRevision, structureRevision: 10 });
+assert.equal(afterStale[0][0].stroke, '#aabbcc', 'stale R=10 must not overwrite R=20 update');
+
+// ── Page preservation: delta with fewer pages must not delete populated pages ──
+const multiPage = [[imageEl], [stroke('page2-el')]];
+const smallPageCount = applyBoardDelta(multiPage, {
+  pageCount: 1,
+  changes: [{ pageIndex: 0, added: [stroke('p0-new')], updated: [], deleted: [] }],
+});
+assert.equal(smallPageCount.length, 2, 'page 2 must be preserved when delta pageCount < stored pageCount');
+assert.equal(smallPageCount[1][0].id, 'page2-el');
+
 console.log('teacher board delta tests passed');

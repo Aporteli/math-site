@@ -53,7 +53,15 @@ export function useWhiteboardHistory(boardState: WhiteboardState, persistence: W
         updateUndoRedoState();
       }
     },
-    [updateUndoRedoState],
+    [
+      updateUndoRedoState,
+      currentPageIndexRef,
+      historyMapRef,
+      inkSeqRef,
+      pagesRef,
+      schedulePushRef,
+      setPages,
+    ],
   );
 
   const undo = useCallback(() => {
@@ -69,7 +77,15 @@ export function useWhiteboardHistory(boardState: WhiteboardState, persistence: W
     scheduleLocalPagesSave();
     schedulePushRef.current();
     updateUndoRedoState();
-  }, [scheduleLocalPagesSave, updateUndoRedoState]);
+  }, [
+    scheduleLocalPagesSave,
+    updateUndoRedoState,
+    currentPageIndexRef,
+    historyMapRef,
+    pagesRef,
+    schedulePushRef,
+    setPages,
+  ]);
 
   const redo = useCallback(() => {
     const pIndex = currentPageIndexRef.current;
@@ -84,7 +100,15 @@ export function useWhiteboardHistory(boardState: WhiteboardState, persistence: W
     scheduleLocalPagesSave();
     schedulePushRef.current();
     updateUndoRedoState();
-  }, [scheduleLocalPagesSave, updateUndoRedoState]);
+  }, [
+    scheduleLocalPagesSave,
+    updateUndoRedoState,
+    currentPageIndexRef,
+    historyMapRef,
+    pagesRef,
+    schedulePushRef,
+    setPages,
+  ]);
 
   // --- 🌟 Smart theme conversion for existing elements ---
   useEffect(() => {
@@ -127,7 +151,15 @@ export function useWhiteboardHistory(boardState: WhiteboardState, persistence: W
 
       scheduleLocalPagesSaveRef.current();
     }
-  }, [isDark, updateUndoRedoState]);
+  }, [
+    isDark,
+    updateUndoRedoState,
+    currentPageIndexRef,
+    historyMapRef,
+    pagesRef,
+    scheduleLocalPagesSaveRef,
+    setPages,
+  ]);
 
   const addImage = useCallback(
     (dataUrl: string, pos?: { x: number; y: number }) => {
@@ -162,7 +194,7 @@ export function useWhiteboardHistory(boardState: WhiteboardState, persistence: W
         savePreferencesImmediately({ tool: 'select' });
       };
     },
-    [handleElementsChange, savePreferencesImmediately],
+    [handleElementsChange, savePreferencesImmediately, currentPageIndexRef, pagesRef, setActiveTool],
   );
   return { handleElementsChange, undo, redo, addImage };
 }

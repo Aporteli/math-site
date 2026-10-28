@@ -187,11 +187,47 @@ export async function POST(req: Request) {
   if (body.type === 'delta') {
     const delta = parseBoardDelta(body);
     if (!delta) return NextResponse.json({ ok: false }, { status: 400 });
+
+    // Fast path: in-memory state is available — dispatch to same-process SSE
+    // subscribers immediately without waiting for the DB write. The DB write
+    // is queued in the background via the lock so the SSE dispatch latency is
+    // not gated on the DB round-trip. This is the normal path when the SSE
+    // stream for this user is open (i.e. the teacher has the whiteboard open).
+    const live = readLiveTeacherBoard(userId);
+    if (live && isPages(live.pages) && live.pages.length > 0) {
+      const merged = applyBoardDelta(live.pages as { id: string }[][], delta) as unknown[][];
+      const revision = publishTeacherBoardDelta({
+        userId,
+        clientId,
+        pages: merged,
+        currentPageIndex: delta.currentPageIndex,
+        inkSeq,
+        pageCount: delta.pageCount,
+        changes: delta.changes,
+      });
+      void withTeacherBoardLock(userId, async () => {
+        await persistTeacherBoard(userId, merged, delta.currentPageIndex, revision);
+        noteTeacherBoardStored(userId, revision);
+      }).catch((err) => console.error('[teacher-board] delta persist failed', err));
+      void broadcastTeacherBoard({
+        kind: 'delta',
+        userId,
+        clientId,
+        revision,
+        inkSeq,
+        currentPageIndex: delta.currentPageIndex,
+        pageCount: delta.pageCount,
+        changes: delta.changes,
+      }).catch(() => undefined);
+      return NextResponse.json({ ok: true, revision });
+    }
+
+    // Cold-start path: bus.latest not yet populated, need the DB state first.
     try {
       const revision = await withTeacherBoardLock(userId, async () => {
         const current = await readStoredPages(userId);
         const merged = applyBoardDelta(current.pages as { id: string }[][], delta);
-        const revision = publishTeacherBoardDelta({
+        const rev = publishTeacherBoardDelta({
           userId,
           clientId,
           pages: merged,
@@ -200,9 +236,9 @@ export async function POST(req: Request) {
           pageCount: delta.pageCount,
           changes: delta.changes,
         });
-        await persistTeacherBoard(userId, merged, delta.currentPageIndex, revision);
-        noteTeacherBoardStored(userId, revision);
-        return revision;
+        await persistTeacherBoard(userId, merged, delta.currentPageIndex, rev);
+        noteTeacherBoardStored(userId, rev);
+        return rev;
       });
       void broadcastTeacherBoard({
         kind: 'delta',

@@ -46,7 +46,7 @@ type Bus = {
 
 type BoardNotice = {
   origin?: string;
-  kind?: 'board' | 'ink' | 'laser';
+  kind?: 'board' | 'ink' | 'laser' | 'delta';
   userId?: string;
   revision?: number;
   clientId?: string;
