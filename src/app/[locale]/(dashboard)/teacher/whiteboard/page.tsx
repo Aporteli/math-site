@@ -1,23 +1,12 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { isLocale } from "@/i18n/config";
-import { getDictionary } from "@/i18n/get-dictionary";
+import { TeacherWorkspacePage, teacherPageMetadata } from "@/components/layout/DashboardPage";
 
 type PageProps = { params: Promise<{ locale: string }> };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { locale } = await params;
-  if (!isLocale(locale)) return {};
-
-  const page = getDictionary(locale).dashboard.teacher.pages.whiteboard;
-  return { title: page.title, description: page.subtitle };
+export function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  return teacherPageMetadata("whiteboard", params);
 }
 
-export default async function TeacherWhiteboardPage({ params }: PageProps) {
-  const { locale } = await params;
-  if (!isLocale(locale)) notFound();
-
-  const dict = getDictionary(locale);
-
-  return ;
+export default function TeacherWhiteboardPage({ params }: PageProps) {
+  return <TeacherWorkspacePage id="whiteboard" params={params} />;
 }

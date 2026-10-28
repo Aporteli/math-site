@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { WorkspaceScreen } from "@/components/layout/WorkspaceScreen";
 import { TeacherJournalWorkspace } from "@/components/lms/teacher/journal/TeacherJournalWorkspace";
+import { TeacherWhiteboard } from "@/components/lms/teacher/teacher-whiteboard/TeacherWhiteboard";
 import { isLocale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import {
@@ -51,6 +52,8 @@ export async function TeacherWorkspacePage({
       case "journal":
       case "calendar":
         return <TeacherJournalWorkspace />;
+      case "whiteboard":
+        return <TeacherWhiteboard copy={teacher.whiteboard} />;
       default:
         return null;
     }
