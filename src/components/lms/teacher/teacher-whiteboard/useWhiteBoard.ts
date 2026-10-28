@@ -1,22 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { diffBoard } from '@/lib/teacher-board/delta';
-import {
-  PENCIL_COLORS,
-  PENCIL_WIDTHS,
-  isStroke,
-  newStrokeId,
-  parseBoardPages,
-  type BoardElement,
-  type Stroke,
-} from './drawing';
+import { PENCIL_COLORS, PENCIL_WIDTHS, newStrokeId, parseStrokes, type Stroke } from './drawing';
 
 const BOARD_URL = '/api/teacher-board';
 
 export function useWhiteBoard() {
-  const [pages, setPages] = useState<BoardElement[][]>([[]]);
-  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null);
   const [color, setColor] = useState<string>(PENCIL_COLORS[0]);
   const [strokeWidth, setStrokeWidth] = useState<number>(PENCIL_WIDTHS[1]);
@@ -24,19 +14,14 @@ export function useWhiteBoard() {
   const [saving, setSaving] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
 
-  const clientIdRef = useRef('');
-  const pagesRef = useRef(pages);
-  const savedPagesRef = useRef<BoardElement[][]>([[]]);
-  const pageIndexRef = useRef(0);
+  const strokesRef = useRef(strokes);
   const saveChainRef = useRef(Promise.resolve());
   const drawingRef = useRef(false);
   const currentStrokeRef = useRef<Stroke | null>(null);
 
-  pagesRef.current = pages;
-  pageIndexRef.current = currentPageIndex;
+  strokesRef.current = strokes;
 
   useEffect(() => {
-    clientIdRef.current = crypto.randomUUID();
     let cancelled = false;
 
     async function loadBoard() {
@@ -44,17 +29,10 @@ export function useWhiteBoard() {
         const response = await fetch(BOARD_URL, { cache: 'no-store' });
         if (!response.ok) return;
         const data = (await response.json()) as {
-          board?: { pages?: unknown; currentPageIndex?: unknown } | null;
+          board?: { strokes?: unknown } | null;
         };
         if (cancelled || !data.board) return;
-        const nextPages = parseBoardPages(data.board.pages);
-        const nextIndex =
-          typeof data.board.currentPageIndex === 'number'
-            ? Math.min(nextPages.length - 1, Math.max(0, data.board.currentPageIndex))
-            : 0;
-        setPages(nextPages);
-        setCurrentPageIndex(nextIndex);
-        savedPagesRef.current = nextPages;
+        setStrokes(parseStrokes(data.board.strokes));
       } catch (error) {
         console.error('Failed to load teacher board', error);
       } finally {
@@ -68,34 +46,16 @@ export function useWhiteBoard() {
     };
   }, []);
 
-  const persist = useCallback((nextPages: BoardElement[][], nextIndex: number) => {
+  const persist = useCallback((nextStrokes: Stroke[]) => {
     saveChainRef.current = saveChainRef.current
       .then(async () => {
-        const previous = savedPagesRef.current;
-        const changes = diffBoard(previous, nextPages);
-        const body =
-          changes.length > 0
-            ? {
-                type: 'delta' as const,
-                clientId: clientIdRef.current,
-                pageCount: nextPages.length,
-                currentPageIndex: nextIndex,
-                changes,
-              }
-            : {
-                clientId: clientIdRef.current,
-                pages: nextPages,
-                currentPageIndex: nextIndex,
-              };
-
         setSaving(true);
         const response = await fetch(BOARD_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ strokes: nextStrokes }),
         });
         if (!response.ok) throw new Error('Save failed');
-        savedPagesRef.current = nextPages;
       })
       .catch((error) => {
         console.error('Failed to save teacher board', error);
@@ -141,23 +101,18 @@ export function useWhiteBoard() {
     currentStrokeRef.current = null;
     setCurrentStroke(null);
     if (!stroke || stroke.points.length < 4) return;
-    const pageIndex = pageIndexRef.current;
-    const nextPages = pagesRef.current.map((page, index) => (index === pageIndex ? [...page, stroke] : page));
-    setPages(nextPages);
-    persist(nextPages, pageIndex);
+    const nextStrokes = [...strokesRef.current, stroke];
+    setStrokes(nextStrokes);
+    persist(nextStrokes);
   }, [persist]);
 
   const confirmClear = useCallback(() => {
-    const pageIndex = pageIndexRef.current;
-    const nextPages = pagesRef.current.map((page, index) => (index === pageIndex ? [] : page));
-    setPages(nextPages);
+    setStrokes([]);
     currentStrokeRef.current = null;
     setCurrentStroke(null);
     setClearOpen(false);
-    persist(nextPages, pageIndex);
+    persist([]);
   }, [persist]);
-
-  const strokes = pages[currentPageIndex]?.filter(isStroke) ?? [];
 
   return {
     strokes,

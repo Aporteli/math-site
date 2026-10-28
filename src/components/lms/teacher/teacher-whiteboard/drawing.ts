@@ -6,8 +6,6 @@ export type Stroke = {
   strokeWidth: number;
 };
 
-export type BoardElement = Stroke | { id: string; type: string };
-
 export type WhiteboardCopy = {
   title: string;
   openMenu: string;
@@ -38,21 +36,9 @@ export function isStroke(value: unknown): value is Stroke {
   );
 }
 
-function isBoardElement(value: unknown): value is BoardElement {
-  if (isStroke(value)) return true;
-  if (!value || typeof value !== 'object') return false;
-  const element = value as { id?: unknown; type?: unknown };
-  return typeof element.id === 'string' && element.id.length > 0 && typeof element.type === 'string';
-}
-
-export function parseBoardPages(raw: unknown): BoardElement[][] {
-  if (!Array.isArray(raw) || raw.length === 0) return [[]];
-  const pages = raw.map((page) => (Array.isArray(page) ? page.filter(isBoardElement) : []));
-  return pages.length > 0 ? pages : [[]];
-}
-
-export function pageStrokes(page: readonly BoardElement[]): Stroke[] {
-  return page.filter(isStroke);
+export function parseStrokes(raw: unknown): Stroke[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(isStroke);
 }
 
 export function newStrokeId() {
